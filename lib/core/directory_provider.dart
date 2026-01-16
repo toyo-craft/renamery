@@ -12,12 +12,23 @@ class DirectoryProvider extends ChangeNotifier {
   final UndoManager _undoManager = UndoManager();
 
   // Rename State
-  RenameMode _renameMode = RenameMode.replace;
+  RenameMode _renameMode = RenameMode.upper; // Default to something safe
+  NumberingMode _numberingMode = NumberingMode.stringNumber;
+
   String? _findText;
   String? _replaceText;
   String? _appendText;
   int _startNumber = 1;
   int _digits = 3;
+  bool _extensionToLowerCase = false;
+  bool _useRegex = false;
+
+  // History State
+  List<String> _appendHistory = [];
+  List<String> _deleteFromHistory = [];
+
+  // Insert Index (Shared with startNumber for now, but UI shows it explicitly)
+  // Logic: startNumber is used as index in Insert Mode.
 
   Directory? get currentDirectory => _currentDirectory;
   List<FileModel> get currentFiles => _currentFiles;
@@ -26,11 +37,16 @@ class DirectoryProvider extends ChangeNotifier {
 
   // Getters for UI
   RenameMode get renameMode => _renameMode;
+  NumberingMode get numberingMode => _numberingMode;
   String? get findText => _findText;
   String? get replaceText => _replaceText;
   String? get appendText => _appendText;
   int get startNumber => _startNumber;
   int get digits => _digits;
+  bool get extensionToLowerCase => _extensionToLowerCase;
+  bool get useRegex => _useRegex;
+  List<String> get appendHistory => _appendHistory;
+  List<String> get deleteFromHistory => _deleteFromHistory;
 
   // Sort State
   int _sortColumnIndex = 0;
@@ -61,16 +77,13 @@ class DirectoryProvider extends ChangeNotifier {
 
     _currentFiles.sort((a, b) {
       int cmp = 0;
-      // 0: Original Name, 1: New Name, ...
-      // For MVP, simplistic sort on Original Name mainly
       switch (columnIndex) {
         case 0: // Original Name
-          // Directories first usually
           if ((a.entity is Directory) && (b.entity is! Directory)) return -1;
           if ((a.entity is! Directory) && (b.entity is Directory)) return 1;
           cmp = a.originalName.toLowerCase().compareTo(
-            b.originalName.toLowerCase(),
-          );
+                b.originalName.toLowerCase(),
+              );
           break;
         case 1: // New Name
           cmp = a.newName.toLowerCase().compareTo(b.newName.toLowerCase());
@@ -96,13 +109,12 @@ class DirectoryProvider extends ChangeNotifier {
   Future<void> executeRename() async {
     if (_currentFiles.isEmpty) return;
 
-    // Target files: If selection exists, only selected. Else all.
     final hasSelection = _currentFiles.any((f) => f.isSelected);
     final targets = hasSelection
         ? _currentFiles.where((f) => f.isSelected).toList()
         : _currentFiles;
 
-    if (targets.isEmpty) return; // Should not happen if logic is correct
+    if (targets.isEmpty) return;
 
     _isLoading = true;
     notifyListeners();
@@ -110,7 +122,6 @@ class DirectoryProvider extends ChangeNotifier {
     List<FileModel> renamaedFiles = [];
 
     for (var file in targets) {
-      // Skip if name hasn't changed
       if (file.originalName == file.newName) continue;
 
       try {
@@ -146,26 +157,55 @@ class DirectoryProvider extends ChangeNotifier {
 
     await _undoManager.undoLastTransaction();
 
-    // Refresh list
     if (_currentDirectory != null) {
       await setDirectory(_currentDirectory!);
     }
   }
 
+  void addToHistory(String value, bool isAppend) {
+    if (value.isEmpty) return;
+    List<String> target = isAppend ? _appendHistory : _deleteFromHistory;
+
+    // Remove if exists to move to top
+    target.remove(value);
+    target.insert(0, value);
+
+    if (target.length > 10) {
+      target = target.sublist(0, 10);
+    }
+
+    // Re-assign to trigger check (List reference check might need new instance or just notify)
+    if (isAppend) {
+      _appendHistory = List.from(target);
+    } else {
+      _deleteFromHistory = List.from(target);
+    }
+    notifyListeners();
+  }
+
+  // Update Settings
   void updateRenameSettings({
     RenameMode? mode,
+    NumberingMode? numberingMode,
     String? find,
     String? replace,
     String? append,
     int? start,
     int? digit,
+    bool? extensionToLowerCase,
+    bool? useRegex,
   }) {
     if (mode != null) _renameMode = mode;
+    if (numberingMode != null) _numberingMode = numberingMode;
     if (find != null) _findText = find;
     if (replace != null) _replaceText = replace;
     if (append != null) _appendText = append;
     if (start != null) _startNumber = start;
     if (digit != null) _digits = digit;
+    if (extensionToLowerCase != null) {
+      _extensionToLowerCase = extensionToLowerCase;
+    }
+    if (useRegex != null) _useRegex = useRegex;
 
     _updatePreviews();
     notifyListeners();
@@ -176,8 +216,6 @@ class DirectoryProvider extends ChangeNotifier {
 
     final hasSelection = _currentFiles.any((f) => f.isSelected);
 
-    // If we have selection, we only apply preview to selected.
-    // Unselected files should reset to their original name.
     if (hasSelection) {
       // 1. Reset unselected
       for (var f in _currentFiles.where((f) => !f.isSelected)) {
@@ -187,22 +225,28 @@ class DirectoryProvider extends ChangeNotifier {
       RenameEngine.generatePreviews(
         _currentFiles.where((f) => f.isSelected).toList(),
         _renameMode,
+        numberingMode: _numberingMode,
         findText: _findText,
         replaceText: _replaceText,
         appendText: _appendText,
         startNumber: _startNumber,
         digits: _digits,
+        extensionToLowerCase: _extensionToLowerCase,
+        useRegex: _useRegex,
       );
     } else {
       // Apply to all
       RenameEngine.generatePreviews(
         _currentFiles,
         _renameMode,
+        numberingMode: _numberingMode,
         findText: _findText,
         replaceText: _replaceText,
         appendText: _appendText,
         startNumber: _startNumber,
         digits: _digits,
+        extensionToLowerCase: _extensionToLowerCase,
+        useRegex: _useRegex,
       );
     }
   }

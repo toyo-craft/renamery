@@ -17,7 +17,7 @@ class _FileListPanelState extends State<FileListPanel> {
   // Initial column widths
   double _colWidthOriginal = 300.0;
   double _colWidthNew = 300.0;
-  double _colWidthStatus = 100.0;
+  final double _colWidthStatus = 100.0;
 
   // Fixed widths
   final double _widthDragHandle = 32.0; // Icon 20 + padding
@@ -62,8 +62,7 @@ class _FileListPanelState extends State<FileListPanel> {
         final files = provider.currentFiles; // Short alias
 
         // Calculate total width based on columns
-        final totalWidth =
-            _widthDragHandle +
+        final totalWidth = _widthDragHandle +
             _widthCheckbox +
             _widthSpace +
             _colWidthOriginal +
@@ -189,10 +188,10 @@ class _FileListPanelState extends State<FileListPanel> {
                                           ),
                                           child: Row(
                                             children: [
-                                              Expanded(
+                                              const Expanded(
                                                 child: Text(
                                                   '変更前ファイル名',
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 12,
                                                   ),
@@ -215,8 +214,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                       _buildResizeHandle((details) {
                                         setState(() {
                                           _colWidthOriginal += details.delta.dx;
-                                          if (_colWidthOriginal < 50)
+                                          if (_colWidthOriginal < 50) {
                                             _colWidthOriginal = 50;
+                                          }
                                         });
                                       }),
                                       SizedBox(width: _widthSpace),
@@ -231,10 +231,10 @@ class _FileListPanelState extends State<FileListPanel> {
                                           ),
                                           child: Row(
                                             children: [
-                                              Expanded(
+                                              const Expanded(
                                                 child: Text(
                                                   '変更後ファイル名 (プレビュー)',
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 12,
                                                   ),
@@ -257,8 +257,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                       _buildResizeHandle((details) {
                                         setState(() {
                                           _colWidthNew += details.delta.dx;
-                                          if (_colWidthNew < 50)
+                                          if (_colWidthNew < 50) {
                                             _colWidthNew = 50;
+                                          }
                                         });
                                       }),
                                       SizedBox(width: _widthSpace),
@@ -298,7 +299,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                             fileModel.entity is Directory;
                                         final isModified =
                                             fileModel.originalName !=
-                                            fileModel.newName;
+                                                fileModel.newName;
                                         final isSelected = fileModel.isSelected;
                                         final key = ValueKey(
                                           fileModel.entity.path,
@@ -312,12 +313,12 @@ class _FileListPanelState extends State<FileListPanel> {
                                           child: Container(
                                             color: isSelected
                                                 ? Theme.of(context)
-                                                      .colorScheme
-                                                      .primaryContainer
-                                                      .withValues(alpha: 0.3)
+                                                    .colorScheme
+                                                    .primaryContainer
+                                                    .withValues(alpha: 0.3)
                                                 : (index % 2 == 0
-                                                      ? Colors.white
-                                                      : Colors.grey[50]),
+                                                    ? Colors.white
+                                                    : Colors.grey[50]),
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 16.0,
                                               vertical: 2.0, // Low height
@@ -328,13 +329,13 @@ class _FileListPanelState extends State<FileListPanel> {
                                                   width: _widthDragHandle,
                                                   child:
                                                       ReorderableDragStartListener(
-                                                        index: index,
-                                                        child: const Icon(
-                                                          Icons.drag_indicator,
-                                                          size: 16,
-                                                          color: Colors.grey,
-                                                        ),
-                                                      ),
+                                                    index: index,
+                                                    child: const Icon(
+                                                      Icons.drag_indicator,
+                                                      size: 16,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
                                                 ),
                                                 SizedBox(
                                                   width: _widthCheckbox,
@@ -342,8 +343,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                                     value: isSelected,
                                                     onChanged: (val) => provider
                                                         .toggleSelection(
-                                                          fileModel,
-                                                        ),
+                                                      fileModel,
+                                                    ),
                                                     visualDensity:
                                                         VisualDensity.compact,
                                                   ),
@@ -359,7 +360,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                         isDir
                                                             ? Icons.folder
                                                             : Icons
-                                                                  .insert_drive_file,
+                                                                .insert_drive_file,
                                                         color: isDir
                                                             ? Colors.amber
                                                             : Colors.blueGrey,
@@ -374,8 +375,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                                               .ellipsis,
                                                           style:
                                                               const TextStyle(
-                                                                fontSize: 12,
-                                                              ),
+                                                            fontSize: 12,
+                                                          ),
                                                         ),
                                                       ),
                                                     ],
@@ -414,8 +415,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                                     isDir
                                                         ? ''
                                                         : (isModified
-                                                              ? '変更あり'
-                                                              : '-'),
+                                                            ? '変更あり'
+                                                            : '-'),
                                                     style: TextStyle(
                                                       color: isModified
                                                           ? Colors.orange

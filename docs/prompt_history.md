@@ -5,8 +5,11 @@
 [User Request] ビルドが始まり、しばらくするとウィンドウが起動します。とありますが、三角ボタンを押すと処理しているようですが、その後ウィンドウは開かず起動しません。
 [User Feedback] すばらしい！しかしドライブのアイコンが車になっているのは、誤解です。パソコンのハードウェアとしてのドライブです。車のドライブではありません
 [User Request] 添付画像を参考にアクセントカラーは緑基調にしてください。
+[User Request] 実装を続けてください
+[User Feedback] はい。但しマクロ機能は本フェーズではスコープ外
+[User Request] MainとSubの機能がmanualとズレているのではないか？manualを精査してください
+[User Request] 右ペインはこちらのNameryの実体に実装を合わせてください。細かいUXはモダンで良いですが、Namery自体は多くの経験に基づき、添付画像のような右ペインになっているので順序などを尊重してください (Screenshot provided)
 [User Feedback] どちらも起動しません .batに関しては赤文字でエラーが表示されますが一瞬でウィンドウが閉じるため視認できません
-[User Request] 実行しました
 [User Feedback] 再度、挙動変わらずです。再度run_debug.batを実施しました
 [User Feedback] 再度、挙動変わらずです。再度run_debug.batを実施しました
 [User Request] あなたからの提示は、今後このプロジェクト @[README.md] を進めるにあたり、SDKの準備 VisualStudioの準備を行う必要があるという指示だったのではないでしょうか？改めて次のステップを提示してください

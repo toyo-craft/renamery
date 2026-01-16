@@ -21,9 +21,18 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _controller = MultiSplitViewController(
       areas: [
-        Area(flex: 0.2, builder: (c, a) => const NavigationPanel()),
-        Area(flex: 0.5, builder: (c, a) => const FileListPanel()),
-        Area(flex: 0.3, builder: (c, a) => const SettingsPanel()),
+        Area(
+          flex: 0.2,
+          builder: (c, a) => const NavigationPanel(),
+        ),
+        Area(
+          flex: 0.5,
+          builder: (c, a) => const FileListPanel(),
+        ),
+        Area(
+          flex: 0.3,
+          builder: (c, a) => const SettingsPanel(),
+        ),
       ],
     );
   }
