@@ -152,41 +152,33 @@ class RenameEngine {
           }
           break;
         case RenameMode.deleteFrontTo:
-          // Delete from start UNTIL the string [findText]
-          // Usually means: remove everything BEFORE the found string.
-          // Or remove everything UP TO AND INCLUDING?
-          // "まで削除" (Delete until) usually includes the target in "deletion" scope if it's the "boundary".
-          // But safely, let's assume removing everything BEFORE the first match, keeping the match?
-          // Or removing the match too?
-          // Let's assume removing everything BEFORE.
-          // Wait, if I say "Delete until 'A'", 'BCA' -> 'A'.
+          // Delete from start UNTIL the string [findText] (INCLUDING findText)
           if (findText != null && findText.isNotEmpty) {
             int idx = newBaseName.indexOf(findText);
             if (idx != -1) {
-              // Remove 0 to idx
-              newBaseName = newBaseName.substring(idx);
-              // If we want to remove the delimiter too: newBaseName = newBaseName.substring(idx + findText.length);
-              // "まで削除" might imply "delete the range ending at X".
-              // Let's stick to "Remove Preceding Text".
+              // substring(idx + length) removes the delimiter as well.
+              // 'original', find 'n' (idx 5). length 1.
+              // substring(6) -> 'al'. Correct.
+              newBaseName = newBaseName.substring(idx + findText.length);
             }
           }
           break;
         case RenameMode.deleteBackTo:
-          // Delete from end BACK TO the string [findText]
-          // Remove everything AFTER the last match?
+          // Delete from end BACK TO the string [findText] (INCLUDING findText)
           if (findText != null && findText.isNotEmpty) {
             int idx = newBaseName.lastIndexOf(findText);
             if (idx != -1) {
-              // Keep 0 to idx + length (or just idx?)
-              // "Back to": e.g. "ABC_DEF", delete back to "_" => "ABC_"
-              newBaseName = newBaseName.substring(0, idx + findText.length);
+              // substring(0, idx) keeps content before delimiter.
+              // 'original', find 'n' (idx 5).
+              // substring(0, 5) -> 'origi'. Correct.
+              newBaseName = newBaseName.substring(0, idx);
             }
           }
           break;
         case RenameMode.insert:
           if (appendText != null && appendText.isNotEmpty) {
-            // Use startNumber as insertion index
-            int index = startNumber;
+            // Use startNumber as insertion index (1-based)
+            int index = startNumber - 1;
             // Protect bounds
             if (index < 0) index = 0;
             if (index > newBaseName.length) index = newBaseName.length;

@@ -86,6 +86,22 @@ class DirectoryProvider extends ChangeNotifier {
   void _updatePreviews() {
     if (_currentFiles.isEmpty) return;
 
+    final hasSelection = _currentFiles.any((f) => f.isSelected);
+    List<FileModel> targets = [];
+
+    // User Requirement: If no selection, NO files are targets.
+    // So distinct from previous behavior (all).
+    if (hasSelection) {
+      targets = _currentFiles.where((f) => f.isSelected).toList();
+    }
+
+    // Reset ALL files to original name first (cleans up unselected or previous states)
+    for (var f in _currentFiles) {
+      f.setNewName(f.originalName);
+    }
+
+    if (targets.isEmpty) return; // Nothing to rename
+
     // Use deleteToText as findText for deleteFrontTo/BackTo modes
     String? currentFindText = _findText;
     if (_renameMode == RenameMode.deleteFrontTo ||
@@ -94,7 +110,7 @@ class DirectoryProvider extends ChangeNotifier {
     }
 
     RenameEngine.generatePreviews(
-      _currentFiles,
+      targets,
       _renameMode,
       findText: currentFindText,
       replaceText: _replaceText,
@@ -181,6 +197,10 @@ class DirectoryProvider extends ChangeNotifier {
       }
       return ascending ? cmp : -cmp;
     });
+    // Sorting might affect numbering if numbering relies on list order.
+    // Standard Namery/Renaming behavior: Numbering follows current Sort Order?
+    // Usually yes.
+    _updatePreviews();
     notifyListeners();
   }
 
@@ -191,17 +211,17 @@ class DirectoryProvider extends ChangeNotifier {
     }
     final FileModel item = _currentFiles.removeAt(oldIndex);
     _currentFiles.insert(newIndex, item);
+
+    // User Requirement: Update previews on reorder (numbering changes)
+    _updatePreviews();
     notifyListeners();
   }
 
   Future<void> executeRename() async {
     if (_currentFiles.isEmpty) return;
 
-    final hasSelection = _currentFiles.any((f) => f.isSelected);
-    final targets = hasSelection
-        ? _currentFiles.where((f) => f.isSelected).toList()
-        : _currentFiles;
-
+    // Strict selection requirement
+    final targets = _currentFiles.where((f) => f.isSelected).toList();
     if (targets.isEmpty) return;
 
     _isLoading = true;
@@ -233,6 +253,35 @@ class DirectoryProvider extends ChangeNotifier {
         await setDirectory(_currentDirectory!);
       }
     } else {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> renameOneFile(FileModel file, String newName) async {
+    if (file.originalName == newName || newName.isEmpty) return;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final oldPath = p.join(file.parentPath, file.originalName);
+      final newPath = p.join(file.parentPath, newName);
+
+      final fsEntity = File(oldPath);
+      if (await fsEntity.exists()) {
+        await fsEntity.rename(newPath);
+        // We re-list directory to ensure state sync,
+        // or effectively we could just update the model if we trust it.
+        // For safety, let's re-list.
+        if (_currentDirectory != null) {
+          await setDirectory(_currentDirectory!);
+        }
+      }
+    } catch (e) {
+      // Handle error (maybe show toast/snackbar in UI, but here we just log or ignore)
+      if (kDebugMode) {
+        print('Rename One Error: $e');
+      }
       _isLoading = false;
       notifyListeners();
     }
