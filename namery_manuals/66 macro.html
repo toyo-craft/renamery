@@ -1,0 +1,109 @@
+<html>
+
+<head>
+<title>複雑な変換</title>
+<link href="help.css" type="text/css" rel="stylesheet">
+</head>
+
+<body class="BaseBody">
+
+<b class="Menu">複雑な変換</b><br>
+<br>
+<img src="Images/Help_16_CExchange.png" border=1><br>
+<br>
+Nameryでは通常のメニュー選択式の変名の他に、
+「コマンド」、「連続置換機能」、「正規表現」が使用できます。<br>
+それらを組み合わせて一行のマクロとして組み込めば、複雑な処理を毎回１動作で処理可能になります。<br>
+<br>
+例） 処理1|処理2|処理3 ・・・（処理を | でいくつでも繋げることが出来ます）<br>
+<br>
+<table>
+  <tr class="category"><td nowrap>処理カテゴリ</td><td>説明</td></tr>
+
+  <tr class="command">
+    <td nowrap><a href="65 command.htm">コマンド</a></td>  
+    <td>
+      Nameryの基本処理コマンド<br>
+      連番、挿入、削除などの基本処理を、スイッチ形式で指定する
+    </td>
+  </tr>
+  <tr class="command">
+    <td nowrap><a href="62 cexchange.htm">連続置換</a></td>
+    <td>
+      複雑な置換を連続して実行する機能<br>
+      通常は置換前・置換後の文字列は1：1だが、複数：1という変換が出来るので、置換処理を細かく簡単に書くことが出来る<br>
+      また、ファイル名中何度も出てくる単語を全部変換出来る
+    </td>
+  </tr>
+  <tr class="command">
+    <td nowrap><a href="63 regular.htm">正規表現</a></td>
+    <td>
+      マッチングによる置換<br>
+      文字列中、特定の指定子にマッチした部分を置換する機能<br>
+      パターン置換では、大文字から小文字へ、2バイトから1バイト文字へなどの変換が出来る
+    </td>
+  </tr>
+</table>
+<br>
+
+例えば<br>
+<br>
+Namery ABC_1.txt → Namery 400-001.txt<br>
+Namely BCD 2.txt → Namery 400-002.txt<br>
+Name_1TEST_０４.txt → Namery 400-004.txt<br>
+Name_TEST_03.txt → Namery 400-003.txt<br>
+<br>
+という変換をしたいとします。2バイト文字やら桁揃えされていないやら色々ありそうです。<br>
+<br>
+<b>●数字を1バイトにする</b><br>
+まず正規表現で<font color=red>「tr/０-９/0-9/k」</font>とやってみます。2バイト数字を1バイト数字に変換して<br>
+<br>
+Namery ABC_1.txt<br>
+Namely BCD 2.txt<br>
+Name_1TEST_04.txt<br>
+Name_TEST_03.txt<br>
+<br>
+となりました。<br>
+<br>
+<b>●数字を3桁に桁揃えする</b><br>
+次にやはり正規表現で<font color=red>「s/(\D)(\d{1})\./$1 00$2/|s/(\D)(\d{2})\./$1 0$2/」</font>
+とやりましょう<br>
+<br>
+Namery ABC_ 001.txt<br>
+Namely BCD  002.txt<br>
+Name_1TEST_ 004.txt<br>
+Name_TEST_ 003.txt<br>
+<br>
+桁揃えが出来、半角スペース+桁揃え後の連番になりました。<br>
+<br>
+<b>●不要な部分を削除する</b><br>
+ここからは色々やり方はありますが、ここでコマンドの削除機能を使って
+<font color=red>「DC(e, )」</font>とやってみます。これは「e」から「 」まで削除してしまうコマンドです。<br>
+<br>
+Nam001.txt<br>
+Nam002.txt<br>
+Nam004.txt<br>
+Nam003.txt<br>
+<br>
+<b>●文字列を挿入する</b><br>
+あとは置換でも連続置換でも正規表現でも何でも出来ますが、挿入コマンドを使ってみましょう
+<font color=red>「IN(w,m,ery 400-)」</font><br>
+<br>
+Namery 400-001.txt<br>
+Namery 400-002.txt<br>
+Namery 400-004.txt<br>
+Namery 400-003.txt<br>
+<br>
+整形できました。これらのコマンドを繋げると<br>
+<br>
+<font color=red>tr/０-９/0-9/k|s/(\D)(\d{1})\./$1 00$2/|s/(\D)(\d{2})\./$1 0$2/|DC(e, )|IN(w,m,ery 400-)</font><br>
+<br>
+となり、正規表現3回、コマンド2回、計5回の処理を経て変名が出来ているのがわかります。<br>
+<br>
+マクロはこのように、処理を繋げていって一つの仕組みとして機能させます。<br>
+<br>
+<br>
+<b class="MEMO">MEMO：<br>
+コマンド文字列を保存しておきたい場合は、別記の<a href="34 etc.htm#static">固定リスト</a>を参照して下さい。<br>
+</body>
+</html>

@@ -1,0 +1,29 @@
+name: renamery
+description: Flutterを使用したNameryファイルリネームツールの復活版。
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # 状態管理
+  provider: ^6.1.1
+  
+  # ファイルとパスのユーティリティ
+  path: ^1.9.0
+  
+  # オプション: 後でファイルピッカーが必要になった場合（独自のUIを使用する可能性がありますが）
+  file_selector: ^1.0.3
+  multi_split_view: ^3.6.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true

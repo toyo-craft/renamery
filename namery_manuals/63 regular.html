@@ -1,0 +1,180 @@
+<html>
+
+<head>
+<title>正規表現</title>
+<link href="help.css" type="text/css" rel="stylesheet">
+</head>
+
+<body class="BaseBody">
+
+<b class="Menu">正規表現（Regular Expression）</b><br>
+<br>
+<img src="Images/Help_19_Regular.png" border=1><br>
+<br>
+Tatsuo Baba氏作成の 正規表現DLL Bregexp.dll を使い、正規表現の使用が可能になりました。<br>
+HP ： <a href=http://www.hi-ho.ne.jp/~babaq/bregexp.html>
+http://www.hi-ho.ne.jp/~babaq/bregexp.html</a><br>
+<br>
+<br>
+
+<font color=red>●個人的に分かりやすかった、正規表現解説サイト</font><br>
+<br>
+Knave Web 講座 第15 章 JavaScriptの正規表現<br>
+HP ： <a href=http://www.site-cooler.com/kwl/javascript/15.htm>
+http://www.site-cooler.com/kwl/javascript/15.htm</a><br>
+<br>
+
+なかま's HP「サルにもわかる正規表現入門」<br>
+HP ： <a href=http://www.mnet.ne.jp/~nakama/>
+http://www.mnet.ne.jp/~nakama/</a><br>
+<br>
+
+
+<br>
+●フィルター部分には、「パターンマッチング」が使用可能です。<br>
+　 (ex /(01|02)-namery/<br>
+　（先頭文字は / ）<br>
+<br>
+　◆パターンマッチング 先頭文字 /<br>
+　　･･･ 正規表現でのパターン抜き出しをフィルタで使用できます<br>
+<br>
+<center>
+<table border>
+  <tr class="category"><td nowrap>正規表現</td><td>解説</td><td>例</td></tr>
+
+  <tr class="sample">
+    <td nowrap>/\d/ or /[0-9]/</td>
+    <td       >数字がある</td>
+    <td nowrap>Namery01.txt<br>Namery 2.txt</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>/\d{3}/</td>
+    <td       >3桁の数字がある</td>
+    <td nowrap>Namery 001.log<br>123 Namery.bat</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>/^\d{3}/</td>
+    <td       >先頭が3桁以上の数字で始まる</td>
+    <td nowrap>123 Namery.bat<br>0000Namery.txt</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>/\d{3,}/</td>
+    <td       >3桁以上連続する数字がある</td>
+    <td nowrap>0000Namery.txt<br>Namery12345.log</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>/txt$/</td>
+    <td       >拡張子の最後がtxt</td>
+    <td nowrap>Namery.txt<br>Namery.atxt</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>/W.*[T8]\.txt$/</td>
+    <td       >Wで始まって最後が T か 8 のtxtファイル</td>
+    <td nowrap>Windows 98.txt<br>WanT.txt</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>/W.*[T8]\..{3}$/</td>
+    <td       >Wで始まって最後が T か 8 のファイル</td>
+    <td nowrap>Windows 98.txt<br>Watch NT.log</td>
+  </tr>
+</table>
+</center>
+<br>
+<font color=red>上記正規表現文字列をフィルタ文字列に使用する事で、ファイルのフィルタリングが可能です。</font><br>
+<p>
+
+<br>
+●連続置換欄に、置換とパターン置換が使用可能です。<br>
+　置換とパターン置換 (ex s/source/exchange/g|tr/abcdef/ghijkl/<br>
+　（先頭文字は s/ または tr/ ）<br>
+<br>
+　◆置換 先頭文字 s/<br>
+　　･･･ 正規表現での置換<br>
+<br>
+<center>
+<table border>
+  <tr class="category"><td nowrap>正規表現</td><td>解説</td><td>例</td></tr>
+
+  <tr class="sample">
+    <td nowrap>s/^ +//</td>
+    <td       >行頭の半角スペースを削除する</td>
+    <td nowrap></td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>s/ +\./\./</td>
+    <td       >ファイル名末尾の半角スペースを削除する</td>
+    <td nowrap></td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>s/^ +//|s/ +\./\./</td>
+    <td       >先頭とファイル名末尾の半角スペース両方削除</td>
+    <td nowrap>上記2例を繋げた処理</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>s/(ab|cd)/[\1]/</td>
+    <td       >ab か cd が含まれていた場合、その単語を[]で囲む</td>
+    <td nowrap>about.txt ⇒ [ab]out.txt</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>s/(Win).*(ws)/\2\1/</td>
+    <td       >Win～ws という文字列を含んだ場合、wsWin に変換する<br>\1や\2の使用例</td>
+    <td nowrap>Windows.txt ⇒ wsWin.txt</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>s/(\D)(\d{1})\./$1 00$2/|<br>
+               s/(\D)(\d{2})\./$1 0$2/</td>
+    <td       >「文字列 + 2桁まで」の数字を3桁に揃える</td>
+    <td nowrap>Name1.txt ⇒ Name 001.txt</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>s/(\D)(\d{1})\./$1 000$2/|<br>
+               s/(\D)(\d{2})\./$1 00$2/|<br>
+               s/(\D)(\d{3})\./$1 0$2/</td>
+    <td       >「文字列 + 3桁まで」の数字を4桁に揃える</td>
+    <td nowrap>Name1.txt ⇒ Name 0001.txt</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>s/[\s　]+/ /kg</td>
+    <td       >全角、複数スペースを半角スペース一つにする</td>
+    <td nowrap></td>
+  </tr>
+</table>
+</center>
+<br>
+<font color=red>上記正規表現文字列をコマンド欄に入力し、チェックボックスをONにして下さい。</font><br>
+<p>
+
+<br>
+　◆パターン置換 先頭文字 tr/<br>
+　　･･･ ある文字をある文字に置換するパターン列挙<br>
+<br>
+<center>
+<table border>
+  <tr class="category"><td nowrap>正規表現</td><td>解説</td><td>例</td></tr>
+
+  <tr class="sample">
+    <td nowrap>tr/あ-み/ア-ミ/k|tr/む-ん/ム-ン/k</td>
+    <td       >ひらがなをカタカナに</td>
+    <td       >「み」 と 「む」の間でおかしくなるので、2つに分け、連続置換書式で繋げてます</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>tr/a-z/A-Z/k</td>
+    <td       >小文字を大文字に</td>
+    <td rowspan="2">最後にkをつけないと、2バイト文字がある場合に不具合が出る</td>
+  </tr>
+  <tr class="sample">
+    <td nowrap>tr/0-9/０-９/k</td>
+    <td       >数字を2バイトに</td>
+    <td       ></td>
+  </tr>
+</table>
+</center>
+<br>
+<font color=red>上記正規表現文字列をコマンド欄に入力し、チェックボックスをONにして下さい。</font><br>
+<p>
+<br>
+正規表現は、Perl5 に準拠しているようです。詳細は上記ページを参照下さい。<br>
+作者はあまり正規表現に詳しく有りませんので、書式などを相談されても
+返答できない場合があります。ご了承下さい。
+</body>
+</html>

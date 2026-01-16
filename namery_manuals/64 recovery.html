@@ -1,0 +1,38 @@
+<html>
+
+<head>
+<title>AR</title>
+<link href="help.css" type="text/css" rel="stylesheet">
+</head>
+
+<body class="BaseBody">
+
+<b class="Menu">アドバンスド リカバリー（Advanced Recovery）</b><br>
+<br>
+<img src="Images/Help_18_Recovery02.png" border=1><br>
+<br>
+アドバンスド リカバリーは、
+<font color=red>今日行った変更履歴を保存し、たとえプログラムが終了したとしてもUndoを可能にする機能</font>
+です。<br>
+設定メニューの「アドバンスドリカバリーを使う」にチェックが入っている場合に機能します。<br>
+<br>
+ファイル名をNameryから一括変更した時に、ツールバーの「戻す」の横のカウンターが 1 づつ
+増えていきます。これが Undo 可能数になります。<font color=red>アドバンスドリカバリー使用時は、この Undoの履歴を
+Nameryが終了した時に出力し、次回起動時に読み込む事で Undo履歴を保持</font>する事が可能です。<br>
+<br>
+出力ファイルは、Namery本体があるフォルダに「Undo_YYYY_MMDD.txt」という形で保存されます。<br>
+これはテキストファイルなので、メモ帳などで開けば、どのような履歴が現在残っているかを
+見る事ができます。また、修正する事も可能です。<br>
+<br>
+今までの履歴を削除したい場合は、Nameryが起動していない状態で上記ファイルを削除して下さい。
+<br>
+Namery起動時に Undo履歴ファイル名 が現在の日付になっていない場合、アドバンスドリカバリーは
+そのファイルを削除し、履歴 0 の状態で起動します。履歴ファイルを保存したい場合は
+上記ファイル名を変更しておいて下さい。<br>
+Ex) 「_Undo_YYYY_MMDD.txt」などにすれば履歴ファイルと見なしません。<br>
+<br>
+<img src="Images/Help_18_Recovery01.png" border=1><br>
+<br>
+
+</body>
+</html>
