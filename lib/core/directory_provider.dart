@@ -147,6 +147,35 @@ class DirectoryProvider extends ChangeNotifier {
         case 1: // New Name
           cmp = a.newName.toLowerCase().compareTo(b.newName.toLowerCase());
           break;
+        case 2: // Size
+          // Directories don't have size in this simple model, treat as 0 or last
+          if ((a.entity is Directory) && (b.entity is! Directory)) return -1;
+          if ((a.entity is! Directory) && (b.entity is Directory)) return 1;
+          if (a.entity is File && b.entity is File) {
+            cmp = (a.entity as File)
+                .lengthSync()
+                .compareTo((b.entity as File).lengthSync());
+          }
+          break;
+        case 3: // Relative Path
+          cmp = a.relativePath.compareTo(b.relativePath);
+          break;
+        case 4: // Type
+          cmp = a.fileType.compareTo(b.fileType);
+          break;
+        case 5: // Date Modified
+          try {
+            cmp = a.entity
+                .statSync()
+                .modified
+                .compareTo(b.entity.statSync().modified);
+          } catch (e) {
+            cmp = 0;
+          }
+          break;
+        case 6: // Attributes
+          cmp = a.attributes.compareTo(b.attributes);
+          break;
         default:
           cmp = 0;
       }

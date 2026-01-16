@@ -14,10 +14,14 @@ class _FileListPanelState extends State<FileListPanel> {
   final ScrollController _horizontalController = ScrollController();
   final TextEditingController _pathController = TextEditingController();
 
-  // Initial column widths
-  double _colWidthOriginal = 300.0;
-  double _colWidthNew = 300.0;
-  final double _colWidthStatus = 100.0;
+  // Column Widths
+  double _colWidthOriginal = 200.0;
+  double _colWidthNew = 200.0;
+  double _colWidthSize = 80.0;
+  double _colWidthPath = 150.0; // Relative Path
+  double _colWidthType = 100.0;
+  double _colWidthDate = 140.0;
+  double _colWidthAttr = 60.0;
 
   // Fixed widths
   final double _widthDragHandle = 32.0; // Icon 20 + padding
@@ -49,6 +53,54 @@ class _FileListPanelState extends State<FileListPanel> {
     );
   }
 
+  Widget _buildHeaderCell(
+      String label, double width, int sortIndex, DirectoryProvider provider) {
+    return SizedBox(
+      width: width,
+      child: InkWell(
+        onTap: () => provider.sortFiles(sortIndex, !provider.sortAscending),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (provider.sortColumnIndex == sortIndex)
+              Icon(
+                provider.sortAscending
+                    ? Icons.arrow_upward
+                    : Icons.arrow_downward,
+                size: 14,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCell(String text, double width,
+      {bool isModified = false,
+      bool isDir = false,
+      bool isBold = false,
+      Color? color}) {
+    return SizedBox(
+      width: width,
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color ?? (isModified ? Colors.blue : Colors.black),
+          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12,
+        ),
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<DirectoryProvider>(
@@ -64,15 +116,21 @@ class _FileListPanelState extends State<FileListPanel> {
         // Calculate total width based on columns
         final totalWidth = _widthDragHandle +
             _widthCheckbox +
-            _widthSpace +
+            (_widthSpace * 7) + // Spaces between cols
             _colWidthOriginal +
-            16.0 + // Resizer
-            _widthSpace +
+            16 +
             _colWidthNew +
-            16.0 + // Resizer
-            _widthSpace +
-            _colWidthStatus +
-            32.0; // Extra padding
+            16 +
+            _colWidthSize +
+            16 +
+            _colWidthPath +
+            16 +
+            _colWidthType +
+            16 +
+            _colWidthDate +
+            16 +
+            _colWidthAttr +
+            32.0;
 
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -168,9 +226,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                       SizedBox(
                                         width: _widthCheckbox,
                                         child: Checkbox(
-                                          value: files.every(
-                                            (f) => f.isSelected,
-                                          ),
+                                          value:
+                                              files.every((f) => f.isSelected),
                                           onChanged: (val) =>
                                               provider.selectAll(val ?? false),
                                           visualDensity: VisualDensity.compact,
@@ -178,104 +235,63 @@ class _FileListPanelState extends State<FileListPanel> {
                                       ),
                                       SizedBox(width: _widthSpace),
 
-                                      // Original Name
-                                      SizedBox(
-                                        width: _colWidthOriginal,
-                                        child: InkWell(
-                                          onTap: () => provider.sortFiles(
-                                            0,
-                                            !provider.sortAscending,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              const Expanded(
-                                                child: Text(
-                                                  '変更前ファイル名',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 12,
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              if (provider.sortColumnIndex == 0)
-                                                Icon(
-                                                  provider.sortAscending
-                                                      ? Icons.arrow_upward
-                                                      : Icons.arrow_downward,
-                                                  size: 14,
-                                                ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      // Resizer 1
-                                      _buildResizeHandle((details) {
-                                        setState(() {
-                                          _colWidthOriginal += details.delta.dx;
-                                          if (_colWidthOriginal < 50) {
-                                            _colWidthOriginal = 50;
-                                          }
-                                        });
-                                      }),
+                                      // 1. Name
+                                      _buildHeaderCell(
+                                          '名前', _colWidthOriginal, 0, provider),
+                                      _buildResizeHandle((d) => setState(() =>
+                                          _colWidthOriginal =
+                                              (_colWidthOriginal + d.delta.dx)
+                                                  .clamp(50.0, 500.0))),
                                       SizedBox(width: _widthSpace),
 
-                                      // New Name
-                                      SizedBox(
-                                        width: _colWidthNew,
-                                        child: InkWell(
-                                          onTap: () => provider.sortFiles(
-                                            1,
-                                            !provider.sortAscending,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              const Expanded(
-                                                child: Text(
-                                                  '変更後ファイル名 (プレビュー)',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 12,
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              if (provider.sortColumnIndex == 1)
-                                                Icon(
-                                                  provider.sortAscending
-                                                      ? Icons.arrow_upward
-                                                      : Icons.arrow_downward,
-                                                  size: 14,
-                                                ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      // Resizer 2
-                                      _buildResizeHandle((details) {
-                                        setState(() {
-                                          _colWidthNew += details.delta.dx;
-                                          if (_colWidthNew < 50) {
-                                            _colWidthNew = 50;
-                                          }
-                                        });
-                                      }),
+                                      // 2. New Name
+                                      _buildHeaderCell('変更後ファイル名', _colWidthNew,
+                                          1, provider),
+                                      _buildResizeHandle((d) => setState(() =>
+                                          _colWidthNew =
+                                              (_colWidthNew + d.delta.dx)
+                                                  .clamp(50.0, 500.0))),
                                       SizedBox(width: _widthSpace),
 
-                                      // Status
-                                      SizedBox(
-                                        width: _colWidthStatus,
-                                        child: const Text(
-                                          '状態',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
+                                      // 3. Size
+                                      _buildHeaderCell(
+                                          'サイズ', _colWidthSize, 2, provider),
+                                      _buildResizeHandle((d) => setState(() =>
+                                          _colWidthSize =
+                                              (_colWidthSize + d.delta.dx)
+                                                  .clamp(40.0, 200.0))),
+                                      SizedBox(width: _widthSpace),
+
+                                      // 4. Relative Path
+                                      _buildHeaderCell(
+                                          '相対パス', _colWidthPath, 3, provider),
+                                      _buildResizeHandle((d) => setState(() =>
+                                          _colWidthPath =
+                                              (_colWidthPath + d.delta.dx)
+                                                  .clamp(50.0, 300.0))),
+                                      SizedBox(width: _widthSpace),
+
+                                      // 5. Type
+                                      _buildHeaderCell('ファイルの種類', _colWidthType,
+                                          4, provider),
+                                      _buildResizeHandle((d) => setState(() =>
+                                          _colWidthType =
+                                              (_colWidthType + d.delta.dx)
+                                                  .clamp(50.0, 200.0))),
+                                      SizedBox(width: _widthSpace),
+
+                                      // 6. Modified
+                                      _buildHeaderCell(
+                                          '更新日時', _colWidthDate, 5, provider),
+                                      _buildResizeHandle((d) => setState(() =>
+                                          _colWidthDate =
+                                              (_colWidthDate + d.delta.dx)
+                                                  .clamp(80.0, 200.0))),
+                                      SizedBox(width: _widthSpace),
+
+                                      // 7. Attributes
+                                      _buildHeaderCell(
+                                          '属性', _colWidthAttr, 6, provider),
                                     ],
                                   ),
                                 ),
@@ -351,7 +367,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                 ),
                                                 SizedBox(width: _widthSpace),
 
-                                                // Original Name
+                                                // 1. Name
                                                 SizedBox(
                                                   width: _colWidthOriginal,
                                                   child: Row(
@@ -382,51 +398,53 @@ class _FileListPanelState extends State<FileListPanel> {
                                                     ],
                                                   ),
                                                 ),
-
-                                                const SizedBox(width: 16),
-                                                SizedBox(width: _widthSpace),
-
-                                                // New Name
                                                 SizedBox(
-                                                  width: _colWidthNew,
-                                                  child: Text(
-                                                    fileModel.newName,
-                                                    style: TextStyle(
-                                                      color: isModified
-                                                          ? Colors.blue
-                                                          : Colors.black,
-                                                      fontWeight: isModified
-                                                          ? FontWeight.bold
-                                                          : FontWeight.normal,
-                                                      fontSize: 12,
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
+                                                    width: _widthSpace + 16),
+
+                                                // 2. New Name
+                                                _buildCell(
+                                                  fileModel.newName,
+                                                  _colWidthNew,
+                                                  isModified: isModified,
+                                                  isBold: isModified,
                                                 ),
-
-                                                const SizedBox(width: 16),
-                                                SizedBox(width: _widthSpace),
-
-                                                // Status
                                                 SizedBox(
-                                                  width: _colWidthStatus,
-                                                  child: Text(
-                                                    isDir
-                                                        ? ''
-                                                        : (isModified
-                                                            ? '変更あり'
-                                                            : '-'),
-                                                    style: TextStyle(
-                                                      color: isModified
-                                                          ? Colors.orange
-                                                          : Colors.grey,
-                                                      fontSize: 11,
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
+                                                    width: _widthSpace + 16),
+
+                                                // 3. Size
+                                                _buildCell(fileModel.size,
+                                                    _colWidthSize,
+                                                    color: Colors.black87),
+                                                SizedBox(
+                                                    width: _widthSpace + 16),
+
+                                                // 4. Relative Path
+                                                _buildCell(
+                                                    fileModel.relativePath,
+                                                    _colWidthPath,
+                                                    color: Colors.black54),
+                                                SizedBox(
+                                                    width: _widthSpace + 16),
+
+                                                // 5. Type
+                                                _buildCell(fileModel.fileType,
+                                                    _colWidthType,
+                                                    color: Colors.black87),
+                                                SizedBox(
+                                                    width: _widthSpace + 16),
+
+                                                // 6. Modified
+                                                _buildCell(
+                                                    fileModel.dateModified,
+                                                    _colWidthDate,
+                                                    color: Colors.black87),
+                                                SizedBox(
+                                                    width: _widthSpace + 16),
+
+                                                // 7. Attributes
+                                                _buildCell(fileModel.attributes,
+                                                    _colWidthAttr,
+                                                    color: Colors.black54),
                                               ],
                                             ),
                                           ),
