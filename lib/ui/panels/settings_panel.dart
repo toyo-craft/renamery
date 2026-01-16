@@ -31,6 +31,17 @@ class _SettingsPanelState extends State<SettingsPanel>
   Widget build(BuildContext context) {
     return Column(
       children: [
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: const [
+              MainTab(),
+              SubTab(),
+              Center(child: Text('Extra Tab (Coming Soon)')),
+              Center(child: Text('etc Tab (Coming Soon)')),
+            ],
+          ),
+        ),
         Container(
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
           child: TabBar(
@@ -42,17 +53,6 @@ class _SettingsPanelState extends State<SettingsPanel>
               Tab(text: 'Sub'),
               Tab(text: 'Extra'),
               Tab(text: 'etc'),
-            ],
-          ),
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: const [
-              MainTab(),
-              SubTab(),
-              Center(child: Text('Extra Tab (Coming Soon)')),
-              Center(child: Text('etc Tab (Coming Soon)')),
             ],
           ),
         ),

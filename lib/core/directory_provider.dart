@@ -12,12 +12,13 @@ class DirectoryProvider extends ChangeNotifier {
   final UndoManager _undoManager = UndoManager();
 
   // Rename State
-  RenameMode _renameMode = RenameMode.upper; // Default to something safe
+  RenameMode _renameMode = RenameMode.upper;
   NumberingMode _numberingMode = NumberingMode.stringNumber;
 
   String? _findText;
   String? _replaceText;
   String? _appendText;
+  String? _deleteToText; // 専用の入力欄
   int _startNumber = 1;
   int _digits = 3;
   bool _extensionToLowerCase = false;
@@ -26,8 +27,9 @@ class DirectoryProvider extends ChangeNotifier {
   // History State
   List<String> _appendHistory = [];
   List<String> _deleteFromHistory = [];
+  List<String> _deleteToHistory = []; // 履歴も分けるのが望ましい
 
-  // Insert Index (Shared with startNumber for now, but UI shows it explicitly)
+  // Insert Index
   // Logic: startNumber is used as index in Insert Mode.
 
   Directory? get currentDirectory => _currentDirectory;
@@ -41,12 +43,69 @@ class DirectoryProvider extends ChangeNotifier {
   String? get findText => _findText;
   String? get replaceText => _replaceText;
   String? get appendText => _appendText;
+  String? get deleteToText => _deleteToText;
   int get startNumber => _startNumber;
   int get digits => _digits;
   bool get extensionToLowerCase => _extensionToLowerCase;
   bool get useRegex => _useRegex;
   List<String> get appendHistory => _appendHistory;
   List<String> get deleteFromHistory => _deleteFromHistory;
+  List<String> get deleteToHistory => _deleteToHistory;
+
+  // ...
+
+  void updateRenameSettings({
+    RenameMode? mode,
+    NumberingMode? numberingMode,
+    String? find,
+    String? replace,
+    String? append,
+    String? deleteTo,
+    int? start,
+    int? digit,
+    bool? extensionToLowerCase,
+    bool? useRegex,
+  }) {
+    if (mode != null) _renameMode = mode;
+    if (numberingMode != null) _numberingMode = numberingMode;
+    if (find != null) _findText = find;
+    if (replace != null) _replaceText = replace;
+    if (append != null) _appendText = append;
+    if (deleteTo != null) _deleteToText = deleteTo;
+    if (start != null) _startNumber = start;
+    if (digit != null) _digits = digit;
+    if (extensionToLowerCase != null) {
+      _extensionToLowerCase = extensionToLowerCase;
+    }
+    if (useRegex != null) _useRegex = useRegex;
+
+    _updatePreviews();
+    notifyListeners();
+  }
+
+  void _updatePreviews() {
+    if (_currentFiles.isEmpty) return;
+
+    // Use deleteToText as findText for deleteFrontTo/BackTo modes
+    String? currentFindText = _findText;
+    if (_renameMode == RenameMode.deleteFrontTo ||
+        _renameMode == RenameMode.deleteBackTo) {
+      currentFindText = _deleteToText;
+    }
+
+    RenameEngine.generatePreviews(
+      _currentFiles,
+      _renameMode,
+      findText: currentFindText,
+      replaceText: _replaceText,
+      appendText: _appendText,
+      startNumber: _startNumber,
+      digits: _digits,
+      extensionToLowerCase: _extensionToLowerCase,
+      useRegex: _useRegex,
+      numberingMode: _numberingMode,
+    );
+  }
 
   // Sort State
   int _sortColumnIndex = 0;
@@ -162,9 +221,9 @@ class DirectoryProvider extends ChangeNotifier {
     }
   }
 
-  void addToHistory(String value, bool isAppend) {
+  void addToHistory(List<String> target, String value) {
     if (value.isEmpty) return;
-    List<String> target = isAppend ? _appendHistory : _deleteFromHistory;
+    // target is passed reference
 
     // Remove if exists to move to top
     target.remove(value);
@@ -174,81 +233,7 @@ class DirectoryProvider extends ChangeNotifier {
       target = target.sublist(0, 10);
     }
 
-    // Re-assign to trigger check (List reference check might need new instance or just notify)
-    if (isAppend) {
-      _appendHistory = List.from(target);
-    } else {
-      _deleteFromHistory = List.from(target);
-    }
     notifyListeners();
-  }
-
-  // Update Settings
-  void updateRenameSettings({
-    RenameMode? mode,
-    NumberingMode? numberingMode,
-    String? find,
-    String? replace,
-    String? append,
-    int? start,
-    int? digit,
-    bool? extensionToLowerCase,
-    bool? useRegex,
-  }) {
-    if (mode != null) _renameMode = mode;
-    if (numberingMode != null) _numberingMode = numberingMode;
-    if (find != null) _findText = find;
-    if (replace != null) _replaceText = replace;
-    if (append != null) _appendText = append;
-    if (start != null) _startNumber = start;
-    if (digit != null) _digits = digit;
-    if (extensionToLowerCase != null) {
-      _extensionToLowerCase = extensionToLowerCase;
-    }
-    if (useRegex != null) _useRegex = useRegex;
-
-    _updatePreviews();
-    notifyListeners();
-  }
-
-  void _updatePreviews() {
-    if (_currentFiles.isEmpty) return;
-
-    final hasSelection = _currentFiles.any((f) => f.isSelected);
-
-    if (hasSelection) {
-      // 1. Reset unselected
-      for (var f in _currentFiles.where((f) => !f.isSelected)) {
-        f.setNewName(f.originalName);
-      }
-      // 2. Apply to selected
-      RenameEngine.generatePreviews(
-        _currentFiles.where((f) => f.isSelected).toList(),
-        _renameMode,
-        numberingMode: _numberingMode,
-        findText: _findText,
-        replaceText: _replaceText,
-        appendText: _appendText,
-        startNumber: _startNumber,
-        digits: _digits,
-        extensionToLowerCase: _extensionToLowerCase,
-        useRegex: _useRegex,
-      );
-    } else {
-      // Apply to all
-      RenameEngine.generatePreviews(
-        _currentFiles,
-        _renameMode,
-        numberingMode: _numberingMode,
-        findText: _findText,
-        replaceText: _replaceText,
-        appendText: _appendText,
-        startNumber: _startNumber,
-        digits: _digits,
-        extensionToLowerCase: _extensionToLowerCase,
-        useRegex: _useRegex,
-      );
-    }
   }
 
   Future<void> setDirectory(Directory directory) async {

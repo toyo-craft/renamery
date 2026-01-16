@@ -14,6 +14,7 @@ class _MainTabState extends State<MainTab> {
   late TextEditingController _findController;
   late TextEditingController _replaceController;
   late TextEditingController _appendController;
+  late TextEditingController _deleteToController;
   late TextEditingController _startController;
   late TextEditingController _digitController;
 
@@ -24,6 +25,7 @@ class _MainTabState extends State<MainTab> {
     _findController = TextEditingController(text: provider.findText);
     _replaceController = TextEditingController(text: provider.replaceText);
     _appendController = TextEditingController(text: provider.appendText);
+    _deleteToController = TextEditingController(text: provider.deleteToText);
     _startController = TextEditingController(
       text: provider.startNumber.toString(),
     );
@@ -35,6 +37,7 @@ class _MainTabState extends State<MainTab> {
     _findController.dispose();
     _replaceController.dispose();
     _appendController.dispose();
+    _deleteToController.dispose();
     _startController.dispose();
     _digitController.dispose();
     super.dispose();
@@ -79,10 +82,9 @@ class _MainTabState extends State<MainTab> {
             onChanged: (val) => onChanged(val),
             onSubmitted: (val) {
               // Add to history
-              context.read<DirectoryProvider>().addToHistory(val,
-                  label == '文字列' || label == '' ? true : false // Logic check
-                  // label '文字列' is Append (Top), '前から' is DeleteFrom
-                  );
+              if (val.isNotEmpty) {
+                context.read<DirectoryProvider>().addToHistory(history, val);
+              }
             },
           ),
         ),
@@ -103,6 +105,9 @@ class _MainTabState extends State<MainTab> {
     }
     if (provider.appendText != _appendController.text) {
       _appendController.text = provider.appendText ?? '';
+    }
+    if (provider.deleteToText != _deleteToController.text) {
+      _deleteToController.text = provider.deleteToText ?? '';
     }
 
     return SingleChildScrollView(
@@ -273,72 +278,91 @@ class _MainTabState extends State<MainTab> {
 
           const Divider(thickness: 1, height: 16, color: Colors.green),
 
-          // --- Deletion Placeholders ---
+          // --- Delete Section ---
+          // 1. Delete Start
           _buildRadioTile(
               context, provider, RenameMode.deleteStart, '先頭から桁数分削除'),
+          // 2. Delete End
           _buildRadioTile(context, provider, RenameMode.deleteEnd, '後ろから桁数分削除'),
+          // 3. Delete From (Index)
           _buildRadioTile(
             context,
             provider,
             RenameMode.deleteFrom,
             '開始数字から桁数削除',
           ),
-          // Complex Delete Row 1 (Using History Input for 'From')
+
+          // 4. Delete To (String/Complex)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4.0),
             child: Row(
               children: [
-                Radio<RenameMode>(
-                  value: RenameMode.deleteFrontTo,
-                  groupValue: provider.renameMode,
-                  onChanged: (val) => context
-                      .read<DirectoryProvider>()
-                      .updateRenameSettings(mode: val),
+                Radio<bool>(
+                  value: true,
+                  groupValue:
+                      (provider.renameMode == RenameMode.deleteFrontTo ||
+                          provider.renameMode == RenameMode.deleteBackTo),
+                  onChanged: (val) {
+                    if (val == true) {
+                      // Default to Front if switching into this mode
+                      context
+                          .read<DirectoryProvider>()
+                          .updateRenameSettings(mode: RenameMode.deleteFrontTo);
+                    }
+                  },
                   visualDensity: VisualDensity.compact,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _buildHistoryTextField(
-                      context,
-                      // We need a separate controller for this input?
-                      // provider.findText? No, this is "Delete Front To".
-                      // We might need a temp controller if provider doesn't strictly support it yet.
-                      // But let's use a new local controller if needed, or re-use 'find' temporarily?
-                      // User said 'String' and 'From'. 'From' probably means 'Find' text sort of, or a specific delete param.
-                      // Let's assume it shares 'findText' or requires new state.
-                      // For now, let's use 'findText' as a placeholder or create a local one.
-                      // Actually, RenameEngine doesn't have a param for this specific "Front To" string yet (it was 'deleteFrontTo').
-                      // It likely needs a string param. 'findText' is a good candidate to reuse.
-                      _findController,
-                      provider.deleteFromHistory,
-                      (val) => context
-                          .read<DirectoryProvider>()
-                          .updateRenameSettings(find: val),
-                      '前から'),
+                  child: Row(
+                    children: [
+                      // Dropdown for Direction
+                      DropdownButton<RenameMode>(
+                        value: (provider.renameMode == RenameMode.deleteBackTo)
+                            ? RenameMode.deleteBackTo
+                            : RenameMode.deleteFrontTo,
+                        items: const [
+                          DropdownMenuItem(
+                            value: RenameMode.deleteFrontTo,
+                            child: Text('前から'),
+                          ),
+                          DropdownMenuItem(
+                            value: RenameMode.deleteBackTo,
+                            child: Text('後から'),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) {
+                            context
+                                .read<DirectoryProvider>()
+                                .updateRenameSettings(mode: val);
+                          }
+                        },
+                        underline: Container(
+                          height: 1,
+                          color: Colors.grey,
+                        ),
+                        isDense: true,
+                      ),
+                      const SizedBox(width: 8),
+                      // Input Field
+                      Expanded(
+                        child: _buildHistoryTextField(
+                          context,
+                          _deleteToController,
+                          provider.deleteToHistory,
+                          (val) => context
+                              .read<DirectoryProvider>()
+                              .updateRenameSettings(deleteTo: val),
+                          '', // No label needed
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('まで削除'),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-          ),
-
-          // Complex Delete Row 2
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: Row(
-              children: [
-                Radio<RenameMode>(
-                  value: RenameMode.deleteBackTo,
-                  groupValue: provider.renameMode,
-                  onChanged: (val) => context
-                      .read<DirectoryProvider>()
-                      .updateRenameSettings(mode: val),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                const SizedBox(width: 8),
-                const Text('後から', style: TextStyle(fontSize: 13)),
-                const Spacer(),
-                const Text('まで削除', style: TextStyle(fontSize: 13)),
               ],
             ),
           ),
