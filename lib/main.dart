@@ -6,9 +6,7 @@ import 'core/directory_provider.dart';
 void main() {
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => DirectoryProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => DirectoryProvider())],
       child: const ReNameryApp(),
     ),
   );
@@ -22,7 +20,7 @@ class ReNameryApp extends StatelessWidget {
     return MaterialApp(
       title: 'ReNamery',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
         fontFamily: 'Segoe UI', // Windowsでのネイティブな外観
       ),

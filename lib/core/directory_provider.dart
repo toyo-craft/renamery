@@ -233,19 +233,52 @@ class DirectoryProvider extends ChangeNotifier {
     }
   }
 
-  // Helper to list Windows drives (Simple implementation)
+  // Quick Access Directories
+  static Future<List<Directory>> getQuickAccessDirectories() async {
+    List<Directory> quickAccess = [];
+
+    String? home;
+    if (Platform.isWindows) {
+      home = Platform.environment['USERPROFILE'];
+    } else {
+      home = Platform.environment['HOME'];
+    }
+
+    if (home != null) {
+      final homeDir = Directory(home);
+      if (await homeDir.exists()) {
+        quickAccess.add(homeDir); // Home
+
+        // Common folders
+        final folders = [
+          'Desktop',
+          'Downloads',
+          'Documents',
+          'Pictures',
+          'Music',
+          'Videos',
+        ];
+        for (var folder in folders) {
+          final dir = Directory(p.join(home, folder));
+          if (await dir.exists()) {
+            quickAccess.add(dir);
+          }
+        }
+
+        // OneDrive Check
+        final oneDrive = Directory(p.join(home, 'OneDrive'));
+        if (await oneDrive.exists()) {
+          quickAccess.add(oneDrive);
+        }
+      }
+    }
+    return quickAccess;
+  }
+
+  // Helper to list Windows drives (Physical Drives)
   static Future<List<Directory>> getLogicalDrives() async {
     List<Directory> drives = [];
 
-    // 1. User Home (Quick Access)
-    if (Platform.isWindows) {
-      final userProfile = Platform.environment['USERPROFILE'];
-      if (userProfile != null) {
-        drives.add(Directory(userProfile));
-      }
-    }
-
-    // 2. Drives
     if (Platform.isWindows) {
       for (var code = 'A'.codeUnitAt(0); code <= 'Z'.codeUnitAt(0); code++) {
         final driveLetter = String.fromCharCode(code);
