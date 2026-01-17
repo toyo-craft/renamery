@@ -549,7 +549,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                       // 4. Relative Path
                                                       _buildCell(
                                                           fileModel
-                                                              .relativePath,
+                                                              .displayRelativePath,
                                                           _colWidthPath,
                                                           color:
                                                               Colors.black54),

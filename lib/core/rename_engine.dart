@@ -25,6 +25,7 @@ enum NumberingMode {
   numberString, // 連番 + 文字列
   numberOriginal, // 連番 + 現在名
   baseStringNumber, // 基本フォルダ名 + 文字列 + 連番
+  baseStringOriginal, // 基本フォルダ名 + 文字列 + 現在名
   relativeStringNumber, // 相対フォルダ名 + 文字列 + 連番
   relativeStringOriginal, // 相対フォルダ名 + 文字列 + 現在名
   numberStringBase, // 連番 + 文字列 + 基本フォルダ名
@@ -47,6 +48,7 @@ class RenameEngine {
     bool extensionToLowerCase = false,
     bool useRegex = false,
     NumberingMode numberingMode = NumberingMode.stringNumber,
+    String? baseDirName, // Name of the root directory (Base Folder)
   }) {
     int counter = startNumber;
 
@@ -62,33 +64,24 @@ class RenameEngine {
           String numberStr = counter.toString().padLeft(digits, '0');
           String text = appendText ?? '';
 
-          // Get Parent Directory Name (Base Folder)
-          String parentName = '';
-          try {
-            // We can get parent dir name from file.originalName's parent path?
-            // But FileModel.originalName is usually just basename if we set it so?
-            // Actually, FileModel typically stores full path or we have context.
-            // Wait, file.originalName in generatePreviews:
-            // "String originalBaseName = p.basenameWithoutExtension(file.originalName);"
-            // This implies file.originalName might be full path or just name.
-            // Let's assume file.originalName is currently just name because that's how it's usually used in previews.
-            // HOWEVER, DirectoryProvider lists files and stores them.
-            // Let's check FileModel logic: "FileModel(entity: e)".
-            // If file.originalName is name only, we can't get parent.
-            // But file.parentPath exists? It's not in the loop variable.
-            // We need to access file.parentPath.
-            // FileModel usually has this. Let's check FileModel definition if needed,
-            // but assuming p.dirname(file.entity.path) or similar is available or we pass it.
-            // Wait, file.originalName IS the property we use.
-            // Let's look at DirectoryProvider line 121: "final oldPath = p.join(file.parentPath, file.originalName);"
-            // So file.originalName is just the name.
-            // file.parentPath is available in FileModel.
-            parentName = p.basename(file.parentPath);
-          } catch (_) {}
+          // Get Base Folder Name
+          // Requirement: "Base Folder Name" = Root Search Directory Name
+          String parentName = baseDirName ?? '';
+          if (parentName.isEmpty) {
+            // Fallback: If not provided, maybe use immediate parent?
+            // But strict definition says Base = Current.
+            // If we don't have it, empty is safer than wrong context.
+            // However, for flat list single file rename, parent might be base.
+            // Let's fallback to p.basename(file.parentPath) if baseDirName is null.
+            try {
+              parentName = p.basename(file.parentPath);
+            } catch (_) {}
+          }
 
-          // Relative Folder: For now, same as Base Folder or empty if not implemented
-          // Requirement: "Relative Folder Name" + String + ...
-          String relativeName = parentName; // Placeholder
+          // Relative Folder Name
+          // Use the calculated relative path from model.
+          // If empty (e.g. root file), it handles gracefully as empty string.
+          String relativeName = file.relativePath;
 
           switch (numberingMode) {
             case NumberingMode.stringNumber:
@@ -105,6 +98,9 @@ class RenameEngine {
               break;
             case NumberingMode.baseStringNumber:
               newBaseName = '$parentName$text$numberStr';
+              break;
+            case NumberingMode.baseStringOriginal:
+              newBaseName = '$parentName$text$originalBaseName';
               break;
             case NumberingMode.relativeStringNumber:
               newBaseName = '$relativeName$text$numberStr';

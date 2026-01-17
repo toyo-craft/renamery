@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:path/path.dart' as p;
 import '../../core/directory_provider.dart';
+import 'filter_settings_panel.dart';
 
 class NavigationPanel extends StatefulWidget {
   const NavigationPanel({super.key});
@@ -113,12 +114,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   },
                 ),
         ),
-        // Placeholder for Preview
-        Container(
-          height: 150,
-          color: Colors.black12,
-          child: const Center(child: Text('Image Preview Area')),
-        ),
+        // Filter & Preview Panel
+        const FilterSettingsPanel(),
       ],
     );
   }
@@ -182,12 +179,10 @@ class _DirectoryTileState extends State<_DirectoryTile> {
 
     if (!_loaded) {
       try {
-        final List<FileSystemEntity> entities = await widget.directory
-            .list()
-            .toList();
-        final List<Directory> subDirs = entities
-            .whereType<Directory>()
-            .toList();
+        final List<FileSystemEntity> entities =
+            await widget.directory.list().toList();
+        final List<Directory> subDirs =
+            entities.whereType<Directory>().toList();
 
         // Sort
         subDirs.sort(
@@ -228,9 +223,8 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     // Determine Icon
     IconData icon =
         widget.customIcon ?? (_isExpanded ? Icons.folder_open : Icons.folder);
-    Color iconColor = widget.customIcon != null
-        ? Colors.blueGrey
-        : Colors.amber;
+    Color iconColor =
+        widget.customIcon != null ? Colors.blueGrey : Colors.amber;
     if (widget.directory.path.endsWith(':\\')) {
       icon = Icons.storage; // Hard Drive
       iconColor = Colors.grey;
@@ -238,7 +232,7 @@ class _DirectoryTileState extends State<_DirectoryTile> {
 
     final isSelected =
         context.watch<DirectoryProvider>().currentDirectory?.path ==
-        widget.directory.path;
+            widget.directory.path;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,9 +281,8 @@ class _DirectoryTileState extends State<_DirectoryTile> {
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
                           : null,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
                 ),

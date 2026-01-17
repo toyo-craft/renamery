@@ -31,17 +31,6 @@ class _SettingsPanelState extends State<SettingsPanel>
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: const [
-              MainTab(),
-              SubTab(),
-              Center(child: Text('Extra Tab (Coming Soon)')),
-              Center(child: Text('etc Tab (Coming Soon)')),
-            ],
-          ),
-        ),
         Container(
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
           child: TabBar(
@@ -56,6 +45,19 @@ class _SettingsPanelState extends State<SettingsPanel>
             ],
           ),
         ),
+        const Divider(height: 1),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: const [
+              MainTab(),
+              SubTab(),
+              Center(child: Text('Extra Tab (Coming Soon)')),
+              Center(child: Text('etc Tab (Coming Soon)')),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
         Container(
           padding: const EdgeInsets.all(8.0),
           width: double.infinity,
@@ -63,7 +65,6 @@ class _SettingsPanelState extends State<SettingsPanel>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Divider(height: 1),
               // Footer Options
               InkWell(
                 onTap: () => context
@@ -100,8 +101,6 @@ class _SettingsPanelState extends State<SettingsPanel>
                 ),
               ),
 
-              // Placeholder for "Select all on open" if needed
-              // CheckboxListTile(...),
               ElevatedButton(
                 onPressed: () {
                   context.read<DirectoryProvider>().executeRename();
@@ -109,20 +108,20 @@ class _SettingsPanelState extends State<SettingsPanel>
                 style: ElevatedButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surfaceContainerHighest,
-                  foregroundColor: Theme.of(context).colorScheme.onSurface,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   elevation: 2,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.play_arrow, color: Colors.green),
+                    const Icon(Icons.play_arrow),
                     const SizedBox(width: 8),
                     Flexible(
                       child: const Text(
                         'Go ReNamery!!',
                         overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],

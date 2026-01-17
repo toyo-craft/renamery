@@ -19,6 +19,9 @@ dependencies:
   # オプション: 後でファイルピッカーが必要になった場合（独自のUIを使用する可能性がありますが）
   file_selector: ^1.0.3
   multi_split_view: ^3.6.1
+  path_provider: ^2.1.5
+  window_manager: ^0.5.1
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:

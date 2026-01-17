@@ -50,13 +50,18 @@ class FileModel {
     return '';
   }
 
-  String get relativePath {
-    // For now, return empty or relative from parent?
-    // Namery shows relative path if recursive.
-    // We store parentPath. If we want relative to root search dir, we need to pass root.
-    // For now, leave empty or show parent if different from current context (not easily known here without passing context).
-    // Let's just return empty for flat list or a placeholder.
-    return '';
+  String _relativePath = '';
+  String _displayRelativePath = ''; // For UI display (full relative path)
+
+  String get relativePath => _relativePath;
+  String get displayRelativePath => _displayRelativePath;
+
+  void setRelativePath(String path) {
+    _relativePath = path;
+  }
+
+  void setDisplayRelativePath(String path) {
+    _displayRelativePath = path;
   }
 
   String get fileType {
@@ -85,12 +90,9 @@ class FileModel {
       final stat = entity.statSync();
       attr += (entity is Directory) ? 'D' : '-';
       attr += '-'; // Archive?
-      attr += (stat.mode & 0x80) == 0
-          ? 'R'
-          : '-'; // ReadOnly check (mode logic varies)
-      // Dart StatMode is restricted.
-      // Let's just return simplified.
-      return (entity is Directory) ? 'D----' : '---A-';
+      attr += (stat.mode & 0x80) == 0 ? 'R' : '-';
+      // Return the constructed string (simplified logic)
+      return attr.padRight(5, '-');
     } catch (e) {
       return '';
     }

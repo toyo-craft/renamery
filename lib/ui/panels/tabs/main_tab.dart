@@ -109,6 +109,10 @@ class _MainTabState extends State<MainTab> {
     if (provider.deleteToText != _deleteToController.text) {
       _deleteToController.text = provider.deleteToText ?? '';
     }
+    // Sync start number (important for Pin feature)
+    if (provider.startNumber.toString() != _startController.text) {
+      _startController.text = provider.startNumber.toString();
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(8.0),
@@ -132,6 +136,32 @@ class _MainTabState extends State<MainTab> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
+                // Pin Icon
+                Tooltip(
+                  message: '変更後の連番数字を保存（次回リネーム時に連番を継続）',
+                  child: InkWell(
+                    onTap: () => context
+                        .read<DirectoryProvider>()
+                        .updateRenameSettings(
+                            saveSequenceNumber: !context
+                                .read<DirectoryProvider>()
+                                .saveSequenceNumber),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Icon(
+                        context.watch<DirectoryProvider>().saveSequenceNumber
+                            ? Icons.push_pin
+                            : Icons.push_pin_outlined,
+                        size: 20,
+                        color: context
+                                .watch<DirectoryProvider>()
+                                .saveSequenceNumber
+                            ? Colors.amber
+                            : Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 60, child: Text('開始/桁')),
                 _buildSpinner(
                   context,
@@ -202,6 +232,10 @@ class _MainTabState extends State<MainTab> {
                       DropdownMenuItem(
                         value: NumberingMode.baseStringNumber,
                         child: Text('基本フォルダ名 + 文字列 + 連番'),
+                      ),
+                      DropdownMenuItem(
+                        value: NumberingMode.baseStringOriginal,
+                        child: Text('基本フォルダ名 + 文字列 + 現在名'),
                       ),
                       DropdownMenuItem(
                         value: NumberingMode.relativeStringNumber,

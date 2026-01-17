@@ -4,12 +4,109 @@ import 'package:path/path.dart' as p;
 import 'file_model.dart';
 import 'rename_engine.dart';
 import 'undo_manager.dart';
+import 'settings_service.dart';
 
 class DirectoryProvider extends ChangeNotifier {
   Directory? _currentDirectory;
   List<FileModel> _currentFiles = [];
   bool _isLoading = false;
   final UndoManager _undoManager = UndoManager();
+
+  Future<void> init() async {
+    final s = SettingsService();
+
+    // 1. Restore Filter Settings (SYNC)
+    _filterText = s.getString('filterText') ?? '';
+    _hideSystemFiles = s.getBool('hideSystemFiles') ?? true;
+    _recursiveSearch = s.getBool('recursiveSearch') ?? false;
+    _showPreview = s.getBool('showPreview') ?? true;
+    _showFolders = s.getBool('showFolders') ?? true;
+    _saveSequenceNumber = s.getBool('saveSequenceNumber') ?? false;
+
+    // 2. Restore Rename Settings (SYNC)
+    final rModeIndex = s.getInt('renameMode');
+    if (rModeIndex != null && rModeIndex < RenameMode.values.length) {
+      _renameMode = RenameMode.values[rModeIndex];
+    }
+    final nModeIndex = s.getInt('numberingMode');
+    if (nModeIndex != null && nModeIndex < NumberingMode.values.length) {
+      _numberingMode = NumberingMode.values[nModeIndex];
+    }
+
+    _findText = s.getString('findText');
+    _replaceText = s.getString('replaceText');
+    _appendText = s.getString('appendText');
+    _deleteToText = s.getString('deleteToText');
+    _startNumber = s.getInt('startNumber') ?? 1;
+    _digits = s.getInt('digits') ?? 3;
+    _extensionToLowerCase = s.getBool('extensionToLowerCase') ?? false;
+    _useRegex = s.getBool('useRegex') ?? false;
+
+    // 3. Restore History (SYNC)
+    if (s.getList('appendHistory') != null) {
+      _appendHistory = s.getList<String>('appendHistory')!;
+    }
+    if (s.getList('deleteFromHistory') != null) {
+      _deleteFromHistory = s.getList<String>('deleteFromHistory')!;
+    }
+    if (s.getList('deleteToHistory') != null) {
+      _deleteToHistory = s.getList<String>('deleteToHistory')!;
+    }
+
+    // 4. Restore Sort (SYNC)
+    _sortColumnIndex = s.getInt('sortColumnIndex') ?? 0;
+    _sortAscending = s.getBool('sortAscending') ?? true;
+
+    // Notify listeners so UI updates with restored settings immediately
+    notifyListeners();
+
+    // 5. Restore Directory (ASYNC - might take time)
+    final lastDir = s.getString('lastDirectory');
+    if (lastDir != null) {
+      final dir = Directory(lastDir);
+      if (await dir.exists()) {
+        await setDirectory(dir);
+      }
+    } else {
+      // If no directory, we are effectively ready with empty state
+      if (_currentDirectory != null) {
+        _applyFilters();
+      }
+      notifyListeners();
+    }
+  }
+
+  void _saveState() {
+    final s = SettingsService();
+    if (_currentDirectory != null) {
+      s.set('lastDirectory', _currentDirectory!.path);
+    }
+    s.set('filterText', _filterText);
+    s.set('hideSystemFiles', _hideSystemFiles);
+    s.set('recursiveSearch', _recursiveSearch);
+    s.set('showPreview', _showPreview);
+    s.set('showFolders', _showFolders);
+    s.set('saveSequenceNumber', _saveSequenceNumber);
+
+    s.set('renameMode', _renameMode.index);
+    s.set('numberingMode', _numberingMode.index);
+    if (_findText != null) s.set('findText', _findText);
+    if (_replaceText != null) s.set('replaceText', _replaceText);
+    if (_appendText != null) s.set('appendText', _appendText);
+    if (_deleteToText != null) s.set('deleteToText', _deleteToText);
+
+    s.set('startNumber', _startNumber);
+    s.set('digits', _digits);
+    s.set('extensionToLowerCase', _extensionToLowerCase);
+    s.set('useRegex', _useRegex);
+
+    s.set('appendHistory', _appendHistory);
+    s.set('deleteFromHistory', _deleteFromHistory);
+    s.set('deleteToHistory', _deleteToHistory);
+
+    s.set('sortColumnIndex', _sortColumnIndex);
+    s.set('sortAscending', _sortAscending);
+  }
 
   // Rename State
   RenameMode _renameMode = RenameMode.upper;
@@ -27,17 +124,27 @@ class DirectoryProvider extends ChangeNotifier {
   // History State
   List<String> _appendHistory = [];
   List<String> _deleteFromHistory = [];
-  List<String> _deleteToHistory = []; // 履歴も分けるのが望ましい
+  List<String> _deleteToHistory = [];
 
-  // Insert Index
-  // Logic: startNumber is used as index in Insert Mode.
+  // Filter State
+  String _filterText = '';
+  bool _hideSystemFiles = true;
+  bool _recursiveSearch = false;
+  bool _showPreview = true;
+  bool _showFolders = true;
+  bool _saveSequenceNumber = false;
 
+  // Cache for in-memory filtering
+  List<FileModel> _allFiles = [];
+
+  // Getters
   Directory? get currentDirectory => _currentDirectory;
   List<FileModel> get currentFiles => _currentFiles;
+  int get allFilesCount => _allFiles.length; // For Status Bar
   bool get isLoading => _isLoading;
   bool get canUndo => _undoManager.canUndo;
 
-  // Getters for UI
+  // Getters for Rename UI
   RenameMode get renameMode => _renameMode;
   NumberingMode get numberingMode => _numberingMode;
   String? get findText => _findText;
@@ -52,7 +159,90 @@ class DirectoryProvider extends ChangeNotifier {
   List<String> get deleteFromHistory => _deleteFromHistory;
   List<String> get deleteToHistory => _deleteToHistory;
 
-  // ...
+  // Getters for Filter UI
+  String get filterText => _filterText;
+  bool get hideSystemFiles => _hideSystemFiles;
+  bool get recursiveSearch => _recursiveSearch;
+  bool get showPreview => _showPreview;
+  bool get showFolders => _showFolders;
+  bool get saveSequenceNumber => _saveSequenceNumber;
+
+  // Filter Logic
+  void updateFilterSettings({
+    String? filter,
+    bool? hideSystem,
+    bool? recursive,
+    bool? preview,
+    bool? showFolders,
+  }) {
+    bool needRescan = false;
+    bool needRefilter = false;
+
+    if (filter != null) {
+      _filterText = filter;
+      needRefilter = true;
+    }
+    if (hideSystem != null) {
+      _hideSystemFiles = hideSystem;
+      needRefilter = true;
+    }
+    if (recursive != null) {
+      if (_recursiveSearch != recursive) {
+        _recursiveSearch = recursive;
+        needRescan = true; // Recursion change requires disk re-scan
+      }
+    }
+    if (preview != null) {
+      _showPreview = preview;
+      notifyListeners();
+    }
+    if (showFolders != null) {
+      _showFolders = showFolders;
+      needRefilter = true;
+    }
+
+    if (needRescan) {
+      if (_currentDirectory != null) {
+        setDirectory(_currentDirectory!);
+      }
+    } else if (needRefilter) {
+      _applyFilters();
+    }
+    _saveState();
+  }
+
+  void _applyFilters() {
+    _currentFiles = _allFiles.where((file) {
+      // 1. System/Hidden Files
+      if (_hideSystemFiles) {
+        final name = p.basename(file.originalName);
+        if (name.startsWith('.')) return false;
+      }
+
+      // 1.5 Show/Hide Folders
+      // If NOT showFolders, and entity IS Directory -> hide
+      if (!_showFolders && file.entity is Directory) {
+        return false;
+      }
+
+      // 2. Filter Text
+      if (_filterText.isNotEmpty) {
+        // Contains check (case insensitive)
+        if (!file.originalName
+            .toLowerCase()
+            .contains(_filterText.toLowerCase())) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+
+    // Re-sort and Re-preview
+    sortFiles(_sortColumnIndex, _sortAscending);
+    // _updatePreviews() is called inside sortFiles at the end
+    // But sortFiles notifies listeners. Doing it again might be redundant but safe.
+    // Actually sortFiles calls _updatePreviews().
+  }
 
   void updateRenameSettings({
     RenameMode? mode,
@@ -65,6 +255,7 @@ class DirectoryProvider extends ChangeNotifier {
     int? digit,
     bool? extensionToLowerCase,
     bool? useRegex,
+    bool? saveSequenceNumber,
   }) {
     if (mode != null) _renameMode = mode;
     if (numberingMode != null) _numberingMode = numberingMode;
@@ -80,6 +271,13 @@ class DirectoryProvider extends ChangeNotifier {
     if (useRegex != null) _useRegex = useRegex;
 
     _updatePreviews();
+    _saveState();
+    if (saveSequenceNumber != null) {
+      _saveSequenceNumber = saveSequenceNumber;
+    }
+
+    _updatePreviews();
+    _saveState();
     notifyListeners();
   }
 
@@ -109,6 +307,11 @@ class DirectoryProvider extends ChangeNotifier {
       currentFindText = _deleteToText;
     }
 
+    String? baseDirName;
+    if (_currentDirectory != null) {
+      baseDirName = p.basename(_currentDirectory!.path);
+    }
+
     RenameEngine.generatePreviews(
       targets,
       _renameMode,
@@ -120,6 +323,7 @@ class DirectoryProvider extends ChangeNotifier {
       extensionToLowerCase: _extensionToLowerCase,
       useRegex: _useRegex,
       numberingMode: _numberingMode,
+      baseDirName: baseDirName,
     );
   }
 
@@ -197,10 +401,9 @@ class DirectoryProvider extends ChangeNotifier {
       }
       return ascending ? cmp : -cmp;
     });
-    // Sorting might affect numbering if numbering relies on list order.
-    // Standard Namery/Renaming behavior: Numbering follows current Sort Order?
-    // Usually yes.
+
     _updatePreviews();
+    _saveState();
     notifyListeners();
   }
 
@@ -251,6 +454,14 @@ class DirectoryProvider extends ChangeNotifier {
       _undoManager.addTransaction(renamaedFiles);
       if (_currentDirectory != null) {
         await setDirectory(_currentDirectory!);
+      }
+
+      // Auto-Increment Logic
+      if (_saveSequenceNumber) {
+        // e.g. Start 1, Processed 5 -> Next Start = 1 + 5 = 6
+        _startNumber += renamaedFiles.length;
+        _saveState();
+        notifyListeners(); // Will update UI controller via watcher
       }
     } else {
       _isLoading = false;
@@ -312,28 +523,75 @@ class DirectoryProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    _saveState();
   }
 
   Future<void> setDirectory(Directory directory) async {
     _currentDirectory = directory;
     _isLoading = true;
+    _isLoading = true;
+    _saveState();
     notifyListeners();
 
     try {
-      final List<FileSystemEntity> entities = await directory.list().toList();
+      List<FileSystemEntity> entities = [];
+      if (_recursiveSearch) {
+        // Recursive Listing
+        entities = await directory.list(recursive: true).toList();
+      } else {
+        entities = await directory.list(recursive: false).toList();
+      }
 
-      _currentFiles = entities.map((e) => FileModel(entity: e)).toList();
+      _allFiles = entities.map((e) => FileModel(entity: e)).toList();
 
-      // Apply default sort
-      sortFiles(_sortColumnIndex, _sortAscending);
+      // Calculate Relative Path for Recursive Mode
+      if (_recursiveSearch) {
+        final rootPath = directory.path;
+        for (var f in _allFiles) {
+          try {
+            // User Definition: Relative Folder = Immediate Parent Folder Name
+            // e.g. Root: node_modules, File: node_modules/undici/docs/file
+            // Relative: docs
 
-      // Initial Preview Calculation (defaults to all since no selection)
-      _updatePreviews();
+            // 1. Display Path: Full Relative Path (e.g. "undici\docs")
+            String displayRelPath = p.relative(f.parentPath, from: rootPath);
+            if (displayRelPath == '.') displayRelPath = '';
+            f.setDisplayRelativePath(displayRelPath);
+
+            // 2. Rename Logic Path: Immediate Parent Name (e.g. "docs")
+            // Check if file is directly in root?
+            if (p.equals(f.parentPath, rootPath)) {
+              // If directly in root, Parent Name is Base Dir Name?
+              // Or empty relative?
+              // Logic: Base = Root Name. Relative = Parent Name.
+              // If file is at root, its parent IS the root.
+              // So Relative = Root Name.
+              // Let's use basename of parentPath.
+              f.setRelativePath(p.basename(f.parentPath));
+            } else {
+              f.setRelativePath(p.basename(f.parentPath));
+            }
+          } catch (e) {
+            f.setRelativePath('');
+            f.setDisplayRelativePath('');
+          }
+        }
+      } else {
+        // Logic for Non-recursive
+        for (var f in _allFiles) {
+          f.setRelativePath('');
+          f.setDisplayRelativePath('');
+        }
+      }
+
+      _applyFilters();
     } catch (e) {
       if (kDebugMode) {
         print('Error listing directory: $e');
       }
+      _allFiles = [];
       _currentFiles = [];
+      notifyListeners();
     } finally {
       _isLoading = false;
       notifyListeners();
