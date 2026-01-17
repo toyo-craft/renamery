@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/directory_provider.dart';
+import '../../core/rename_engine.dart';
 import 'tabs/main_tab.dart';
 import 'tabs/sub_tab.dart';
 
@@ -19,12 +20,69 @@ class _SettingsPanelState extends State<SettingsPanel>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_handleTabSelection);
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabSelection);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _handleTabSelection() {
+    if (_tabController.indexIsChanging) {
+      // Tab is animating, wait for end? Or update immediately?
+      // Usually indexIsChanging is true during animation.
+      // But we want to switch mode immediately when user taps.
+    } else {
+      // Animation finished or immediate tap.
+      // Determine which mode to activate based on tab index.
+      // Main Tab (0) -> Uses its last active mode? Or Default?
+      // Sub Tab (1) -> Uses its last active mode?
+      // ReNamery preserves the "last selected radio" per tab?
+      // Or does it have a default?
+      // Let's assume we need to switch to *some* valid mode for that tab.
+      final provider = context.read<DirectoryProvider>();
+      final index = _tabController.index;
+
+      RenameMode? targetMode;
+      if (index == 0) {
+        // Main Tab active.
+        if (isSubTabMode(provider.renameMode)) {
+          // Restore last active Main Tab mode
+          targetMode = provider.lastMainMode;
+        }
+      } else if (index == 1) {
+        // Sub Tab active.
+        if (!isSubTabMode(provider.renameMode)) {
+          // Restore last active Sub Tab mode
+          targetMode = provider.lastSubMode;
+        }
+      }
+
+      if (targetMode != null) {
+        provider.updateRenameSettings(mode: targetMode, immediate: true);
+      }
+    }
+  }
+
+  bool isSubTabMode(RenameMode mode) {
+    return [
+      RenameMode
+          .extension, // Note: Shared? 'extension' usually in SubTab now? Original Namery had it in Main?
+      // Actually in our clean SubTab, we used 'extension'.
+      // Let's check RenameEngine definition.
+      // extension, extensionRemove, extensionAdd, extensionUpper, extensionLower, formatProperCase, listRename
+      // are SubTab modes.
+      // replace, append, prepend, numbering, upper, lower, capitalize, insert, delete... are MainTab modes.
+      RenameMode.extensionRemove,
+      RenameMode.extensionAdd,
+      RenameMode.extensionUpper,
+      RenameMode.extensionLower,
+      RenameMode.formatProperCase,
+      RenameMode.listRename,
+    ].contains(mode);
   }
 
   @override

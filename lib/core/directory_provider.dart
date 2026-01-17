@@ -44,6 +44,19 @@ class DirectoryProvider extends ChangeNotifier {
     _extensionToLowerCase = s.getBool('extensionToLowerCase') ?? false;
     _useRegex = s.getBool('useRegex') ?? false;
 
+    // Sub Tab / New States
+    _listRenameText = s.getString('listRenameText') ?? '';
+    _subTabExtensionText = s.getString('subTabExtensionText') ?? '';
+
+    final lMainIndex = s.getInt('lastMainMode');
+    if (lMainIndex != null && lMainIndex < RenameMode.values.length) {
+      _lastMainMode = RenameMode.values[lMainIndex];
+    }
+    final lSubIndex = s.getInt('lastSubMode');
+    if (lSubIndex != null && lSubIndex < RenameMode.values.length) {
+      _lastSubMode = RenameMode.values[lSubIndex];
+    }
+
     // 3. Restore History (SYNC)
     if (s.getList('appendHistory') != null) {
       _appendHistory = s.getList<String>('appendHistory')!;
@@ -109,6 +122,12 @@ class DirectoryProvider extends ChangeNotifier {
 
     s.set('sortColumnIndex', _sortColumnIndex);
     s.set('sortAscending', _sortAscending);
+
+    // New Fields
+    s.set('listRenameText', _listRenameText);
+    s.set('subTabExtensionText', _subTabExtensionText);
+    s.set('lastMainMode', _lastMainMode.index);
+    s.set('lastSubMode', _lastSubMode.index);
   }
 
   // Rename State
@@ -264,6 +283,25 @@ class DirectoryProvider extends ChangeNotifier {
     // Actually sortFiles calls _updatePreviews().
   }
 
+  // Helper to distinguish modes (Same logic as SettingsPanel, arguably should be static or shared)
+  bool _isSubTabMode(RenameMode mode) {
+    return [
+      RenameMode.extensionRemove,
+      RenameMode.extensionAdd,
+      RenameMode.extensionUpper,
+      RenameMode.extensionLower,
+      RenameMode.formatProperCase,
+      RenameMode.listRename,
+      RenameMode.extension, // Usually SubTab
+    ].contains(mode);
+  }
+
+  RenameMode _lastMainMode = RenameMode.replace;
+  RenameMode _lastSubMode = RenameMode.extension;
+
+  RenameMode get lastMainMode => _lastMainMode;
+  RenameMode get lastSubMode => _lastSubMode;
+
   void updateRenameSettings({
     RenameMode? mode,
     NumberingMode? numberingMode,
@@ -301,6 +339,15 @@ class DirectoryProvider extends ChangeNotifier {
       _saveSequenceNumber = saveSequenceNumber;
     }
 
+    // Track Last Active Modes per Tab
+    if (mode != null) {
+      if (_isSubTabMode(mode)) {
+        _lastSubMode = mode;
+      } else {
+        _lastMainMode = mode;
+      }
+    }
+
     // Debounce preview update
     _previewTimer?.cancel();
     if (immediate) {
@@ -310,6 +357,7 @@ class DirectoryProvider extends ChangeNotifier {
         _updatePreviews();
       });
     }
+    _saveState();
     notifyListeners();
   }
 
@@ -339,6 +387,12 @@ class DirectoryProvider extends ChangeNotifier {
       currentFindText = _deleteToText;
     }
 
+    String? currentReplaceText = _replaceText;
+    if (_renameMode == RenameMode.extension ||
+        _renameMode == RenameMode.extensionAdd) {
+      currentReplaceText = _subTabExtensionText;
+    }
+
     String? baseDirName;
     if (_currentDirectory != null) {
       baseDirName = p.basename(_currentDirectory!.path);
@@ -348,7 +402,7 @@ class DirectoryProvider extends ChangeNotifier {
       targets,
       _renameMode,
       findText: currentFindText,
-      replaceText: _replaceText,
+      replaceText: currentReplaceText,
       appendText: _appendText,
       startNumber: _startNumber,
       digits: _digits,
