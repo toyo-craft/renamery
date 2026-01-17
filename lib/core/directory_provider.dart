@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'file_model.dart';
@@ -163,6 +164,14 @@ class DirectoryProvider extends ChangeNotifier {
   List<String> get deleteFromHistory => _deleteFromHistory;
   List<String> get deleteToHistory => _deleteToHistory;
 
+  // Sub Tab State
+  String _listRenameText = '';
+  String _subTabExtensionText = '';
+  Timer? _previewTimer;
+
+  String get listRenameText => _listRenameText;
+  String get subTabExtensionText => _subTabExtensionText;
+
   // Getters for Filter UI
   String get filterText => _filterText;
   bool get hideSystemFiles => _hideSystemFiles;
@@ -267,6 +276,9 @@ class DirectoryProvider extends ChangeNotifier {
     bool? extensionToLowerCase,
     bool? useRegex,
     bool? saveSequenceNumber,
+    String? listText,
+    String? extensionText,
+    bool immediate = false, // If true, skip debounce
   }) {
     if (mode != null) _renameMode = mode;
     if (numberingMode != null) _numberingMode = numberingMode;
@@ -281,14 +293,23 @@ class DirectoryProvider extends ChangeNotifier {
     }
     if (useRegex != null) _useRegex = useRegex;
 
-    _updatePreviews();
-    _saveState();
+    // Sub Tab
+    if (listText != null) _listRenameText = listText;
+    if (extensionText != null) _subTabExtensionText = extensionText;
+
     if (saveSequenceNumber != null) {
       _saveSequenceNumber = saveSequenceNumber;
     }
 
-    _updatePreviews();
-    _saveState();
+    // Debounce preview update
+    _previewTimer?.cancel();
+    if (immediate) {
+      _updatePreviews();
+    } else {
+      _previewTimer = Timer(const Duration(milliseconds: 200), () {
+        _updatePreviews();
+      });
+    }
     notifyListeners();
   }
 
@@ -335,6 +356,7 @@ class DirectoryProvider extends ChangeNotifier {
       useRegex: _useRegex,
       numberingMode: _numberingMode,
       baseDirName: baseDirName,
+      listText: _listRenameText,
     );
   }
 

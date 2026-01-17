@@ -149,8 +149,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                    '${provider.currentDirectory?.path ?? ""}'),
+                                Text(provider.currentDirectory?.path ?? ""),
                                 const SizedBox(height: 8),
                                 const Text(
                                   'において、直前に行った変更処理を復元しますか？\n変更後フォルダ内のファイルへ何らかのアクションを起こしている場合、失敗する可能性があります。',

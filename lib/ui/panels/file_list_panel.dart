@@ -28,7 +28,7 @@ class _FileListPanelState extends State<FileListPanel> {
   double _colWidthPath = 150.0; // Relative Path
   double _colWidthType = 100.0;
   double _colWidthDate = 140.0;
-  double _colWidthAttr = 60.0;
+  final double _colWidthAttr = 60.0;
 
   // Fixed widths
   final double _widthDragHandle = 32.0; // Icon 20 + padding

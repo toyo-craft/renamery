@@ -77,7 +77,8 @@ class _SettingsPanelState extends State<SettingsPanel>
                     .updateRenameSettings(
                         extensionToLowerCase: !context
                             .read<DirectoryProvider>()
-                            .extensionToLowerCase),
+                            .extensionToLowerCase,
+                        immediate: true),
                 borderRadius: BorderRadius.circular(4.0),
                 child: Padding(
                   padding:
@@ -93,7 +94,8 @@ class _SettingsPanelState extends State<SettingsPanel>
                               .extensionToLowerCase,
                           onChanged: (val) => context
                               .read<DirectoryProvider>()
-                              .updateRenameSettings(extensionToLowerCase: val),
+                              .updateRenameSettings(
+                                  extensionToLowerCase: val, immediate: true),
                           visualDensity: VisualDensity.compact,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
@@ -176,13 +178,13 @@ class _SettingsPanelState extends State<SettingsPanel>
                   foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   elevation: 2,
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.play_arrow),
-                    const SizedBox(width: 8),
+                    Icon(Icons.play_arrow),
+                    SizedBox(width: 8),
                     Flexible(
-                      child: const Text(
+                      child: Text(
                         'Go ReNamery!!',
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontWeight: FontWeight.bold),

@@ -132,7 +132,7 @@ class _MainTabState extends State<MainTab> {
             provider.appendHistory,
             (val) => context
                 .read<DirectoryProvider>()
-                .updateRenameSettings(append: val),
+                .updateRenameSettings(append: val, mode: RenameMode.append),
             '文字列',
             isCompact: isCompact,
           ),
@@ -210,7 +210,7 @@ class _MainTabState extends State<MainTab> {
                     groupValue: provider.renameMode,
                     onChanged: (val) => context
                         .read<DirectoryProvider>()
-                        .updateRenameSettings(mode: val),
+                        .updateRenameSettings(mode: val, immediate: true),
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -315,7 +315,7 @@ class _MainTabState extends State<MainTab> {
                     groupValue: provider.renameMode,
                     onChanged: (val) => context
                         .read<DirectoryProvider>()
-                        .updateRenameSettings(mode: val),
+                        .updateRenameSettings(mode: val, immediate: true),
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -437,7 +437,12 @@ class _MainTabState extends State<MainTab> {
                           provider.deleteToHistory,
                           (val) => context
                               .read<DirectoryProvider>()
-                              .updateRenameSettings(deleteTo: val),
+                              .updateRenameSettings(
+                                  deleteTo: val,
+                                  mode: provider.renameMode ==
+                                          RenameMode.deleteBackTo
+                                      ? RenameMode.deleteBackTo
+                                      : RenameMode.deleteFrontTo),
                           '', // No label needed
                           isCompact: isCompact,
                         ),
@@ -466,7 +471,7 @@ class _MainTabState extends State<MainTab> {
                     groupValue: provider.renameMode,
                     onChanged: (val) => context
                         .read<DirectoryProvider>()
-                        .updateRenameSettings(mode: val),
+                        .updateRenameSettings(mode: val, immediate: true),
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -490,7 +495,8 @@ class _MainTabState extends State<MainTab> {
                           ),
                           onChanged: (val) => context
                               .read<DirectoryProvider>()
-                              .updateRenameSettings(find: val),
+                              .updateRenameSettings(
+                                  find: val, mode: RenameMode.replace),
                         ),
                       ),
                       const Padding(
@@ -525,7 +531,8 @@ class _MainTabState extends State<MainTab> {
                     ),
                     onChanged: (val) => context
                         .read<DirectoryProvider>()
-                        .updateRenameSettings(replace: val),
+                        .updateRenameSettings(
+                            replace: val, mode: RenameMode.replace),
                   ),
                 ),
                 const Padding(
@@ -536,9 +543,8 @@ class _MainTabState extends State<MainTab> {
             ),
           ),
           InkWell(
-            onTap: () => context
-                .read<DirectoryProvider>()
-                .updateRenameSettings(useRegex: !provider.useRegex),
+            onTap: () => context.read<DirectoryProvider>().updateRenameSettings(
+                useRegex: !provider.useRegex, immediate: true),
             borderRadius: BorderRadius.circular(4.0),
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: spacing),
@@ -548,7 +554,7 @@ class _MainTabState extends State<MainTab> {
                     value: provider.useRegex,
                     onChanged: (val) => context
                         .read<DirectoryProvider>()
-                        .updateRenameSettings(useRegex: val),
+                        .updateRenameSettings(useRegex: val, immediate: true),
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -573,8 +579,9 @@ class _MainTabState extends State<MainTab> {
     double spacing = 4.0,
   }) {
     return InkWell(
-      onTap: () =>
-          context.read<DirectoryProvider>().updateRenameSettings(mode: mode),
+      onTap: () => context
+          .read<DirectoryProvider>()
+          .updateRenameSettings(mode: mode, immediate: true),
       borderRadius: BorderRadius.circular(4.0),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: spacing),
@@ -588,7 +595,7 @@ class _MainTabState extends State<MainTab> {
                 groupValue: provider.renameMode,
                 onChanged: (val) => context
                     .read<DirectoryProvider>()
-                    .updateRenameSettings(mode: val),
+                    .updateRenameSettings(mode: val, immediate: true),
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
