@@ -13,6 +13,7 @@ class UndoManager {
   final List<List<UndoAction>> _history = [];
 
   bool get canUndo => _history.isNotEmpty;
+  int get undoCount => _history.length;
 
   void addTransaction(List<FileModel> renamedFiles) {
     List<UndoAction> transaction = [];
@@ -32,10 +33,17 @@ class UndoManager {
     }
   }
 
-  Future<void> undoLastTransaction() async {
-    if (_history.isEmpty) return;
+  List<UndoAction> peekLastTransaction() {
+    if (_history.isEmpty) return [];
+    return _history.last;
+  }
+
+  Future<Map<String, dynamic>> undoLastTransaction() async {
+    if (_history.isEmpty) return {'count': 0, 'errors': <String>[]};
 
     List<UndoAction> lastTransaction = _history.removeLast();
+    int successCount = 0;
+    List<String> errors = [];
 
     // 複雑な移動の場合は逆順の方が安全かもしれませんが、通常のリネームであれば並列でも問題ありません
     for (var action in lastTransaction.reversed) {
@@ -43,11 +51,14 @@ class UndoManager {
         final file = File(action.newPath);
         if (await file.exists()) {
           await file.rename(action.originalPath);
+          successCount++;
+        } else {
+          errors.add('${p.basename(action.newPath)}: File not found');
         }
       } catch (e) {
-        // エラー処理（例：ファイルがロックされている、またはスキップされた場合）
-        print('アンドゥエラー ${action.newPath} -> ${action.originalPath}: $e');
+        errors.add('${p.basename(action.newPath)}: $e');
       }
     }
+    return {'count': successCount, 'errors': errors};
   }
 }

@@ -9,13 +9,14 @@ class SubTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DirectoryProvider>();
+    final isCompact = provider.isCompactMode;
 
     final TextEditingController replaceController = TextEditingController(
       text: provider.replaceText,
     ); // Simple controller for now. Detailed sync is tricky in StatelessWidget.
 
     return ListView(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(isCompact ? 8.0 : 16.0),
       children: [
         _buildSectionTitle(context, '拡張子 (Extensions)'),
         Card(
@@ -37,16 +38,21 @@ class SubTab extends StatelessWidget {
                       ); // Revert to default
                     }
                   },
+                  dense: isCompact,
                 ),
                 if (provider.renameMode == RenameMode.extension) ...[
                   const Divider(),
                   const Text('新しい拡張子 (例: jpg)'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: isCompact ? 4.0 : 8.0),
                   TextField(
                     controller: replaceController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
                       isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: isCompact ? 8.0 : 12.0,
+                        horizontal: 8.0,
+                      ),
                     ),
                     onChanged: (val) =>
                         provider.updateRenameSettings(replace: val),

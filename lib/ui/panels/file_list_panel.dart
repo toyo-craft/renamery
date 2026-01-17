@@ -82,6 +82,12 @@ class _FileListPanelState extends State<FileListPanel> {
 
   Widget _buildHeaderCell(
       String label, double width, int sortIndex, DirectoryProvider provider) {
+    // Is this column active?
+    final isActive = provider.sortColumnIndex == sortIndex;
+    final color = isActive
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.onSurface;
+
     return SizedBox(
       width: width,
       child: InkWell(
@@ -91,17 +97,21 @@ class _FileListPanelState extends State<FileListPanel> {
             Expanded(
               child: Text(
                 label,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: color,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (provider.sortColumnIndex == sortIndex)
+            if (isActive)
               Icon(
                 provider.sortAscending
                     ? Icons.arrow_upward
                     : Icons.arrow_downward,
                 size: 14,
+                color: color,
               ),
           ],
         ),
@@ -265,13 +275,22 @@ class _FileListPanelState extends State<FileListPanel> {
                                     children: [
                                       // Header
                                       Container(
-                                        height: 30, // Compact Header
+                                        height: 36, // Slightly taller Header
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 16.0,
+                                          horizontal: 8.0,
                                         ),
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.surfaceContainerHighest,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surface, // Clean white/surface
+                                          border: Border(
+                                            bottom: BorderSide(
+                                              color: Theme.of(context)
+                                                  .dividerColor,
+                                              width: 1.0,
+                                            ),
+                                          ),
+                                        ),
                                         child: Row(
                                           children: [
                                             SizedBox(width: _widthDragHandle),
@@ -349,7 +368,6 @@ class _FileListPanelState extends State<FileListPanel> {
                                           ],
                                         ),
                                       ),
-                                      const Divider(height: 1),
                                       // List
                                       Expanded(
                                         child: SizedBox(
@@ -388,19 +406,39 @@ class _FileListPanelState extends State<FileListPanel> {
                                                   fileModel,
                                                 ),
                                                 child: Container(
-                                                  color: isSelected
-                                                      ? Theme.of(context)
-                                                          .colorScheme
-                                                          .primaryContainer
-                                                          .withValues(
-                                                              alpha: 0.3)
-                                                      : (index % 2 == 0
-                                                          ? Colors.white
-                                                          : Colors.grey[50]),
+                                                  margin: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 8.0,
+                                                      vertical:
+                                                          1.0), // Margin for floating effect
+                                                  decoration: BoxDecoration(
+                                                    color: isSelected
+                                                        ? Theme.of(context)
+                                                            .colorScheme
+                                                            .secondaryContainer
+                                                            .withValues(
+                                                                alpha: 0.5)
+                                                        : (index % 2 == 0
+                                                            ? Colors.white
+                                                            : Colors.grey[50]),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8), // Rounded
+                                                    border: isSelected
+                                                        ? Border.all(
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .primary
+                                                                .withValues(
+                                                                    alpha: 0.3))
+                                                        : null,
+                                                  ),
                                                   padding: const EdgeInsets
                                                       .symmetric(
-                                                    horizontal: 16.0,
-                                                    vertical: 2.0, // Low height
+                                                    horizontal: 8.0,
+                                                    vertical:
+                                                        4.0, // Comfortable height
                                                   ),
                                                   child: Row(
                                                     children: [
@@ -409,11 +447,16 @@ class _FileListPanelState extends State<FileListPanel> {
                                                         child:
                                                             ReorderableDragStartListener(
                                                           index: index,
-                                                          child: const Icon(
+                                                          child: Icon(
                                                             Icons
                                                                 .drag_indicator,
                                                             size: 16,
-                                                            color: Colors.grey,
+                                                            color: isSelected
+                                                                ? Theme.of(
+                                                                        context)
+                                                                    .colorScheme
+                                                                    .primary
+                                                                : Colors.grey,
                                                           ),
                                                         ),
                                                       ),
@@ -483,8 +526,6 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                         fileModel
                                                                             .originalName;
                                                                   });
-                                                                  // Provide a small delay to ensure widget is built before focus?
-                                                                  // autofocus:true handles it mostly.
                                                                 },
                                                                 child: Row(
                                                                   children: [
@@ -499,7 +540,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                               .amber
                                                                           : Colors
                                                                               .blueGrey,
-                                                                      size: 16,
+                                                                      size: 18,
                                                                     ),
                                                                     const SizedBox(
                                                                         width:
@@ -512,9 +553,18 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                         overflow:
                                                                             TextOverflow.ellipsis,
                                                                         style:
-                                                                            const TextStyle(
+                                                                            TextStyle(
                                                                           fontSize:
                                                                               12,
+                                                                          fontWeight: isSelected
+                                                                              ? FontWeight.w600
+                                                                              : FontWeight.normal,
+                                                                          decoration: isSelected
+                                                                              ? TextDecoration.underline
+                                                                              : null, // M3 doesn't underline usually, but helpful
+                                                                          decorationColor: Theme.of(context)
+                                                                              .colorScheme
+                                                                              .primary,
                                                                         ),
                                                                       ),
                                                                     ),

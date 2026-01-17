@@ -22,6 +22,7 @@ class DirectoryProvider extends ChangeNotifier {
     _showPreview = s.getBool('showPreview') ?? true;
     _showFolders = s.getBool('showFolders') ?? true;
     _saveSequenceNumber = s.getBool('saveSequenceNumber') ?? false;
+    _isCompactMode = s.getBool('isCompactMode') ?? true; // Default to Compact
 
     // 2. Restore Rename Settings (SYNC)
     final rModeIndex = s.getInt('renameMode');
@@ -87,6 +88,7 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('showPreview', _showPreview);
     s.set('showFolders', _showFolders);
     s.set('saveSequenceNumber', _saveSequenceNumber);
+    s.set('isCompactMode', _isCompactMode);
 
     s.set('renameMode', _renameMode.index);
     s.set('numberingMode', _numberingMode.index);
@@ -133,6 +135,7 @@ class DirectoryProvider extends ChangeNotifier {
   bool _showPreview = true;
   bool _showFolders = true;
   bool _saveSequenceNumber = false;
+  bool _isCompactMode = true;
 
   // Cache for in-memory filtering
   List<FileModel> _allFiles = [];
@@ -143,6 +146,7 @@ class DirectoryProvider extends ChangeNotifier {
   int get allFilesCount => _allFiles.length; // For Status Bar
   bool get isLoading => _isLoading;
   bool get canUndo => _undoManager.canUndo;
+  int get undoCount => _undoManager.undoCount;
 
   // Getters for Rename UI
   RenameMode get renameMode => _renameMode;
@@ -166,6 +170,7 @@ class DirectoryProvider extends ChangeNotifier {
   bool get showPreview => _showPreview;
   bool get showFolders => _showFolders;
   bool get saveSequenceNumber => _saveSequenceNumber;
+  bool get isCompactMode => _isCompactMode;
 
   // Filter Logic
   void updateFilterSettings({
@@ -209,6 +214,12 @@ class DirectoryProvider extends ChangeNotifier {
       _applyFilters();
     }
     _saveState();
+  }
+
+  void setCompactMode(bool isCompact) {
+    _isCompactMode = isCompact;
+    _saveState();
+    notifyListeners();
   }
 
   void _applyFilters() {
@@ -341,6 +352,22 @@ class DirectoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void resetSettings() {
+    _renameMode = RenameMode.replace;
+    _findText = '';
+    _replaceText = '';
+    _appendText = '';
+    _startNumber = 1;
+    _digits = 3;
+    _numberingMode = NumberingMode.stringNumber;
+    // _deleteModeString = 'start'; // Default radio selection - This is not a state variable
+    _extensionToLowerCase = false;
+    _useRegex = false;
+    // _caseConversion = CaseConversion.none; // This is not a state variable
+    _saveState();
+    notifyListeners();
+  }
+
   void selectAll(bool select) {
     for (var f in _currentFiles) {
       f.isSelected = select;
@@ -372,9 +399,15 @@ class DirectoryProvider extends ChangeNotifier {
           if ((a.entity is Directory) && (b.entity is! Directory)) return -1;
           if ((a.entity is! Directory) && (b.entity is Directory)) return 1;
           if (a.entity is File && b.entity is File) {
-            cmp = (a.entity as File)
-                .lengthSync()
-                .compareTo((b.entity as File).lengthSync());
+            int sizeA = 0;
+            int sizeB = 0;
+            try {
+              sizeA = (a.entity as File).lengthSync();
+            } catch (_) {}
+            try {
+              sizeB = (b.entity as File).lengthSync();
+            } catch (_) {}
+            cmp = sizeA.compareTo(sizeB);
           }
           break;
         case 3: // Relative Path
@@ -420,12 +453,12 @@ class DirectoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> executeRename() async {
-    if (_currentFiles.isEmpty) return;
+  Future<int> executeRename() async {
+    if (_currentFiles.isEmpty) return 0;
 
     // Strict selection requirement
     final targets = _currentFiles.where((f) => f.isSelected).toList();
-    if (targets.isEmpty) return;
+    if (targets.isEmpty) return 0;
 
     _isLoading = true;
     notifyListeners();
@@ -467,6 +500,7 @@ class DirectoryProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+    return renamaedFiles.length;
   }
 
   Future<void> renameOneFile(FileModel file, String newName) async {
@@ -498,16 +532,22 @@ class DirectoryProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> undo() async {
-    if (!_undoManager.canUndo) return;
+  Future<Map<String, dynamic>> undo() async {
+    if (!_undoManager.canUndo) return {'count': 0, 'errors': []};
     _isLoading = true;
     notifyListeners();
 
-    await _undoManager.undoLastTransaction();
+    final result = await _undoManager.undoLastTransaction();
 
     if (_currentDirectory != null) {
       await setDirectory(_currentDirectory!);
     }
+    return result;
+  }
+
+  // Undo Metadata
+  List<UndoAction> getLastUndoTransaction() {
+    return _undoManager.peekLastTransaction();
   }
 
   void addToHistory(List<String> target, String value) {

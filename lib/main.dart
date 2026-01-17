@@ -50,14 +50,21 @@ class ReNameryApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ReNamery',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true,
-        fontFamily: 'Segoe UI', // Windowsでのネイティブな外観
-      ),
-      home: const HomeScreen(),
+    return Consumer<DirectoryProvider>(
+      builder: (context, provider, child) {
+        return MaterialApp(
+          title: 'ReNamery',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+            visualDensity: provider.isCompactMode
+                ? VisualDensity.compact
+                : VisualDensity.standard,
+            useMaterial3: true,
+            fontFamily: 'Segoe UI',
+          ),
+          home: const HomeScreen(),
+        );
+      },
     );
   }
 }

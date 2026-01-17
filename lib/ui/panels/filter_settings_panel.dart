@@ -30,17 +30,19 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DirectoryProvider>();
+    final isCompact = provider.isCompactMode;
+    final double spacing = isCompact ? 2.0 : 4.0;
 
     if (_filterController.text != provider.filterText) {
       _filterController.text = provider.filterText;
     }
 
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(
+      decoration: BoxDecoration(
+        border: const Border(
           top: BorderSide(color: Colors.grey, width: 1.0),
         ),
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -48,13 +50,22 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
         children: [
           // Header / Toggle
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            color: Colors.amber.shade100, // Mimic yellow folder-ish header
+            padding: EdgeInsets.symmetric(
+                horizontal: 8.0, vertical: isCompact ? 4.0 : 8.0),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Row(
               children: [
-                const Text('表示設定 (フィルタ)',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                Icon(Icons.filter_list,
+                    size: 16, color: Theme.of(context).colorScheme.onSurface),
+                const SizedBox(width: 8),
+                Text(
+                  '表示設定 (フィルタ)',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 const Spacer(),
                 Tooltip(
                   message: 'リストにフォルダを表示',
@@ -64,12 +75,16 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                         .updateFilterSettings(
                             showFolders:
                                 !context.read<DirectoryProvider>().showFolders),
-                    child: Icon(
-                      Icons.folder,
-                      size: 16,
-                      color: context.watch<DirectoryProvider>().showFolders
-                          ? Colors.amber
-                          : Colors.grey,
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Icon(
+                        Icons.folder,
+                        size: 18,
+                        color: context.watch<DirectoryProvider>().showFolders
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                   ),
                 ),
@@ -77,85 +92,115 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Filter Mode Radio: All vs Specify
-                Row(
-                  children: [
-                    Radio<bool>(
-                      value: true,
-                      groupValue: provider.filterText.isEmpty,
-                      onChanged: (val) {
-                        context
-                            .read<DirectoryProvider>()
-                            .updateFilterSettings(filter: '');
-                      },
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                InkWell(
+                  onTap: () => context
+                      .read<DirectoryProvider>()
+                      .updateFilterSettings(filter: ''),
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: spacing),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: Radio<bool>(
+                            value: true,
+                            groupValue: provider.filterText.isEmpty,
+                            onChanged: (val) {
+                              context
+                                  .read<DirectoryProvider>()
+                                  .updateFilterSettings(filter: '');
+                            },
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Text('全てのファイル', style: TextStyle(fontSize: 12)),
+                      ],
                     ),
-                    const Text('全てのファイル', style: TextStyle(fontSize: 12)),
-                  ],
+                  ),
                 ),
                 // Radio "Specify" + TextField
-                Row(
-                  children: [
-                    Radio<bool>(
-                      value: false,
-                      groupValue: provider.filterText.isEmpty,
-                      onChanged: (val) {
-                        // Focus text field?
-                      },
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    const Text('指定', style: TextStyle(fontSize: 12)),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: SizedBox(
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: spacing),
+                  child: Row(
+                    children: [
+                      SizedBox(
                         height: 24,
-                        child: TextField(
-                          controller: _filterController,
-                          style: const TextStyle(fontSize: 12),
-                          decoration: const InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 0),
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
+                        width: 24,
+                        child: Radio<bool>(
+                          value: false,
+                          groupValue: provider.filterText.isEmpty,
                           onChanged: (val) {
-                            context
-                                .read<DirectoryProvider>()
-                                .updateFilterSettings(filter: val);
+                            // Focus text field?
                           },
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      const Text('指定', style: TextStyle(fontSize: 12)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SizedBox(
+                          height: isCompact ? 28 : 32,
+                          child: TextField(
+                            controller: _filterController,
+                            style: const TextStyle(fontSize: 12),
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: isCompact ? 8 : 12),
+                              border: const OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                            onChanged: (val) {
+                              context
+                                  .read<DirectoryProvider>()
+                                  .updateFilterSettings(filter: val);
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: spacing),
                 // Checkboxes
                 _buildCheckbox(
+                  context,
                   'システムファイルを非表示',
                   provider.hideSystemFiles,
                   (val) => context
                       .read<DirectoryProvider>()
                       .updateFilterSettings(hideSystem: val),
+                  isCompact,
                 ),
                 _buildCheckbox(
+                  context,
                   '下位フォルダ検索',
                   provider.recursiveSearch,
                   (val) => context
                       .read<DirectoryProvider>()
                       .updateFilterSettings(recursive: val),
+                  isCompact,
                 ),
                 _buildCheckbox(
+                  context,
                   'プレビュー表示',
                   provider.showPreview,
                   (val) => context
                       .read<DirectoryProvider>()
                       .updateFilterSettings(preview: val),
+                  isCompact,
                 ),
               ],
             ),
@@ -165,8 +210,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
             Container(
               height: 150,
               decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Colors.grey)),
-                color: Colors.white,
+                border: Border(top: BorderSide(color: Colors.grey, width: 0.5)),
               ),
               child: _buildPreviewContent(provider),
             ),
@@ -175,20 +219,35 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
     );
   }
 
-  Widget _buildCheckbox(String label, bool value, Function(bool) onChanged) {
-    return Row(
-      children: [
-        SizedBox(
-          height: 24,
-          width: 24,
-          child: Checkbox(
-            value: value,
-            onChanged: (val) => onChanged(val ?? false),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
+  Widget _buildCheckbox(
+    BuildContext context,
+    String label,
+    bool value,
+    Function(bool) onChanged,
+    bool isCompact,
+  ) {
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: isCompact ? 2.0 : 4.0),
+        child: Row(
+          children: [
+            SizedBox(
+              height: 24,
+              width: 24,
+              child: Checkbox(
+                value: value,
+                onChanged: (val) => onChanged(val ?? false),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(label, style: const TextStyle(fontSize: 12)),
+          ],
         ),
-        Text(label, style: const TextStyle(fontSize: 12)),
-      ],
+      ),
     );
   }
 

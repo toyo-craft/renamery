@@ -48,18 +48,20 @@ class _MainTabState extends State<MainTab> {
     TextEditingController controller,
     List<String> history,
     Function(String) onChanged,
-    String label,
-  ) {
+    String label, {
+    bool isCompact = false,
+  }) {
     return Row(
       children: [
         if (label.isNotEmpty) SizedBox(width: 60, child: Text(label)),
         Expanded(
           child: TextField(
             controller: controller,
+            style: const TextStyle(fontSize: 13),
             decoration: InputDecoration(
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 8,
+              contentPadding: EdgeInsets.symmetric(
+                vertical: isCompact ? 6 : 8,
                 horizontal: 8,
               ),
               border: const OutlineInputBorder(),
@@ -95,6 +97,9 @@ class _MainTabState extends State<MainTab> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DirectoryProvider>();
+    final isCompact = provider.isCompactMode;
+    final double spacing = isCompact ? 2.0 : 4.0;
+    final double blockSpacing = isCompact ? 8.0 : 16.0;
 
     // Sync controllers
     if (provider.findText != _findController.text) {
@@ -115,22 +120,24 @@ class _MainTabState extends State<MainTab> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(8.0),
+      padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // --- Top Section: Common Inputs ---
           // String Input with History
           _buildHistoryTextField(
-              context,
-              _appendController,
-              provider.appendHistory,
-              (val) => context
-                  .read<DirectoryProvider>()
-                  .updateRenameSettings(append: val),
-              '文字列'),
+            context,
+            _appendController,
+            provider.appendHistory,
+            (val) => context
+                .read<DirectoryProvider>()
+                .updateRenameSettings(append: val),
+            '文字列',
+            isCompact: isCompact,
+          ),
 
-          const SizedBox(height: 4),
+          SizedBox(height: spacing),
           // --- Numbering Inputs (Spinner Style) ---
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -169,6 +176,7 @@ class _MainTabState extends State<MainTab> {
                   (val) => context
                       .read<DirectoryProvider>()
                       .updateRenameSettings(start: val),
+                  isCompact: isCompact,
                 ),
                 const SizedBox(width: 8),
                 _buildSpinner(
@@ -177,87 +185,96 @@ class _MainTabState extends State<MainTab> {
                   (val) => context
                       .read<DirectoryProvider>()
                       .updateRenameSettings(digit: val),
+                  isCompact: isCompact,
                 ),
               ],
             ),
           ),
-          const Divider(
+          Divider(
             thickness: 1,
-            height: 16,
+            height: blockSpacing,
             color: Colors.green,
           ), // Green header line
 
           // --- Mode Radio Group ---
           // 1. Numbering with Dropdown
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            padding: EdgeInsets.symmetric(vertical: spacing),
             child: Row(
               children: [
-                Radio<RenameMode>(
-                  value: RenameMode.numbering,
-                  groupValue: provider.renameMode,
-                  onChanged: (val) => context
-                      .read<DirectoryProvider>()
-                      .updateRenameSettings(mode: val),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Radio<RenameMode>(
+                    value: RenameMode.numbering,
+                    groupValue: provider.renameMode,
+                    onChanged: (val) => context
+                        .read<DirectoryProvider>()
+                        .updateRenameSettings(mode: val),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: DropdownButton<NumberingMode>(
-                    value: provider.numberingMode,
-                    isDense: true,
-                    isExpanded: true,
-                    underline: Container(
-                      height: 1,
-                      color: Colors.grey,
+                  child: SizedBox(
+                    height: isCompact ? 32 : null,
+                    child: DropdownButton<NumberingMode>(
+                      value: provider.numberingMode,
+                      isDense: true,
+                      isExpanded: true,
+                      style: const TextStyle(fontSize: 13, color: Colors.black),
+                      underline: Container(
+                        height: 1,
+                        color: Colors.grey,
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: NumberingMode.stringNumber,
+                          child: Text('文字列 + 連番'),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.originalNumber,
+                          child: Text('現在名 + 連番'),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.numberString,
+                          child: Text('連番 + 文字列'),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.numberOriginal,
+                          child: Text('連番 + 現在名'),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.baseStringNumber,
+                          child: Text('基本フォルダ名 + 文字列 + 連番'),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.baseStringOriginal,
+                          child: Text('基本フォルダ名 + 文字列 + 現在名'),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.relativeStringNumber,
+                          child: Text('相対フォルダ名 + 文字列 + 連番'),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.relativeStringOriginal,
+                          child: Text('相対フォルダ名 + 文字列 + 現在名'),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.numberStringBase,
+                          child: Text('連番 + 文字列 + 基本フォルダ名'),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.numberStringRelative,
+                          child: Text('連番 + 文字列 + 相対フォルダ名'),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        context.read<DirectoryProvider>().updateRenameSettings(
+                            mode: RenameMode.numbering, numberingMode: val);
+                      },
                     ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: NumberingMode.stringNumber,
-                        child: Text('文字列 + 連番'),
-                      ),
-                      DropdownMenuItem(
-                        value: NumberingMode.originalNumber,
-                        child: Text('現在名 + 連番'),
-                      ),
-                      DropdownMenuItem(
-                        value: NumberingMode.numberString,
-                        child: Text('連番 + 文字列'),
-                      ),
-                      DropdownMenuItem(
-                        value: NumberingMode.numberOriginal,
-                        child: Text('連番 + 現在名'),
-                      ),
-                      DropdownMenuItem(
-                        value: NumberingMode.baseStringNumber,
-                        child: Text('基本フォルダ名 + 文字列 + 連番'),
-                      ),
-                      DropdownMenuItem(
-                        value: NumberingMode.baseStringOriginal,
-                        child: Text('基本フォルダ名 + 文字列 + 現在名'),
-                      ),
-                      DropdownMenuItem(
-                        value: NumberingMode.relativeStringNumber,
-                        child: Text('相対フォルダ名 + 文字列 + 連番'),
-                      ),
-                      DropdownMenuItem(
-                        value: NumberingMode.relativeStringOriginal,
-                        child: Text('相対フォルダ名 + 文字列 + 現在名'),
-                      ),
-                      DropdownMenuItem(
-                        value: NumberingMode.numberStringBase,
-                        child: Text('連番 + 文字列 + 基本フォルダ名'),
-                      ),
-                      DropdownMenuItem(
-                        value: NumberingMode.numberStringRelative,
-                        child: Text('連番 + 文字列 + 相対フォルダ名'),
-                      ),
-                    ],
-                    onChanged: (val) {
-                      context.read<DirectoryProvider>().updateRenameSettings(
-                          mode: RenameMode.numbering, numberingMode: val);
-                    },
                   ),
                 ),
               ],
@@ -269,30 +286,39 @@ class _MainTabState extends State<MainTab> {
             provider,
             RenameMode.prepend,
             'Prefix(前方追加)',
+            spacing: spacing,
           ),
-          _buildRadioTile(context, provider, RenameMode.append, 'Suffix(後方追加)'),
+          _buildRadioTile(context, provider, RenameMode.append, 'Suffix(後方追加)',
+              spacing: spacing),
           _buildRadioTile(
             context,
             provider,
             RenameMode.capitalize,
             '先頭文字を大文字化',
+            spacing: spacing,
           ),
-          _buildRadioTile(context, provider, RenameMode.upper, '大文字化'),
-          _buildRadioTile(context, provider, RenameMode.lower, '小文字化'),
+          _buildRadioTile(context, provider, RenameMode.upper, '大文字化',
+              spacing: spacing),
+          _buildRadioTile(context, provider, RenameMode.lower, '小文字化',
+              spacing: spacing),
 
           // String Insertion
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            padding: EdgeInsets.symmetric(vertical: spacing),
             child: Row(
               children: [
-                Radio<RenameMode>(
-                  value: RenameMode.insert,
-                  groupValue: provider.renameMode,
-                  onChanged: (val) => context
-                      .read<DirectoryProvider>()
-                      .updateRenameSettings(mode: val),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Radio<RenameMode>(
+                    value: RenameMode.insert,
+                    groupValue: provider.renameMode,
+                    onChanged: (val) => context
+                        .read<DirectoryProvider>()
+                        .updateRenameSettings(mode: val),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 const Text('文字列挿入', style: TextStyle(fontSize: 13)),
@@ -301,83 +327,106 @@ class _MainTabState extends State<MainTab> {
                 // RenameEngine uses startNumber as index.
                 // So we bind the spinner to startNumber, but visually associate it here.
                 _buildSpinner(
-                    context,
-                    _startController, // Re-using start controller as index
-                    (val) => context
-                        .read<DirectoryProvider>()
-                        .updateRenameSettings(start: val)),
+                  context,
+                  _startController, // Re-using start controller as index
+                  (val) => context
+                      .read<DirectoryProvider>()
+                      .updateRenameSettings(start: val),
+                  isCompact: isCompact,
+                ),
               ],
             ),
           ),
 
-          const Divider(thickness: 1, height: 16, color: Colors.green),
+          Divider(thickness: 1, height: blockSpacing, color: Colors.green),
 
           // --- Delete Section ---
           // 1. Delete Start
           _buildRadioTile(
-              context, provider, RenameMode.deleteStart, '先頭から桁数分削除'),
+            context,
+            provider,
+            RenameMode.deleteStart,
+            '先頭から桁数分削除',
+            spacing: spacing,
+          ),
           // 2. Delete End
-          _buildRadioTile(context, provider, RenameMode.deleteEnd, '後ろから桁数分削除'),
+          _buildRadioTile(
+            context,
+            provider,
+            RenameMode.deleteEnd,
+            '後ろから桁数分削除',
+            spacing: spacing,
+          ),
           // 3. Delete From (Index)
           _buildRadioTile(
             context,
             provider,
             RenameMode.deleteFrom,
             '開始数字から桁数削除',
+            spacing: spacing,
           ),
 
           // 4. Delete To (String/Complex)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            padding: EdgeInsets.symmetric(vertical: spacing),
             child: Row(
               children: [
-                Radio<bool>(
-                  value: true,
-                  groupValue:
-                      (provider.renameMode == RenameMode.deleteFrontTo ||
-                          provider.renameMode == RenameMode.deleteBackTo),
-                  onChanged: (val) {
-                    if (val == true) {
-                      // Default to Front if switching into this mode
-                      context
-                          .read<DirectoryProvider>()
-                          .updateRenameSettings(mode: RenameMode.deleteFrontTo);
-                    }
-                  },
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Radio<bool>(
+                    value: true,
+                    groupValue:
+                        (provider.renameMode == RenameMode.deleteFrontTo ||
+                            provider.renameMode == RenameMode.deleteBackTo),
+                    onChanged: (val) {
+                      if (val == true) {
+                        // Default to Front if switching into this mode
+                        context.read<DirectoryProvider>().updateRenameSettings(
+                            mode: RenameMode.deleteFrontTo);
+                      }
+                    },
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Row(
                     children: [
                       // Dropdown for Direction
-                      DropdownButton<RenameMode>(
-                        value: (provider.renameMode == RenameMode.deleteBackTo)
-                            ? RenameMode.deleteBackTo
-                            : RenameMode.deleteFrontTo,
-                        items: const [
-                          DropdownMenuItem(
-                            value: RenameMode.deleteFrontTo,
-                            child: Text('前から'),
+                      SizedBox(
+                        height: isCompact ? 32 : null,
+                        child: DropdownButton<RenameMode>(
+                          value:
+                              (provider.renameMode == RenameMode.deleteBackTo)
+                                  ? RenameMode.deleteBackTo
+                                  : RenameMode.deleteFrontTo,
+                          style: const TextStyle(
+                              fontSize: 13, color: Colors.black),
+                          items: const [
+                            DropdownMenuItem(
+                              value: RenameMode.deleteFrontTo,
+                              child: Text('前から'),
+                            ),
+                            DropdownMenuItem(
+                              value: RenameMode.deleteBackTo,
+                              child: Text('後から'),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) {
+                              context
+                                  .read<DirectoryProvider>()
+                                  .updateRenameSettings(mode: val);
+                            }
+                          },
+                          underline: Container(
+                            height: 1,
+                            color: Colors.grey,
                           ),
-                          DropdownMenuItem(
-                            value: RenameMode.deleteBackTo,
-                            child: Text('後から'),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            context
-                                .read<DirectoryProvider>()
-                                .updateRenameSettings(mode: val);
-                          }
-                        },
-                        underline: Container(
-                          height: 1,
-                          color: Colors.grey,
+                          isDense: true,
                         ),
-                        isDense: true,
                       ),
                       const SizedBox(width: 8),
                       // Input Field
@@ -390,6 +439,7 @@ class _MainTabState extends State<MainTab> {
                               .read<DirectoryProvider>()
                               .updateRenameSettings(deleteTo: val),
                           '', // No label needed
+                          isCompact: isCompact,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -401,21 +451,25 @@ class _MainTabState extends State<MainTab> {
             ),
           ),
 
-          const Divider(thickness: 1, height: 16, color: Colors.green),
+          Divider(thickness: 1, height: blockSpacing, color: Colors.green),
 
           // --- Replace Section ---
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            padding: EdgeInsets.symmetric(vertical: spacing),
             child: Row(
               children: [
-                Radio<RenameMode>(
-                  value: RenameMode.replace,
-                  groupValue: provider.renameMode,
-                  onChanged: (val) => context
-                      .read<DirectoryProvider>()
-                      .updateRenameSettings(mode: val),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Radio<RenameMode>(
+                    value: RenameMode.replace,
+                    groupValue: provider.renameMode,
+                    onChanged: (val) => context
+                        .read<DirectoryProvider>()
+                        .updateRenameSettings(mode: val),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -424,14 +478,15 @@ class _MainTabState extends State<MainTab> {
                       Expanded(
                         child: TextField(
                           controller: _findController,
-                          decoration: const InputDecoration(
+                          style: const TextStyle(fontSize: 13),
+                          decoration: InputDecoration(
                             hintText: '検索 (Find)',
                             isDense: true,
                             contentPadding: EdgeInsets.symmetric(
-                              vertical: 8,
+                              vertical: isCompact ? 6 : 8,
                               horizontal: 8,
                             ),
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                           ),
                           onChanged: (val) => context
                               .read<DirectoryProvider>()
@@ -449,23 +504,24 @@ class _MainTabState extends State<MainTab> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(
+            padding: EdgeInsets.only(
               left: 32.0,
-              top: 4.0,
+              top: spacing,
             ), // Indent to align with radio
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _replaceController,
-                    decoration: const InputDecoration(
+                    style: const TextStyle(fontSize: 13),
+                    decoration: InputDecoration(
                       hintText: '置換 (Replace)',
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(
-                        vertical: 8,
+                        vertical: isCompact ? 6 : 8,
                         horizontal: 8,
                       ),
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                     onChanged: (val) => context
                         .read<DirectoryProvider>()
@@ -485,7 +541,7 @@ class _MainTabState extends State<MainTab> {
                 .updateRenameSettings(useRegex: !provider.useRegex),
             borderRadius: BorderRadius.circular(4.0),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              padding: EdgeInsets.symmetric(vertical: spacing),
               child: Row(
                 children: [
                   Checkbox(
@@ -513,24 +569,29 @@ class _MainTabState extends State<MainTab> {
     BuildContext context,
     DirectoryProvider provider,
     RenameMode mode,
-    String label,
-  ) {
+    String label, {
+    double spacing = 4.0,
+  }) {
     return InkWell(
       onTap: () =>
           context.read<DirectoryProvider>().updateRenameSettings(mode: mode),
       borderRadius: BorderRadius.circular(4.0),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        padding: EdgeInsets.symmetric(vertical: spacing),
         child: Row(
           children: [
-            Radio<RenameMode>(
-              value: mode,
-              groupValue: provider.renameMode,
-              onChanged: (val) => context
-                  .read<DirectoryProvider>()
-                  .updateRenameSettings(mode: val),
-              visualDensity: VisualDensity.compact,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            SizedBox(
+              height: 24,
+              width: 24,
+              child: Radio<RenameMode>(
+                value: mode,
+                groupValue: provider.renameMode,
+                onChanged: (val) => context
+                    .read<DirectoryProvider>()
+                    .updateRenameSettings(mode: val),
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
             ),
             const SizedBox(width: 8),
             Text(label, style: const TextStyle(fontSize: 13)),
@@ -543,8 +604,9 @@ class _MainTabState extends State<MainTab> {
   Widget _buildSpinner(
     BuildContext context,
     TextEditingController controller,
-    Function(int) onChanged,
-  ) {
+    Function(int) onChanged, {
+    bool isCompact = false,
+  }) {
     return SizedBox(
       width: 80,
       child: Row(
@@ -552,13 +614,14 @@ class _MainTabState extends State<MainTab> {
           Expanded(
             child: TextField(
               controller: controller,
-              decoration: const InputDecoration(
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
                 isDense: true,
                 contentPadding: EdgeInsets.symmetric(
-                  vertical: 8,
+                  vertical: isCompact ? 6 : 8,
                   horizontal: 4,
                 ),
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
               onChanged: (val) {

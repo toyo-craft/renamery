@@ -122,13 +122,14 @@ class _NavigationPanelState extends State<NavigationPanel> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 8, 4),
+      padding:
+          const EdgeInsets.fromLTRB(16, 12, 16, 4), // Increased top padding
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: Colors.grey,
+          color: Theme.of(context).colorScheme.primary, // Use primary color
         ),
       ),
     );
@@ -237,62 +238,84 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          onTap: _onTap,
-          child: Container(
-            color: isSelected
-                ? Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer.withValues(alpha: 0.5)
-                : null,
-            padding: const EdgeInsets.symmetric(
-              vertical: 2.0,
-            ), // Compact vertical
-            child: Row(
-              children: [
-                // Indent / Expand Button
-                // We use a fixed width container for alignment
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: InkWell(
-                    onTap: _toggleExpand,
-                    child: Icon(
-                      _isExpanded
-                          ? Icons.keyboard_arrow_down
-                          : Icons.keyboard_arrow_right,
-                      size: 16,
-                      color: Colors.grey,
+        Padding(
+          padding: const EdgeInsets.only(
+              right: 8.0, bottom: 2.0), // Margin for rounded
+          child: InkWell(
+            onTap: _onTap,
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            ),
+            child: Container(
+              decoration: isSelected
+                  ? BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(16),
+                        bottomRight: Radius.circular(16),
+                      ),
+                    )
+                  : null,
+              padding: const EdgeInsets.symmetric(
+                vertical: 4.0, // Increased vertical padding for touch target
+              ),
+              child: Row(
+                children: [
+                  // Indent / Expand Button
+                  // We use a fixed width container for alignment
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: InkWell(
+                      onTap: _toggleExpand,
+                      child: Icon(
+                        _isExpanded
+                            ? Icons.keyboard_arrow_down
+                            : Icons.keyboard_arrow_right,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                     ),
                   ),
-                ),
-                // Folder Icon
-                Icon(icon, size: 18, color: iconColor),
-                const SizedBox(width: 8),
-                // Text
-                Flexible(
-                  child: Text(
-                    name,
-                    maxLines: 1,
-                    overflow:
-                        TextOverflow.visible, // Let it expand in IntrinsicWidth
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                  // Folder Icon
+                  Icon(icon, size: 20, color: iconColor), // Increased icon size
+                  const SizedBox(width: 12), // More gap
+                  // Text
+                  Flexible(
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow
+                          .visible, // Let it expand in IntrinsicWidth
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.onSecondaryContainer
+                            : null,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-              ],
+                  const SizedBox(width: 8),
+                ],
+              ),
             ),
           ),
         ),
         if (_isExpanded)
-          Padding(
+          Container(
+            margin:
+                const EdgeInsets.only(left: 11.0), // Align with arrow center
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+                  width: 1.0,
+                ),
+              ),
+            ),
             padding: const EdgeInsets.only(left: 12.0), // Tree Indentation
             child: Column(
               children: _subDirectories

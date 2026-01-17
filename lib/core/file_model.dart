@@ -43,9 +43,13 @@ class FileModel {
   // Helpers for UI
   String get size {
     if (entity is File) {
-      final len = (entity as File).lengthSync();
-      if (len < 1024) return '$len B';
-      return '${(len / 1024).ceil()} KB';
+      try {
+        final len = (entity as File).lengthSync();
+        if (len < 1024) return '$len B';
+        return '${(len / 1024).ceil()} KB';
+      } catch (e) {
+        return 'Locked'; // Indicate file is locked/inaccessible
+      }
     }
     return '';
   }
