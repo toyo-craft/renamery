@@ -4,6 +4,8 @@ import '../../core/directory_provider.dart';
 import '../../core/rename_engine.dart';
 import 'tabs/main_tab.dart';
 import 'tabs/sub_tab.dart';
+import 'tabs/extra_tab.dart';
+import 'tabs/etc_tab.dart';
 
 class SettingsPanel extends StatefulWidget {
   const SettingsPanel({super.key});
@@ -32,32 +34,32 @@ class _SettingsPanelState extends State<SettingsPanel>
 
   void _handleTabSelection() {
     if (_tabController.indexIsChanging) {
-      // Tab is animating, wait for end? Or update immediately?
-      // Usually indexIsChanging is true during animation.
-      // But we want to switch mode immediately when user taps.
+      // Animation ...
     } else {
-      // Animation finished or immediate tap.
-      // Determine which mode to activate based on tab index.
-      // Main Tab (0) -> Uses its last active mode? Or Default?
-      // Sub Tab (1) -> Uses its last active mode?
-      // ReNamery preserves the "last selected radio" per tab?
-      // Or does it have a default?
-      // Let's assume we need to switch to *some* valid mode for that tab.
       final provider = context.read<DirectoryProvider>();
       final index = _tabController.index;
 
       RenameMode? targetMode;
       if (index == 0) {
-        // Main Tab active.
-        if (isSubTabMode(provider.renameMode)) {
-          // Restore last active Main Tab mode
+        // Main Tab
+        // If current mode is NOT Main, switch to last Main.
+        if (!provider.isMainMode(provider.renameMode)) {
           targetMode = provider.lastMainMode;
         }
       } else if (index == 1) {
-        // Sub Tab active.
-        if (!isSubTabMode(provider.renameMode)) {
-          // Restore last active Sub Tab mode
+        // Sub Tab
+        if (!provider.isSubMode(provider.renameMode)) {
           targetMode = provider.lastSubMode;
+        }
+      } else if (index == 2) {
+        // Extra Tab
+        if (!provider.isExtraMode(provider.renameMode)) {
+          targetMode = provider.lastExtraMode;
+        }
+      } else if (index == 3) {
+        // Etc Tab
+        if (!provider.isEtcMode(provider.renameMode)) {
+          targetMode = provider.lastEtcMode;
         }
       }
 
@@ -65,24 +67,6 @@ class _SettingsPanelState extends State<SettingsPanel>
         provider.updateRenameSettings(mode: targetMode, immediate: true);
       }
     }
-  }
-
-  bool isSubTabMode(RenameMode mode) {
-    return [
-      RenameMode
-          .extension, // Note: Shared? 'extension' usually in SubTab now? Original Namery had it in Main?
-      // Actually in our clean SubTab, we used 'extension'.
-      // Let's check RenameEngine definition.
-      // extension, extensionRemove, extensionAdd, extensionUpper, extensionLower, formatProperCase, listRename
-      // are SubTab modes.
-      // replace, append, prepend, numbering, upper, lower, capitalize, insert, delete... are MainTab modes.
-      RenameMode.extensionRemove,
-      RenameMode.extensionAdd,
-      RenameMode.extensionUpper,
-      RenameMode.extensionLower,
-      RenameMode.formatProperCase,
-      RenameMode.listRename,
-    ].contains(mode);
   }
 
   @override
@@ -100,11 +84,11 @@ class _SettingsPanelState extends State<SettingsPanel>
             tabAlignment: TabAlignment.start,
             labelPadding:
                 const EdgeInsets.symmetric(horizontal: 16.0), // Consistent
-            tabs: const [
-              Tab(text: 'Main'),
-              Tab(text: 'Sub'),
-              Tab(text: 'Extra'),
-              Tab(text: 'etc'),
+            tabs: [
+              Tab(text: "Main"),
+              Tab(text: "Sub"),
+              Tab(text: "Extra"),
+              Tab(text: "etc"),
             ],
           ),
         ),
@@ -115,8 +99,8 @@ class _SettingsPanelState extends State<SettingsPanel>
             children: const [
               MainTab(),
               SubTab(),
-              Center(child: Text('Extra Tab (Coming Soon)')),
-              Center(child: Text('etc Tab (Coming Soon)')),
+              ExtraTab(),
+              EtcTab(),
             ],
           ),
         ),

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'file_model.dart';
 import 'rename_engine.dart';
@@ -56,6 +57,38 @@ class DirectoryProvider extends ChangeNotifier {
     if (lSubIndex != null && lSubIndex < RenameMode.values.length) {
       _lastSubMode = RenameMode.values[lSubIndex];
     }
+    final lEtcIndex = s.getInt('lastEtcMode');
+    if (lEtcIndex != null && lEtcIndex < RenameMode.values.length) {
+      _lastEtcMode = RenameMode.values[lEtcIndex];
+    } else {
+      _lastEtcMode = RenameMode.changeTimestamp; // Default
+    }
+    final lExtraIndex = s.getInt('lastExtraMode');
+    if (lExtraIndex != null && lExtraIndex < RenameMode.values.length) {
+      _lastExtraMode = RenameMode.values[lExtraIndex];
+    } else {
+      _lastExtraMode = RenameMode.appendDate; // Default
+    }
+
+    // Extra Tab
+    _dateFormat = s.getString('dateFormat') ?? 'yyyymmdd_';
+    final dPosIndex = s.getInt('datePosition');
+    if (dPosIndex != null && dPosIndex < DatePosition.values.length) {
+      _datePosition = DatePosition.values[dPosIndex];
+    }
+
+    // Etc Tab
+    _etcTimestamp = s.getString('etcTimestamp') ?? '';
+    // If empty, set default to now? Or keep empty? User Manual: "Ex 2002/03/30 17:30".
+    if (_etcTimestamp.isEmpty) {
+      final now = DateTime.now();
+      _etcTimestamp =
+          '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    }
+    _etcAttribReadOnly = s.getBool('etcAttribReadOnly') ?? false;
+    _etcAttribHidden = s.getBool('etcAttribHidden') ?? false;
+    _etcAttribArchive = s.getBool('etcAttribArchive') ?? false;
+    _etcAttribSystem = s.getBool('etcAttribSystem') ?? false;
 
     // 3. Restore History (SYNC)
     if (s.getList('appendHistory') != null) {
@@ -128,6 +161,21 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('subTabExtensionText', _subTabExtensionText);
     s.set('lastMainMode', _lastMainMode.index);
     s.set('lastSubMode', _lastSubMode.index);
+    s.set('lastEtcMode', _lastEtcMode.index);
+    s.set('lastExtraMode', _lastExtraMode.index);
+    s.set('lastEtcMode', _lastEtcMode.index);
+    s.set('lastExtraMode', _lastExtraMode.index);
+
+    // Extra Tab
+    s.set('dateFormat', _dateFormat);
+    s.set('datePosition', _datePosition.index);
+
+    // Etc Tab
+    s.set('etcTimestamp', _etcTimestamp);
+    s.set('etcAttribReadOnly', _etcAttribReadOnly);
+    s.set('etcAttribHidden', _etcAttribHidden);
+    s.set('etcAttribArchive', _etcAttribArchive);
+    s.set('etcAttribSystem', _etcAttribSystem);
   }
 
   // Rename State
@@ -157,6 +205,17 @@ class DirectoryProvider extends ChangeNotifier {
   bool _saveSequenceNumber = false;
   bool _isCompactMode = true;
 
+  // Extra Tab State
+  String _dateFormat = 'yyyymmdd_';
+  DatePosition _datePosition = DatePosition.front;
+
+  // Etc Tab State
+  String _etcTimestamp = ''; // "yyyy/MM/dd HH:mm"
+  bool _etcAttribReadOnly = false;
+  bool _etcAttribHidden = false;
+  bool _etcAttribArchive = false;
+  bool _etcAttribSystem = false;
+
   // Cache for in-memory filtering
   List<FileModel> _allFiles = [];
 
@@ -182,6 +241,60 @@ class DirectoryProvider extends ChangeNotifier {
   List<String> get appendHistory => _appendHistory;
   List<String> get deleteFromHistory => _deleteFromHistory;
   List<String> get deleteToHistory => _deleteToHistory;
+
+  // Mode Memory
+  RenameMode _lastMainMode = RenameMode.upper;
+  RenameMode _lastSubMode = RenameMode.extensionRemove;
+  RenameMode _lastEtcMode = RenameMode.changeTimestamp;
+  RenameMode _lastExtraMode = RenameMode.appendDate;
+
+  RenameMode get lastMainMode => _lastMainMode;
+  RenameMode get lastSubMode => _lastSubMode;
+  RenameMode get lastEtcMode => _lastEtcMode;
+  RenameMode get lastExtraMode => _lastExtraMode;
+
+  String get dateFormat => _dateFormat;
+  DatePosition get datePosition => _datePosition;
+
+  String get etcTimestamp => _etcTimestamp;
+  bool get etcAttribReadOnly => _etcAttribReadOnly;
+  bool get etcAttribHidden => _etcAttribHidden;
+  bool get etcAttribArchive => _etcAttribArchive;
+  bool get etcAttribSystem => _etcAttribSystem;
+
+  bool isMainMode(RenameMode mode) {
+    return !isSubMode(mode) && !isExtraMode(mode) && !isEtcMode(mode);
+  }
+
+  bool isSubMode(RenameMode mode) {
+    return [
+      RenameMode.extensionRemove,
+      RenameMode.extensionAdd,
+      RenameMode.extensionUpper,
+      RenameMode.extensionLower,
+      RenameMode.formatProperCase,
+      RenameMode.listRename,
+    ].contains(mode);
+  }
+
+  bool isExtraMode(RenameMode mode) {
+    return [
+      RenameMode.appendDate,
+      RenameMode.convHalfToFull,
+      RenameMode.convFullToHalf,
+      RenameMode.convFullKataToHira,
+      RenameMode.convHiraToFullKata,
+      RenameMode.convFullAlphaToHalfAlpha,
+      RenameMode.convNumToHalf,
+    ].contains(mode);
+  }
+
+  bool isEtcMode(RenameMode mode) {
+    return [
+      RenameMode.changeTimestamp,
+      RenameMode.changeAttributes,
+    ].contains(mode);
+  }
 
   // Sub Tab State
   String _listRenameText = '';
@@ -284,23 +397,6 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   // Helper to distinguish modes (Same logic as SettingsPanel, arguably should be static or shared)
-  bool _isSubTabMode(RenameMode mode) {
-    return [
-      RenameMode.extensionRemove,
-      RenameMode.extensionAdd,
-      RenameMode.extensionUpper,
-      RenameMode.extensionLower,
-      RenameMode.formatProperCase,
-      RenameMode.listRename,
-      RenameMode.extension, // Usually SubTab
-    ].contains(mode);
-  }
-
-  RenameMode _lastMainMode = RenameMode.replace;
-  RenameMode _lastSubMode = RenameMode.extension;
-
-  RenameMode get lastMainMode => _lastMainMode;
-  RenameMode get lastSubMode => _lastSubMode;
 
   void updateRenameSettings({
     RenameMode? mode,
@@ -311,25 +407,48 @@ class DirectoryProvider extends ChangeNotifier {
     String? deleteTo,
     int? start,
     int? digit,
+    String? findText,
+    String? replaceText,
+    String? appendText,
+    String? deleteToText,
+    int? startNumber,
+    int? digits,
     bool? extensionToLowerCase,
     bool? useRegex,
     bool? saveSequenceNumber,
     String? listText,
     String? extensionText,
-    bool immediate = false, // If true, skip debounce
+    String? dateFormat,
+    DatePosition? datePosition,
+    String? etcTimestamp,
+    bool? etcAttribReadOnly,
+    bool? etcAttribHidden,
+    bool? etcAttribArchive,
+    bool? etcAttribSystem,
+    bool immediate = false, // false = debounce, true = immediate
   }) {
     if (mode != null) _renameMode = mode;
     if (numberingMode != null) _numberingMode = numberingMode;
-    if (find != null) _findText = find;
-    if (replace != null) _replaceText = replace;
-    if (append != null) _appendText = append;
-    if (deleteTo != null) _deleteToText = deleteTo;
-    if (start != null) _startNumber = start;
-    if (digit != null) _digits = digit;
-    if (extensionToLowerCase != null) {
+    if (findText != null) _findText = findText;
+    if (replaceText != null) _replaceText = replaceText;
+    if (appendText != null) _appendText = appendText;
+    if (deleteToText != null) _deleteToText = deleteToText;
+    if (startNumber != null) _startNumber = startNumber;
+    if (digits != null) _digits = digits;
+    if (extensionToLowerCase != null)
       _extensionToLowerCase = extensionToLowerCase;
-    }
     if (useRegex != null) _useRegex = useRegex;
+
+    // Extra Tab
+    if (dateFormat != null) _dateFormat = dateFormat;
+    if (datePosition != null) _datePosition = datePosition;
+
+    // Etc Tab
+    if (etcTimestamp != null) _etcTimestamp = etcTimestamp;
+    if (etcAttribReadOnly != null) _etcAttribReadOnly = etcAttribReadOnly;
+    if (etcAttribHidden != null) _etcAttribHidden = etcAttribHidden;
+    if (etcAttribArchive != null) _etcAttribArchive = etcAttribArchive;
+    if (etcAttribSystem != null) _etcAttribSystem = etcAttribSystem;
 
     // Sub Tab
     if (listText != null) _listRenameText = listText;
@@ -341,10 +460,14 @@ class DirectoryProvider extends ChangeNotifier {
 
     // Track Last Active Modes per Tab
     if (mode != null) {
-      if (_isSubTabMode(mode)) {
+      if (isSubMode(mode)) {
         _lastSubMode = mode;
-      } else {
+      } else if (isMainMode(mode)) {
         _lastMainMode = mode;
+      } else if (isExtraMode(mode)) {
+        _lastExtraMode = mode;
+      } else if (isEtcMode(mode)) {
+        _lastEtcMode = mode;
       }
     }
 
@@ -411,6 +534,8 @@ class DirectoryProvider extends ChangeNotifier {
       numberingMode: _numberingMode,
       baseDirName: baseDirName,
       listText: _listRenameText,
+      dateFormat: _dateFormat,
+      datePosition: _datePosition,
     );
   }
 
@@ -540,27 +665,61 @@ class DirectoryProvider extends ChangeNotifier {
     notifyListeners();
 
     List<FileModel> renamaedFiles = [];
+    List<UndoAction> transaction = [];
 
     for (var file in targets) {
-      if (file.originalName == file.newName) continue;
+      // Logic branching
+      if (_renameMode == RenameMode.changeTimestamp) {
+        try {
+          final fullPath = p.join(file.parentPath, file.originalName);
+          final DateFormat format = DateFormat('yyyy/MM/dd HH:mm');
+          final DateTime dt = format.parse(_etcTimestamp);
 
-      try {
-        final oldPath = p.join(file.parentPath, file.originalName);
-        final newPath = p.join(file.parentPath, file.newName);
-
-        final fsEntity = File(oldPath);
-        if (await fsEntity.exists()) {
-          await fsEntity.rename(newPath);
-          file.markRenamed();
-          renamaedFiles.add(file);
+          final f = File(fullPath);
+          await f.setLastModified(dt);
+          // Metadata update doesn't change name, but effectively "done"
+          // Maybe refresh file info?
+        } catch (e) {
+          file.markError(e.toString());
         }
-      } catch (e) {
-        file.markError(e.toString());
+      } else if (_renameMode == RenameMode.changeAttributes) {
+        try {
+          final fullPath = p.join(file.parentPath, file.originalName);
+
+          List<String> args = [];
+          args.add(_etcAttribReadOnly ? '+R' : '-R');
+          args.add(_etcAttribHidden ? '+H' : '-H');
+          args.add(_etcAttribSystem ? '+S' : '-S');
+          args.add(_etcAttribArchive ? '+A' : '-A');
+          args.add(fullPath);
+
+          await Process.run('attrib', args);
+        } catch (e) {
+          file.markError(e.toString());
+        }
+      } else {
+        // Normal Rename
+        if (file.originalName == file.newName) continue;
+
+        try {
+          final oldPath = p.join(file.parentPath, file.originalName);
+          final newPath = p.join(file.parentPath, file.newName);
+
+          final fsEntity = File(oldPath);
+          if (await fsEntity.exists()) {
+            await fsEntity.rename(newPath);
+            file.markRenamed();
+            transaction.add(UndoAction(oldPath, newPath));
+            renamaedFiles.add(file);
+          }
+        } catch (e) {
+          file.markError(e.toString());
+        }
       }
     }
 
-    if (renamaedFiles.isNotEmpty) {
-      _undoManager.addTransaction(renamaedFiles);
+    if (transaction.isNotEmpty) {
+      _undoManager.addTransaction(transaction);
       if (_currentDirectory != null) {
         await setDirectory(_currentDirectory!);
       }

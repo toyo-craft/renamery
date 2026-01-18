@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'file_model.dart';
 
@@ -24,7 +25,20 @@ enum RenameMode {
   extensionLower,
   formatProperCase,
   listRename,
+  // Extra Tab
+  appendDate,
+  convHalfToFull,
+  convFullToHalf,
+  convFullKataToHira,
+  convHiraToFullKata,
+  convFullAlphaToHalfAlpha,
+  convNumToHalf,
+  // Etc Tab
+  changeTimestamp,
+  changeAttributes,
 }
+
+enum DatePosition { front, back }
 
 enum NumberingMode {
   stringNumber, // 文字列 + 連番
@@ -57,6 +71,8 @@ class RenameEngine {
     NumberingMode numberingMode = NumberingMode.stringNumber,
     String? baseDirName, // Name of the root directory (Base Folder)
     String? listText, // For List Rename
+    String? dateFormat, // For Date Append
+    DatePosition datePosition = DatePosition.front, // For Date Append
   }) {
     int counter = startNumber;
 
@@ -336,21 +352,241 @@ class RenameEngine {
         // Since generatePreviews is static, we might pass the map?
         // Or handle it as a special case where "replaceText" might logically hold the map? NO.
         // Let's add an optional map parameter to generatePreviews?
+
+        // ...
+
+        // --- Extra Tab Features ---
+        case RenameMode.appendDate:
+          if (dateFormat != null && dateFormat.isNotEmpty) {
+            try {
+              final DateTime date = file.entity.statSync().modified;
+              final formatter = DateFormat(dateFormat);
+              final dateStr = formatter.format(date);
+
+              if (datePosition == DatePosition.front) {
+                newBaseName = '$dateStr$newBaseName';
+              } else {
+                newBaseName = '$newBaseName$dateStr';
+              }
+            } catch (_) {
+              // Ignore invalid formats or stat errors
+            }
+          }
+          break;
+        case RenameMode.convHalfToFull:
+          newBaseName = JpTextConverter.toFullWidth(newBaseName);
+          break;
+        case RenameMode.convFullToHalf:
+          newBaseName = JpTextConverter.toHalfWidth(newBaseName);
+          break;
+        case RenameMode.convFullKataToHira:
+          newBaseName = JpTextConverter.kataToHira(newBaseName);
+          break;
+        case RenameMode.convHiraToFullKata:
+          newBaseName = JpTextConverter.hiraToKata(newBaseName);
+          break;
+        case RenameMode.convFullAlphaToHalfAlpha:
+          newBaseName = JpTextConverter.fullAlphaToHalf(newBaseName);
+          break;
+        case RenameMode.convNumToHalf:
+          newBaseName = JpTextConverter.fullNumToHalf(newBaseName);
+          break;
         default:
           break;
-      }
-
-      if (mode == RenameMode.listRename) {
-        // Implementation for List Rename
-        // Needs a lookup map.
-        // Assuming 'findText' or similar passed somehow?
-        // Better to add a parameter `Map<String, String>? listMap`
-        // But we need to update signature.
       }
 
       file.setNewName('$newBaseName$extension');
     }
 
     return files;
+  }
+}
+
+class JpTextConverter {
+  static const String _halfKana =
+      'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮｯｰﾞﾟ';
+  static const List<String> _fullKana = [
+    'ア',
+    'イ',
+    'ウ',
+    'エ',
+    'オ',
+    'カ',
+    'キ',
+    'ク',
+    'ケ',
+    'コ',
+    'サ',
+    'シ',
+    'ス',
+    'セ',
+    'ソ',
+    'タ',
+    'チ',
+    'ツ',
+    'テ',
+    'ト',
+    'ナ',
+    'ニ',
+    'ヌ',
+    'ネ',
+    'ノ',
+    'ハ',
+    'ヒ',
+    'フ',
+    'ヘ',
+    'ホ',
+    'マ',
+    'ミ',
+    'ム',
+    'メ',
+    'モ',
+    'ヤ',
+    'ユ',
+    'ヨ',
+    'ラ',
+    'リ',
+    'ル',
+    'レ',
+    'ロ',
+    'ワ',
+    'ヲ',
+    'ン',
+    'ァ',
+    'ィ',
+    'ゥ',
+    'ェ',
+    'ォ',
+    'ャ',
+    'ュ',
+    'ョ',
+    'ッ',
+    'ー',
+    '゛',
+    '゜'
+  ];
+
+  static const Map<String, String> _halfToFullMap = {
+    'ｶﾞ': 'ガ',
+    'ｷﾞ': 'ギ',
+    'ｸﾞ': 'グ',
+    'ｹﾞ': 'ゲ',
+    'ｺﾞ': 'ゴ',
+    'ｻﾞ': 'ザ',
+    'ｼﾞ': 'ジ',
+    'ｽﾞ': 'ズ',
+    'ｾﾞ': 'ゼ',
+    'ｿﾞ': 'ゾ',
+    'ﾀﾞ': 'ダ',
+    'ﾁﾞ': 'ヂ',
+    'ﾂﾞ': 'ヅ',
+    'ﾃﾞ': 'デ',
+    'ﾄﾞ': 'ド',
+    'ﾊﾞ': 'バ',
+    'ﾋﾞ': 'ビ',
+    'ﾌﾞ': 'ブ',
+    'ﾍﾞ': 'ベ',
+    'ﾎﾞ': 'ボ',
+    'ﾊﾟ': 'パ',
+    'ﾋﾟ': 'ピ',
+    'ﾌﾟ': 'プ',
+    'ﾍﾟ': 'ペ',
+    'ﾎﾟ': 'ポ',
+    'ｳﾞ': 'ヴ',
+  };
+
+  static String toFullWidth(String text) {
+    String result = text;
+
+    // 1. Resolve composite Half-Kana (Dakuten/Handakuten)
+    _halfToFullMap.forEach((k, v) {
+      result = result.replaceAll(k, v);
+    });
+
+    // 2. Resolve single Half-Kana
+    for (int i = 0; i < _halfKana.length; i++) {
+      result = result.replaceAll(_halfKana[i], _fullKana[i]);
+    }
+
+    // 3. Alphanumeric / Symbols
+    // ASCII 0x21(!) to 0x7E(~) -> +0xFEE0
+    // Space 0x20 -> 0x3000
+    result = result.runes
+        .map((r) {
+          if (r == 0x20) return 0x3000;
+          if (r >= 0x21 && r <= 0x7E) return r + 0xFEE0;
+          return r;
+        })
+        .map((c) => String.fromCharCode(c))
+        .join();
+
+    return result;
+  }
+
+  static String toHalfWidth(String text) {
+    String result = text;
+    // Simple ASCII reverse
+    result = result.runes
+        .map((r) {
+          if (r == 0x3000) return 0x20;
+          if (r >= 0xFF01 && r <= 0xFF5E) return r - 0xFEE0;
+          return r;
+        })
+        .map((c) => String.fromCharCode(c))
+        .join();
+
+    // Reverse Map for composite
+    final Map<String, String> fullToHalfComposite =
+        _halfToFullMap.map((k, v) => MapEntry(v, k));
+    fullToHalfComposite.forEach((k, v) {
+      result = result.replaceAll(k, v);
+    });
+
+    // Single Kana
+    for (int i = 0; i < _fullKana.length; i++) {
+      result = result.replaceAll(_fullKana[i], _halfKana[i]);
+    }
+    return result;
+  }
+
+  static String kataToHira(String text) {
+    return text.runes
+        .map((r) {
+          if (r >= 0x30A1 && r <= 0x30F6) return r - 0x60;
+          return r;
+        })
+        .map((c) => String.fromCharCode(c))
+        .join();
+  }
+
+  static String hiraToKata(String text) {
+    return text.runes
+        .map((r) {
+          if (r >= 0x3041 && r <= 0x3096) return r + 0x60;
+          return r;
+        })
+        .map((c) => String.fromCharCode(c))
+        .join();
+  }
+
+  static String fullAlphaToHalf(String text) {
+    return text.runes
+        .map((r) {
+          if (r >= 0xFF21 && r <= 0xFF3A) return r - 0xFEE0;
+          if (r >= 0xFF41 && r <= 0xFF5A) return r - 0xFEE0;
+          return r;
+        })
+        .map((c) => String.fromCharCode(c))
+        .join();
+  }
+
+  static String fullNumToHalf(String text) {
+    return text.runes
+        .map((r) {
+          if (r >= 0xFF10 && r <= 0xFF19) return r - 0xFEE0;
+          return r;
+        })
+        .map((c) => String.fromCharCode(c))
+        .join();
   }
 }

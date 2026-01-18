@@ -182,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                                       // UndoAction contains (original, new)
                                       // So we want to show: basename(new) <- basename(original)
                                       final oldName =
-                                          p.basename(action.originalPath);
+                                          p.basename(action.oldPath);
                                       final newName =
                                           p.basename(action.newPath);
                                       return Padding(
