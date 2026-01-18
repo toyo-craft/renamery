@@ -26,6 +26,20 @@ class DirectoryProvider extends ChangeNotifier {
     _saveSequenceNumber = s.getBool('saveSequenceNumber') ?? false;
     _isCompactMode = s.getBool('isCompactMode') ?? true; // Default to Compact
 
+    // Navigation History (Restored from settings)
+    final savedNavHistory = s.getList<String>('navHistory');
+    if (savedNavHistory != null) {
+      _navHistory = savedNavHistory;
+    } else {
+      _navHistory.clear();
+    }
+    _navIndex = s.getInt('navIndex') ?? -1;
+
+    // Safety check for index bounds
+    if (_navIndex >= _navHistory.length) {
+      _navIndex = _navHistory.isNotEmpty ? _navHistory.length - 1 : -1;
+    }
+
     // 2. Restore Rename Settings (SYNC)
     final rModeIndex = s.getInt('renameMode');
     if (rModeIndex != null && rModeIndex < RenameMode.values.length) {
@@ -136,6 +150,9 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('showFolders', _showFolders);
     s.set('saveSequenceNumber', _saveSequenceNumber);
     s.set('isCompactMode', _isCompactMode);
+
+    s.set('navHistory', _navHistory);
+    s.set('navIndex', _navIndex);
 
     s.set('renameMode', _renameMode.index);
     s.set('numberingMode', _numberingMode.index);
@@ -641,7 +658,201 @@ class DirectoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Manual Sort
+  // --- Navigation History ---
+  List<String> _navHistory = [];
+  int _navIndex = -1;
+
+  bool get canGoBack => _navIndex > 0;
+  bool get canGoForward => _navIndex < _navHistory.length - 1;
+
+  Future<void> goBack() async {
+    if (canGoBack) {
+      _navIndex--;
+      final path = _navHistory[_navIndex];
+      await _navigateInternal(Directory(path));
+    }
+  }
+
+  Future<void> goForward() async {
+    if (canGoForward) {
+      _navIndex++;
+      final path = _navHistory[_navIndex];
+      await _navigateInternal(Directory(path));
+    }
+  }
+
+  // History access for UI
+  // Back history: Items BEFORE _navIndex, reversed (closest first)
+  List<String> get backHistory {
+    if (_navIndex <= 0) return [];
+    return _navHistory.sublist(0, _navIndex).reversed.toList();
+  }
+
+  // Forward history: Items AFTER _navIndex
+  List<String> get forwardHistory {
+    if (_navIndex >= _navHistory.length - 1) return [];
+    return _navHistory.sublist(_navIndex + 1);
+  }
+
+  Future<void> jumpToHistory(String path) async {
+    // Find the index of this path.
+    // Note: Duplicates might exist. We should probably target simple linear scan
+    // that prefers "closest" or "most logical" target?
+    // Or, since the UI will likely pick from one of the lists above,
+    // we can infer the target index based on which list it came from?
+    // Actually, passing the absolute index would be safer if we exposed it.
+    // But string is easier for now if unique enough.
+    // Let's modify logic to accept an index if possible, or just scan.
+    // Simple scan: find LAST occurrence <= index (for back) or FIRST >= index?
+    // Actually, let's just find the first match in the whole history that isn't current?
+    // Ideally we should pass the index from the UI.
+
+    final index = _navHistory.indexOf(path);
+    if (index != -1 && index != _navIndex) {
+      _navIndex = index;
+      await _navigateInternal(Directory(path));
+    }
+  }
+
+  // Better Jump Method: Jump by offset (relative) logic or absolute index?
+  // Let's rely on the UI calling jumpToHistory(path).
+  // Wait, if I have A -> B -> A -> C.
+  // Current C. Back history: A, B, A.
+  // If I click the first A (the one before B), I expect to go to index 0.
+  // If I click the second A (the recent one), I expect index 2.
+  // `indexOf` will always return 0.
+  // So I MUST use index.
+  // Let's refactor: exposing `List<Map<String, dynamic>>` or similar?
+  // Or just helper for "Jump back N steps".
+
+  Future<void> jumpBack(int steps) async {
+    final newIndex = _navIndex - steps;
+    if (newIndex >= 0) {
+      _navIndex = newIndex;
+      await _navigateInternal(Directory(_navHistory[_navIndex]));
+    }
+  }
+
+  Future<void> jumpForward(int steps) async {
+    final newIndex = _navIndex + steps;
+    if (newIndex < _navHistory.length) {
+      _navIndex = newIndex;
+      await _navigateInternal(Directory(_navHistory[_navIndex]));
+    }
+  }
+
+  Future<void> refresh() async {
+    if (_currentDirectory != null) {
+      // Force reload
+      await setDirectory(_currentDirectory!, addToHistory: false);
+    }
+  }
+
+  // Internal nav that doesn't add to history again (or handles it)
+  Future<void> _navigateInternal(Directory dir) async {
+    // Similar to setDirectory but doesn't modify history stack
+    // Actually setDirectory logic is heavy.
+    // Let's refactor setDirectory to accept an option?
+    // Or just call setDirectory with addToHistory: false
+    await setDirectory(dir, addToHistory: false);
+  }
+
+  // --- List Manipulation ---
+
+  bool get canExecute {
+    // Current Logic enforces selection for execution (in ToolbarPanel)
+    // So we check if ANY selected file has a change.
+    // If we later support "Execute All if None Selected", we would check that here too.
+
+    final selected = _currentFiles.where((f) => f.isSelected);
+    if (selected.isEmpty) return false;
+
+    return selected.any((f) => f.originalName != f.newName);
+  }
+
+  bool get canMoveUp {
+    if (_currentFiles.isEmpty) return false;
+    // Check if any selected item has a non-selected item above it
+    for (int i = 0; i < _currentFiles.length; i++) {
+      if (_currentFiles[i].isSelected) {
+        if (i > 0 && !_currentFiles[i - 1].isSelected) {
+          return true; // Found an item that can move up (swap with unselected above)
+        }
+      }
+    }
+    return false;
+  }
+
+  bool get canMoveDown {
+    if (_currentFiles.isEmpty) return false;
+    // Check if any selected item has a non-selected item below it
+    for (int i = 0; i < _currentFiles.length; i++) {
+      if (_currentFiles[i].isSelected) {
+        if (i < _currentFiles.length - 1 && !_currentFiles[i + 1].isSelected) {
+          return true; // Found an item that can move down (swap with unselected below)
+        }
+      }
+    }
+    return false;
+  }
+
+  void moveSelection(bool up) {
+    // Only move if we have a selection
+    var selectedIndices = _currentFiles
+        .asMap()
+        .entries
+        .where((e) => e.value.isSelected)
+        .map((e) => e.key)
+        .toList();
+
+    if (selectedIndices.isEmpty) return;
+
+    // Sort indices to handle movement correctly
+    selectedIndices.sort();
+    if (!up) {
+      selectedIndices = selectedIndices.reversed.toList();
+    }
+
+    bool changed = false;
+    final List<FileModel> newFiles = List.from(_currentFiles);
+
+    for (var index in selectedIndices) {
+      if (up) {
+        if (index > 0) {
+          final prevIndex = index - 1;
+          // Only swap if the previous item is NOT selected (to move the whole block)
+          if (!newFiles[prevIndex].isSelected) {
+            final temp = newFiles[prevIndex];
+            newFiles[prevIndex] = newFiles[index];
+            newFiles[index] = temp;
+            changed = true;
+          }
+        }
+      } else {
+        if (index < newFiles.length - 1) {
+          final nextIndex = index + 1;
+          // Only swap if the next item is NOT selected
+          if (!newFiles[nextIndex].isSelected) {
+            final temp = newFiles[nextIndex];
+            newFiles[nextIndex] = newFiles[index];
+            newFiles[index] = temp;
+            changed = true;
+          }
+        }
+      }
+    }
+
+    if (changed) {
+      _currentFiles = newFiles;
+      // If we move manually, we might be breaking the sort order.
+      // Should we set sort to 'Manual'?
+      // For now, let's just update the list.
+      _updatePreviews(); // Re-calculate previews (e.g. sequence numbers might change)
+      notifyListeners();
+    }
+  }
+
+  // Manual Sort (Renamed for consistency if needed, checking existing reorderFiles)
   void reorderFiles(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) {
       newIndex -= 1;
@@ -801,9 +1012,32 @@ class DirectoryProvider extends ChangeNotifier {
     _saveState();
   }
 
-  Future<void> setDirectory(Directory directory) async {
+  Future<void> setDirectory(Directory directory,
+      {bool addToHistory = true}) async {
+    // History Logic
+    if (addToHistory &&
+        (_currentDirectory == null ||
+            _currentDirectory!.path != directory.path)) {
+      // If we are in the middle of history, truncate forward history
+      if (_navIndex < _navHistory.length - 1) {
+        _navHistory = _navHistory.sublist(0, _navIndex + 1);
+      }
+      _navHistory.add(directory.path);
+
+      // Limit History Size
+      const int maxHistory = 20;
+      if (_navHistory.length > maxHistory) {
+        _navHistory.removeAt(0);
+        // No need to adjust index here because we are about to set it to length-1 anyway?
+        // Wait. _navHistory.add -> length is now 21. index will be 20.
+        // removeAt(0) -> length becomes 20. index should be 19.
+        // So effectively index is length - 1 always when adding new.
+      }
+
+      _navIndex = _navHistory.length - 1;
+    }
+
     _currentDirectory = directory;
-    _isLoading = true;
     _isLoading = true;
     _saveState();
     notifyListeners();
@@ -913,6 +1147,35 @@ class DirectoryProvider extends ChangeNotifier {
       }
     }
     return quickAccess;
+  }
+
+  Future<int> deleteSelectedFiles() async {
+    final targets = _currentFiles.where((f) => f.isSelected).toList();
+    if (targets.isEmpty) return 0;
+
+    int count = 0;
+    _isLoading = true;
+    notifyListeners();
+
+    for (var f in targets) {
+      try {
+        // Use try-catch per file to avoid stopping everything
+        await f.entity.delete(recursive: true);
+        count++;
+      } catch (e) {
+        if (kDebugMode) {
+          print('Delete error: $e');
+        }
+      }
+    }
+
+    if (count > 0 && _currentDirectory != null) {
+      setDirectory(_currentDirectory!);
+    } else {
+      _isLoading = false;
+      notifyListeners();
+    }
+    return count;
   }
 
   // Helper to list Windows drives (Physical Drives)
