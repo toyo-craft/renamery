@@ -68,7 +68,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                 ),
                 const Spacer(),
                 Tooltip(
-                  message: 'リストにフォルダを表示',
+                  message: 'リストに${provider.termFolder}を表示',
                   child: InkWell(
                     onTap: () => context
                         .read<DirectoryProvider>()
@@ -82,7 +82,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                         Icons.folder,
                         size: 18,
                         color: context.watch<DirectoryProvider>().showFolders
-                            ? Theme.of(context).colorScheme.primary
+                            ? Colors.amber
                             : Theme.of(context).colorScheme.outline,
                       ),
                     ),
@@ -186,7 +186,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                 ),
                 _buildCheckbox(
                   context,
-                  '下位フォルダ検索',
+                  '下位${provider.termFolder}検索',
                   provider.recursiveSearch,
                   (val) => context
                       .read<DirectoryProvider>()

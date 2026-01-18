@@ -156,38 +156,7 @@ class _SettingsPanelState extends State<SettingsPanel>
                 ),
               ),
 
-              // Density Toggle
-              InkWell(
-                onTap: () => context.read<DirectoryProvider>().setCompactMode(
-                    !context.read<DirectoryProvider>().isCompactMode),
-                borderRadius: BorderRadius.circular(4.0),
-                child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(vertical: isCompact ? 2.0 : 4.0),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        height: 24,
-                        width: 36, // Switch width
-                        child: Switch(
-                          value:
-                              !context.watch<DirectoryProvider>().isCompactMode,
-                          onChanged: (val) => context
-                              .read<DirectoryProvider>()
-                              .setCompactMode(!val),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'タッチモード (ゆったり表示)',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // Density Toggle and Reset moved to SettingsScreen
 
               SizedBox(height: padding),
 
@@ -233,19 +202,6 @@ class _SettingsPanelState extends State<SettingsPanel>
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Tooltip(
-                message: '設定をリセット',
-                child: IconButton(
-                  onPressed: () {
-                    context.read<DirectoryProvider>().resetSettings();
-                  },
-                  icon: const Icon(Icons.refresh),
-                  style: IconButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                  ),
                 ),
               ),
             ],

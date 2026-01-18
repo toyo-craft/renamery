@@ -9,9 +9,10 @@ import '../../core/settings_service.dart';
 import 'panels/navigation_panel.dart';
 import 'panels/file_list_panel.dart';
 import 'panels/settings_panel.dart';
-import 'panels/toolbar_panel.dart';
+
 import 'helpers/undo_helper.dart';
 import 'helpers/copy_helper.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -120,6 +121,11 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     // Breakpoint: 800px arbitrary for "Tablet/Desktop" split
     final isDesktop = MediaQuery.of(context).size.width >= 800;
 
+    // Watch provider for toolbar updates
+    final provider = context.watch<DirectoryProvider>();
+    final iconColor = Colors.green[700]; // Namery Green-ish
+    final iconSize = 28.0;
+
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () {
@@ -180,8 +186,220 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         autofocus: true,
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('ReNamery'),
-            centerTitle: false,
+            titleSpacing: 0, // Minimize spacing to fit more icons if needed
+            title: Row(
+              children: [
+                const SizedBox(width: 8),
+                // 1. Back Group
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  color: iconColor,
+                  iconSize: iconSize,
+                  tooltip: '戻る',
+                  onPressed:
+                      provider.canGoBack ? () => provider.goBack() : null,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                PopupMenuButton<int>(
+                  icon: const Icon(Icons.arrow_drop_down),
+                  color: Colors.white,
+                  enabled: provider.backHistory.isNotEmpty,
+                  onSelected: (steps) => provider.jumpBack(steps),
+                  itemBuilder: (context) {
+                    return List.generate(provider.backHistory.length, (index) {
+                      return PopupMenuItem(
+                        value: index + 1,
+                        height: 32,
+                        child: Text(provider.backHistory[index],
+                            style: const TextStyle(fontSize: 12)),
+                      );
+                    });
+                  },
+                  tooltip: '履歴 (戻る)',
+                ),
+
+                // 2. Forward Group
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward),
+                  color: iconColor,
+                  iconSize: iconSize,
+                  tooltip: '進む',
+                  onPressed:
+                      provider.canGoForward ? () => provider.goForward() : null,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                PopupMenuButton<int>(
+                  icon: const Icon(Icons.arrow_drop_down),
+                  color: Colors.white,
+                  enabled: provider.forwardHistory.isNotEmpty,
+                  onSelected: (steps) => provider.jumpForward(steps),
+                  itemBuilder: (context) {
+                    return List.generate(provider.forwardHistory.length,
+                        (index) {
+                      return PopupMenuItem(
+                        value: index + 1,
+                        height: 32,
+                        child: Text(provider.forwardHistory[index],
+                            style: const TextStyle(fontSize: 12)),
+                      );
+                    });
+                  },
+                  tooltip: '履歴 (進む)',
+                ),
+
+                const SizedBox(
+                    height: 24,
+                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
+
+                // 3. Execute
+                IconButton(
+                  icon: const Icon(Icons.play_arrow),
+                  color: iconColor,
+                  iconSize: iconSize,
+                  tooltip: provider.hasInvalidFilenames
+                      ? 'エラー：ファイル名に禁止文字が含まれています'
+                      : '実行',
+                  onPressed:
+                      (provider.canExecute && !provider.hasInvalidFilenames)
+                          ? () => _confirmAndExecute(context, provider)
+                          : null,
+                ),
+
+                // 4. Undo
+                TextButton.icon(
+                  icon: const Icon(Icons.undo),
+                  label: Text(
+                      provider.canUndo ? '戻す (${provider.undoCount})' : '戻す'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: iconColor,
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: provider.canUndo
+                      ? () => UndoHelper.handleUndo(context, provider)
+                      : null,
+                ),
+
+                // 5. Copy Group
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.content_copy),
+                      color: Colors.grey[700],
+                      iconSize: iconSize,
+                      tooltip: 'コピー (現在名)',
+                      onPressed: provider.currentFiles.any((f) => f.isSelected)
+                          ? () => CopyHelper.handleCopy(context, provider)
+                          : null,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    PopupMenuButton<int>(
+                      icon: const Icon(Icons.arrow_drop_down),
+                      color: Colors.white,
+                      enabled: provider.currentFiles.any((f) => f.isSelected) ||
+                          provider.getLastUndoTransaction().isNotEmpty,
+                      onSelected: (value) async {
+                        await CopyHelper.handleCopyMenu(
+                            context, provider, value);
+                      },
+                      itemBuilder: (context) {
+                        final hasSelection =
+                            provider.currentFiles.any((f) => f.isSelected);
+                        final hasUndo =
+                            provider.getLastUndoTransaction().isNotEmpty;
+
+                        return [
+                          PopupMenuItem(
+                            value: 1,
+                            height: 32,
+                            enabled: hasSelection,
+                            child: const Text('クリップボードへ現在のリストをコピー',
+                                style: TextStyle(fontSize: 12)),
+                          ),
+                          PopupMenuItem(
+                            value: 2,
+                            height: 32,
+                            enabled: hasSelection,
+                            child: const Text('クリップボードへ現在のリストをコピー (Path)',
+                                style: TextStyle(fontSize: 12)),
+                          ),
+                          PopupMenuItem(
+                            value: 3,
+                            height: 32,
+                            enabled: hasSelection,
+                            child: const Text('クリップボードへフルパスリストをコピー',
+                                style: TextStyle(fontSize: 12)),
+                          ),
+                          PopupMenuItem(
+                            value: 4,
+                            height: 32,
+                            enabled: hasUndo,
+                            child: const Text('直前の変更記録をクリップボードへ',
+                                style: TextStyle(fontSize: 12)),
+                          ),
+                        ];
+                      },
+                      tooltip: 'コピーオプション',
+                    ),
+                  ],
+                ),
+
+                const SizedBox(
+                    height: 24,
+                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
+
+                // 6. Up
+                IconButton(
+                  icon: const Icon(Icons.arrow_upward),
+                  color: iconColor,
+                  iconSize: iconSize,
+                  tooltip: '上に移動',
+                  onPressed: provider.canMoveUp
+                      ? () => provider.moveSelection(true)
+                      : null,
+                ),
+
+                // 7. Down
+                IconButton(
+                  icon: const Icon(Icons.arrow_downward),
+                  color: iconColor,
+                  iconSize: iconSize,
+                  tooltip: '下に移動',
+                  onPressed: provider.canMoveDown
+                      ? () => provider.moveSelection(false)
+                      : null,
+                ),
+
+                const SizedBox(
+                    height: 24,
+                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
+
+                // 8. Refresh
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  color: iconColor,
+                  iconSize: iconSize,
+                  tooltip: '全て更新',
+                  onPressed: () => provider.refresh(),
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
+                },
+                tooltip: '設定',
+              ),
+            ],
           ),
           // Drawer is only available on Mobile
           drawer: !isDesktop
@@ -192,7 +410,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
               : null,
           body: Column(
             children: [
-              const ToolbarPanel(),
+              // ToolbarPanel Removed (Merged into AppBar)
               Expanded(
                 child: MultiSplitViewTheme(
                   data: MultiSplitViewThemeData(
@@ -261,5 +479,23 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmAndExecute(
+      BuildContext context, DirectoryProvider provider) async {
+    if (!provider.currentFiles.any((f) => f.isSelected)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ファイルが選択されていません')),
+      );
+      return;
+    }
+
+    final executedCount = await provider.executeRename();
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$executedCount 個のファイルをリネームしました')),
+      );
+    }
   }
 }

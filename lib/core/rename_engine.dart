@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'file_model.dart';
@@ -55,6 +56,16 @@ enum NumberingMode {
 
 enum CaseConversion { none, upper, lower, capitalize }
 
+// Moving ValidationType here to avoid circular dependency issues if DirectoryProvider imports RenameEngine
+enum ValidationType {
+  auto,
+  windows,
+  mac,
+  linux,
+  ios,
+  android,
+}
+
 class RenameEngine {
   /// パラメータに基づいてファイルのプレビュー名を生成します。
   static List<FileModel> generatePreviews(
@@ -73,6 +84,7 @@ class RenameEngine {
     String? listText, // For List Rename
     String? dateFormat, // For Date Append
     DatePosition datePosition = DatePosition.front, // For Date Append
+    ValidationType validationType = ValidationType.auto,
   }) {
     int counter = startNumber;
 
@@ -101,6 +113,13 @@ class RenameEngine {
     }
 
     for (var file in files) {
+      // 0. Skip Unselected Files
+      if (!file.isSelected) {
+        file.setNewName(file.originalName);
+        file.setValidationError(null);
+        continue;
+      }
+
       String originalBaseName = p.basenameWithoutExtension(file.originalName);
       String extension = p.extension(file.originalName);
       String newBaseName = originalBaseName;
@@ -254,20 +273,10 @@ class RenameEngine {
           }
           break;
         case RenameMode.listRename:
-          // Use parsed map
-          // Keys are original NAMES (with or without extension? Usually full name or base name?)
-          // Namery manual doesn't specify deeply but "Change Old Name to New Name".
-          // Usually full name match or base name match.
-          // Let's assume Base Name match for now as extensions are handled separately in Namery logic usually,
-          // BUT if list provides extensions, it might be full name.
-          // Let's try matching Original Full Name first.
+          // Use parsed map (Rename Map logic)
           if (renameMap.containsKey(file.originalName)) {
             String? mapped = renameMap[file.originalName];
             if (mapped != null) {
-              // Mapped Name might include extension.
-              // If so, we should update extension too?
-              // Or does it replace the base name only?
-              // If mapped has extension, use it.
               if (p.extension(mapped).isNotEmpty) {
                 newBaseName = p.basenameWithoutExtension(mapped);
                 extension = p.extension(mapped);
@@ -276,7 +285,6 @@ class RenameEngine {
               }
             }
           } else if (renameMap.containsKey(originalBaseName)) {
-            // Fallback to base name match
             newBaseName = renameMap[originalBaseName]!;
           }
           break;
@@ -302,7 +310,7 @@ class RenameEngine {
           break;
       }
 
-      // 3. Extension Lowercase (Legacy flag - keep for compatibility if needed, but SubTab uses specific modes)
+      // 3. Extension Lowercase
       if (extensionToLowerCase) {
         extension = extension.toLowerCase();
       }
@@ -314,10 +322,6 @@ class RenameEngine {
           break;
         case RenameMode.extensionAdd:
           if (replaceText != null && replaceText.isNotEmpty) {
-            // Add to END of existing extension, or append if none?
-            // Usually "Add Extension" means appending another extension like .bak
-            // Original Namery manual says "Add".
-            // If original is .txt and adding .bak -> .txt.bak
             if (replaceText.startsWith('.')) {
               extension += replaceText;
             } else {
@@ -332,8 +336,6 @@ class RenameEngine {
           extension = extension.toLowerCase();
           break;
         case RenameMode.formatProperCase:
-          // Split by space, hyphen, underscore
-          // Capitalize first letter of each part, lower others.
           newBaseName = newBaseName.replaceAllMapped(
             RegExp(r'([ \-_]+|^)([a-zA-Z0-9]+)'),
             (match) {
@@ -346,16 +348,14 @@ class RenameEngine {
             },
           );
           break;
-        // List Rename is handled outside or via specific lookup?
-        // Usually List Rename maps Original Name -> New Name.
-        // If handled here, we need the map.
-        // Since generatePreviews is static, we might pass the map?
-        // Or handle it as a special case where "replaceText" might logically hold the map? NO.
-        // Let's add an optional map parameter to generatePreviews?
+        // List Rename handled in main switch
+        default:
+          // ...
+          break;
+      }
 
-        // ...
-
-        // --- Extra Tab Features ---
+      // --- Extra Tab Features ---
+      switch (mode) {
         case RenameMode.appendDate:
           if (dateFormat != null && dateFormat.isNotEmpty) {
             try {
@@ -396,13 +396,67 @@ class RenameEngine {
       }
 
       file.setNewName('$newBaseName$extension');
+
+      // Validation Logic
+      RegExp invalidChars;
+      String errorMsg = 'ファイル名に使用できない文字が含まれています';
+
+      switch (validationType) {
+        case ValidationType.windows:
+          invalidChars = RegExp(r'[\\/:*?"<>|]');
+          break;
+        case ValidationType.mac:
+        case ValidationType.ios:
+          invalidChars = RegExp(
+              r'[:/]'); // Colon is restricted in Finder, Slash is path separator
+          break;
+        case ValidationType.linux:
+        case ValidationType.android:
+          invalidChars = RegExp(r'[/]'); // Only slash is strictly forbidden
+          break;
+        case ValidationType.auto:
+        default:
+          if (Platform.isWindows) {
+            invalidChars = RegExp(r'[\\/:*?"<>|]');
+          } else if (Platform.isMacOS) {
+            invalidChars = RegExp(r'[:/]');
+          } else {
+            invalidChars = RegExp(r'[/]');
+          }
+          break;
+      }
+
+      final controlChars = RegExp(r'[\x00-\x1f]');
+
+      if (invalidChars.hasMatch(file.newName)) {
+        file.setValidationError(errorMsg);
+      } else if (controlChars.hasMatch(file.newName)) {
+        file.setValidationError('制御文字が含まれています');
+      } else if (file.newName.trim().isEmpty) {
+        file.setValidationError('ファイル名が空です');
+      } else {
+        file.setValidationError(null);
+      }
     }
 
     return files;
   }
 }
 
+// (ValidationType is already defined above or effectively replaced here if I deleted the other instance)
+// Actually, looking at the previous view_file, it seems my previous replace_file_content MIGHT have failed to effectively replace the old instance if I targeted a block.
+// Wait, the previous tool output showed `ValidationType` defined TWICE in the diff?
+// No, the output showed +ValidationType...
+// The file view shows enum at line 437.
+// It also shows switch case using it.
+// The lint says "ValidationType is already defined".
+// This implies it is defined earlier in the file or imported.
+// It is NOT imported (I removed DirectoryProvider import).
+// So it must be defined earlier in the file.
+// Let's check lines 1-100 of rename_engine.dart to see if it's there.
+
 class JpTextConverter {
+// ... (JpTextConverter content remains same)
   static const String _halfKana =
       'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮｯｰﾞﾟ';
   static const List<String> _fullKana = [

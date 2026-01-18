@@ -91,6 +91,20 @@ class DirectoryProvider extends ChangeNotifier {
       _datePosition = DatePosition.values[dPosIndex];
     }
 
+    // Validation
+    final vTypeIndex = s.getInt('validationType');
+    if (vTypeIndex != null && vTypeIndex < ValidationType.values.length) {
+      _validationType = ValidationType.values[vTypeIndex];
+    }
+
+    // Initial Directory Settings
+    final initModeIndex = s.getInt('initialDirectoryMode');
+    if (initModeIndex != null &&
+        initModeIndex < InitialDirectoryMode.values.length) {
+      _initialDirectoryMode = InitialDirectoryMode.values[initModeIndex];
+    }
+    _fixedInitialDirectory = s.getString('fixedInitialDirectory') ?? '';
+
     // Etc Tab
     _etcTimestamp = s.getString('etcTimestamp') ?? '';
     // If empty, set default to now? Or keep empty? User Manual: "Ex 2002/03/30 17:30".
@@ -123,14 +137,23 @@ class DirectoryProvider extends ChangeNotifier {
     notifyListeners();
 
     // 5. Restore Directory (ASYNC - might take time)
-    final lastDir = s.getString('lastDirectory');
-    if (lastDir != null) {
-      final dir = Directory(lastDir);
-      if (await dir.exists()) {
-        await setDirectory(dir);
-      }
+    Directory? targetDir;
+
+    if (_initialDirectoryMode == InitialDirectoryMode.fixed &&
+        _fixedInitialDirectory.isNotEmpty) {
+      targetDir = Directory(_fixedInitialDirectory);
     } else {
-      // If no directory, we are effectively ready with empty state
+      // Last Used
+      final lastDir = s.getString('lastDirectory');
+      if (lastDir != null) {
+        targetDir = Directory(lastDir);
+      }
+    }
+
+    if (targetDir != null && await targetDir.exists()) {
+      await setDirectory(targetDir);
+    } else {
+      // Fallback or empty state
       if (_currentDirectory != null) {
         _applyFilters();
       }
@@ -187,6 +210,13 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('dateFormat', _dateFormat);
     s.set('datePosition', _datePosition.index);
 
+    // Validation
+    s.set('validationType', _validationType.index);
+
+    // Initial Directory
+    s.set('initialDirectoryMode', _initialDirectoryMode.index);
+    s.set('fixedInitialDirectory', _fixedInitialDirectory);
+
     // Etc Tab
     s.set('etcTimestamp', _etcTimestamp);
     s.set('etcAttribReadOnly', _etcAttribReadOnly);
@@ -198,6 +228,11 @@ class DirectoryProvider extends ChangeNotifier {
   // Rename State
   RenameMode _renameMode = RenameMode.upper;
   NumberingMode _numberingMode = NumberingMode.stringNumber;
+  ValidationType _validationType = ValidationType.auto;
+
+  // Initial Directory State
+  InitialDirectoryMode _initialDirectoryMode = InitialDirectoryMode.lastUsed;
+  String _fixedInitialDirectory = '';
 
   String? _findText;
   String? _replaceText;
@@ -247,6 +282,17 @@ class DirectoryProvider extends ChangeNotifier {
   // Getters for Rename UI
   RenameMode get renameMode => _renameMode;
   NumberingMode get numberingMode => _numberingMode;
+  ValidationType get validationType => _validationType;
+  InitialDirectoryMode get initialDirectoryMode => _initialDirectoryMode;
+  String get fixedInitialDirectory => _fixedInitialDirectory;
+
+  void updateInitialDirectorySettings(InitialDirectoryMode mode, String path) {
+    _initialDirectoryMode = mode;
+    _fixedInitialDirectory = path;
+    _saveState();
+    notifyListeners();
+  }
+
   String? get findText => _findText;
   String? get replaceText => _replaceText;
   String? get appendText => _appendText;
@@ -437,6 +483,7 @@ class DirectoryProvider extends ChangeNotifier {
     String? extensionText,
     String? dateFormat,
     DatePosition? datePosition,
+    ValidationType? validationType,
     String? etcTimestamp,
     bool? etcAttribReadOnly,
     bool? etcAttribHidden,
@@ -459,6 +506,9 @@ class DirectoryProvider extends ChangeNotifier {
     // Extra Tab
     if (dateFormat != null) _dateFormat = dateFormat;
     if (datePosition != null) _datePosition = datePosition;
+
+    // Validation
+    if (validationType != null) _validationType = validationType;
 
     // Etc Tab
     if (etcTimestamp != null) _etcTimestamp = etcTimestamp;
@@ -516,6 +566,7 @@ class DirectoryProvider extends ChangeNotifier {
     // Reset ALL files to original name first (cleans up unselected or previous states)
     for (var f in _currentFiles) {
       f.setNewName(f.originalName);
+      f.setValidationError(null);
     }
 
     if (targets.isEmpty) return; // Nothing to rename
@@ -553,6 +604,7 @@ class DirectoryProvider extends ChangeNotifier {
       listText: _listRenameText,
       dateFormat: _dateFormat,
       datePosition: _datePosition,
+      validationType: _validationType,
     );
   }
 
@@ -1178,6 +1230,10 @@ class DirectoryProvider extends ChangeNotifier {
     return count;
   }
 
+  // Validation State Getter
+  bool get hasInvalidFilenames =>
+      _currentFiles.any((f) => f.hasValidationError);
+
   // Helper to list Windows drives (Physical Drives)
   static Future<List<Directory>> getLogicalDrives() async {
     List<Directory> drives = [];
@@ -1195,4 +1251,28 @@ class DirectoryProvider extends ChangeNotifier {
     }
     return drives;
   }
+
+  // Terminology Getter
+  String get termFolder {
+    switch (_validationType) {
+      case ValidationType.windows:
+      case ValidationType.mac:
+      case ValidationType.ios:
+        return 'フォルダ';
+      case ValidationType.linux:
+      case ValidationType.android:
+        return 'ディレクトリ';
+      case ValidationType.auto:
+        if (Platform.isWindows || Platform.isMacOS || Platform.isIOS) {
+          return 'フォルダ';
+        } else {
+          return 'ディレクトリ';
+        }
+    }
+  }
+}
+
+enum InitialDirectoryMode {
+  lastUsed,
+  fixed,
 }

@@ -231,9 +231,27 @@ class _DirectoryTileState extends State<_DirectoryTile> {
       iconColor = Colors.grey;
     }
 
-    final isSelected =
-        context.watch<DirectoryProvider>().currentDirectory?.path ==
-            widget.directory.path;
+    final provider = context.watch<DirectoryProvider>();
+    final currentDir = provider.currentDirectory;
+    final isSelected = currentDir?.path == widget.directory.path;
+
+    // Auto-expand if currentDir is a descendant
+    if (currentDir != null && !_isExpanded) {
+      bool isDescendant = false;
+      try {
+        isDescendant = p.isWithin(widget.directory.path, currentDir.path);
+      } catch (e) {
+        // Ignore path parsing errors
+      }
+
+      if (isDescendant) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_isExpanded) {
+            _toggleExpand(); // Reuse existing toggle logic which handles loading
+          }
+        });
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

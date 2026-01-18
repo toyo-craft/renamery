@@ -163,7 +163,7 @@ class ToolbarPanel extends StatelessWidget {
                       value: 2,
                       height: 32,
                       enabled: hasSelection,
-                      child: const Text('クリップボードへ現在のリストをコピー (Path)',
+                      child: const Text('相対パスリストをコピー',
                           style: TextStyle(fontSize: 12)),
                     ),
                     PopupMenuItem(

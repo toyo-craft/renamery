@@ -40,6 +40,23 @@ class FileModel {
     _errorMessage = message;
   }
 
+  // Validation Error (separate from operation error)
+  bool _hasValidationError = false;
+  String? _validationErrorMessage;
+
+  bool get hasValidationError => _hasValidationError;
+  String? get validationErrorMessage => _validationErrorMessage;
+
+  void setValidationError(String? message) {
+    if (message != null) {
+      _hasValidationError = true;
+      _validationErrorMessage = message;
+    } else {
+      _hasValidationError = false;
+      _validationErrorMessage = null;
+    }
+  }
+
   // Helpers for UI
   String get size {
     if (entity is File) {
@@ -70,8 +87,13 @@ class FileModel {
 
   String get fileType {
     if (entity is Directory) return 'Folder';
-    final ext = entity.uri.pathSegments.last.split('.').last.toUpperCase();
-    return '$ext File';
+    try {
+      if (!entity.uri.pathSegments.last.contains('.')) return 'File';
+      final ext = entity.uri.pathSegments.last.split('.').last.toUpperCase();
+      return '$ext File';
+    } catch (_) {
+      return 'File';
+    }
   }
 
   String get dateModified {

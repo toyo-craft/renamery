@@ -228,7 +228,7 @@ class _MainTabState extends State<MainTab> {
                         height: 1,
                         color: Colors.grey,
                       ),
-                      items: const [
+                      items: [
                         DropdownMenuItem(
                           value: NumberingMode.stringNumber,
                           child: Text('文字列 + 連番'),
@@ -247,27 +247,27 @@ class _MainTabState extends State<MainTab> {
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.baseStringNumber,
-                          child: Text('基本フォルダ名 + 文字列 + 連番'),
+                          child: Text('基本${provider.termFolder}名 + 文字列 + 連番'),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.baseStringOriginal,
-                          child: Text('基本フォルダ名 + 文字列 + 現在名'),
+                          child: Text('基本${provider.termFolder}名 + 文字列 + 現在名'),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.relativeStringNumber,
-                          child: Text('相対フォルダ名 + 文字列 + 連番'),
+                          child: Text('相対${provider.termFolder}名 + 文字列 + 連番'),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.relativeStringOriginal,
-                          child: Text('相対フォルダ名 + 文字列 + 現在名'),
+                          child: Text('相対${provider.termFolder}名 + 文字列 + 現在名'),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.numberStringBase,
-                          child: Text('連番 + 文字列 + 基本フォルダ名'),
+                          child: Text('連番 + 文字列 + 基本${provider.termFolder}名'),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.numberStringRelative,
-                          child: Text('連番 + 文字列 + 相対フォルダ名'),
+                          child: Text('連番 + 文字列 + 相対${provider.termFolder}名'),
                         ),
                       ],
                       onChanged: (val) {

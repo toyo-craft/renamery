@@ -254,7 +254,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                   child: CircularProgressIndicator());
                             }
                             if (provider.currentDirectory == null) {
-                              return const Center(child: Text('フォルダを選択してください'));
+                              return Center(
+                                  child:
+                                      Text('${provider.termFolder}を選択してください'));
                             }
                             if (files.isEmpty) {
                               return const Center(child: Text('ファイルがありません'));
@@ -576,12 +578,60 @@ class _FileListPanelState extends State<FileListPanel> {
                                                           width:
                                                               _widthSpace + 16),
 
-                                                      // 2. New Name
-                                                      _buildCell(
-                                                        fileModel.newName,
-                                                        _colWidthNew,
-                                                        isModified: isModified,
-                                                        isBold: isModified,
+                                                      // New Name Cell with specific layout for Error Icon
+                                                      SizedBox(
+                                                        width: _colWidthNew,
+                                                        child: Row(
+                                                          children: [
+                                                            Expanded(
+                                                              child: Text(
+                                                                fileModel
+                                                                    .newName,
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: fileModel
+                                                                          .hasValidationError
+                                                                      ? Colors
+                                                                          .red
+                                                                      : (isModified
+                                                                          ? Colors
+                                                                              .blue
+                                                                          : Colors
+                                                                              .black),
+                                                                  fontWeight: isModified
+                                                                      ? FontWeight
+                                                                          .bold
+                                                                      : FontWeight
+                                                                          .normal,
+                                                                  fontSize: 12,
+                                                                ),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                            ),
+                                                            if (fileModel
+                                                                .hasValidationError)
+                                                              Tooltip(
+                                                                message: fileModel
+                                                                        .validationErrorMessage ??
+                                                                    'エラー',
+                                                                child:
+                                                                    const Padding(
+                                                                  padding: EdgeInsets
+                                                                      .only(
+                                                                          left:
+                                                                              4),
+                                                                  child: Icon(
+                                                                      Icons
+                                                                          .error_outline,
+                                                                      color: Colors
+                                                                          .red,
+                                                                      size: 16),
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
                                                       ),
                                                       SizedBox(
                                                           width:
