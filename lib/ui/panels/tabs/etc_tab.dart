@@ -222,7 +222,6 @@ class _EtcTabState extends State<EtcTab> {
                 controller: _timestampController,
                 decoration: InputDecoration(
                   isDense: true,
-                  border: const OutlineInputBorder(),
                   hintText: 'yyyy/MM/dd HH:mm',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.calendar_month),

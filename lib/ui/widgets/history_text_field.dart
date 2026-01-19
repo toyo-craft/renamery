@@ -46,7 +46,6 @@ class HistoryTextField extends StatelessWidget {
                 vertical: isCompact ? 6 : 8,
                 horizontal: 8,
               ),
-              border: const OutlineInputBorder(),
               suffixIcon: PopupMenuButton<String>(
                 icon: const Icon(Icons.arrow_drop_down),
                 onSelected: (String value) {

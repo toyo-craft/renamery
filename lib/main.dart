@@ -62,6 +62,14 @@ class ReNameryApp extends StatelessWidget {
                 : VisualDensity.standard,
             useMaterial3: true,
             fontFamily: 'Segoe UI',
+            tabBarTheme: TabBarThemeData(
+              indicatorSize: TabBarIndicatorSize.label,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+            ),
+            inputDecorationTheme: const InputDecorationTheme(
+              filled: true,
+              border: UnderlineInputBorder(),
+            ),
           ),
           home: const HomeScreen(),
           localizationsDelegates: const [
