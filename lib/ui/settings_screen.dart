@@ -28,6 +28,76 @@ class SettingsScreen extends StatelessWidget {
               ),
               const Divider(),
               const Divider(),
+              _buildSectionHeader(context, '外観'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('テーマモード'),
+                    const SizedBox(height: 8),
+                    SegmentedButton<AppThemeType>(
+                      segments: const [
+                        ButtonSegment(
+                            value: AppThemeType.system,
+                            label: Text('システム'),
+                            icon: Icon(Icons.brightness_auto)),
+                        ButtonSegment(
+                            value: AppThemeType.light,
+                            label: Text('ライト'),
+                            icon: Icon(Icons.brightness_high)),
+                        ButtonSegment(
+                            value: AppThemeType.dark,
+                            label: Text('ダーク'),
+                            icon: Icon(Icons.brightness_4)),
+                        ButtonSegment(
+                            value: AppThemeType.darkGray,
+                            label: Text('グレー'),
+                            icon: Icon(Icons.contrast)),
+                      ],
+                      selected: {provider.appTheme},
+                      onSelectionChanged: (Set<AppThemeType> newSelection) {
+                        provider.setAppTheme(newSelection.first);
+                      },
+                      showSelectedIcon: false,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('テーマカラー'),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final color in [
+                          Colors.green,
+                          Colors.blue,
+                          Colors.indigo,
+                          Colors.purple,
+                          Colors.pink,
+                          Colors.red,
+                          Colors.orange,
+                          Colors.brown,
+                          Colors.blueGrey,
+                        ])
+                          InkWell(
+                            onTap: () => provider.setSeedColor(color),
+                            borderRadius: BorderRadius.circular(16),
+                            child: CircleAvatar(
+                              backgroundColor: color,
+                              radius: 16,
+                              child: provider.seedColor.value == color.value
+                                  ? const Icon(Icons.check,
+                                      size: 16, color: Colors.white)
+                                  : null,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Divider(),
               _buildSectionHeader(context, '動作モード (OS設定)'),
               ListTile(
                 title: const Text('OSモード'),

@@ -58,9 +58,14 @@ class _ExtraTabState extends State<ExtraTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDateSection(context, provider, mode, spacing),
-              Divider(height: blockSpacing, thickness: 1, color: Colors.green),
-              _buildConversionSection(context, provider, mode, spacing),
+              _buildDateSection(
+                  context, provider, provider.renameMode, spacing),
+              Divider(
+                  height: blockSpacing,
+                  thickness: 1,
+                  color: Theme.of(context).colorScheme.outlineVariant),
+              _buildConversionSection(
+                  context, provider, provider.renameMode, spacing),
             ],
           ),
         );

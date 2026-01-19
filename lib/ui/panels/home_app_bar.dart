@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/directory_provider.dart';
 import '../helpers/undo_helper.dart';
 import '../helpers/copy_helper.dart';
+import 'package:path/path.dart' as p;
 import '../settings_screen.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -19,7 +20,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DirectoryProvider>();
-    final iconColor = Colors.green[700];
+    // final iconColor = Colors.green[700]; // Removed fixed color
     const iconSize = 28.0;
 
     return AppBar(
@@ -46,7 +47,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               // 1. Back Group
               IconButton(
                 icon: const Icon(Icons.arrow_back),
-                color: iconColor,
+                // color: iconColor, // Use Theme Default
                 iconSize: iconSize,
                 tooltip: '戻る',
                 onPressed: provider.canGoBack ? () => provider.goBack() : null,
@@ -55,7 +56,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               PopupMenuButton<int>(
                 icon: const Icon(Icons.arrow_drop_down),
-                color: Colors.white,
+                // color: Colors.white, // Use Theme
                 enabled: provider.backHistory.isNotEmpty,
                 onSelected: (steps) => provider.jumpBack(steps),
                 itemBuilder: (context) {
@@ -63,7 +64,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     return PopupMenuItem(
                       value: index + 1,
                       height: 32,
-                      child: Text(provider.backHistory[index],
+                      child: Text(p.basename(provider.backHistory[index]),
                           style: const TextStyle(fontSize: 12)),
                     );
                   });
@@ -74,7 +75,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               // 2. Forward Group
               IconButton(
                 icon: const Icon(Icons.arrow_forward),
-                color: iconColor,
+                // color: iconColor,
                 iconSize: iconSize,
                 tooltip: '進む',
                 onPressed:
@@ -84,7 +85,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               PopupMenuButton<int>(
                 icon: const Icon(Icons.arrow_drop_down),
-                color: Colors.white,
+                // color: Colors.white,
                 enabled: provider.forwardHistory.isNotEmpty,
                 onSelected: (steps) => provider.jumpForward(steps),
                 itemBuilder: (context) {
@@ -92,7 +93,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     return PopupMenuItem(
                       value: index + 1,
                       height: 32,
-                      child: Text(provider.forwardHistory[index],
+                      child: Text(p.basename(provider.forwardHistory[index]),
                           style: const TextStyle(fontSize: 12)),
                     );
                   });
@@ -107,7 +108,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               // 3. Execute
               IconButton(
                 icon: const Icon(Icons.play_arrow),
-                color: iconColor,
+                // color: iconColor,
                 iconSize: iconSize,
                 tooltip: provider.hasInvalidFilenames
                     ? 'エラー：ファイル名に禁止文字が含まれています'
@@ -125,7 +126,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   label: Text(
                       provider.canUndo ? '戻す (${provider.undoCount})' : '戻す'),
                   style: TextButton.styleFrom(
-                    foregroundColor: iconColor,
+                    // foregroundColor: iconColor, // Use theme
                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   onPressed: provider.canUndo
@@ -135,7 +136,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               else
                 IconButton(
                   icon: const Icon(Icons.undo),
-                  color: iconColor,
+                  // color: iconColor,
                   iconSize: iconSize,
                   tooltip:
                       provider.canUndo ? '戻す (${provider.undoCount})' : '戻す',
@@ -153,7 +154,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 // 5. Copy Group
                 IconButton(
                   icon: const Icon(Icons.content_copy),
-                  color: Colors.grey[700],
+                  // color: Colors.grey[700], // Use Theme
                   iconSize: iconSize,
                   tooltip: 'コピー (現在名)',
                   onPressed: provider.currentFiles.any((f) => f.isSelected)
@@ -164,7 +165,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 PopupMenuButton<int>(
                   icon: const Icon(Icons.arrow_drop_down),
-                  color: Colors.white,
+                  // color: Colors.white,
                   enabled: provider.currentFiles.any((f) => f.isSelected) ||
                       provider.getLastUndoTransaction().isNotEmpty,
                   onSelected: (value) async {
@@ -181,7 +182,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 // 6. Up/Down
                 IconButton(
                   icon: const Icon(Icons.arrow_upward),
-                  color: iconColor,
+                  // color: iconColor,
                   iconSize: iconSize,
                   tooltip: '上に移動',
                   onPressed: provider.canMoveUp
@@ -190,7 +191,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.arrow_downward),
-                  color: iconColor,
+                  // color: iconColor,
                   iconSize: iconSize,
                   tooltip: '下に移動',
                   onPressed: provider.canMoveDown
@@ -205,7 +206,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 // 8. Refresh
                 IconButton(
                   icon: const Icon(Icons.refresh),
-                  color: iconColor,
+                  // color: iconColor,
                   iconSize: iconSize,
                   tooltip: '全て更新',
                   onPressed: () => provider.refresh(),
@@ -214,7 +215,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 // Narrow Layout: Show Overflow Menu
                 const Spacer(),
                 PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: iconColor),
+                  icon: const Icon(Icons.more_vert), //, color: iconColor),
                   tooltip: 'その他の操作',
                   onSelected: (value) async {
                     switch (value) {

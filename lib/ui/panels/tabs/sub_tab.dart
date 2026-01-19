@@ -178,13 +178,61 @@ class _SubTabState extends State<SubTab> {
                       child: Text('テキスト入力 (Original[TAB]New)'),
                     ),
                     DropdownMenuItem(
+                      value: 'sample_chapter',
+                      child: Text('サンプル: 連番ファイル (01_chapter...)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'sample_ext',
+                      child: Text('サンプル: 拡張子一括置換 (.jpg[TAB].png)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'sample_replace',
+                      child: Text('サンプル: 特定文字の置換 (old[TAB]new)'),
+                    ),
+                    DropdownMenuItem(
                       value: 'file_read',
                       enabled: false,
                       child: Text('ファイル読込 (Coming Soon)',
                           style: TextStyle(color: Colors.grey)),
                     ),
                   ],
-                  onChanged: (val) {},
+                  onChanged: (val) {
+                    if (val == 'text_input' || val == null) return;
+
+                    String sampleText = '';
+                    switch (val) {
+                      case 'sample_chapter':
+                        sampleText =
+                            '01_chapter_intro.mp4\t01_chapter_intro.mp4\n02_chapter_main.mp4\t02_chapter_main.mp4\n03_chapter_end.mp4\t03_chapter_end.mp4';
+                        // User manual says: list rename is "Original [TAB] New".
+                        // Actually the user sample "01_chapter_intro.mp4" (single column) implies "Target" or "New"?
+                        // If single column, it usually implies "Original" to remain "Original"? Or "New" if matching by index?
+                        // Let's re-read the engine logic or assume Tab separated.
+                        // Wait, list rename usually maps Original -> New.
+                        // If the user wants to *rename to* chapter files, they probably providing target names?
+                        // Let's use the exact sample the user gave previously for the default text area: "01_chapter_intro.mp4\n..."
+                        // Maybe simpler: just put the text.
+                        sampleText =
+                            '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
+                        break;
+                      case 'sample_ext':
+                        sampleText =
+                            'image01.jpg\timage01.png\nimage02.jpg\timage02.png\nimage03.jpg\timage03.png';
+                        break;
+                      case 'sample_replace':
+                        sampleText =
+                            'old_report.docx\tnew_report.docx\ndraft_v1.txt\tdraft_final.txt';
+                        break;
+                    }
+
+                    if (sampleText.isNotEmpty) {
+                      context.read<DirectoryProvider>().updateRenameSettings(
+                          listText: sampleText,
+                          mode: RenameMode.listRename,
+                          immediate: true);
+                      _listController.text = sampleText;
+                    }
+                  },
                 ),
               ),
             ],

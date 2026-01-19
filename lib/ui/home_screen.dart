@@ -34,7 +34,12 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     // Initialize 3-Pane Controller (Desktop)
     _threePaneController = MultiSplitViewController(
       areas: [
-        Area(flex: 0.2, builder: (c, a) => const NavigationPanel()),
+        Area(
+            flex: 0.2,
+            builder: (c, a) => Consumer<DirectoryProvider>(
+                  builder: (context, provider, child) =>
+                      NavigationPanel(key: ValueKey(provider.resetCount)),
+                )),
         Area(flex: 0.5, builder: (c, a) => const FileListPanel()),
         Area(flex: 0.3, builder: (c, a) => const SettingsPanel()),
       ],
@@ -191,9 +196,12 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         ),
         // Left Drawer (if Left Pane hidden)
         drawer: !showLeftPane
-            ? const Drawer(
+            ? Drawer(
                 width: 300,
-                child: NavigationPanel(),
+                child: Consumer<DirectoryProvider>(
+                  builder: (context, provider, child) =>
+                      NavigationPanel(key: ValueKey(provider.resetCount)),
+                ),
               )
             : null,
         // Right Drawer (if Right Pane hidden)

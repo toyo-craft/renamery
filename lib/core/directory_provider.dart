@@ -1,12 +1,20 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'file_model.dart';
 import 'rename_engine.dart';
 import 'undo_manager.dart';
 import 'settings_service.dart';
+
+enum AppThemeType {
+  system,
+  light,
+  dark,
+  darkGray, // New Custom Theme
+}
 
 class DirectoryProvider extends ChangeNotifier {
   Directory? _currentDirectory;
@@ -35,6 +43,15 @@ class DirectoryProvider extends ChangeNotifier {
     _showFolders = s.getBool('showFolders') ?? true;
     _saveSequenceNumber = s.getBool('saveSequenceNumber') ?? false;
     _isCompactMode = s.getBool('isCompactMode') ?? true; // Default to Compact
+
+    // Theme (SYNC)
+    final appThemeStr = s.getString('appTheme') ?? 'light';
+    _appTheme = AppThemeType.values.firstWhere((e) => e.name == appThemeStr,
+        orElse: () => AppThemeType.light);
+    final seedColorVal = s.getInt('seedColor');
+    if (seedColorVal != null) {
+      _seedColor = Color(seedColorVal);
+    }
 
     // Navigation History (Restored from settings)
     final savedNavHistory = s.getList<String>('navHistory');
@@ -66,12 +83,12 @@ class DirectoryProvider extends ChangeNotifier {
     _deleteToText = s.getString('deleteToText');
     _startNumber = s.getInt('startNumber') ?? 1;
     _digits = s.getInt('digits') ?? 3;
-    _extensionToLowerCase = s.getBool('extensionToLowerCase') ?? false;
+    _extensionToLowerCase = s.getBool('extensionToLowerCase') ?? true;
     _useRegex = s.getBool('useRegex') ?? false;
 
     // Sub Tab / New States
-    _listRenameText = s.getString('listRenameText') ?? '';
-    _listRenameText = s.getString('listRenameText') ?? '';
+    _listRenameText = s.getString('listRenameText') ??
+        '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
     _extensionChangeText = s.getString('extensionChangeText') ?? '';
     _extensionAddText = s.getString('extensionAddText') ?? '';
 
@@ -194,6 +211,8 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('showFolders', _showFolders);
     s.set('saveSequenceNumber', _saveSequenceNumber);
     s.set('isCompactMode', _isCompactMode);
+    s.set('appTheme', _appTheme.name);
+    s.set('seedColor', _seedColor.value);
 
     s.set('navHistory', _navHistory);
     s.set('navIndex', _navIndex);
@@ -223,14 +242,12 @@ class DirectoryProvider extends ChangeNotifier {
 
     // New Fields
     s.set('listRenameText', _listRenameText);
-    s.set('listRenameText', _listRenameText);
     s.set('extensionChangeText', _extensionChangeText);
     s.set('extensionAddText', _extensionAddText);
     s.set('lastMainMode', _lastMainMode.index);
     s.set('lastSubMode', _lastSubMode.index);
     s.set('lastEtcMode', _lastEtcMode.index);
     s.set('lastExtraMode', _lastExtraMode.index);
-    s.set('lastEtcMode', _lastEtcMode.index);
     s.set('lastEtcMode', _lastEtcMode.index);
     s.set('lastExtraMode', _lastExtraMode.index);
     s.set('lastStringMode', _lastStringMode.index);
@@ -255,13 +272,17 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   // Rename State
-  RenameMode _renameMode = RenameMode.upper;
+  RenameMode _renameMode = RenameMode.numbering; // Default: Numbering (Main)
   NumberingMode _numberingMode = NumberingMode.stringNumber;
   ValidationType _validationType = ValidationType.auto;
 
   // Initial Directory State
   InitialDirectoryMode _initialDirectoryMode = InitialDirectoryMode.lastUsed;
   String _fixedInitialDirectory = '';
+
+  // Reset Signal for Sidebar
+  int _resetCount = 0;
+  int get resetCount => _resetCount;
 
   String? _findText;
   String? _replaceText;
@@ -270,7 +291,7 @@ class DirectoryProvider extends ChangeNotifier {
   int _startNumber = 1;
   int _insertIndex = 1;
   int _digits = 3;
-  bool _extensionToLowerCase = false;
+  bool _extensionToLowerCase = true;
   bool _useRegex = false;
 
   // Navigation Source
@@ -296,10 +317,14 @@ class DirectoryProvider extends ChangeNotifier {
   bool _showPreview = true;
   bool _showFolders = true;
   bool _saveSequenceNumber = false;
-  bool _isCompactMode = true;
+  bool _isCompactMode = false; // Default: OFF (Standard)
+
+  // Theme State
+  AppThemeType _appTheme = AppThemeType.light; // Default: Light
+  Color _seedColor = Colors.green;
 
   // Extra Tab State
-  String _dateFormat = 'yyyymmdd_';
+  String _dateFormat = 'yyyyMMdd_'; // Default: yyyyMMdd_
   DatePosition _datePosition = DatePosition.front;
 
   // Etc Tab State
@@ -351,8 +376,8 @@ class DirectoryProvider extends ChangeNotifier {
   List<String> get extensionHistory => _extensionHistory;
 
   // Mode Memory
-  RenameMode _lastMainMode = RenameMode.upper;
-  RenameMode _lastSubMode = RenameMode.extensionRemove;
+  RenameMode _lastMainMode = RenameMode.numbering; // Default: Numbering
+  RenameMode _lastSubMode = RenameMode.extension; // Default: Change Extension
   RenameMode _lastEtcMode = RenameMode.changeTimestamp;
   RenameMode _lastExtraMode = RenameMode.appendDate;
   RenameMode _lastStringMode = RenameMode.append; // Default Suffix
@@ -407,7 +432,8 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   // Sub Tab State
-  String _listRenameText = '';
+  String _listRenameText =
+      '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
   String _extensionChangeText = '';
   String _extensionAddText = '';
   Timer? _previewTimer;
@@ -424,6 +450,23 @@ class DirectoryProvider extends ChangeNotifier {
   bool get showFolders => _showFolders;
   bool get saveSequenceNumber => _saveSequenceNumber;
   bool get isCompactMode => _isCompactMode;
+
+  AppThemeType get appTheme => _appTheme;
+
+  // Helper for MaterialApp to consume (Mapping)
+  ThemeMode get themeMode {
+    switch (_appTheme) {
+      case AppThemeType.light:
+        return ThemeMode.light;
+      case AppThemeType.dark:
+      case AppThemeType.darkGray:
+        return ThemeMode.dark;
+      case AppThemeType.system:
+        return ThemeMode.system;
+    }
+  }
+
+  Color get seedColor => _seedColor;
 
   // Filter Logic
   void updateFilterSettings({
@@ -471,6 +514,18 @@ class DirectoryProvider extends ChangeNotifier {
 
   void setCompactMode(bool isCompact) {
     _isCompactMode = isCompact;
+    _saveState();
+    notifyListeners();
+  }
+
+  void setAppTheme(AppThemeType theme) {
+    _appTheme = theme;
+    _saveState();
+    notifyListeners();
+  }
+
+  void setSeedColor(Color color) {
+    _seedColor = color;
     _saveState();
     notifyListeners();
   }
@@ -700,18 +755,68 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   void resetSettings() {
-    _renameMode = RenameMode.replace;
-    _findText = '';
-    _replaceText = '';
-    _appendText = '';
+    // 1. Theme
+    _appTheme = AppThemeType.light;
+    _seedColor = Colors.green;
+    _isCompactMode = false;
+
+    // 2. Initial Directory
+    _initialDirectoryMode = InitialDirectoryMode.lastUsed;
+    _fixedInitialDirectory = '';
+
+    // 3. Rename Settings
+    _renameMode = RenameMode.numbering;
+    _numberingMode = NumberingMode.stringNumber;
     _startNumber = 1;
     _insertIndex = 1;
     _digits = 3;
-    _numberingMode = NumberingMode.stringNumber;
-    // _deleteModeString = 'start'; // Default radio selection - This is not a state variable
-    _extensionToLowerCase = false;
+    _findText = '';
+    _replaceText = '';
+    _appendText = '';
+    _deleteToText = '';
+    _extensionToLowerCase = true;
     _useRegex = false;
-    // _caseConversion = CaseConversion.none; // This is not a state variable
+    _saveSequenceNumber = false;
+
+    // Mode Memory defaults
+    _lastMainMode = RenameMode.numbering;
+    _lastSubMode = RenameMode.extension;
+    _lastExtraMode = RenameMode.appendDate;
+    _lastEtcMode = RenameMode.changeTimestamp;
+    _lastStringMode = RenameMode.append;
+
+    // Sub Tab
+    _listRenameText =
+        '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
+    _extensionChangeText = '';
+    _extensionAddText = '';
+
+    // Extra Tab
+    _dateFormat = 'yyyyMMdd_';
+    _datePosition = DatePosition.front;
+
+    // Etc Tab
+    _etcTimestamp =
+        ''; // Will default to now on next read if needed, or clear it
+    final now = DateTime.now();
+    _etcTimestamp =
+        '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    _etcAttribReadOnly = false;
+    _etcAttribHidden = false;
+    _etcAttribArchive = false;
+    _etcAttribSystem = false;
+
+    // 4. View Settings (Left Pane)
+    _showFolders = true;
+    _hideSystemFiles = true;
+    _recursiveSearch = false;
+    _showPreview = true;
+    _validationType = ValidationType.auto;
+
+    // 5. Reset Signal (Collapse Tree)
+    _resetCount++;
+
+    _applyFilters(); // Re-apply view settings
     _saveState();
     notifyListeners();
   }
@@ -1131,10 +1236,16 @@ class DirectoryProvider extends ChangeNotifier {
     if (value.isEmpty) return;
     // target is passed reference
 
-    // Remove if exists to move to top
+    // Remove if exists to move to top (prevent duplicates)
     target.remove(value);
     target.insert(0, value);
 
+    if (target.length > 20) {
+      // Increased limit slightly or keep logic
+      target.removeRange(20, target.length);
+    }
+    // Limit was 10, keeping 10 or increasing? User didn't specify size, just duplicates.
+    // Existing code had 10. Let's stick to 10 but ensure removal works.
     if (target.length > 10) {
       target.removeRange(10, target.length);
     }
@@ -1163,16 +1274,16 @@ class DirectoryProvider extends ChangeNotifier {
       if (_navIndex < _navHistory.length - 1) {
         _navHistory = _navHistory.sublist(0, _navIndex + 1);
       }
+
+      // Remove duplicate if exists (User Request)
+      _navHistory.remove(directory.path);
+
       _navHistory.add(directory.path);
 
       // Limit History Size
       const int maxHistory = 20;
       if (_navHistory.length > maxHistory) {
         _navHistory.removeAt(0);
-        // No need to adjust index here because we are about to set it to length-1 anyway?
-        // Wait. _navHistory.add -> length is now 21. index will be 20.
-        // removeAt(0) -> length becomes 20. index should be 19.
-        // So effectively index is length - 1 always when adding new.
       }
 
       _navIndex = _navHistory.length - 1;

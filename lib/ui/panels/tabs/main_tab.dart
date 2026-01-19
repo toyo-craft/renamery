@@ -165,8 +165,8 @@ class _MainTabState extends State<MainTab> {
                         color: context
                                 .watch<DirectoryProvider>()
                                 .saveSequenceNumber
-                            ? Colors.amber
-                            : Colors.grey,
+                            ? Theme.of(context).colorScheme.tertiary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -197,8 +197,8 @@ class _MainTabState extends State<MainTab> {
           Divider(
             thickness: 1,
             height: blockSpacing,
-            color: Colors.green,
-          ), // Green header line
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ), // Divider
 
           // --- Mode Radio Group ---
           // 1. Numbering with Dropdown
@@ -230,7 +230,7 @@ class _MainTabState extends State<MainTab> {
                       style: Theme.of(context).textTheme.bodyMedium,
                       underline: Container(
                         height: 1,
-                        color: Colors.grey,
+                        color: Theme.of(context).colorScheme.outline,
                       ),
                       items: [
                         DropdownMenuItem(
@@ -343,7 +343,10 @@ class _MainTabState extends State<MainTab> {
             ),
           ),
 
-          Divider(thickness: 1, height: blockSpacing, color: Colors.green),
+          Divider(
+              thickness: 1,
+              height: blockSpacing,
+              color: Theme.of(context).colorScheme.outlineVariant),
 
           // --- Delete Section ---
           // 1. Delete Start
@@ -428,7 +431,7 @@ class _MainTabState extends State<MainTab> {
                           },
                           underline: Container(
                             height: 1,
-                            color: Colors.grey,
+                            color: Theme.of(context).colorScheme.outline,
                           ),
                           isDense: true,
                         ),
@@ -460,7 +463,10 @@ class _MainTabState extends State<MainTab> {
             ),
           ),
 
-          Divider(thickness: 1, height: blockSpacing, color: Colors.green),
+          Divider(
+              thickness: 1,
+              height: blockSpacing,
+              color: Theme.of(context).colorScheme.outlineVariant),
 
           // --- Replace Section ---
           Padding(

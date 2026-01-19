@@ -133,12 +133,17 @@ class _EtcTabState extends State<EtcTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Timestamp Section
-              _buildTimestampSection(context, provider, mode, spacing),
+              _buildTimestampSection(
+                  context, provider, provider.renameMode, spacing),
 
-              Divider(height: blockSpacing, thickness: 1, color: Colors.green),
+              Divider(
+                  height: blockSpacing,
+                  thickness: 1,
+                  color: Theme.of(context).colorScheme.outlineVariant),
 
               // Attribute Section
-              _buildAttributeSection(context, provider, mode, spacing),
+              _buildAttributeSection(
+                  context, provider, provider.renameMode, spacing),
 
               const SizedBox(height: 24),
 

@@ -69,9 +69,11 @@ class _FileListPanelState extends State<FileListPanel> {
         child: Container(
           width: 16,
           height: double.infinity,
-          color: Colors.transparent,
-          child: const Center(
-            child: VerticalDivider(width: 1, thickness: 1, color: Colors.grey),
+          child: Center(
+            child: VerticalDivider(
+                width: 1,
+                thickness: 1,
+                color: Theme.of(context).colorScheme.outlineVariant),
           ),
         ),
       ),
@@ -124,7 +126,10 @@ class _FileListPanelState extends State<FileListPanel> {
       child: Text(
         text,
         style: TextStyle(
-          color: color ?? (isModified ? Colors.blue : Colors.black),
+          color: color ??
+              (isModified
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurface),
           fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
           fontSize: 12,
         ),
@@ -174,7 +179,7 @@ class _FileListPanelState extends State<FileListPanel> {
                     horizontal: 8.0,
                     vertical: 4.0,
                   ),
-                  color: Colors.grey[200],
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -186,8 +191,9 @@ class _FileListPanelState extends State<FileListPanel> {
                         child: Container(
                           // Simple box for styling
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(color: Colors.grey.shade400),
+                            color: Theme.of(context).colorScheme.surface,
+                            border: Border.all(
+                                color: Theme.of(context).colorScheme.outline),
                             borderRadius: BorderRadius.circular(2),
                           ),
                           child: TextField(
@@ -273,7 +279,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                       decoration: BoxDecoration(
                                         color: Theme.of(context)
                                             .colorScheme
-                                            .surface, // Clean white/surface
+                                            .surfaceContainerHighest,
                                         border: Border(
                                           bottom: BorderSide(
                                             color:
@@ -407,23 +413,24 @@ class _FileListPanelState extends State<FileListPanel> {
                                                       ? Theme.of(context)
                                                           .colorScheme
                                                           .secondaryContainer
-                                                          .withValues(
-                                                              alpha: 0.5)
+                                                          .withOpacity(0.5)
                                                       : (index % 2 == 0
-                                                          ? Colors.white
-                                                          : Colors.grey[50]),
+                                                          ? Theme.of(context)
+                                                              .colorScheme
+                                                              .surface
+                                                          : Theme.of(context)
+                                                              .colorScheme
+                                                              .surfaceContainerLow),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           8), // Rounded
                                                   border: isSelected
                                                       ? Border.all(
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary
-                                                                  .withValues(
-                                                                      alpha:
-                                                                          0.3))
+                                                          color: Theme.of(
+                                                                  context)
+                                                              .colorScheme
+                                                              .primary
+                                                              .withOpacity(0.3))
                                                       : null,
                                                 ),
                                                 padding:
@@ -447,7 +454,10 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                       context)
                                                                   .colorScheme
                                                                   .primary
-                                                              : Colors.grey,
+                                                              : Theme.of(
+                                                                      context)
+                                                                  .colorScheme
+                                                                  .onSurfaceVariant,
                                                         ),
                                                       ),
                                                     ),
@@ -531,10 +541,12 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                         : Icons
                                                                             .insert_drive_file,
                                                                     color: isDir
-                                                                        ? Colors
-                                                                            .amber
-                                                                        : Colors
-                                                                            .blueGrey,
+                                                                        ? Theme.of(context)
+                                                                            .colorScheme
+                                                                            .tertiary
+                                                                        : Theme.of(context)
+                                                                            .colorScheme
+                                                                            .secondary,
                                                                     size: 18,
                                                                   ),
                                                                   const SizedBox(
@@ -579,14 +591,18 @@ class _FileListPanelState extends State<FileListPanel> {
                                                             child: Text(
                                                               fileModel.newName,
                                                               style: TextStyle(
-                                                                color: fileModel
-                                                                        .hasValidationError
-                                                                    ? Colors.red
+                                                                color: fileModel.hasValidationError
+                                                                    ? Theme.of(
+                                                                            context)
+                                                                        .colorScheme
+                                                                        .error
                                                                     : (isModified
-                                                                        ? Colors
-                                                                            .blue
-                                                                        : Colors
-                                                                            .black),
+                                                                        ? Theme.of(context)
+                                                                            .colorScheme
+                                                                            .primary
+                                                                        : Theme.of(context)
+                                                                            .colorScheme
+                                                                            .onSurface),
                                                                 fontWeight: isModified
                                                                     ? FontWeight
                                                                         .bold
@@ -629,7 +645,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                                     // 3. Size
                                                     _buildCell(fileModel.size,
                                                         _colWidthSize,
-                                                        color: Colors.black87),
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface),
                                                     SizedBox(
                                                         width:
                                                             _widthSpace + 16),
@@ -639,7 +657,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                                         fileModel
                                                             .displayRelativePath,
                                                         _colWidthPath,
-                                                        color: Colors.black54),
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurfaceVariant),
                                                     SizedBox(
                                                         width:
                                                             _widthSpace + 16),
@@ -648,7 +668,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                                     _buildCell(
                                                         fileModel.fileType,
                                                         _colWidthType,
-                                                        color: Colors.black87),
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface),
                                                     SizedBox(
                                                         width:
                                                             _widthSpace + 16),
@@ -657,7 +679,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                                     _buildCell(
                                                         fileModel.dateModified,
                                                         _colWidthDate,
-                                                        color: Colors.black87),
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface),
                                                     SizedBox(
                                                         width:
                                                             _widthSpace + 16),
@@ -666,7 +690,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                                     _buildCell(
                                                         fileModel.attributes,
                                                         _colWidthAttr,
-                                                        color: Colors.black54),
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurfaceVariant),
                                                   ],
                                                 ),
                                               ),

@@ -54,18 +54,90 @@ class ReNameryApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<DirectoryProvider>(
       builder: (context, provider, child) {
+        final lightScheme = ColorScheme.fromSeed(
+          seedColor: provider.seedColor,
+          brightness: Brightness.light,
+        );
+        final darkScheme = ColorScheme.fromSeed(
+          seedColor: provider.seedColor,
+          brightness: Brightness.dark,
+        );
+
+        // Define Dark Gray Scheme (Neutral / High Contrast)
+        final darkGrayScheme = ColorScheme.fromSeed(
+          seedColor: provider.seedColor,
+          brightness: Brightness.dark,
+          background:
+              const Color(0xFF1E1E1E), // Neutral Dark Gray (VS Code like)
+          surface: const Color(0xFF1E1E1E),
+        ).copyWith(
+          // Override surfaces to be more neutral/gray
+          surface: const Color(0xFF1E1E1E),
+          surfaceContainer: const Color(0xFF252526),
+          surfaceContainerHigh: const Color(0xFF2D2D2D),
+          surfaceContainerHighest: const Color(0xFF323233),
+          onSurface: const Color(0xFFE0E0E0),
+        );
+
+        // Select Dark Theme Data
+        final useDarkGray = provider.appTheme == AppThemeType.darkGray;
+        final targetDarkScheme = useDarkGray ? darkGrayScheme : darkScheme;
+
         return MaterialApp(
           title: 'ReNamery',
+          themeMode: provider.themeMode,
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+            colorScheme: lightScheme,
             visualDensity: provider.isCompactMode
                 ? VisualDensity.compact
                 : VisualDensity.standard,
             useMaterial3: true,
             textTheme: GoogleFonts.notoSansJpTextTheme(),
-            tabBarTheme: TabBarThemeData(
+            iconTheme: IconThemeData(
+              color: lightScheme.primary,
+              weight: 700.0,
+            ),
+            tabBarTheme: const TabBarThemeData(
               indicatorSize: TabBarIndicatorSize.label,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+              labelPadding: EdgeInsets.symmetric(horizontal: 16.0),
+            ),
+            appBarTheme: AppBarTheme(
+              iconTheme: IconThemeData(
+                color: lightScheme.primary,
+                weight: 700.0,
+              ),
+            ),
+            inputDecorationTheme: const InputDecorationTheme(
+              filled: true,
+              border: UnderlineInputBorder(),
+            ),
+          ),
+          darkTheme: ThemeData(
+            colorScheme: targetDarkScheme,
+            visualDensity: provider.isCompactMode
+                ? VisualDensity.compact
+                : VisualDensity.standard,
+            useMaterial3: true,
+            scaffoldBackgroundColor: useDarkGray
+                ? const Color(0xFF1E1E1E)
+                : null, // Enforce background
+            textTheme: GoogleFonts.notoSansJpTextTheme(
+              ThemeData(brightness: Brightness.dark).textTheme,
+            ),
+            iconTheme: IconThemeData(
+              color: targetDarkScheme.primary,
+              weight: 700.0,
+            ),
+            tabBarTheme: const TabBarThemeData(
+              indicatorSize: TabBarIndicatorSize.label,
+              labelPadding: EdgeInsets.symmetric(horizontal: 16.0),
+            ),
+            appBarTheme: AppBarTheme(
+              backgroundColor: useDarkGray ? const Color(0xFF1F1F1F) : null,
+              iconTheme: IconThemeData(
+                color: targetDarkScheme.primary,
+                weight: 700.0,
+              ),
             ),
             inputDecorationTheme: const InputDecorationTheme(
               filled: true,
