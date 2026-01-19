@@ -46,6 +46,9 @@ class _NavigationPanelState extends State<NavigationPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<DirectoryProvider>();
+    final currentDir = provider.currentDirectory;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -87,8 +90,10 @@ class _NavigationPanelState extends State<NavigationPanel> {
                                       (dir) => _DirectoryTile(
                                         directory: dir,
                                         customIcon: _getIconForPath(dir.path),
-                                        isRoot:
-                                            true, // Special handling usually not needed but good for styling
+                                        isRoot: true,
+                                        isQuickAccess: true,
+                                        contextRoot:
+                                            dir.path, // I am the root context!
                                       ),
                                     ),
                                     const SizedBox(height: 8),
@@ -99,9 +104,10 @@ class _NavigationPanelState extends State<NavigationPanel> {
                                   ..._drives.map(
                                     (dir) => _DirectoryTile(
                                       directory: dir,
-                                      customIcon: Icons
-                                          .computer, // Drive Icon replacement
+                                      customIcon: Icons.computer,
                                       isRoot: true,
+                                      isQuickAccess: false,
+                                      // Tree nodes don't use contextRoot for now (or could use drive?)
                                     ),
                                   ),
                                 ],
@@ -154,11 +160,16 @@ class _DirectoryTile extends StatefulWidget {
   final Directory directory;
   final IconData? customIcon;
   final bool isRoot;
+  final bool isQuickAccess; // New flag
+  final String?
+      contextRoot; // The root path of the current navigation context (for QA)
 
   const _DirectoryTile({
     required this.directory,
     this.customIcon,
     this.isRoot = false,
+    this.isQuickAccess = false,
+    this.contextRoot,
   });
 
   @override
@@ -209,7 +220,23 @@ class _DirectoryTileState extends State<_DirectoryTile> {
   }
 
   void _onTap() {
-    context.read<DirectoryProvider>().setDirectory(widget.directory);
+    // Determine the Context Root for this interaction
+    // If I am a QA Root, I establish the context using my own path.
+    // If I am a child, I use the inherited context.
+    String? myContextRoot = widget.contextRoot;
+    if (widget.isQuickAccess && widget.isRoot) {
+      myContextRoot = widget.directory.path;
+    }
+
+    context.read<DirectoryProvider>().setDirectory(
+          widget.directory,
+          source: widget.isQuickAccess ? 'quick_access' : 'tree',
+          contextRoot: myContextRoot,
+        );
+
+    if (!_isExpanded) {
+      _toggleExpand();
+    }
   }
 
   @override
@@ -233,21 +260,99 @@ class _DirectoryTileState extends State<_DirectoryTile> {
 
     final provider = context.watch<DirectoryProvider>();
     final currentDir = provider.currentDirectory;
-    final isSelected = currentDir?.path == widget.directory.path;
+    bool isSelected = currentDir?.path == widget.directory.path;
 
-    // Auto-expand if currentDir is a descendant
+    // Strict Selection Logic using Context Root
+    if (isSelected) {
+      final source = provider.navigationSource;
+      final activeContextRoot = provider.navigationContextRoot;
+
+      if (source == 'quick_access') {
+        // If navigating in QA, we must match the Context Root.
+        // My context root is: Inherited (if child) OR Self (if root).
+        String? myContextRoot = widget.contextRoot;
+        if (widget.isQuickAccess && widget.isRoot) {
+          myContextRoot = widget.directory.path;
+        }
+
+        // Only select if I am a Quick Access tile AND my context matches active context
+        if (!widget.isQuickAccess) {
+          isSelected = false;
+        } else if (activeContextRoot != null &&
+            myContextRoot != activeContextRoot) {
+          isSelected = false;
+        }
+      } else if (source == 'tree') {
+        isSelected = !widget.isQuickAccess;
+      }
+    }
+
+    // Auto-expand Logic
     if (currentDir != null && !_isExpanded) {
+      bool shouldAutoExpand = false;
       bool isDescendant = false;
+
       try {
         isDescendant = p.isWithin(widget.directory.path, currentDir.path);
       } catch (e) {
         // Ignore path parsing errors
       }
 
-      if (isDescendant) {
+      final source = provider.navigationSource;
+      final activeContextRoot = provider.navigationContextRoot;
+      String? myContextRoot = widget.contextRoot;
+      if (widget.isQuickAccess && widget.isRoot) {
+        myContextRoot = widget.directory.path;
+      }
+
+      // 1. If Source is QA
+      if (source == 'quick_access') {
+        // If I am a Tree Node -> Suppress
+        if (!widget.isQuickAccess) {
+          // Suppress
+        }
+        // If I am a QA Node
+        else {
+          // If I am Root, match Context Root
+          if (widget.isRoot) {
+            if (myContextRoot == activeContextRoot) {
+              // I am the Active Root (or containing it?)
+              // Wait, if I am the Active Root, I should expand if descendant.
+              if (isDescendant) shouldAutoExpand = true;
+            } else {
+              // I am NOT the active root. Suppress.
+            }
+          } else {
+            // I am a Child. My Context Root should match active context root.
+            if (myContextRoot == activeContextRoot) {
+              if (isDescendant) shouldAutoExpand = true;
+            }
+          }
+        }
+      }
+      // 2. If Source is Tree
+      else if (source == 'tree') {
+        // Only expand Tree Nodes
+        if (!widget.isQuickAccess && isDescendant) {
+          shouldAutoExpand = true;
+        }
+      }
+      // 3. Unknown Source (External/Initial)
+      else {
+        // Default behavior (expand all physical matches) ??
+        // Maybe conservative: Expand if descendant.
+        if (isDescendant) shouldAutoExpand = true;
+      }
+
+      // Also expand if Selected (Exact Match) AND valid context
+      if (isSelected) {
+        shouldAutoExpand = true;
+      }
+
+      if (shouldAutoExpand) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && !_isExpanded) {
-            _toggleExpand(); // Reuse existing toggle logic which handles loading
+            _toggleExpand();
           }
         });
       }
@@ -336,9 +441,18 @@ class _DirectoryTileState extends State<_DirectoryTile> {
             ),
             padding: const EdgeInsets.only(left: 12.0), // Tree Indentation
             child: Column(
-              children: _subDirectories
-                  .map((dir) => _DirectoryTile(directory: dir))
-                  .toList(),
+              children: _subDirectories.map((dir) {
+                // Pass context root down
+                String? childContext = widget.contextRoot;
+                if (widget.isQuickAccess && widget.isRoot) {
+                  childContext = widget.directory.path;
+                }
+                return _DirectoryTile(
+                  directory: dir,
+                  isQuickAccess: widget.isQuickAccess,
+                  contextRoot: childContext,
+                );
+              }).toList(),
             ),
           ),
       ],

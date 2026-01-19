@@ -16,7 +16,16 @@ class _MainTabState extends State<MainTab> {
   late TextEditingController _appendController;
   late TextEditingController _deleteToController;
   late TextEditingController _startController;
+  late TextEditingController _insertController; // For Insert Index
   late TextEditingController _digitController;
+
+  late FocusNode _findFocus;
+  late FocusNode _replaceFocus;
+  late FocusNode _appendFocus;
+  late FocusNode _deleteToFocus;
+  late FocusNode _startFocus; // For Start/Digit spinner
+  late FocusNode _startInsertFocus; // For Insert mode spinner
+  late FocusNode _digitFocus;
 
   @override
   void initState() {
@@ -29,7 +38,18 @@ class _MainTabState extends State<MainTab> {
     _startController = TextEditingController(
       text: provider.startNumber.toString(),
     );
+    _insertController = TextEditingController(
+      text: provider.insertIndex.toString(),
+    );
     _digitController = TextEditingController(text: provider.digits.toString());
+
+    _findFocus = FocusNode();
+    _replaceFocus = FocusNode();
+    _appendFocus = FocusNode();
+    _deleteToFocus = FocusNode();
+    _startFocus = FocusNode();
+    _startInsertFocus = FocusNode();
+    _digitFocus = FocusNode();
   }
 
   @override
@@ -39,7 +59,16 @@ class _MainTabState extends State<MainTab> {
     _appendController.dispose();
     _deleteToController.dispose();
     _startController.dispose();
+    _insertController.dispose();
     _digitController.dispose();
+
+    _findFocus.dispose();
+    _replaceFocus.dispose();
+    _appendFocus.dispose();
+    _deleteToFocus.dispose();
+    _startFocus.dispose();
+    _startInsertFocus.dispose();
+    _digitFocus.dispose();
     super.dispose();
   }
 
@@ -49,6 +78,7 @@ class _MainTabState extends State<MainTab> {
     List<String> history,
     Function(String) onChanged,
     String label, {
+    FocusNode? focusNode,
     bool isCompact = false,
   }) {
     return Row(
@@ -56,6 +86,7 @@ class _MainTabState extends State<MainTab> {
         if (label.isNotEmpty) SizedBox(width: 60, child: Text(label)),
         Expanded(
           child: TextField(
+            focusNode: focusNode,
             controller: controller,
             style: const TextStyle(fontSize: 13),
             decoration: InputDecoration(
@@ -101,22 +132,36 @@ class _MainTabState extends State<MainTab> {
     final double spacing = isCompact ? 2.0 : 4.0;
     final double blockSpacing = isCompact ? 8.0 : 16.0;
 
-    // Sync controllers
-    if (provider.findText != _findController.text) {
+    // Sync controllers if NOT focused
+    if (provider.findText != _findController.text && !_findFocus.hasFocus) {
       _findController.text = provider.findText ?? '';
     }
-    if (provider.replaceText != _replaceController.text) {
+    if (provider.replaceText != _replaceController.text &&
+        !_replaceFocus.hasFocus) {
       _replaceController.text = provider.replaceText ?? '';
     }
-    if (provider.appendText != _appendController.text) {
+    if (provider.appendText != _appendController.text &&
+        !_appendFocus.hasFocus) {
       _appendController.text = provider.appendText ?? '';
     }
-    if (provider.deleteToText != _deleteToController.text) {
+    if (provider.deleteToText != _deleteToController.text &&
+        !_deleteToFocus.hasFocus) {
       _deleteToController.text = provider.deleteToText ?? '';
     }
-    // Sync start number (important for Pin feature)
-    if (provider.startNumber.toString() != _startController.text) {
+    // Sync start number
+    if (provider.startNumber.toString() != _startController.text &&
+        !_startFocus.hasFocus) {
       _startController.text = provider.startNumber.toString();
+    }
+    // Sync insert index
+    if (provider.insertIndex.toString() != _insertController.text &&
+        !_startInsertFocus.hasFocus) {
+      _insertController.text = provider.insertIndex.toString();
+    }
+    // Sync digits
+    if (provider.digits.toString() != _digitController.text &&
+        !_digitFocus.hasFocus) {
+      _digitController.text = provider.digits.toString();
     }
 
     return SingleChildScrollView(
@@ -130,10 +175,19 @@ class _MainTabState extends State<MainTab> {
             context,
             _appendController,
             provider.appendHistory,
-            (val) => context
-                .read<DirectoryProvider>()
-                .updateRenameSettings(append: val, mode: RenameMode.append),
+            (val) {
+              final provider = context.read<DirectoryProvider>();
+              final current = provider.renameMode;
+              final isStringMode = current == RenameMode.append ||
+                  current == RenameMode.prepend ||
+                  current == RenameMode.insert ||
+                  current == RenameMode.numbering;
+              provider.updateRenameSettings(
+                  append: val,
+                  mode: isStringMode ? null : provider.lastStringMode);
+            },
             '文字列',
+            focusNode: _appendFocus,
             isCompact: isCompact,
           ),
 
@@ -175,7 +229,8 @@ class _MainTabState extends State<MainTab> {
                   _startController,
                   (val) => context
                       .read<DirectoryProvider>()
-                      .updateRenameSettings(start: val),
+                      .updateRenameSettings(start: val, immediate: true),
+                  focusNode: _startFocus,
                   isCompact: isCompact,
                 ),
                 const SizedBox(width: 8),
@@ -184,7 +239,8 @@ class _MainTabState extends State<MainTab> {
                   _digitController,
                   (val) => context
                       .read<DirectoryProvider>()
-                      .updateRenameSettings(digit: val),
+                      .updateRenameSettings(digits: val, immediate: true),
+                  focusNode: _digitFocus,
                   isCompact: isCompact,
                 ),
               ],
@@ -328,10 +384,11 @@ class _MainTabState extends State<MainTab> {
                 // So we bind the spinner to startNumber, but visually associate it here.
                 _buildSpinner(
                   context,
-                  _startController, // Re-using start controller as index
+                  _insertController, // Separate controller
                   (val) => context
                       .read<DirectoryProvider>()
-                      .updateRenameSettings(start: val),
+                      .updateRenameSettings(insertIndex: val, immediate: true),
+                  focusNode: _startInsertFocus,
                   isCompact: isCompact,
                 ),
               ],
@@ -444,6 +501,7 @@ class _MainTabState extends State<MainTab> {
                                       ? RenameMode.deleteBackTo
                                       : RenameMode.deleteFrontTo),
                           '', // No label needed
+                          focusNode: _deleteToFocus,
                           isCompact: isCompact,
                         ),
                       ),
@@ -482,6 +540,7 @@ class _MainTabState extends State<MainTab> {
                     children: [
                       Expanded(
                         child: TextField(
+                          focusNode: _findFocus,
                           controller: _findController,
                           style: const TextStyle(fontSize: 13),
                           decoration: InputDecoration(
@@ -518,6 +577,7 @@ class _MainTabState extends State<MainTab> {
               children: [
                 Expanded(
                   child: TextField(
+                    focusNode: _replaceFocus,
                     controller: _replaceController,
                     style: const TextStyle(fontSize: 13),
                     decoration: InputDecoration(
@@ -612,6 +672,7 @@ class _MainTabState extends State<MainTab> {
     BuildContext context,
     TextEditingController controller,
     Function(int) onChanged, {
+    FocusNode? focusNode,
     bool isCompact = false,
   }) {
     return SizedBox(
@@ -620,6 +681,7 @@ class _MainTabState extends State<MainTab> {
         children: [
           Expanded(
             child: TextField(
+              focusNode: focusNode,
               controller: controller,
               style: const TextStyle(fontSize: 13),
               decoration: InputDecoration(
@@ -651,6 +713,7 @@ class _MainTabState extends State<MainTab> {
             children: [
               InkWell(
                 onTap: () {
+                  focusNode?.requestFocus();
                   int current = int.tryParse(controller.text) ?? 1;
                   current++;
                   controller.text = current.toString();
@@ -662,6 +725,7 @@ class _MainTabState extends State<MainTab> {
               ),
               InkWell(
                 onTap: () {
+                  focusNode?.requestFocus();
                   int current = int.tryParse(controller.text) ?? 1;
                   if (current > 1) {
                     current--;

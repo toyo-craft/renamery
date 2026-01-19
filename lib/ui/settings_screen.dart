@@ -131,9 +131,45 @@ class SettingsScreen extends StatelessWidget {
               const Divider(),
               _buildSectionHeader(context, 'リセット'),
               ListTile(
+                title: const Text('入力履歴を削除'),
+                subtitle: const Text('文字列補完などの入力履歴を削除します'),
+                leading: const Icon(Icons.history, color: Colors.orange),
+                onTap: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('入力履歴の削除'),
+                      content: const Text('すべての入力履歴を削除しますか？'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('キャンセル'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style:
+                              TextButton.styleFrom(foregroundColor: Colors.red),
+                          child: const Text('削除'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    provider.clearInputHistory();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('入力履歴を削除しました')),
+                      );
+                    }
+                  }
+                },
+              ),
+              const Divider(),
+              ListTile(
                 title: const Text('全設定をリセット'),
                 subtitle: const Text('リネーム設定やフィルター設定を初期状態に戻します'),
-                leading: const Icon(Icons.restore, color: Colors.orange),
+                leading: const Icon(Icons.restore, color: Colors.red),
                 onTap: () async {
                   final confirm = await showDialog<bool>(
                     context: context,

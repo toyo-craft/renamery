@@ -106,21 +106,31 @@ class FileModel {
     }
   }
 
+  // Attributes
+  bool _isReadOnly = false;
+  bool _isHidden = false;
+  bool _isSystem = false;
+  bool _isArchive = false;
+
+  void setAttributes({
+    bool readOnly = false,
+    bool hidden = false,
+    bool system = false,
+    bool archive = false,
+  }) {
+    _isReadOnly = readOnly;
+    _isHidden = hidden;
+    _isSystem = system;
+    _isArchive = archive;
+  }
+
   String get attributes {
-    // Windows attributes not easily accessible via standard dart:io Stat without FFI or running command.
-    // We can show '---A' placeholder or simple RW/RO.
-    // custom implementation required for full attributes.
-    // For now: D---- or ---- (Directory vs File)
     String attr = '';
-    try {
-      final stat = entity.statSync();
-      attr += (entity is Directory) ? 'D' : '-';
-      attr += '-'; // Archive?
-      attr += (stat.mode & 0x80) == 0 ? 'R' : '-';
-      // Return the constructed string (simplified logic)
-      return attr.padRight(5, '-');
-    } catch (e) {
-      return '';
-    }
+    attr += (entity is Directory) ? 'd' : '-';
+    attr += _isReadOnly ? 'r' : '-';
+    attr += _isHidden ? 'h' : '-';
+    attr += _isSystem ? 's' : '-';
+    attr += _isArchive ? 'a' : '-';
+    return attr;
   }
 }

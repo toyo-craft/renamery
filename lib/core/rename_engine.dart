@@ -74,7 +74,8 @@ class RenameEngine {
     String? findText,
     String? replaceText,
     String? appendText,
-    int startNumber = 1, // Used as Index for Insert Mode
+    int startNumber = 1,
+    int insertIndex = 1, // Used for Insert Mode
     int digits = 3,
     CaseConversion caseConversion = CaseConversion.none,
     bool extensionToLowerCase = false,
@@ -220,7 +221,7 @@ class RenameEngine {
           break;
         case RenameMode.insert:
           if (appendText != null && appendText.isNotEmpty) {
-            int index = startNumber - 1;
+            int index = insertIndex - 1;
             if (index < 0) index = 0;
             if (index > newBaseName.length) index = newBaseName.length;
             newBaseName = newBaseName.replaceRange(index, index, appendText);
@@ -415,7 +416,6 @@ class RenameEngine {
           invalidChars = RegExp(r'[/]'); // Only slash is strictly forbidden
           break;
         case ValidationType.auto:
-        default:
           if (Platform.isWindows) {
             invalidChars = RegExp(r'[\\/:*?"<>|]');
           } else if (Platform.isMacOS) {

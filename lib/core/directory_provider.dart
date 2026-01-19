@@ -12,7 +12,17 @@ class DirectoryProvider extends ChangeNotifier {
   Directory? _currentDirectory;
   List<FileModel> _currentFiles = [];
   bool _isLoading = false;
+  bool _isInlineRenaming = false;
   final UndoManager _undoManager = UndoManager();
+
+  bool get isInlineRenaming => _isInlineRenaming;
+
+  void setInlineRenaming(bool isRenaming) {
+    if (_isInlineRenaming != isRenaming) {
+      _isInlineRenaming = isRenaming;
+      notifyListeners();
+    }
+  }
 
   Future<void> init() async {
     final s = SettingsService();
@@ -185,6 +195,7 @@ class DirectoryProvider extends ChangeNotifier {
     if (_deleteToText != null) s.set('deleteToText', _deleteToText);
 
     s.set('startNumber', _startNumber);
+    s.set('insertIndex', _insertIndex);
     s.set('digits', _digits);
     s.set('extensionToLowerCase', _extensionToLowerCase);
     s.set('useRegex', _useRegex);
@@ -204,7 +215,9 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('lastEtcMode', _lastEtcMode.index);
     s.set('lastExtraMode', _lastExtraMode.index);
     s.set('lastEtcMode', _lastEtcMode.index);
+    s.set('lastEtcMode', _lastEtcMode.index);
     s.set('lastExtraMode', _lastExtraMode.index);
+    s.set('lastStringMode', _lastStringMode.index);
 
     // Extra Tab
     s.set('dateFormat', _dateFormat);
@@ -239,9 +252,18 @@ class DirectoryProvider extends ChangeNotifier {
   String? _appendText;
   String? _deleteToText; // 専用の入力欄
   int _startNumber = 1;
+  int _insertIndex = 1;
   int _digits = 3;
   bool _extensionToLowerCase = false;
   bool _useRegex = false;
+
+  // Navigation Source
+  String? _navigationSource;
+  String? get navigationSource => _navigationSource;
+
+  // Navigation Context Root (for differentiating QA trees)
+  String? _navigationContextRoot;
+  String? get navigationContextRoot => _navigationContextRoot;
 
   // History State
   List<String> _appendHistory = [];
@@ -298,6 +320,7 @@ class DirectoryProvider extends ChangeNotifier {
   String? get appendText => _appendText;
   String? get deleteToText => _deleteToText;
   int get startNumber => _startNumber;
+  int get insertIndex => _insertIndex;
   int get digits => _digits;
   bool get extensionToLowerCase => _extensionToLowerCase;
   bool get useRegex => _useRegex;
@@ -310,11 +333,13 @@ class DirectoryProvider extends ChangeNotifier {
   RenameMode _lastSubMode = RenameMode.extensionRemove;
   RenameMode _lastEtcMode = RenameMode.changeTimestamp;
   RenameMode _lastExtraMode = RenameMode.appendDate;
+  RenameMode _lastStringMode = RenameMode.append; // Default Suffix
 
   RenameMode get lastMainMode => _lastMainMode;
   RenameMode get lastSubMode => _lastSubMode;
   RenameMode get lastEtcMode => _lastEtcMode;
   RenameMode get lastExtraMode => _lastExtraMode;
+  RenameMode get lastStringMode => _lastStringMode;
 
   String get dateFormat => _dateFormat;
   DatePosition get datePosition => _datePosition;
@@ -475,6 +500,7 @@ class DirectoryProvider extends ChangeNotifier {
     String? appendText,
     String? deleteToText,
     int? startNumber,
+    int? insertIndex,
     int? digits,
     bool? extensionToLowerCase,
     bool? useRegex,
@@ -493,12 +519,27 @@ class DirectoryProvider extends ChangeNotifier {
   }) {
     if (mode != null) _renameMode = mode;
     if (numberingMode != null) _numberingMode = numberingMode;
+
+    if (find != null) _findText = find;
     if (findText != null) _findText = findText;
+
+    if (replace != null) _replaceText = replace;
     if (replaceText != null) _replaceText = replaceText;
+
+    if (append != null) _appendText = append;
     if (appendText != null) _appendText = appendText;
+
+    if (deleteTo != null) _deleteToText = deleteTo;
     if (deleteToText != null) _deleteToText = deleteToText;
+
+    if (start != null) _startNumber = start;
     if (startNumber != null) _startNumber = startNumber;
+
+    if (insertIndex != null) _insertIndex = insertIndex;
+
+    if (digit != null) _digits = digit;
     if (digits != null) _digits = digits;
+
     if (extensionToLowerCase != null)
       _extensionToLowerCase = extensionToLowerCase;
     if (useRegex != null) _useRegex = useRegex;
@@ -535,6 +576,14 @@ class DirectoryProvider extends ChangeNotifier {
         _lastExtraMode = mode;
       } else if (isEtcMode(mode)) {
         _lastEtcMode = mode;
+      }
+
+      // Update Last String Mode
+      if (mode == RenameMode.append ||
+          mode == RenameMode.prepend ||
+          mode == RenameMode.insert ||
+          mode == RenameMode.numbering) {
+        _lastStringMode = mode;
       }
     }
 
@@ -596,6 +645,7 @@ class DirectoryProvider extends ChangeNotifier {
       replaceText: currentReplaceText,
       appendText: _appendText,
       startNumber: _startNumber,
+      insertIndex: _insertIndex,
       digits: _digits,
       extensionToLowerCase: _extensionToLowerCase,
       useRegex: _useRegex,
@@ -628,6 +678,7 @@ class DirectoryProvider extends ChangeNotifier {
     _replaceText = '';
     _appendText = '';
     _startNumber = 1;
+    _insertIndex = 1;
     _digits = 3;
     _numberingMode = NumberingMode.stringNumber;
     // _deleteModeString = 'start'; // Default radio selection - This is not a state variable
@@ -1064,8 +1115,18 @@ class DirectoryProvider extends ChangeNotifier {
     _saveState();
   }
 
+  void clearInputHistory() {
+    _appendHistory.clear();
+    _deleteFromHistory.clear();
+    _deleteToHistory.clear();
+    _saveState();
+    notifyListeners();
+  }
+
   Future<void> setDirectory(Directory directory,
-      {bool addToHistory = true}) async {
+      {bool addToHistory = true, String? source, String? contextRoot}) async {
+    _navigationSource = source;
+    _navigationContextRoot = contextRoot;
     // History Logic
     if (addToHistory &&
         (_currentDirectory == null ||
@@ -1146,6 +1207,11 @@ class DirectoryProvider extends ChangeNotifier {
       }
 
       _applyFilters();
+
+      // Fetch Attributes in bulk (Windows Only)
+      if (Platform.isWindows) {
+        await _loadAttributes(_currentDirectory!);
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error listing directory: $e');
@@ -1156,6 +1222,75 @@ class DirectoryProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _loadAttributes(Directory dir) async {
+    try {
+      // Run attrib *
+      // Note: attributes might be localized? No, A S H R are standard.
+      // Output format: A   H  R    C:\Path\To\File.txt
+      final result =
+          await Process.run('attrib', ['*'], workingDirectory: dir.path);
+      if (result.exitCode == 0) {
+        final lines = (result.stdout as String).split('\n');
+        final Map<String, String> attrMap = {};
+
+        // Parse
+        // Using fixed width parsing for performance and reliability with 'attrib' output format.
+        // Format: 'A   H        C:\Path' (First 20 chars are attributes)
+        // Let's assume absolute if working dir is set, but output might vary.
+        // Attrib output usually matches input. attrib * -> relative paths if in dir.
+        // Wait, Process.run workingDirectory set.
+        // Output will be: "A      file.txt" (Relative) or "A      C:\path\file.txt"?
+        // Let's check my test output: "A                    R:\renamery\.gitignore"
+        // It returned ABSOLUTE path.
+
+        for (var line in lines) {
+          line = line.trim();
+          if (line.isEmpty) continue;
+          // Split by first large gap? Or use regex.
+          // Attribs are fixed width (approx 20 chars).
+          if (line.length > 21) {
+            final attrPart = line.substring(0, 20).toUpperCase();
+            final pathPart = line.substring(20).trim();
+            // Path might be absolute.
+            // Normalize path for matching.
+            String normalizedPath = pathPart;
+            // If absolute, key should be absolute.
+            // If relative, key should be join(dir.path, relative).
+            // Since our FileModels have absolute paths.
+            // Let's try to match.
+            // If path start with drive letter, it's absolute.
+            // FileModel entity.path is absolute.
+
+            attrMap[normalizedPath.toLowerCase()] = attrPart;
+            // Also try absolute if raw path is relative
+            if (!pathPart.contains(':')) {
+              attrMap['${dir.path}\\$pathPart'
+                  .toLowerCase()
+                  .replaceAll('/', '\\')] = attrPart;
+            }
+          }
+        }
+
+        // Apply to FileModels
+        for (var f in _currentFiles) {
+          final key = f.entity.path.toLowerCase().replaceAll('/', '\\');
+          if (attrMap.containsKey(key)) {
+            final attrs = attrMap[key]!;
+            f.setAttributes(
+              readOnly: attrs.contains('R'),
+              hidden: attrs.contains('H'),
+              system: attrs.contains('S'),
+              archive: attrs.contains('A'),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore attribute errors
+      print('Attrib Error: $e');
     }
   }
 

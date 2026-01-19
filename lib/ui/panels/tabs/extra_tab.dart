@@ -130,48 +130,31 @@ class _ExtraTabState extends State<ExtraTab> {
 
               // Position Radios (Front / Back)
               Text('位置', style: Theme.of(context).textTheme.bodySmall),
-              Row(
-                children: [
-                  _buildPositionRadio(
-                      context, provider, DatePosition.front, '前方'),
-                  const SizedBox(width: 16),
-                  _buildPositionRadio(
-                      context, provider, DatePosition.back, '後方'),
+              const SizedBox(height: 8),
+              SegmentedButton<DatePosition>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(
+                    value: DatePosition.front,
+                    label: Text('前方'),
+                  ),
+                  ButtonSegment(
+                    value: DatePosition.back,
+                    label: Text('後方'),
+                  ),
                 ],
+                selected: {provider.datePosition},
+                onSelectionChanged: (Set<DatePosition> newSelection) {
+                  _updateSettings(context,
+                      datePosition: newSelection.first,
+                      mode: RenameMode.appendDate,
+                      immediate: true);
+                },
               ),
             ],
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildPositionRadio(BuildContext context, DirectoryProvider provider,
-      DatePosition pos, String label) {
-    return InkWell(
-      onTap: () {
-        _updateSettings(context, datePosition: pos, immediate: true);
-        // Also force mode? Not necessarily, user can config before enabling.
-        if (provider.renameMode == RenameMode.appendDate) {
-          // already active
-        }
-      },
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Radio<DatePosition>(
-            value: pos,
-            groupValue: provider.datePosition,
-            visualDensity: VisualDensity.compact,
-            onChanged: (val) {
-              if (val != null) {
-                _updateSettings(context, datePosition: val, immediate: true);
-              }
-            },
-          ),
-          Text(label),
-        ],
-      ),
     );
   }
 

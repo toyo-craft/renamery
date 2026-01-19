@@ -160,7 +160,7 @@ class _SettingsPanelState extends State<SettingsPanel>
 
               SizedBox(height: padding),
 
-              ElevatedButton(
+              FilledButton(
                 onPressed: () async {
                   final provider = context.read<DirectoryProvider>();
                   final count = await provider.executeRename();
@@ -177,16 +177,15 @@ class _SettingsPanelState extends State<SettingsPanel>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         margin: const EdgeInsets.all(16),
+                        showCloseIcon: true, // M3
                         duration: const Duration(seconds: 2),
                       ),
                     );
                   }
                 },
-                style: ElevatedButton.styleFrom(
+                style: FilledButton.styleFrom(
                   padding: EdgeInsets.symmetric(
                       vertical: isCompact ? 12 : 16, horizontal: 16),
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   elevation: 2,
                 ),
                 child: const Row(

@@ -154,10 +154,10 @@ class _EtcTabState extends State<EtcTab> {
                   hintText: 'yyyy/MM/dd HH:mm',
                 ),
                 onChanged: (val) {
-                  _updateSettings(context, timestamp: val, immediate: false);
-                  if (mode != RenameMode.changeTimestamp) {
-                    // Optionally activate mode?
-                  }
+                  _updateSettings(context,
+                      timestamp: val,
+                      mode: RenameMode.changeTimestamp, // Auto-select mode
+                      immediate: false);
                 },
               ),
               const SizedBox(height: 4),
@@ -201,16 +201,28 @@ class _EtcTabState extends State<EtcTab> {
           child: Column(
             children: [
               _buildCheckbox('ReadOnly', provider.etcAttribReadOnly, (val) {
-                _updateSettings(context, readOnly: val, immediate: true);
+                _updateSettings(context,
+                    readOnly: val,
+                    mode: RenameMode.changeAttributes, // Auto-select mode
+                    immediate: true);
               }),
               _buildCheckbox('Hidden', provider.etcAttribHidden, (val) {
-                _updateSettings(context, hidden: val, immediate: true);
+                _updateSettings(context,
+                    hidden: val,
+                    mode: RenameMode.changeAttributes, // Auto-select mode
+                    immediate: true);
               }),
               _buildCheckbox('Archive', provider.etcAttribArchive, (val) {
-                _updateSettings(context, archive: val, immediate: true);
+                _updateSettings(context,
+                    archive: val,
+                    mode: RenameMode.changeAttributes, // Auto-select mode
+                    immediate: true);
               }),
               _buildCheckbox('System', provider.etcAttribSystem, (val) {
-                _updateSettings(context, system: val, immediate: true);
+                _updateSettings(context,
+                    system: val,
+                    mode: RenameMode.changeAttributes, // Auto-select mode
+                    immediate: true);
               }),
             ],
           ),
