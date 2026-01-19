@@ -167,7 +167,7 @@ class _SubTabState extends State<SubTab> {
                   value: 'text_input',
                   isDense: true,
                   isExpanded: true,
-                  style: const TextStyle(fontSize: 13, color: Colors.black),
+                  style: Theme.of(context).textTheme.bodyMedium,
                   underline: Container(
                     height: 1,
                     color: Colors.grey,
@@ -196,10 +196,13 @@ class _SubTabState extends State<SubTab> {
               controller: _listController,
               maxLines: 8,
               minLines: 3,
-              style: const TextStyle(fontSize: 12, fontFamily: 'Consolas'),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(fontFamily: 'Consolas'),
               decoration: const InputDecoration(
                 hintText: 'old_name.txt\tnew_name.txt\nfile01.png\timage01.png',
-                border: OutlineInputBorder(),
+                // border: OutlineInputBorder(), // Removed for global theme
                 isDense: true,
               ),
               onChanged: (val) => context
@@ -243,7 +246,7 @@ class _SubTabState extends State<SubTab> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 13)),
+            Text(label, style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
       ),
@@ -279,7 +282,7 @@ class _SubTabState extends State<SubTab> {
             ),
           ),
           const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontSize: 13)),
+          Text(label, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(width: 8),
           Expanded(
             child: HistoryTextField(

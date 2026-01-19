@@ -31,14 +31,15 @@ class HistoryTextField extends StatelessWidget {
         if (label.isNotEmpty) ...[
           SizedBox(
               width: 60,
-              child: Text(label, style: const TextStyle(fontSize: 13))),
+              child:
+                  Text(label, style: Theme.of(context).textTheme.bodyMedium)),
           const SizedBox(width: 8),
         ],
         Expanded(
           child: TextField(
             focusNode: focusNode,
             controller: controller,
-            style: const TextStyle(fontSize: 13),
+            style: Theme.of(context).textTheme.bodyMedium,
             decoration: InputDecoration(
               isDense: true,
               hintText: hintText,

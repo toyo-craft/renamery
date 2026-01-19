@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'ui/home_screen.dart';
 import 'core/directory_provider.dart';
 
@@ -61,7 +62,7 @@ class ReNameryApp extends StatelessWidget {
                 ? VisualDensity.compact
                 : VisualDensity.standard,
             useMaterial3: true,
-            fontFamily: 'Segoe UI',
+            textTheme: GoogleFonts.notoSansJpTextTheme(),
             tabBarTheme: TabBarThemeData(
               indicatorSize: TabBarIndicatorSize.label,
               labelPadding: const EdgeInsets.symmetric(horizontal: 16.0),

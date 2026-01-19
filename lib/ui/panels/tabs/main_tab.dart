@@ -227,7 +227,7 @@ class _MainTabState extends State<MainTab> {
                       value: provider.numberingMode,
                       isDense: true,
                       isExpanded: true,
-                      style: const TextStyle(fontSize: 13, color: Colors.black),
+                      style: Theme.of(context).textTheme.bodyMedium,
                       underline: Container(
                         height: 1,
                         color: Colors.grey,
@@ -325,7 +325,7 @@ class _MainTabState extends State<MainTab> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text('文字列挿入', style: TextStyle(fontSize: 13)),
+                Text('文字列挿入', style: Theme.of(context).textTheme.bodyMedium),
                 const Spacer(),
                 // Re-use StartController/Spinner or create new?
                 // RenameEngine uses startNumber as index.
@@ -551,7 +551,7 @@ class _MainTabState extends State<MainTab> {
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   const SizedBox(width: 8),
-                  const Text('正規表現', style: TextStyle(fontSize: 13)),
+                  Text('正規表現', style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
             ),
@@ -593,7 +593,7 @@ class _MainTabState extends State<MainTab> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 13)),
+            Text(label, style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
       ),
@@ -615,14 +615,14 @@ class _MainTabState extends State<MainTab> {
             child: TextField(
               focusNode: focusNode,
               controller: controller,
-              style: const TextStyle(fontSize: 13),
+              style: Theme.of(context).textTheme.bodyMedium,
               decoration: InputDecoration(
                 isDense: true,
                 contentPadding: EdgeInsets.symmetric(
                   vertical: isCompact ? 6 : 8,
                   horizontal: 4,
                 ),
-                border: const OutlineInputBorder(),
+                // border: const OutlineInputBorder(), // Removed to use global theme
               ),
               keyboardType: TextInputType.number,
               onChanged: (val) {

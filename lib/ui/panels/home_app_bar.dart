@@ -26,8 +26,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: showDrawerMenu
           ? Builder(
               builder: (context) => IconButton(
-                icon: const Icon(Icons.menu),
-                color: iconColor,
+                icon: const Icon(Icons.folder),
+                color: Theme.of(context).colorScheme.primary,
                 tooltip: 'メニュー (フォルダ)',
                 onPressed: () {
                   Scaffold.of(context).openDrawer();
