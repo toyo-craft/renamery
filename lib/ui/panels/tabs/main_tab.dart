@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/directory_provider.dart';
-import '../../../core/rename_engine.dart'; // To access RenameMode enum directly if strict typing needed
+import '../../../core/rename_engine.dart';
+import '../../widgets/history_text_field.dart';
 
 class MainTab extends StatefulWidget {
   const MainTab({super.key});
@@ -72,58 +73,7 @@ class _MainTabState extends State<MainTab> {
     super.dispose();
   }
 
-  Widget _buildHistoryTextField(
-    BuildContext context,
-    TextEditingController controller,
-    List<String> history,
-    Function(String) onChanged,
-    String label, {
-    FocusNode? focusNode,
-    bool isCompact = false,
-  }) {
-    return Row(
-      children: [
-        if (label.isNotEmpty) SizedBox(width: 60, child: Text(label)),
-        Expanded(
-          child: TextField(
-            focusNode: focusNode,
-            controller: controller,
-            style: const TextStyle(fontSize: 13),
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(
-                vertical: isCompact ? 6 : 8,
-                horizontal: 8,
-              ),
-              border: const OutlineInputBorder(),
-              suffixIcon: PopupMenuButton<String>(
-                icon: const Icon(Icons.arrow_drop_down),
-                onSelected: (String value) {
-                  controller.text = value;
-                  onChanged(value);
-                },
-                itemBuilder: (BuildContext context) {
-                  return history.map((String value) {
-                    return PopupMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList();
-                },
-              ),
-            ),
-            onChanged: (val) => onChanged(val),
-            onSubmitted: (val) {
-              // Add to history
-              if (val.isNotEmpty) {
-                context.read<DirectoryProvider>().addToHistory(history, val);
-              }
-            },
-          ),
-        ),
-      ],
-    );
-  }
+  // Removed _buildHistoryTextField helper in favor of HistoryTextField widget
 
   @override
   Widget build(BuildContext context) {
@@ -171,25 +121,23 @@ class _MainTabState extends State<MainTab> {
         children: [
           // --- Top Section: Common Inputs ---
           // String Input with History
-          _buildHistoryTextField(
-            context,
-            _appendController,
-            provider.appendHistory,
-            (val) {
-              final provider = context.read<DirectoryProvider>();
-              final current = provider.renameMode;
-              final isStringMode = current == RenameMode.append ||
-                  current == RenameMode.prepend ||
-                  current == RenameMode.insert ||
-                  current == RenameMode.numbering;
-              provider.updateRenameSettings(
-                  append: val,
-                  mode: isStringMode ? null : provider.lastStringMode);
-            },
-            '文字列',
-            focusNode: _appendFocus,
-            isCompact: isCompact,
-          ),
+          HistoryTextField(
+              controller: _appendController,
+              history: provider.appendHistory,
+              onChanged: (val) {
+                final provider = context.read<DirectoryProvider>();
+                final current = provider.renameMode;
+                final isStringMode = current == RenameMode.append ||
+                    current == RenameMode.prepend ||
+                    current == RenameMode.insert ||
+                    current == RenameMode.numbering;
+                provider.updateRenameSettings(
+                    append: val,
+                    mode: isStringMode ? null : provider.lastStringMode);
+              },
+              label: '文字列',
+              focusNode: _appendFocus,
+              isCompact: isCompact),
 
           SizedBox(height: spacing),
           // --- Numbering Inputs (Spinner Style) ---
@@ -488,22 +436,20 @@ class _MainTabState extends State<MainTab> {
                       const SizedBox(width: 8),
                       // Input Field
                       Expanded(
-                        child: _buildHistoryTextField(
-                          context,
-                          _deleteToController,
-                          provider.deleteToHistory,
-                          (val) => context
-                              .read<DirectoryProvider>()
-                              .updateRenameSettings(
-                                  deleteTo: val,
-                                  mode: provider.renameMode ==
-                                          RenameMode.deleteBackTo
-                                      ? RenameMode.deleteBackTo
-                                      : RenameMode.deleteFrontTo),
-                          '', // No label needed
-                          focusNode: _deleteToFocus,
-                          isCompact: isCompact,
-                        ),
+                        child: HistoryTextField(
+                            controller: _deleteToController,
+                            history: provider.deleteToHistory,
+                            onChanged: (val) => context
+                                .read<DirectoryProvider>()
+                                .updateRenameSettings(
+                                    deleteTo: val,
+                                    mode: provider.renameMode ==
+                                            RenameMode.deleteBackTo
+                                        ? RenameMode.deleteBackTo
+                                        : RenameMode.deleteFrontTo),
+                            label: '', // No label
+                            focusNode: _deleteToFocus,
+                            isCompact: isCompact),
                       ),
                       const SizedBox(width: 8),
                       const Text('まで削除'),
@@ -539,19 +485,12 @@ class _MainTabState extends State<MainTab> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: TextField(
+                        child: HistoryTextField(
                           focusNode: _findFocus,
                           controller: _findController,
-                          style: const TextStyle(fontSize: 13),
-                          decoration: InputDecoration(
-                            hintText: '検索 (Find)',
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              vertical: isCompact ? 6 : 8,
-                              horizontal: 8,
-                            ),
-                            border: const OutlineInputBorder(),
-                          ),
+                          history: provider.findHistory,
+                          hintText: '検索 (Find)',
+                          isCompact: isCompact,
                           onChanged: (val) => context
                               .read<DirectoryProvider>()
                               .updateRenameSettings(
@@ -576,19 +515,12 @@ class _MainTabState extends State<MainTab> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: HistoryTextField(
                     focusNode: _replaceFocus,
                     controller: _replaceController,
-                    style: const TextStyle(fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: '置換 (Replace)',
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: isCompact ? 6 : 8,
-                        horizontal: 8,
-                      ),
-                      border: const OutlineInputBorder(),
-                    ),
+                    history: provider.replaceHistory,
+                    hintText: '置換 (Replace)',
+                    isCompact: isCompact,
                     onChanged: (val) => context
                         .read<DirectoryProvider>()
                         .updateRenameSettings(

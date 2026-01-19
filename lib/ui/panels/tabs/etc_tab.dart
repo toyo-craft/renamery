@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
+import 'package:intl/intl.dart';
 
 class EtcTab extends StatefulWidget {
   const EtcTab({Key? key}) : super(key: key);
@@ -45,6 +46,77 @@ class _EtcTabState extends State<EtcTab> {
           etcAttribSystem: system,
           immediate: immediate,
         );
+  }
+
+  Future<void> _pickDateTime(BuildContext context) async {
+    DateTime initialDate = DateTime.now();
+    try {
+      if (_timestampController.text.isNotEmpty) {
+        // Try parsing current text "yyyy/MM/dd HH:mm"
+        final parts = _timestampController.text.split(' ');
+        if (parts.length == 2) {
+          final dateParts = parts[0].split('/');
+          final timeParts = parts[1].split(':');
+          if (dateParts.length == 3 && timeParts.length == 2) {
+            initialDate = DateTime(
+              int.parse(dateParts[0]),
+              int.parse(dateParts[1]),
+              int.parse(dateParts[2]),
+              int.parse(timeParts[0]),
+              int.parse(timeParts[1]),
+            );
+          }
+        }
+      }
+    } catch (_) {
+      // Ignore parse errors, use now
+    }
+
+    final DateTime? date = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1970),
+      lastDate: DateTime(2100),
+      locale: const Locale(
+          'ja', 'JP'), // Optional: Localize if needed, usually auto
+    );
+
+    if (date != null && context.mounted) {
+      final TimeOfDay? time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(initialDate),
+        helpText: '時刻を選択してください',
+        builder: (context, child) {
+          return Localizations.override(
+            context: context,
+            locale: const Locale('ja', 'JP'),
+            child: MediaQuery(
+              data:
+                  MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+              child: child!,
+            ),
+          );
+        },
+      );
+
+      if (time != null && context.mounted) {
+        final DateTime result = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          time.hour,
+          time.minute,
+        );
+        final String formatted = DateFormat('yyyy/MM/dd HH:mm').format(result);
+        _timestampController.text = formatted;
+        _updateSettings(
+          context,
+          timestamp: formatted,
+          mode: RenameMode.changeTimestamp,
+          immediate: true,
+        );
+      }
+    }
   }
 
   @override
@@ -148,10 +220,15 @@ class _EtcTabState extends State<EtcTab> {
             children: [
               TextField(
                 controller: _timestampController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   isDense: true,
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   hintText: 'yyyy/MM/dd HH:mm',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_month),
+                    onPressed: () => _pickDateTime(context),
+                    tooltip: '日付と時刻を選択',
+                  ),
                 ),
                 onChanged: (val) {
                   _updateSettings(context,

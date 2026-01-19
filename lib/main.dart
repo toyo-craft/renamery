@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'ui/home_screen.dart';
 import 'core/directory_provider.dart';
@@ -63,6 +64,15 @@ class ReNameryApp extends StatelessWidget {
             fontFamily: 'Segoe UI',
           ),
           home: const HomeScreen(),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('ja', 'JP'),
+            Locale('en', 'US'),
+          ],
         );
       },
     );

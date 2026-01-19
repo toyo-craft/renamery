@@ -71,7 +71,9 @@ class DirectoryProvider extends ChangeNotifier {
 
     // Sub Tab / New States
     _listRenameText = s.getString('listRenameText') ?? '';
-    _subTabExtensionText = s.getString('subTabExtensionText') ?? '';
+    _listRenameText = s.getString('listRenameText') ?? '';
+    _extensionChangeText = s.getString('extensionChangeText') ?? '';
+    _extensionAddText = s.getString('extensionAddText') ?? '';
 
     final lMainIndex = s.getInt('lastMainMode');
     if (lMainIndex != null && lMainIndex < RenameMode.values.length) {
@@ -138,6 +140,15 @@ class DirectoryProvider extends ChangeNotifier {
     if (s.getList('deleteToHistory') != null) {
       _deleteToHistory = s.getList<String>('deleteToHistory')!;
     }
+    if (s.getList('findHistory') != null) {
+      _findHistory = s.getList<String>('findHistory')!;
+    }
+    if (s.getList('replaceHistory') != null) {
+      _replaceHistory = s.getList<String>('replaceHistory')!;
+    }
+    if (s.getList('extensionHistory') != null) {
+      _extensionHistory = s.getList<String>('extensionHistory')!;
+    }
 
     // 4. Restore Sort (SYNC)
     _sortColumnIndex = s.getInt('sortColumnIndex') ?? 0;
@@ -203,13 +214,18 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('appendHistory', _appendHistory);
     s.set('deleteFromHistory', _deleteFromHistory);
     s.set('deleteToHistory', _deleteToHistory);
+    s.set('findHistory', _findHistory);
+    s.set('replaceHistory', _replaceHistory);
+    s.set('extensionHistory', _extensionHistory);
 
     s.set('sortColumnIndex', _sortColumnIndex);
     s.set('sortAscending', _sortAscending);
 
     // New Fields
     s.set('listRenameText', _listRenameText);
-    s.set('subTabExtensionText', _subTabExtensionText);
+    s.set('listRenameText', _listRenameText);
+    s.set('extensionChangeText', _extensionChangeText);
+    s.set('extensionAddText', _extensionAddText);
     s.set('lastMainMode', _lastMainMode.index);
     s.set('lastSubMode', _lastSubMode.index);
     s.set('lastEtcMode', _lastEtcMode.index);
@@ -269,6 +285,9 @@ class DirectoryProvider extends ChangeNotifier {
   List<String> _appendHistory = [];
   List<String> _deleteFromHistory = [];
   List<String> _deleteToHistory = [];
+  List<String> _findHistory = [];
+  List<String> _replaceHistory = [];
+  List<String> _extensionHistory = [];
 
   // Filter State
   String _filterText = '';
@@ -327,6 +346,9 @@ class DirectoryProvider extends ChangeNotifier {
   List<String> get appendHistory => _appendHistory;
   List<String> get deleteFromHistory => _deleteFromHistory;
   List<String> get deleteToHistory => _deleteToHistory;
+  List<String> get findHistory => _findHistory;
+  List<String> get replaceHistory => _replaceHistory;
+  List<String> get extensionHistory => _extensionHistory;
 
   // Mode Memory
   RenameMode _lastMainMode = RenameMode.upper;
@@ -386,11 +408,13 @@ class DirectoryProvider extends ChangeNotifier {
 
   // Sub Tab State
   String _listRenameText = '';
-  String _subTabExtensionText = '';
+  String _extensionChangeText = '';
+  String _extensionAddText = '';
   Timer? _previewTimer;
 
   String get listRenameText => _listRenameText;
-  String get subTabExtensionText => _subTabExtensionText;
+  String get extensionChangeText => _extensionChangeText;
+  String get extensionAddText => _extensionAddText;
 
   // Getters for Filter UI
   String get filterText => _filterText;
@@ -506,7 +530,8 @@ class DirectoryProvider extends ChangeNotifier {
     bool? useRegex,
     bool? saveSequenceNumber,
     String? listText,
-    String? extensionText,
+    String? extensionChangeText,
+    String? extensionAddText,
     String? dateFormat,
     DatePosition? datePosition,
     ValidationType? validationType,
@@ -560,7 +585,8 @@ class DirectoryProvider extends ChangeNotifier {
 
     // Sub Tab
     if (listText != null) _listRenameText = listText;
-    if (extensionText != null) _subTabExtensionText = extensionText;
+    if (extensionChangeText != null) _extensionChangeText = extensionChangeText;
+    if (extensionAddText != null) _extensionAddText = extensionAddText;
 
     if (saveSequenceNumber != null) {
       _saveSequenceNumber = saveSequenceNumber;
@@ -628,9 +654,10 @@ class DirectoryProvider extends ChangeNotifier {
     }
 
     String? currentReplaceText = _replaceText;
-    if (_renameMode == RenameMode.extension ||
-        _renameMode == RenameMode.extensionAdd) {
-      currentReplaceText = _subTabExtensionText;
+    if (_renameMode == RenameMode.extension) {
+      currentReplaceText = _extensionChangeText;
+    } else if (_renameMode == RenameMode.extensionAdd) {
+      currentReplaceText = _extensionAddText;
     }
 
     String? baseDirName;
@@ -1034,6 +1061,7 @@ class DirectoryProvider extends ChangeNotifier {
 
     if (transaction.isNotEmpty) {
       _undoManager.addTransaction(transaction);
+      _saveInputHistory();
       if (_currentDirectory != null) {
         await setDirectory(_currentDirectory!);
       }
@@ -1108,7 +1136,7 @@ class DirectoryProvider extends ChangeNotifier {
     target.insert(0, value);
 
     if (target.length > 10) {
-      target = target.sublist(0, 10);
+      target.removeRange(10, target.length);
     }
 
     notifyListeners();
@@ -1403,6 +1431,48 @@ class DirectoryProvider extends ChangeNotifier {
         } else {
           return 'ディレクトリ';
         }
+    }
+  }
+
+  void _saveInputHistory() {
+    switch (_renameMode) {
+      case RenameMode.append:
+      case RenameMode.prepend:
+      case RenameMode.insert:
+      case RenameMode.numbering:
+        if (_appendText != null) addToHistory(_appendHistory, _appendText!);
+        break;
+      case RenameMode.replace:
+        if (_findText != null) addToHistory(_findHistory, _findText!);
+        if (_replaceText != null) addToHistory(_replaceHistory, _replaceText!);
+        break;
+      case RenameMode.deleteFrontTo:
+      case RenameMode.deleteBackTo:
+      case RenameMode.deleteFrom: // Maybe?
+        if (_deleteToText != null) {
+          addToHistory(_deleteToHistory, _deleteToText!);
+        }
+        break;
+      case RenameMode.extension:
+        if (_extensionChangeText.isNotEmpty) {
+          addToHistory(_extensionHistory, _extensionChangeText);
+        }
+        break;
+      case RenameMode.extensionAdd:
+        if (_extensionAddText.isNotEmpty) {
+          addToHistory(_extensionHistory,
+              _extensionAddText); // Using same history list? Or split history?
+          // User asked for split *items* (fields), history might be shared or split.
+          // Conventionally, extension history is shared.
+          // Let's keep history shared for now unless requested otherwise.
+          addToHistory(_extensionHistory, _extensionAddText);
+        }
+        break;
+      case RenameMode.extensionRemove:
+        // No input usually, or maybe removed extension?
+        break;
+      default:
+        break;
     }
   }
 }

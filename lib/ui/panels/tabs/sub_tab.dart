@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/directory_provider.dart';
 import '../../../core/rename_engine.dart';
+import '../../widgets/history_text_field.dart';
 
 class SubTab extends StatefulWidget {
   const SubTab({super.key});
@@ -11,21 +12,25 @@ class SubTab extends StatefulWidget {
 }
 
 class _SubTabState extends State<SubTab> {
-  late TextEditingController _extensionController;
+  late TextEditingController _extensionChangeController;
+  late TextEditingController _extensionAddController;
   late TextEditingController _listController;
 
   @override
   void initState() {
     super.initState();
     final provider = context.read<DirectoryProvider>();
-    _extensionController =
-        TextEditingController(text: provider.subTabExtensionText);
+    _extensionChangeController =
+        TextEditingController(text: provider.extensionChangeText);
+    _extensionAddController =
+        TextEditingController(text: provider.extensionAddText);
     _listController = TextEditingController(text: provider.listRenameText);
   }
 
   @override
   void dispose() {
-    _extensionController.dispose();
+    _extensionChangeController.dispose();
+    _extensionAddController.dispose();
     _listController.dispose();
     super.dispose();
   }
@@ -38,8 +43,12 @@ class _SubTabState extends State<SubTab> {
     final double blockSpacing = isCompact ? 8.0 : 16.0;
 
     // Sync controllers
-    if (provider.subTabExtensionText != _extensionController.text) {
-      _extensionController.text = provider.subTabExtensionText;
+    // Sync controllers
+    if (provider.extensionChangeText != _extensionChangeController.text) {
+      _extensionChangeController.text = provider.extensionChangeText;
+    }
+    if (provider.extensionAddText != _extensionAddController.text) {
+      _extensionAddController.text = provider.extensionAddText;
     }
     if (provider.listRenameText != _listController.text) {
       _listController.text = provider.listRenameText;
@@ -60,11 +69,12 @@ class _SubTabState extends State<SubTab> {
             provider,
             RenameMode.extension,
             '拡張子を変更',
-            _extensionController,
+            _extensionChangeController,
             (val) => context.read<DirectoryProvider>().updateRenameSettings(
-                extensionText: val, mode: RenameMode.extension),
+                extensionChangeText: val, mode: RenameMode.extension),
             hint: 'txt',
             isCompact: isCompact,
+            history: provider.extensionHistory, // Pass history
           ),
 
           // Extension Add (with input or reuse?)
@@ -77,11 +87,12 @@ class _SubTabState extends State<SubTab> {
             provider,
             RenameMode.extensionAdd,
             '拡張子を追加',
-            _extensionController, // Shared controller
+            _extensionAddController,
             (val) => context.read<DirectoryProvider>().updateRenameSettings(
-                extensionText: val, mode: RenameMode.extensionAdd),
+                extensionAddText: val, mode: RenameMode.extensionAdd),
             hint: 'bak',
             isCompact: isCompact,
+            history: provider.extensionHistory, // Shared history
           ),
 
           _buildRadioTile(
@@ -248,6 +259,7 @@ class _SubTabState extends State<SubTab> {
     Function(String) onChanged, {
     String? hint,
     bool isCompact = false,
+    List<String> history = const [],
   }) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: isCompact ? 2.0 : 4.0),
@@ -270,38 +282,13 @@ class _SubTabState extends State<SubTab> {
           Text(label, style: const TextStyle(fontSize: 13)),
           const SizedBox(width: 8),
           Expanded(
-            child: TextField(
-              controller:
-                  controller, // Note: Shared controller usage might be tricky if fields are distinct?
-              // Here we use one 'extensionText' for both rename/add, so shared is fine.
-              // But confusing if user switches mode?
-              // Namery usually shares the input area?
-              // In Namery manual image, there is ONE input field next to the radio group?
-              // No, the image shows input field next to "Extension Change".
-              // If I click "Remove", input might be disabled or irrelevant.
-              // If I click "Add", input is relevant.
-              // Let's use ONE shared input for all extension logic if possible or just use this widget.
-              // If I use the same controller for both widgets, text duplicates in both fields UI-wise?
-              // Yes.
-              // So better to have ONE input field or sync them.
-              // Here I am rendering TWO rows each with an input.
-              // Better UI: Radio Group + Single Input?
-              // Or: Radio Row ... Input
-              // Radio Row ...
-              // Let's stick to simple implementation: Input next to Radio.
-              style: const TextStyle(fontSize: 13),
-              decoration: InputDecoration(
-                hintText: hint,
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  vertical: isCompact ? 6 : 8,
-                  horizontal: 8,
-                ),
-                border: const OutlineInputBorder(),
-              ),
+            child: HistoryTextField(
+              controller: controller,
+              history: history,
+              hintText: hint,
+              isCompact: isCompact,
               onChanged: onChanged,
               onTap: () {
-                // Auto-switch mode on focus?
                 context
                     .read<DirectoryProvider>()
                     .updateRenameSettings(mode: mode, immediate: true);
