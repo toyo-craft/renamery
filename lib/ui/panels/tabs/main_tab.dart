@@ -79,8 +79,8 @@ class _MainTabState extends State<MainTab> {
   Widget build(BuildContext context) {
     final provider = context.watch<DirectoryProvider>();
     final isCompact = provider.isCompactMode;
-    final double spacing = isCompact ? 2.0 : 4.0;
-    final double blockSpacing = isCompact ? 8.0 : 16.0;
+    final double spacing = isCompact ? 4.0 : 8.0; // 4dp grid
+    final double blockSpacing = isCompact ? 12.0 : 20.0; // 4dp grid
 
     // Sync controllers if NOT focused
     if (provider.findText != _findController.text && !_findFocus.hasFocus) {

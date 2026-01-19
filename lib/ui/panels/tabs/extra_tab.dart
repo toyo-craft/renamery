@@ -49,16 +49,18 @@ class _ExtraTabState extends State<ExtraTab> {
   Widget build(BuildContext context) {
     return Consumer<DirectoryProvider>(
       builder: (context, provider, child) {
-        final mode = provider.renameMode;
+        final isCompact = provider.isCompactMode;
+        final double spacing = isCompact ? 4.0 : 8.0; // 4dp grid
+        final double blockSpacing = isCompact ? 12.0 : 20.0; // 4dp grid
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDateSection(context, provider, mode),
-              const Divider(height: 24, thickness: 1),
-              _buildConversionSection(context, provider, mode),
+              _buildDateSection(context, provider, mode, spacing),
+              Divider(height: blockSpacing, thickness: 1, color: Colors.green),
+              _buildConversionSection(context, provider, mode, spacing),
             ],
           ),
         );
@@ -66,8 +68,8 @@ class _ExtraTabState extends State<ExtraTab> {
     );
   }
 
-  Widget _buildDateSection(
-      BuildContext context, DirectoryProvider provider, RenameMode mode) {
+  Widget _buildDateSection(BuildContext context, DirectoryProvider provider,
+      RenameMode mode, double spacing) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -158,8 +160,8 @@ class _ExtraTabState extends State<ExtraTab> {
     );
   }
 
-  Widget _buildConversionSection(
-      BuildContext context, DirectoryProvider provider, RenameMode mode) {
+  Widget _buildConversionSection(BuildContext context,
+      DirectoryProvider provider, RenameMode mode, double spacing) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

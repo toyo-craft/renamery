@@ -72,7 +72,7 @@ class _SettingsPanelState extends State<SettingsPanel>
   @override
   Widget build(BuildContext context) {
     final isCompact = context.watch<DirectoryProvider>().isCompactMode;
-    final double padding = isCompact ? 4.0 : 8.0;
+    final double padding = isCompact ? 4.0 : 8.0; // 4dp grid
 
     return Column(
       children: [

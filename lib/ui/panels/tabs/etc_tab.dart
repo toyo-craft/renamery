@@ -123,20 +123,22 @@ class _EtcTabState extends State<EtcTab> {
   Widget build(BuildContext context) {
     return Consumer<DirectoryProvider>(
       builder: (context, provider, child) {
-        final mode = provider.renameMode;
+        final isCompact = provider.isCompactMode;
+        final double spacing = isCompact ? 4.0 : 8.0; // 4dp grid
+        final double blockSpacing = isCompact ? 12.0 : 20.0; // 4dp grid
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Timestamp Section
-              _buildTimestampSection(context, provider, mode),
+              _buildTimestampSection(context, provider, mode, spacing),
 
-              const Divider(height: 24, thickness: 1),
+              Divider(height: blockSpacing, thickness: 1, color: Colors.green),
 
               // Attribute Section
-              _buildAttributeSection(context, provider, mode),
+              _buildAttributeSection(context, provider, mode, spacing),
 
               const SizedBox(height: 24),
 
@@ -189,8 +191,8 @@ class _EtcTabState extends State<EtcTab> {
     );
   }
 
-  Widget _buildTimestampSection(
-      BuildContext context, DirectoryProvider provider, RenameMode mode) {
+  Widget _buildTimestampSection(BuildContext context,
+      DirectoryProvider provider, RenameMode mode, double spacing) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -248,8 +250,8 @@ class _EtcTabState extends State<EtcTab> {
     );
   }
 
-  Widget _buildAttributeSection(
-      BuildContext context, DirectoryProvider provider, RenameMode mode) {
+  Widget _buildAttributeSection(BuildContext context,
+      DirectoryProvider provider, RenameMode mode, double spacing) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

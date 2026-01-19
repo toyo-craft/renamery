@@ -113,6 +113,10 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     // 2. Tablet: Center + Right (Width >= 700)
     // 3. Mobile: Center (Width < 700)
 
+    // 1. Desktop: Left + Center + Right (Width >= 1100)
+    // 2. Tablet: Center + Right (Width >= 700)
+    // 3. Mobile: Center (Width < 700)
+
     final bool showLeftPane = width >= 1100;
     final bool showRightPane = width >= 700;
 
