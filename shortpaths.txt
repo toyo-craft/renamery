@@ -1,0 +1,48 @@
+ ドライブ C のボリューム ラベルは Windows です
+ ボリューム シリアル番号は 66D7-A46B です
+
+ c:\Users\s.kodatai のディレクトリ
+
+2026/01/16  13:30    <DIR>                       .
+2025/08/21  14:51    <DIR>                       ..
+2025/12/16  15:06    <DIR>          ANTIGR~1     .antigravity
+2025/09/11  07:20    <DIR>          AWS~1        .aws
+2026/01/15  11:02                12 BASH_H~1     .bash_history
+2025/09/24  17:04    <DIR>          CACHE~1      .cache
+2025/10/28  08:09    <DIR>          CODEX~1      .codex
+2025/09/24  17:04    <DIR>          CONFIG~1     .config
+2025/08/26  00:37    <DIR>          DBUS-K~1     .dbus-keyrings
+2026/01/13  12:17    <DIR>          DOCKER~1     .docker
+2026/01/16  13:30    <DIR>          DOTNET~1     .dotnet
+2026/01/15  10:53    <DIR>          GEMINI~1     .gemini
+2025/11/15  09:17                54 GITCON~1     .gitconfig
+2025/12/06  18:29    <DIR>          KIRO~1       .kiro
+2026/01/15  03:52    <DIR>          LMSTUD~2     .lmstudio
+2025/08/22  16:38                28 LMSTUD~1     .lmstudio-home-pointer
+2026/01/09  18:17    <DIR>          LOCAL~1      .local
+2026/01/16  13:30    <DIR>          NUGET~1      .nuget
+2025/10/24  15:30    <DIR>          OLLAMA~1     .ollama
+2026/01/10  10:52    <DIR>          OPENHA~1     .openhands-state
+2025/08/21  17:30    <DIR>          SSH~1        .ssh
+2026/01/16  13:26    <DIR>          TEMPLA~2     .templateengine
+2025/11/15  09:35               944 VIMINF~1     .viminfo
+2025/11/24  01:04               121 YARNRC~1     .yarnrc
+2026/01/15  13:01    <JUNCTION>                  Box [\??\Volume{e659a244-7e50-11f0-8443-7893c3bafdbb}\]
+2025/08/21  14:52    <DIR>                       Contacts
+2025/10/15  01:08    <DIR>                       Desktop
+2026/01/16  13:17    <DIR>          DOCUME~1     Documents
+2026/01/16  13:14    <DIR>          DOWNLO~1     Downloads
+2025/08/21  14:52    <DIR>          FAVORI~1     Favorites
+2025/08/21  14:52    <DIR>                       Links
+2025/08/21  14:52    <DIR>                       Music
+2025/10/08  07:53    <DIR>                       old_Box
+2025/08/21  16:11    <DIR>                       OneDrive
+2026/01/15  07:46    <DIR>          ONEDRI~1     OneDrive - 株式会社セラフ
+2025/08/21  14:52    <DIR>          SAVEDG~1     Saved Games
+2025/10/10  13:09             5,573 SCHEMA~1.SQL schema_update.sql
+2025/08/25  14:24    <DIR>                       Searches
+2026/01/16  13:30    <DIR>                       source
+2025/08/22  10:27    <DIR>                       Videos
+2026/01/09  19:16    <DIR>          WORKSP~1     workspace_base
+               6 個のファイル               6,732 バイト
+              35 個のディレクトリ  299,076,108,288 バイトの空き領域
