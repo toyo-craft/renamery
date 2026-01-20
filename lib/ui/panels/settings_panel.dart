@@ -156,10 +156,43 @@ class _SettingsPanelState extends State<SettingsPanel>
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: isCompact ? 40 : 48,
+                child: FilledButton.icon(
+                  onPressed:
+                      (provider.canExecute && !provider.hasInvalidFilenames)
+                          ? () => _confirmAndExecute(context, provider)
+                          : null,
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(provider.labelGoRenamery,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  // style: defaults to Theme.of(context).colorScheme.primary
+                ),
+              ),
             ],
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _confirmAndExecute(
+      BuildContext context, DirectoryProvider provider) async {
+    if (!provider.currentFiles.any((f) => f.isSelected)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ファイルが選択されていません')),
+      );
+      return;
+    }
+
+    final executedCount = await provider.executeRename();
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$executedCount 個のファイルをリネームしました')),
+      );
+    }
   }
 }

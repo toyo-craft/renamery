@@ -107,19 +107,18 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               // 3. Execute (Go ReNamery!!!)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: FilledButton.icon(
+                child: IconButton(
                   icon: const Icon(Icons.play_arrow),
-                  label: Text(provider.labelGoRenamery,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                  ),
+                  // color: iconColor,
+                  iconSize: iconSize,
+                  tooltip: provider.hasInvalidFilenames
+                      ? provider.labelErrorInvalidFilename
+                      : provider.labelExecute,
                   onPressed:
                       (provider.canExecute && !provider.hasInvalidFilenames)
                           ? () => _confirmAndExecute(context, provider)
                           : null,
-                ), // Tooltip handled by button? Or wrap? FilledButton handles tooltip if standard? No, need explicit Tooltip widget if desired, but text is self-explanatory.
+                ),
               ),
 
               // 4. Undo
