@@ -139,11 +139,11 @@
   "labelDialogDelete": "削除",
   "labelDialogReset": "リセット",
   "labelMsgHistoryCleared": "履歴を削除しました",
-  "labelMsgSettingsReset": "まっさらにしたぞ",
-  "labelFilterHideFolders": "ハコは隠すんべ",
-  "labelFilterShowFolders": "ハコも見せるんべ",
-  "labelPreviewNoSelection": "なーんも選んでねぇ",
-  "labelPreviewSelectedCount": "{count} つのモノを選んでっぞ",
+  "labelMsgSettingsReset": "設定をリセットしました",
+  "labelFilterHideFolders": "フォルダーを隠す",
+  "labelFilterShowFolders": "フォルダーを表示",
+  "labelPreviewNoSelection": "選択されていません",
+  "labelPreviewSelectedCount": "{count} 個のファイルが選択されています",
   "@labelPreviewSelectedCount": {
     "placeholders": {
       "count": {
@@ -151,9 +151,9 @@
       }
     }
   },
-  "labelPreviewImageLoadFailed": "絵が出ねぇぞ",
-  "labelPreviewUnavailable": "中身が見れねぇべ",
-  "labelPreviewOmitted": "... (端折ったぞ: 全部で {size} KB)",
+  "labelPreviewImageLoadFailed": "画像の読み込みに失敗しました",
+  "labelPreviewUnavailable": "プレビューを利用できません",
+  "labelPreviewOmitted": "... (省略されました: 全 {size} KB)",
   "@labelPreviewOmitted": {
     "placeholders": {
       "size": {
@@ -161,15 +161,15 @@
       }
     }
   },
-  "labelPreviewBinaryError": "中身が見れねぇ: 暗号か何かっぺ？",
-  "labelGoRenamery": "ReNameryの刑だっ!!!",
-  "labelTermFolder": "ハコ",
-  "labelTermFile": "モノ",
-  "labelSettingsOSMac": "シャレオツなMac (Finder互換だっぺ)",
-  "labelSettingsOSLinux": "ペンギンのやつ (Linuxだっぺ)",
-  "labelSettingsOSiOS": "リンゴの電話 (iPhoneだっぺ)",
-  "labelSettingsOSAndroid": "ドロイド君 (Androidだっぺ)",
-  "labelMsgExecutedCount": "{count} つのモノの名前をひっくり返したぞ",
+  "labelPreviewBinaryError": "プレビューを利用できません: バイナリまたは不明なエンコーディング",
+  "labelGoRenamery": "Go ReNamery!!!",
+  "labelTermFolder": "フォルダー",
+  "labelTermFile": "ファイル",
+  "labelSettingsOSMac": "Mac (Finder互換)",
+  "labelSettingsOSLinux": "Linux",
+  "labelSettingsOSiOS": "iOS (iPhone/iPad)",
+  "labelSettingsOSAndroid": "Android",
+  "labelMsgExecutedCount": "{count} 個のファイルをリネームしました",
   "@labelMsgExecutedCount": {
     "placeholders": {
       "count": {
@@ -177,15 +177,15 @@
       }
     }
   },
-  "labelMsgNoSelection": "何も選んでねぇっぺよ",
-  "labelCopyListPath": "全部まるっと書き写す (Path)",
-  "labelMenuGo": "行けっ!!!",
-  "labelNoFiles": "何も無ぇっぺ",
-  "labelSelectFolderPrompt": "{term}を選んでくんねぇか",
-  "labelNavTitle": "道しるべ",
-  "labelNavPC": "この箱",
-  "labelNumSaveSequenceTooltip": "今の数字を覚えとく（次はこっから始めるべ）",
-  "labelStatusDisplayCount": "今見えてんの: {current} / 全部で: {total} 個 : 選んだの {selected} 個だっぺ",
+  "labelMsgNoSelection": "ファイルが選択されていません",
+  "labelCopyListPath": "リストをクリップボードにコピー (Path)",
+  "labelMenuGo": "移動",
+  "labelNoFiles": "ファイルがありません",
+  "labelSelectFolderPrompt": "{term}を選択してください",
+  "labelNavTitle": "ナビゲーション",
+  "labelNavPC": "PC",
+  "labelNumSaveSequenceTooltip": "変更後の連番数字を保存（次回リネーム時に連番を継続）",
+  "labelStatusDisplayCount": "現在の表示: {current} / 全 {total} ファイル : 選択 {selected} ファイル",
   "@labelStatusDisplayCount": {
     "placeholders": {
       "current": { "type": "int" },
@@ -193,52 +193,52 @@
       "selected": { "type": "int" }
     }
   },
-  "labelStatusTotalCount": "全部で {total} 個 : 選んだの {selected} 個だっぺ",
+  "labelStatusTotalCount": "全 {total} ファイル : 選択 {selected} ファイル",
   "@labelStatusTotalCount": {
     "placeholders": {
       "total": { "type": "int" },
       "selected": { "type": "int" }
     }
   },
-  "labelStatusProcessing": "やってっから待ってろ...",
-  "labelStatusReady": "準備OKだんべ",
-  "labelDeleteConfirmTitle": "消してもいいんか？",
-  "labelDeleteConfirmMessage": "{count} 個まるごと消しちまうけどいいんか？\nもう元には戻せねぇぞ。",
+  "labelStatusProcessing": "処理中...",
+  "labelStatusReady": "準備完了",
+  "labelDeleteConfirmTitle": "削除の確認",
+  "labelDeleteConfirmMessage": "{count} 個のファイルを完全に削除しますか？\nこの操作は元に戻せません。",
   "@labelDeleteConfirmMessage": {
     "placeholders": {
       "count": { "type": "int" }
     }
   },
-  "labelMsgDeletedCount": "{count} 個消してやったべ",
+  "labelMsgDeletedCount": "{count} 個のファイルを削除しました",
   "@labelMsgDeletedCount": {
     "placeholders": {
       "count": { "type": "int" }
     }
   },
-  "labelUndoTitle": "元に戻すべ",
-  "labelUndoConfirm": "さっきやった {count} 個の変更、元に戻していいんか？",
+  "labelUndoTitle": "処理の復元",
+  "labelUndoConfirm": "直前に行った {count} 件の変更を元に戻しますか？",
   "@labelUndoConfirm": {
     "placeholders": {
       "count": { "type": "int" }
     }
   },
-  "labelMsgUndoSuccess": "元通りにしてやったべ",
-  "labelUndoRecoverBtn": "元に戻す",
-  "labelMsgNoUndoRecord": "元に戻すもんがねぇべ",
-  "labelMsgUndoRecordCopied": "さっきの記録、クリップボードに放り込んどいたべ",
-  "labelMsgCopyNamesSuccess": "{count} 個の名前をコピーしたべ",
+  "labelMsgUndoSuccess": "復元しました",
+  "labelUndoRecoverBtn": "復元",
+  "labelMsgNoUndoRecord": "直前の変更記録がありません",
+  "labelMsgUndoRecordCopied": "直前の変更記録をクリップボードにコピーしました",
+  "labelMsgCopyNamesSuccess": "{count} 件のファイル名をコピーしました",
   "@labelMsgCopyNamesSuccess": {
     "placeholders": {
       "count": { "type": "int" }
     }
   },
-  "labelMsgCopyRelativePathsSuccess": "{count} 個の相対パスをコピーしたべ",
+  "labelMsgCopyRelativePathsSuccess": "{count} 件のファイルパス(相対)をコピーしました",
   "@labelMsgCopyRelativePathsSuccess": {
     "placeholders": {
       "count": { "type": "int" }
     }
   },
-  "labelMsgCopyFullPathsSuccess": "{count} 個のフルパスをコピーしたべ",
+  "labelMsgCopyFullPathsSuccess": "{count} 件のフルパスをコピーしました",
   "@labelMsgCopyFullPathsSuccess": {
     "placeholders": {
       "count": { "type": "int" }

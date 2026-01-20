@@ -998,149 +998,149 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelMsgHistoryCleared => '履歴を削除しました';
 
   @override
-  String get labelMsgSettingsReset => 'まっさらにしたぞ';
+  String get labelMsgSettingsReset => '設定をリセットしました';
 
   @override
-  String get labelFilterHideFolders => 'ハコは隠すんべ';
+  String get labelFilterHideFolders => 'フォルダーを隠す';
 
   @override
-  String get labelFilterShowFolders => 'ハコも見せるんべ';
+  String get labelFilterShowFolders => 'フォルダーを表示';
 
   @override
-  String get labelPreviewNoSelection => 'なーんも選んでねぇ';
+  String get labelPreviewNoSelection => '選択されていません';
 
   @override
   String labelPreviewSelectedCount(int count) {
-    return '$count つのモノを選んでっぞ';
+    return '$count 個のファイルが選択されています';
   }
 
   @override
-  String get labelPreviewImageLoadFailed => '絵が出ねぇぞ';
+  String get labelPreviewImageLoadFailed => '画像の読み込みに失敗しました';
 
   @override
-  String get labelPreviewUnavailable => '中身が見れねぇべ';
+  String get labelPreviewUnavailable => 'プレビューを利用できません';
 
   @override
   String labelPreviewOmitted(String size) {
-    return '... (端折ったぞ: 全部で $size KB)';
+    return '... (省略されました: 全 $size KB)';
   }
 
   @override
-  String get labelPreviewBinaryError => '中身が見れねぇ: 暗号か何かっぺ？';
+  String get labelPreviewBinaryError => 'プレビューを利用できません: バイナリまたは不明なエンコーディング';
 
   @override
-  String get labelGoRenamery => 'ReNameryの刑だっ!!!';
+  String get labelGoRenamery => 'Go ReNamery!!!';
 
   @override
-  String get labelTermFolder => 'ハコ';
+  String get labelTermFolder => 'フォルダー';
 
   @override
-  String get labelTermFile => 'モノ';
+  String get labelTermFile => 'ファイル';
 
   @override
-  String get labelSettingsOSMac => 'シャレオツなMac (Finder互換だっぺ)';
+  String get labelSettingsOSMac => 'Mac (Finder互換)';
 
   @override
-  String get labelSettingsOSLinux => 'ペンギンのやつ (Linuxだっぺ)';
+  String get labelSettingsOSLinux => 'Linux';
 
   @override
-  String get labelSettingsOSiOS => 'リンゴの電話 (iPhoneだっぺ)';
+  String get labelSettingsOSiOS => 'iOS (iPhone/iPad)';
 
   @override
-  String get labelSettingsOSAndroid => 'ドロイド君 (Androidだっぺ)';
+  String get labelSettingsOSAndroid => 'Android';
 
   @override
   String labelMsgExecutedCount(int count) {
-    return '$count つのモノの名前をひっくり返したぞ';
+    return '$count 個のファイルをリネームしました';
   }
 
   @override
-  String get labelMsgNoSelection => '何も選んでねぇっぺよ';
+  String get labelMsgNoSelection => 'ファイルが選択されていません';
 
   @override
-  String get labelCopyListPath => '全部まるっと書き写す (Path)';
+  String get labelCopyListPath => 'リストをクリップボードにコピー (Path)';
 
   @override
-  String get labelMenuGo => '行けっ!!!';
+  String get labelMenuGo => '移動';
 
   @override
-  String get labelNoFiles => '何も無ぇっぺ';
+  String get labelNoFiles => 'ファイルがありません';
 
   @override
   String labelSelectFolderPrompt(Object term) {
-    return '$termを選んでくんねぇか';
+    return '$termを選択してください';
   }
 
   @override
-  String get labelNavTitle => '道しるべ';
+  String get labelNavTitle => 'ナビゲーション';
 
   @override
-  String get labelNavPC => 'この箱';
+  String get labelNavPC => 'PC';
 
   @override
-  String get labelNumSaveSequenceTooltip => '今の数字を覚えとく（次はこっから始めるべ）';
+  String get labelNumSaveSequenceTooltip => '変更後の連番数字を保存（次回リネーム時に連番を継続）';
 
   @override
   String labelStatusDisplayCount(int current, int total, int selected) {
-    return '今見えてんの: $current / 全部で: $total 個 : 選んだの $selected 個だっぺ';
+    return '現在の表示: $current / 全 $total ファイル : 選択 $selected ファイル';
   }
 
   @override
   String labelStatusTotalCount(int total, int selected) {
-    return '全部で $total 個 : 選んだの $selected 個だっぺ';
+    return '全 $total ファイル : 選択 $selected ファイル';
   }
 
   @override
-  String get labelStatusProcessing => 'やってっから待ってろ...';
+  String get labelStatusProcessing => '処理中...';
 
   @override
-  String get labelStatusReady => '準備OKだんべ';
+  String get labelStatusReady => '準備完了';
 
   @override
-  String get labelDeleteConfirmTitle => '消してもいいんか？';
+  String get labelDeleteConfirmTitle => '削除の確認';
 
   @override
   String labelDeleteConfirmMessage(int count) {
-    return '$count 個まるごと消しちまうけどいいんか？\nもう元には戻せねぇぞ。';
+    return '$count 個のファイルを完全に削除しますか？\nこの操作は元に戻せません。';
   }
 
   @override
   String labelMsgDeletedCount(int count) {
-    return '$count 個消してやったべ';
+    return '$count 個のファイルを削除しました';
   }
 
   @override
-  String get labelUndoTitle => '元に戻すべ';
+  String get labelUndoTitle => '処理の復元';
 
   @override
   String labelUndoConfirm(int count) {
-    return 'さっきやった $count 個の変更、元に戻していいんか？';
+    return '直前に行った $count 件の変更を元に戻しますか？';
   }
 
   @override
-  String get labelMsgUndoSuccess => '元通りにしてやったべ';
+  String get labelMsgUndoSuccess => '復元しました';
 
   @override
-  String get labelUndoRecoverBtn => '元に戻す';
+  String get labelUndoRecoverBtn => '復元';
 
   @override
-  String get labelMsgNoUndoRecord => '元に戻すもんがねぇべ';
+  String get labelMsgNoUndoRecord => '直前の変更記録がありません';
 
   @override
-  String get labelMsgUndoRecordCopied => 'さっきの記録、クリップボードに放り込んどいたべ';
+  String get labelMsgUndoRecordCopied => '直前の変更記録をクリップボードにコピーしました';
 
   @override
   String labelMsgCopyNamesSuccess(int count) {
-    return '$count 個の名前をコピーしたべ';
+    return '$count 件のファイル名をコピーしました';
   }
 
   @override
   String labelMsgCopyRelativePathsSuccess(int count) {
-    return '$count 個の相対パスをコピーしたべ';
+    return '$count 件のファイルパス(相対)をコピーしました';
   }
 
   @override
   String labelMsgCopyFullPathsSuccess(int count) {
-    return '$count 個のフルパスをコピーしたべ';
+    return '$count 件のフルパスをコピーしました';
   }
 }
