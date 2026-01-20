@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ExtraTab extends StatefulWidget {
   const ExtraTab({super.key});
@@ -18,10 +19,6 @@ class _ExtraTabState extends State<ExtraTab> {
     super.initState();
     final provider = context.read<DirectoryProvider>();
     _dateFormatController.text = provider.dateFormat;
-
-    // Listen to provider updates if needed, usage of Consumer handles rebuilds.
-    // If provider updates externally, we might want to sync controller.
-    // But usually user inputs here.
   }
 
   @override
@@ -47,6 +44,7 @@ class _ExtraTabState extends State<ExtraTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Consumer<DirectoryProvider>(
       builder: (context, provider, child) {
         final isCompact = provider.isCompactMode;
@@ -59,13 +57,13 @@ class _ExtraTabState extends State<ExtraTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildDateSection(
-                  context, provider, provider.renameMode, spacing),
+                  context, provider, provider.renameMode, spacing, l10n),
               Divider(
                   height: blockSpacing,
                   thickness: 1,
                   color: Theme.of(context).colorScheme.outlineVariant),
               _buildConversionSection(
-                  context, provider, provider.renameMode, spacing),
+                  context, provider, provider.renameMode, spacing, l10n),
             ],
           ),
         );
@@ -74,7 +72,7 @@ class _ExtraTabState extends State<ExtraTab> {
   }
 
   Widget _buildDateSection(BuildContext context, DirectoryProvider provider,
-      RenameMode mode, double spacing) {
+      RenameMode mode, double spacing, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -93,7 +91,7 @@ class _ExtraTabState extends State<ExtraTab> {
                   _updateSettings(context, mode: val, immediate: true);
                 },
               ),
-              Text(provider.labelExtraAppendDate),
+              Text(l10n.labelExtraAppendDate),
             ],
           ),
         ),
@@ -107,36 +105,24 @@ class _ExtraTabState extends State<ExtraTab> {
               // Date Format Input
               TextField(
                 controller: _dateFormatController,
-                enabled:
-                    true, // Use enabled/disabled based on mode? Or always allow edit?
-                // Usually Namery allows edit even if not selected, but highlights when selected.
-                // Let's keep enabled.
                 decoration: InputDecoration(
-                  labelText: provider.labelExtraDateFormatHint,
+                  labelText: l10n.labelExtraDateFormatHint,
                   isDense: true,
                   border: const OutlineInputBorder(),
                 ),
                 onChanged: (val) {
-                  // If mode is active, update immediate?
-                  // Or assume typing implies wanting to use this mode?
-                  // Namery behavior: Typing doesn't force mode unless maybe focused?
-                  // But usually we update settings.
                   if (mode == RenameMode.appendDate) {
                     _updateSettings(context,
                         dateFormat: val, immediate: false); // Debounce
                   } else {
-                    // Just update the stored text without activating mode?
-                    // DirectoryProvider stores it regardless.
                     _updateSettings(context, dateFormat: val, immediate: false);
-                    // If we want to Auto-Activate:
-                    // _updateSettings(context, mode: RenameMode.appendDate, dateFormat: val);
                   }
                 },
               ),
               const SizedBox(height: 8),
 
               // Position Radios (Front / Back)
-              Text(provider.labelExtraPosition,
+              Text(l10n.labelExtraPosition,
                   style: Theme.of(context).textTheme.bodySmall),
               const SizedBox(height: 8),
               SegmentedButton<DatePosition>(
@@ -144,11 +130,11 @@ class _ExtraTabState extends State<ExtraTab> {
                 segments: [
                   ButtonSegment(
                     value: DatePosition.front,
-                    label: Text(provider.labelExtraFront),
+                    label: Text(l10n.labelExtraFront),
                   ),
                   ButtonSegment(
                     value: DatePosition.back,
-                    label: Text(provider.labelExtraBack),
+                    label: Text(l10n.labelExtraBack),
                   ),
                 ],
                 selected: {provider.datePosition},
@@ -166,23 +152,27 @@ class _ExtraTabState extends State<ExtraTab> {
     );
   }
 
-  Widget _buildConversionSection(BuildContext context,
-      DirectoryProvider provider, RenameMode mode, double spacing) {
+  Widget _buildConversionSection(
+      BuildContext context,
+      DirectoryProvider provider,
+      RenameMode mode,
+      double spacing,
+      AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSimpleRadio(context, RenameMode.convHalfToFull,
-            provider.labelExtraConvHalfToFull, mode),
+            l10n.labelExtraConvHalfToFull, mode),
         _buildSimpleRadio(context, RenameMode.convFullToHalf,
-            provider.labelExtraConvFullToHalf, mode),
+            l10n.labelExtraConvFullToHalf, mode),
         _buildSimpleRadio(context, RenameMode.convFullKataToHira,
-            provider.labelExtraConvKataToHira, mode),
+            l10n.labelExtraConvKataToHira, mode),
         _buildSimpleRadio(context, RenameMode.convHiraToFullKata,
-            provider.labelExtraConvHiraToKata, mode),
+            l10n.labelExtraConvHiraToKata, mode),
         _buildSimpleRadio(context, RenameMode.convFullAlphaToHalfAlpha,
-            provider.labelExtraConvFullAlphaToHalf, mode),
+            l10n.labelExtraConvFullAlphaToHalf, mode),
         _buildSimpleRadio(context, RenameMode.convNumToHalf,
-            provider.labelExtraConvNumToHalf, mode),
+            l10n.labelExtraConvNumToHalf, mode),
       ],
     );
   }

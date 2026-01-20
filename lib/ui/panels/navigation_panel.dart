@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:path/path.dart' as p;
 import '../../core/directory_provider.dart';
 import 'filter_settings_panel.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class NavigationPanel extends StatefulWidget {
   const NavigationPanel({super.key});
@@ -46,7 +47,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
 
   @override
   Widget build(BuildContext context) {
-    // final provider = context.watch<DirectoryProvider>();
+    final l10n = AppLocalizations.of(context)!;
+    final provider = context.watch<DirectoryProvider>();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,9 +57,9 @@ class _NavigationPanelState extends State<NavigationPanel> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: const Text(
-            'Navigation',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          child: Text(
+            l10n.labelNavTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
         Expanded(
@@ -84,9 +86,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
                                 children: [
                                   // Quick Access Section
                                   if (_quickAccess.isNotEmpty) ...[
-                                    _buildSectionHeader(context
-                                        .watch<DirectoryProvider>()
-                                        .labelNavQuickAccess),
+                                    _buildSectionHeader(
+                                        l10n.labelNavQuickAccess),
                                     ..._quickAccess.map(
                                       (dir) => _DirectoryTile(
                                         directory: dir,
@@ -101,7 +102,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                                   ],
 
                                   // PC Section
-                                  _buildSectionHeader('PC'),
+                                  _buildSectionHeader(l10n.labelNavPC),
                                   ..._drives.map(
                                     (dir) => _DirectoryTile(
                                       directory: dir,

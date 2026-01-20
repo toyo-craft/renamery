@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For Clipboard
 import '../../core/directory_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class CopyHelper {
   static Future<void> handleCopy(
@@ -10,6 +11,7 @@ class CopyHelper {
 
   static Future<void> handleCopyMenu(
       BuildContext context, DirectoryProvider provider, int value) async {
+    final l10n = AppLocalizations.of(context)!;
     // 1: Names, 2: Names+Path (Relative), 3: Full Path, 4: Undo Log
 
     // Logic for 4 is distinct (based on undo log)
@@ -18,7 +20,7 @@ class CopyHelper {
       if (transaction.isEmpty) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('直前の変更記録がありません')),
+            SnackBar(content: Text(l10n.labelMsgNoUndoRecord)),
           );
         }
         return;
@@ -29,7 +31,7 @@ class CopyHelper {
       await Clipboard.setData(ClipboardData(text: text));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('直前の変更記録をクリップボードにコピーしました')),
+          SnackBar(content: Text(l10n.labelMsgUndoRecordCopied)),
         );
       }
       return;
@@ -38,14 +40,10 @@ class CopyHelper {
     // Common logic for 1, 2, 3 (Target Selection)
     final selected = provider.currentFiles.where((f) => f.isSelected);
 
-    // STRICT SELECTION: If no selection, do nothing (or show message if triggered explicitly?)
-    // User said: "When file unselected, copy target is none".
-    // Buttons are disabled in UI, but Shortcut might trigger it.
-    // So we invoke safely.
     if (selected.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ファイルが選択されていません')),
+          SnackBar(content: Text(l10n.labelNoFilesSelected)),
         );
       }
       return;
@@ -59,7 +57,7 @@ class CopyHelper {
     if (value == 1) {
       // Current List (Names)
       text = target.map((f) => f.originalName).join('\n');
-      message = '${target.length} 件のファイル名をコピーしました';
+      message = l10n.labelMsgCopyNamesSuccess(target.length);
     } else if (value == 2) {
       // Current List (Path)
       text = target.map((f) {
@@ -68,13 +66,13 @@ class CopyHelper {
         }
         return f.originalName;
       }).join('\n');
-      message = '${target.length} 件のファイルパス(相対)をコピーしました';
+      message = l10n.labelMsgCopyRelativePathsSuccess(target.length);
     } else if (value == 3) {
       // Full List
       text = target.map((f) {
         return f.entity.path;
       }).join('\n');
-      message = '${target.length} 件のフルパスをコピーしました';
+      message = l10n.labelMsgCopyFullPathsSuccess(target.length);
     }
 
     await Clipboard.setData(ClipboardData(text: text));

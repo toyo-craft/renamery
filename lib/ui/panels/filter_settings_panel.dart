@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/directory_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class FilterSettingsPanel extends StatefulWidget {
   const FilterSettingsPanel({super.key});
@@ -39,6 +40,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final l10n = AppLocalizations.of(context)!;
         // Handle unbounded width (e.g. inside ScrollView)
         final width =
             constraints.maxWidth.isFinite ? constraints.maxWidth : 300.0;
@@ -64,7 +66,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                   children: [
                     // Title
                     Text(
-                      provider.labelSettingsFilterTitle,
+                      l10n.labelSettingsFilterTitle,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12, // Compact
@@ -73,18 +75,15 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                     ),
                     const Spacer(),
                     // Toggle Button (Folder Icon)
-                    // "Yellow fill and grey fill" -> Using Stack to layer icons or just Amber folder
-                    // User requested specific colors.
                     IconButton(
-                      icon: const Icon(Icons.folder,
-                          size: 16), // Always filled folder
+                      icon: const Icon(Icons.folder, size: 16),
                       padding: EdgeInsets.zero,
                       color: provider.showFolders
                           ? Colors.amber[700]
-                          : Colors.grey, // Active: Amber, Inactive: Grey
+                          : Colors.grey,
                       tooltip: provider.showFolders
-                          ? 'Hide Folders'
-                          : 'Show Folders',
+                          ? l10n.labelFilterHideFolders
+                          : l10n.labelFilterShowFolders,
                       onPressed: () {
                         context.read<DirectoryProvider>().updateFilterSettings(
                             showFolders: !provider.showFolders);
@@ -121,7 +120,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                                   MaterialTapTargetSize.shrinkWrap,
                             ),
                           ),
-                          Text(provider.labelFilterAll,
+                          Text(l10n.labelFilterAll,
                               style: const TextStyle(fontSize: 12)),
                         ],
                       ),
@@ -142,14 +141,13 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                                 context
                                     .read<DirectoryProvider>()
                                     .updateFilterSettings(isSpecific: true);
-                                // Focus logic usually handled by tap or just enabling logic
                               },
                               visualDensity: VisualDensity.compact,
                               materialTapTargetSize:
                                   MaterialTapTargetSize.shrinkWrap,
                             ),
                           ),
-                          Text(provider.labelFilterSpecific,
+                          Text(l10n.labelFilterSpecific,
                               style: const TextStyle(fontSize: 12)),
                           const SizedBox(width: 8),
                           Expanded(
@@ -184,7 +182,6 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                                     .surfaceContainerLow,
                               ),
                               onTap: () {
-                                // Auto-select Specify if tapped
                                 if (!provider.isFilterSpecific) {
                                   context
                                       .read<DirectoryProvider>()
@@ -205,7 +202,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                     // Checkboxes
                     _buildCheckbox(
                       context,
-                      provider.labelFilterHideSystem,
+                      l10n.labelFilterHideSystem,
                       provider.hideSystemFiles,
                       (val) => context
                           .read<DirectoryProvider>()
@@ -214,7 +211,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                     ),
                     _buildCheckbox(
                       context,
-                      provider.labelFilterRecursive,
+                      l10n.labelFilterRecursive,
                       provider.recursiveSearch,
                       (val) => context
                           .read<DirectoryProvider>()
@@ -223,7 +220,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                     ),
                     _buildCheckbox(
                       context,
-                      provider.labelFilterPreview,
+                      l10n.labelFilterPreview,
                       provider.showPreview,
                       (val) => context
                           .read<DirectoryProvider>()
@@ -241,7 +238,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
                     border:
                         Border(top: BorderSide(color: Colors.grey, width: 0.5)),
                   ),
-                  child: _buildPreviewContent(provider),
+                  child: _buildPreviewContent(provider, l10n),
                 ),
             ],
           ),
@@ -282,17 +279,19 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
     );
   }
 
-  Widget _buildPreviewContent(DirectoryProvider provider) {
+  Widget _buildPreviewContent(
+      DirectoryProvider provider, AppLocalizations l10n) {
     final selected = provider.currentFiles.where((f) => f.isSelected).toList();
 
     if (selected.isEmpty) {
-      return const Center(
-          child: Text('No selection', style: TextStyle(color: Colors.grey)));
+      return Center(
+          child: Text(l10n.labelPreviewNoSelection,
+              style: const TextStyle(color: Colors.grey)));
     }
 
     if (selected.length > 1) {
       return Center(
-          child: Text('${selected.length} files selected',
+          child: Text(l10n.labelPreviewSelectedCount(selected.length),
               style: const TextStyle(color: Colors.grey)));
     }
 
@@ -309,7 +308,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
           File(path),
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) =>
-              const Center(child: Text('Image load failed')),
+              Center(child: Text(l10n.labelPreviewImageLoadFailed)),
         ),
       );
     }
@@ -318,16 +317,15 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: FutureBuilder<String>(
-        future: _readTextPreview(File(path)),
+        future: _readTextPreview(File(path), l10n),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
                 child: CircularProgressIndicator(strokeWidth: 2));
           }
-          final text = snapshot.data ?? 'Preview unavailable';
+          final text = snapshot.data ?? l10n.labelPreviewUnavailable;
           return SingleChildScrollView(
             child: SelectableText(
-              // Copyable
               text,
               style: const TextStyle(fontSize: 11, fontFamily: 'Consolas'),
             ),
@@ -337,26 +335,22 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
     );
   }
 
-  Future<String> _readTextPreview(File file) async {
+  Future<String> _readTextPreview(File file, AppLocalizations l10n) async {
     try {
       final len = await file.length();
       const int limit = 50 * 1024; // 50KB
 
       if (len > limit) {
-        // Partial Read logic
         final stream = file.openRead(0, limit);
         final chunks = await stream.toList();
         final bytes = chunks.expand((element) => element).toList();
-
-        // Decode with allowMalformed to avoid crashes on cut multi-byte chars or binary data
         String content = utf8.decode(bytes, allowMalformed: true);
-        return '$content\n\n... (省略されました: 全 ${(len / 1024).toStringAsFixed(1)} KB)';
+        final sizeStr = (len / 1024).toStringAsFixed(1);
+        return '$content\n\n${l10n.labelPreviewOmitted(sizeStr)}';
       }
-
-      // Small file: standard read
       return await file.readAsString();
     } catch (e) {
-      return 'Preview unavailable: Binary or unknown encoding';
+      return l10n.labelPreviewBinaryError;
     }
   }
 }

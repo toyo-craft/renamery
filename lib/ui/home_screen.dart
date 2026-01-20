@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../core/directory_provider.dart';
 import '../../core/settings_service.dart';
@@ -112,11 +113,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final width = MediaQuery.of(context).size.width;
-
-    // 1. Desktop: Left + Center + Right (Width >= 1100)
-    // 2. Tablet: Center + Right (Width >= 700)
-    // 3. Mobile: Center (Width < 700)
 
     // 1. Desktop: Left + Center + Right (Width >= 1100)
     // 2. Tablet: Center + Right (Width >= 700)
@@ -182,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
         // Delete : Delete Files
         if (logicalKey == LogicalKeyboardKey.delete) {
-          _handleDelete(context);
+          _handleDelete(context, l10n);
           return KeyEventResult.handled;
         }
 
@@ -241,13 +239,14 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
               String countText = '';
               if (current != total) {
                 countText =
-                    'Display: $current / Total: $total File : Selected $selected File';
+                    l10n.labelStatusDisplayCount(current, total, selected);
               } else {
-                countText = '全 $total File : Selected $selected File';
+                countText = l10n.labelStatusTotalCount(total, selected);
               }
 
-              String statusText =
-                  provider.isLoading ? 'Processing...' : 'Ready';
+              String statusText = provider.isLoading
+                  ? l10n.labelStatusProcessing
+                  : l10n.labelStatusReady;
 
               return Row(
                 children: [
@@ -298,7 +297,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     }
   }
 
-  Future<void> _handleDelete(BuildContext context) async {
+  Future<void> _handleDelete(
+      BuildContext context, AppLocalizations l10n) async {
     final provider = context.read<DirectoryProvider>();
     final selectedCount =
         provider.currentFiles.where((f) => f.isSelected).length;
@@ -307,17 +307,17 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('削除の確認'),
-        content: Text('$selectedCount 個のファイルを完全に削除しますか？\nこの操作は元に戻せません。'),
+        title: Text(l10n.labelDeleteConfirmTitle),
+        content: Text(l10n.labelDeleteConfirmMessage(selectedCount)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('キャンセル'),
+            child: Text(l10n.labelDialogCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('削除'),
+            child: Text(l10n.labelDialogDelete),
           ),
         ],
       ),
@@ -327,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
       final deleted = await provider.deleteSelectedFiles();
       if (context.mounted && deleted > 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$deleted 個のファイルを削除しました')),
+          SnackBar(content: Text(l10n.labelMsgDeletedCount(deleted))),
         );
       }
     }

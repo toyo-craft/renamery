@@ -1,340 +1,145 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/directory_provider.dart';
-import '../helpers/undo_helper.dart';
-import '../helpers/copy_helper.dart';
-import 'package:path/path.dart' as p;
 import '../settings_screen.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final bool showDrawerMenu;
-
-  const HomeAppBar({
-    super.key,
-    this.showDrawerMenu = false,
-  });
+  const HomeAppBar({super.key});
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<DirectoryProvider>();
-    // final iconColor = Colors.green[700]; // Removed fixed color
-    const iconSize = 28.0;
+    final isCompact = provider.isCompactMode;
 
     return AppBar(
-      leading: showDrawerMenu
-          ? Builder(
-              builder: (context) => IconButton(
-                icon: const Icon(Icons.folder),
-                color: Theme.of(context).colorScheme.primary,
-                tooltip: provider.labelMenuFolder,
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
+      title: const Text(
+        'ReNamery',
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+      ),
+      leadingWidth: isCompact ? 0 : null,
+      leading: isCompact ? const SizedBox.shrink() : null,
+      centerTitle: isCompact,
+      bottom: isCompact
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
               ),
             )
           : null,
-      automaticallyImplyLeading: false, // We handle it manually
-      titleSpacing: 0,
-      title: LayoutBuilder(
+      flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 600;
+          final showWide = constraints.maxWidth > 800;
+          if (isCompact) return const SizedBox.shrink();
+
           return Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              const SizedBox(width: 8),
-              // 1. Back Group
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
-                iconSize: iconSize,
-                tooltip: provider.labelNavBack,
-                onPressed: provider.canGoBack ? () => provider.goBack() : null,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              PopupMenuButton<int>(
-                icon: const Icon(Icons.arrow_drop_down),
-                // color: Colors.white, // Use Theme
-                enabled: provider.backHistory.isNotEmpty,
-                onSelected: (steps) => provider.jumpBack(steps),
-                itemBuilder: (context) {
-                  return List.generate(provider.backHistory.length, (index) {
-                    return PopupMenuItem(
-                      value: index + 1,
-                      height: 32,
-                      child: Text(p.basename(provider.backHistory[index]),
-                          style: const TextStyle(fontSize: 12)),
-                    );
-                  });
-                },
-                tooltip: provider.labelHistoryBack,
-              ),
-
-              // 2. Forward Group
-              IconButton(
-                icon: const Icon(Icons.arrow_forward),
-                // color: iconColor,
-                iconSize: iconSize,
-                tooltip: provider.labelNavForward,
-                onPressed:
-                    provider.canGoForward ? () => provider.goForward() : null,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              PopupMenuButton<int>(
-                icon: const Icon(Icons.arrow_drop_down),
-                // color: Colors.white,
-                enabled: provider.forwardHistory.isNotEmpty,
-                onSelected: (steps) => provider.jumpForward(steps),
-                itemBuilder: (context) {
-                  return List.generate(provider.forwardHistory.length, (index) {
-                    return PopupMenuItem(
-                      value: index + 1,
-                      height: 32,
-                      child: Text(p.basename(provider.forwardHistory[index]),
-                          style: const TextStyle(fontSize: 12)),
-                    );
-                  });
-                },
-                tooltip: provider.labelHistoryForward,
-              ),
-
-              const SizedBox(
-                  height: 24,
-                  child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-
-              // 3. Execute (Go ReNamery!!!)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: IconButton(
-                  icon: const Icon(Icons.play_arrow),
-                  // color: iconColor,
-                  iconSize: iconSize,
-                  tooltip: provider.hasInvalidFilenames
-                      ? provider.labelErrorInvalidFilename
-                      : provider.labelExecute,
-                  onPressed:
-                      (provider.canExecute && !provider.hasInvalidFilenames)
-                          ? () => _confirmAndExecute(context, provider)
-                          : null,
-                ),
-              ),
-
-              // 4. Undo
-              if (!isNarrow)
-                TextButton.icon(
-                  icon: const Icon(Icons.undo),
-                  label: Text(provider.canUndo
-                      ? '${provider.labelUndo} (${provider.undoCount})'
-                      : provider.labelUndo),
-                  style: TextButton.styleFrom(
-                    // foregroundColor: iconColor, // Use theme
-                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              if (showWide) ...[
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, right: 100),
+                  child: Row(
+                    children: [
+                      _ActionButton(
+                        icon: Icons.play_arrow,
+                        label: l10n.labelMenuRename,
+                        onPressed: () =>
+                            _confirmAndExecute(context, provider, l10n),
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      _ActionButton(
+                        icon: Icons.undo,
+                        label: l10n.labelMenuUndo,
+                        onPressed: provider.getLastUndoTransaction().isEmpty
+                            ? null
+                            : () => provider.undoRename(),
+                      ),
+                      const SizedBox(width: 8),
+                      _ActionButton(
+                        icon: Icons.refresh,
+                        label: l10n.labelMenuRefresh,
+                        onPressed: () => provider.refreshFiles(),
+                      ),
+                      const SizedBox(width: 16),
+                      // Copy Menu
+                      PopupMenuButton<int>(
+                        tooltip: l10n.labelMenuCopy,
+                        itemBuilder: (context) =>
+                            _buildCopyMenuItems(provider, l10n),
+                        onSelected: (val) {
+                          if (val == 1) provider.copyListToClipboard(false);
+                          if (val == 2) provider.copyListToClipboard(true);
+                          if (val == 3) provider.copySelectedFullPaths();
+                          if (val == 4) provider.copyUndoListToClipboard();
+                        },
+                        child: _ActionButton(
+                          icon: Icons.copy,
+                          label: l10n.labelMenuCopy,
+                          onPressed: null, // Just to show the button style
+                        ),
+                      ),
+                    ],
                   ),
-                  onPressed: provider.canUndo
-                      ? () => UndoHelper.handleUndo(context, provider)
-                      : null,
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.undo),
-                  // color: iconColor,
-                  iconSize: iconSize,
-                  tooltip: provider.canUndo
-                      ? '${provider.labelUndo} (${provider.undoCount})'
-                      : provider.labelUndo,
-                  onPressed: provider.canUndo
-                      ? () => UndoHelper.handleUndo(context, provider)
-                      : null,
-                ),
-
-              if (!isNarrow) ...[
-                // Wide Layout: Show all icons
-                const SizedBox(
-                    height: 24,
-                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-
-                // 5. Copy Group
-                IconButton(
-                  icon: const Icon(Icons.content_copy),
-                  // color: Colors.grey[700], // Use Theme
-                  iconSize: iconSize,
-                  tooltip: provider.labelCopyName,
-                  onPressed: provider.currentFiles.any((f) => f.isSelected)
-                      ? () => CopyHelper.handleCopy(context, provider)
-                      : null,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                PopupMenuButton<int>(
-                  icon: const Icon(Icons.arrow_drop_down),
-                  // color: Colors.white,
-                  enabled: provider.currentFiles.any((f) => f.isSelected) ||
-                      provider.getLastUndoTransaction().isNotEmpty,
-                  onSelected: (value) async {
-                    await CopyHelper.handleCopyMenu(context, provider, value);
-                  },
-                  itemBuilder: (context) => _buildCopyMenuItems(provider),
-                  tooltip: provider.labelCopyOptions,
-                ),
-
-                const SizedBox(
-                    height: 24,
-                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-
-                // 6. Up/Down
-                IconButton(
-                  icon: const Icon(Icons.arrow_upward),
-                  // color: iconColor,
-                  iconSize: iconSize,
-                  tooltip: provider.labelMoveUp,
-                  onPressed: provider.canMoveUp
-                      ? () => provider.moveSelection(true)
-                      : null,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_downward),
-                  // color: iconColor,
-                  iconSize: iconSize,
-                  tooltip: provider.labelMoveDown,
-                  onPressed: provider.canMoveDown
-                      ? () => provider.moveSelection(false)
-                      : null,
-                ),
-
-                const SizedBox(
-                    height: 24,
-                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-
-                // 8. Refresh
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  // color: iconColor,
-                  iconSize: iconSize,
-                  tooltip: provider.labelRefresh,
-                  onPressed: () => provider.refresh(),
                 ),
               ] else ...[
-                // Narrow Layout: Show Overflow Menu
-                const Spacer(),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert), //, color: iconColor),
-                  tooltip: provider.labelMenuMore,
-                  onSelected: (value) async {
-                    switch (value) {
-                      case 'copy_name':
-                        await CopyHelper.handleCopy(context, provider);
-                        break;
-                      case 'copy_path':
-                        await CopyHelper.handleCopyMenu(context, provider, 2);
-                        break;
-                      case 'copy_fullpath':
-                        await CopyHelper.handleCopyMenu(context, provider, 3);
-                        break;
-                      case 'copy_undo':
-                        await CopyHelper.handleCopyMenu(context, provider, 4);
-                        break;
-                      case 'move_up':
-                        provider.moveSelection(true);
-                        break;
-                      case 'move_down':
-                        provider.moveSelection(false);
-                        break;
-                      case 'refresh':
-                        provider.refresh();
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) {
-                    final hasSelection =
-                        provider.currentFiles.any((f) => f.isSelected);
-                    final hasUndo =
-                        provider.getLastUndoTransaction().isNotEmpty;
-                    return [
-                      // Flattened Copy Options
+                // Narrow layout menu
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, right: 60),
+                  child: PopupMenuButton<int>(
+                    icon: const Icon(Icons.more_vert),
+                    itemBuilder: (context) => [
                       PopupMenuItem(
-                        value: 'copy_name',
-                        enabled: hasSelection,
-                        child: const Row(
-                          children: [
-                            Icon(Icons.content_copy, size: 20),
-                            SizedBox(width: 8),
-                            Text('コピー (現在名)'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'copy_path',
-                        enabled: hasSelection,
-                        child: const Row(
-                          children: [
-                            Icon(Icons.copy, size: 20),
-                            SizedBox(width: 8),
-                            Text('コピー (パス)'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'copy_fullpath',
-                        enabled: hasSelection,
-                        child: const Row(
-                          children: [
-                            Icon(Icons.copy_all, size: 20),
-                            SizedBox(width: 8),
-                            Text('コピー (フルパス)'),
-                          ],
-                        ),
-                      ),
-                      if (hasUndo)
-                        const PopupMenuItem(
-                          value: 'copy_undo',
-                          child: Row(
-                            children: [
-                              Icon(Icons.history, size: 20),
-                              SizedBox(width: 8),
-                              Text('変更記録をコピー'),
-                            ],
-                          ),
-                        ),
-                      const PopupMenuDivider(),
-                      // Move
-                      PopupMenuItem(
-                        value: 'move_up',
-                        enabled: provider.canMoveUp,
-                        child: const Row(
-                          children: [
-                            Icon(Icons.arrow_upward, size: 20),
-                            SizedBox(width: 8),
-                            Text('上に移動'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'move_down',
-                        enabled: provider.canMoveDown,
-                        child: const Row(
-                          children: [
-                            Icon(Icons.arrow_downward, size: 20),
-                            SizedBox(width: 8),
-                            Text('下に移動'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuDivider(),
-                      // Refresh
-                      const PopupMenuItem(
-                        value: 'refresh',
+                        value: 1,
                         child: Row(
                           children: [
-                            Icon(Icons.refresh, size: 20),
-                            SizedBox(width: 8),
-                            Text('全て更新'),
+                            const Icon(Icons.play_arrow, size: 20),
+                            const SizedBox(width: 8),
+                            Text(l10n.labelMenuRename),
                           ],
                         ),
                       ),
-                    ];
-                  },
+                      PopupMenuItem(
+                        value: 2,
+                        enabled: provider.getLastUndoTransaction().isNotEmpty,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.undo, size: 20),
+                            const SizedBox(width: 8),
+                            Text(l10n.labelMenuUndo),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 3,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.refresh, size: 20),
+                            const SizedBox(width: 8),
+                            Text(l10n.labelMenuRefresh),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuDivider(),
+                      ..._buildCopyMenuItems(provider, l10n),
+                    ],
+                    onSelected: (val) {
+                      if (val == 1) _confirmAndExecute(context, provider, l10n);
+                      if (val == 2) provider.undoRename();
+                      if (val == 3) provider.refreshFiles();
+                      // Values from _buildCopyMenuItems
+                      if (val == 101) provider.copyListToClipboard(false);
+                      if (val == 102) provider.copyListToClipboard(true);
+                      if (val == 103) provider.copySelectedFullPaths();
+                    },
+                  ),
                 ),
               ],
             ],
@@ -351,17 +156,17 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             );
           },
-          tooltip: provider.labelMenuSettings,
+          tooltip: l10n.labelMenuSettings,
         ),
       ],
     );
   }
 
-  Future<void> _confirmAndExecute(
-      BuildContext context, DirectoryProvider provider) async {
+  Future<void> _confirmAndExecute(BuildContext context,
+      DirectoryProvider provider, AppLocalizations l10n) async {
     if (!provider.currentFiles.any((f) => f.isSelected)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ファイルが選択されていません')),
+        SnackBar(content: Text(l10n.labelMsgNoSelection)),
       );
       return;
     }
@@ -370,45 +175,94 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$executedCount 個のファイルをリネームしました')),
+        SnackBar(content: Text(l10n.labelMsgExecutedCount(executedCount))),
       );
     }
   }
 
-  List<PopupMenuEntry<int>> _buildCopyMenuItems(DirectoryProvider provider) {
+  List<PopupMenuEntry<int>> _buildCopyMenuItems(
+      DirectoryProvider provider, AppLocalizations l10n) {
     final hasSelection = provider.currentFiles.any((f) => f.isSelected);
     final hasUndo = provider.getLastUndoTransaction().isNotEmpty;
 
     return [
       PopupMenuItem(
-        value: 1,
+        value: 101, // Changed values to avoid collision in narrow menu
         height: 32,
         enabled: hasSelection,
-        child: Text(provider.labelCopyListClipboard,
+        child: Text(l10n.labelCopyListClipboard,
             style: const TextStyle(fontSize: 12)),
       ),
       PopupMenuItem(
-        value: 2,
+        value: 102,
         height: 32,
         enabled: hasSelection,
-        child: Text(
-            '${provider.labelCopyListClipboard} (Path)', // Partially distinct? Or add labelCopyListPath
-            style: const TextStyle(fontSize: 12)),
+        child:
+            Text(l10n.labelCopyListPath, style: const TextStyle(fontSize: 12)),
       ),
       PopupMenuItem(
-        value: 3,
+        value: 103,
         height: 32,
         enabled: hasSelection,
-        child: Text(provider.labelCopyFullPath,
-            style: const TextStyle(fontSize: 12)),
+        child:
+            Text(l10n.labelCopyFullPath, style: const TextStyle(fontSize: 12)),
       ),
       PopupMenuItem(
         value: 4,
         height: 32,
         enabled: hasUndo,
-        child:
-            Text(provider.labelCopyUndo, style: const TextStyle(fontSize: 12)),
+        child: Text(l10n.labelCopyUndo, style: const TextStyle(fontSize: 12)),
       ),
     ];
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final Color? color;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isEnabled = onPressed != null;
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isEnabled
+                  ? (color ?? theme.colorScheme.onSurface)
+                  : theme.disabledColor,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: isEnabled
+                    ? theme.colorScheme.onSurface
+                    : theme.disabledColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class EtcTab extends StatefulWidget {
   const EtcTab({super.key});
@@ -48,7 +49,8 @@ class _EtcTabState extends State<EtcTab> {
         );
   }
 
-  Future<void> _pickDateTime(BuildContext context) async {
+  Future<void> _pickDateTime(
+      BuildContext context, AppLocalizations l10n) async {
     DateTime initialDate = DateTime.now();
     try {
       if (_timestampController.text.isNotEmpty) {
@@ -77,24 +79,17 @@ class _EtcTabState extends State<EtcTab> {
       initialDate: initialDate,
       firstDate: DateTime(1970),
       lastDate: DateTime(2100),
-      locale: const Locale(
-          'ja', 'JP'), // Optional: Localize if needed, usually auto
     );
 
     if (date != null && context.mounted) {
       final TimeOfDay? time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(initialDate),
-        helpText: context.read<DirectoryProvider>().labelEtcPickTime,
+        helpText: l10n.labelEtcPickTime,
         builder: (context, child) {
-          return Localizations.override(
-            context: context,
-            locale: const Locale('ja', 'JP'),
-            child: MediaQuery(
-              data:
-                  MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-              child: child!,
-            ),
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
           );
         },
       );
@@ -121,6 +116,7 @@ class _EtcTabState extends State<EtcTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Consumer<DirectoryProvider>(
       builder: (context, provider, child) {
         final isCompact = provider.isCompactMode;
@@ -134,7 +130,7 @@ class _EtcTabState extends State<EtcTab> {
             children: [
               // Timestamp Section
               _buildTimestampSection(
-                  context, provider, provider.renameMode, spacing),
+                  context, provider, provider.renameMode, spacing, l10n),
 
               Divider(
                   height: blockSpacing,
@@ -143,11 +139,10 @@ class _EtcTabState extends State<EtcTab> {
 
               // Attribute Section
               _buildAttributeSection(
-                  context, provider, provider.renameMode, spacing),
+                  context, provider, provider.renameMode, spacing, l10n),
 
               const SizedBox(height: 24),
 
-              // Caution Message
               // Caution Message
               Container(
                 width: double.infinity,
@@ -168,7 +163,7 @@ class _EtcTabState extends State<EtcTab> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            provider.labelEtcCautionTitle,
+                            l10n.labelEtcCautionTitle,
                             style: TextStyle(
                               color: Colors.amber.shade900,
                               fontWeight: FontWeight.bold,
@@ -177,7 +172,7 @@ class _EtcTabState extends State<EtcTab> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            provider.labelEtcCautionMessage,
+                            l10n.labelEtcCautionMessage,
                             style: TextStyle(
                               color: Colors.amber.shade900,
                               fontSize: 12,
@@ -196,8 +191,12 @@ class _EtcTabState extends State<EtcTab> {
     );
   }
 
-  Widget _buildTimestampSection(BuildContext context,
-      DirectoryProvider provider, RenameMode mode, double spacing) {
+  Widget _buildTimestampSection(
+      BuildContext context,
+      DirectoryProvider provider,
+      RenameMode mode,
+      double spacing,
+      AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -216,7 +215,7 @@ class _EtcTabState extends State<EtcTab> {
                       mode: RenameMode.changeTimestamp, immediate: true);
                 },
               ),
-              Text(provider.labelEtcTimestampChange),
+              Text(l10n.labelEtcTimestampChange),
             ],
           ),
         ),
@@ -232,8 +231,8 @@ class _EtcTabState extends State<EtcTab> {
                   hintText: 'yyyy/MM/dd HH:mm',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.calendar_month),
-                    onPressed: () => _pickDateTime(context),
-                    tooltip: provider.labelEtcPickDateTooltip,
+                    onPressed: () => _pickDateTime(context, l10n),
+                    tooltip: l10n.labelEtcPickDateTooltip,
                   ),
                 ),
                 onChanged: (val) {
@@ -245,7 +244,7 @@ class _EtcTabState extends State<EtcTab> {
               ),
               const SizedBox(height: 4),
               Text(
-                provider.labelEtcTimestampNote,
+                l10n.labelEtcTimestampNote,
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
@@ -255,8 +254,12 @@ class _EtcTabState extends State<EtcTab> {
     );
   }
 
-  Widget _buildAttributeSection(BuildContext context,
-      DirectoryProvider provider, RenameMode mode, double spacing) {
+  Widget _buildAttributeSection(
+      BuildContext context,
+      DirectoryProvider provider,
+      RenameMode mode,
+      double spacing,
+      AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -275,7 +278,7 @@ class _EtcTabState extends State<EtcTab> {
                       mode: RenameMode.changeAttributes, immediate: true);
                 },
               ),
-              Text(provider.labelEtcAttributeChange),
+              Text(l10n.labelEtcAttributeChange),
             ],
           ),
         ),
@@ -284,7 +287,7 @@ class _EtcTabState extends State<EtcTab> {
           child: Column(
             children: [
               _buildCheckbox(
-                  provider.labelEtcAttribReadOnly, provider.etcAttribReadOnly,
+                  l10n.labelEtcAttribReadOnly, provider.etcAttribReadOnly,
                   (val) {
                 _updateSettings(context,
                     readOnly: val,
@@ -292,24 +295,21 @@ class _EtcTabState extends State<EtcTab> {
                     immediate: true);
               }),
               _buildCheckbox(
-                  provider.labelEtcAttribHidden, provider.etcAttribHidden,
-                  (val) {
+                  l10n.labelEtcAttribHidden, provider.etcAttribHidden, (val) {
                 _updateSettings(context,
                     hidden: val,
                     mode: RenameMode.changeAttributes, // Auto-select mode
                     immediate: true);
               }),
               _buildCheckbox(
-                  provider.labelEtcAttribArchive, provider.etcAttribArchive,
-                  (val) {
+                  l10n.labelEtcAttribArchive, provider.etcAttribArchive, (val) {
                 _updateSettings(context,
                     archive: val,
                     mode: RenameMode.changeAttributes, // Auto-select mode
                     immediate: true);
               }),
               _buildCheckbox(
-                  provider.labelEtcAttribSystem, provider.etcAttribSystem,
-                  (val) {
+                  l10n.labelEtcAttribSystem, provider.etcAttribSystem, (val) {
                 _updateSettings(context,
                     system: val,
                     mode: RenameMode.changeAttributes, // Auto-select mode

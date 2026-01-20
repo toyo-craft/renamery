@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/directory_provider.dart';
 import '../../../core/rename_engine.dart';
 import '../../widgets/history_text_field.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class MainTab extends StatefulWidget {
   const MainTab({super.key});
@@ -73,10 +74,9 @@ class _MainTabState extends State<MainTab> {
     super.dispose();
   }
 
-  // Removed _buildHistoryTextField helper in favor of HistoryTextField widget
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<DirectoryProvider>();
     final isCompact = provider.isCompactMode;
     final double spacing = isCompact ? 4.0 : 8.0; // 4dp grid
@@ -135,7 +135,7 @@ class _MainTabState extends State<MainTab> {
                     append: val,
                     mode: isStringMode ? null : provider.lastStringMode);
               },
-              label: provider.labelStringInput,
+              label: l10n.labelStringInput,
               focusNode: _appendFocus,
               isCompact: isCompact),
 
@@ -147,7 +147,7 @@ class _MainTabState extends State<MainTab> {
               children: [
                 // Pin Icon
                 Tooltip(
-                  message: '変更後の連番数字を保存（次回リネーム時に連番を継続）',
+                  message: l10n.labelNumSaveSequenceTooltip,
                   child: InkWell(
                     onTap: () => context
                         .read<DirectoryProvider>()
@@ -171,7 +171,7 @@ class _MainTabState extends State<MainTab> {
                     ),
                   ),
                 ),
-                SizedBox(width: 60, child: Text(provider.labelStartDigit)),
+                SizedBox(width: 60, child: Text(l10n.labelStartDigit)),
                 _buildSpinner(
                   context,
                   _startController,
@@ -235,43 +235,43 @@ class _MainTabState extends State<MainTab> {
                       items: [
                         DropdownMenuItem(
                           value: NumberingMode.stringNumber,
-                          child: Text(provider.labelNumStringNumber),
+                          child: Text(l10n.labelNumStringNumber),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.originalNumber,
-                          child: Text(provider.labelNumOriginalNumber),
+                          child: Text(l10n.labelNumOriginalNumber),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.numberString,
-                          child: Text(provider.labelNumNumberString),
+                          child: Text(l10n.labelNumNumberString),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.numberOriginal,
-                          child: Text(provider.labelNumNumberOriginal),
+                          child: Text(l10n.labelNumNumberOriginal),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.baseStringNumber,
-                          child: Text(provider.labelNumBaseStringNumber),
+                          child: Text(l10n.labelNumBaseStringNumber),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.baseStringOriginal,
-                          child: Text(provider.labelNumBaseStringOriginal),
+                          child: Text(l10n.labelNumBaseStringOriginal),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.relativeStringNumber,
-                          child: Text(provider.labelNumRelativeStringNumber),
+                          child: Text(l10n.labelNumRelativeStringNumber),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.relativeStringOriginal,
-                          child: Text(provider.labelNumRelativeStringOriginal),
+                          child: Text(l10n.labelNumRelativeStringOriginal),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.numberStringBase,
-                          child: Text(provider.labelNumNumberStringBase),
+                          child: Text(l10n.labelNumNumberStringBase),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.numberStringRelative,
-                          child: Text(provider.labelNumNumberStringRelative),
+                          child: Text(l10n.labelNumNumberStringRelative),
                         ),
                       ],
                       onChanged: (val) {
@@ -289,24 +289,24 @@ class _MainTabState extends State<MainTab> {
             context,
             provider,
             RenameMode.prepend,
-            provider.labelOpPrefix,
+            l10n.labelOpPrefix,
             spacing: spacing,
           ),
           _buildRadioTile(
-              context, provider, RenameMode.append, provider.labelOpSuffix,
+              context, provider, RenameMode.append, l10n.labelOpSuffix,
               spacing: spacing),
           _buildRadioTile(
             context,
             provider,
             RenameMode.capitalize,
-            provider.labelOpCapitalize,
+            l10n.labelOpCapitalize,
             spacing: spacing,
           ),
           _buildRadioTile(
-              context, provider, RenameMode.upper, provider.labelOpUpper,
+              context, provider, RenameMode.upper, l10n.labelOpUpper,
               spacing: spacing),
           _buildRadioTile(
-              context, provider, RenameMode.lower, provider.labelOpLower,
+              context, provider, RenameMode.lower, l10n.labelOpLower,
               spacing: spacing),
 
           // String Insertion
@@ -328,12 +328,9 @@ class _MainTabState extends State<MainTab> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(provider.labelOpInsert,
+                Text(l10n.labelOpInsert,
                     style: Theme.of(context).textTheme.bodyMedium),
                 const Spacer(),
-                // Re-use StartController/Spinner or create new?
-                // RenameEngine uses startNumber as index.
-                // So we bind the spinner to startNumber, but visually associate it here.
                 _buildSpinner(
                   context,
                   _insertController, // Separate controller
@@ -358,7 +355,7 @@ class _MainTabState extends State<MainTab> {
             context,
             provider,
             RenameMode.deleteStart,
-            provider.labelOpDeleteStart,
+            l10n.labelOpDeleteStart,
             spacing: spacing,
           ),
           // 2. Delete End
@@ -366,7 +363,7 @@ class _MainTabState extends State<MainTab> {
             context,
             provider,
             RenameMode.deleteEnd,
-            provider.labelOpDeleteEnd,
+            l10n.labelOpDeleteEnd,
             spacing: spacing,
           ),
           // 3. Delete From (Index)
@@ -374,7 +371,7 @@ class _MainTabState extends State<MainTab> {
             context,
             provider,
             RenameMode.deleteFrom,
-            provider.labelOpDeleteFrom,
+            l10n.labelOpDeleteFrom,
             spacing: spacing,
           ),
 
@@ -418,11 +415,11 @@ class _MainTabState extends State<MainTab> {
                           items: [
                             DropdownMenuItem(
                               value: RenameMode.deleteFrontTo,
-                              child: Text(provider.labelDeleteFront),
+                              child: Text(l10n.labelDeleteFront),
                             ),
                             DropdownMenuItem(
                               value: RenameMode.deleteBackTo,
-                              child: Text(provider.labelDeleteBack),
+                              child: Text(l10n.labelDeleteBack),
                             ),
                           ],
                           onChanged: (val) {
@@ -458,7 +455,7 @@ class _MainTabState extends State<MainTab> {
                             isCompact: isCompact),
                       ),
                       const SizedBox(width: 8),
-                      Text(provider.labelDeleteUntil),
+                      Text(l10n.labelDeleteUntil),
                     ],
                   ),
                 ),
@@ -498,7 +495,7 @@ class _MainTabState extends State<MainTab> {
                           focusNode: _findFocus,
                           controller: _findController,
                           history: provider.findHistory,
-                          hintText: provider.labelFindHint,
+                          hintText: l10n.labelFindHint,
                           isCompact: isCompact,
                           onChanged: (val) => context
                               .read<DirectoryProvider>()
@@ -508,7 +505,7 @@ class _MainTabState extends State<MainTab> {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                        child: Text(provider.labelReplaceFrom),
+                        child: Text(l10n.labelReplaceFrom),
                       ),
                     ],
                   ),
@@ -528,7 +525,7 @@ class _MainTabState extends State<MainTab> {
                     focusNode: _replaceFocus,
                     controller: _replaceController,
                     history: provider.replaceHistory,
-                    hintText: provider.labelReplaceHint,
+                    hintText: l10n.labelReplaceHint,
                     isCompact: isCompact,
                     onChanged: (val) => context
                         .read<DirectoryProvider>()
@@ -538,7 +535,7 @@ class _MainTabState extends State<MainTab> {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Text(provider.labelReplaceTo),
+                  child: Text(l10n.labelReplaceTo),
                 ),
               ],
             ),
@@ -560,7 +557,7 @@ class _MainTabState extends State<MainTab> {
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   const SizedBox(width: 8),
-                  Text(provider.labelRegex,
+                  Text(l10n.labelRegex,
                       style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
@@ -632,7 +629,6 @@ class _MainTabState extends State<MainTab> {
                   vertical: isCompact ? 6 : 8,
                   horizontal: 4,
                 ),
-                // border: const OutlineInputBorder(), // Removed to use global theme
               ),
               keyboardType: TextInputType.number,
               onChanged: (val) {
@@ -643,7 +639,6 @@ class _MainTabState extends State<MainTab> {
                   if (value < 1) {
                     value = 1; // Enforce min 1
                     controller.text = '1';
-                    // Cursor position fix might be needed but simple set is safe for valid int
                   }
                   onChanged(value);
                 }
@@ -659,8 +654,6 @@ class _MainTabState extends State<MainTab> {
                   int current = int.tryParse(controller.text) ?? 1;
                   current++;
                   controller.text = current.toString();
-                  // onChanged(current); // Controller listener or manual?
-                  // TextField controller doesn't trigger onChanged when text is set programmatically.
                   onChanged(current);
                 },
                 child: const Icon(Icons.arrow_drop_up, size: 18),

@@ -1,25 +1,27 @@
 import 'package:flutter/material.dart';
 import '../../core/directory_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class UndoHelper {
   static Future<void> handleUndo(
       BuildContext context, DirectoryProvider provider) async {
+    final l10n = AppLocalizations.of(context)!;
     final transaction = provider.getLastUndoTransaction();
     if (transaction.isEmpty) return;
 
     final shouldUndo = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title:
-            const Text('処理の復元', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(l10n.labelUndoTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('直前に行った ${transaction.length} 件の変更を元に戻しますか？'),
+              Text(l10n.labelUndoConfirm(transaction.length)),
               const SizedBox(height: 16),
               Container(
                 height: 150,
@@ -46,10 +48,10 @@ class UndoHelper {
         ),
         actions: [
           TextButton(
-              child: const Text('キャンセル'),
+              child: Text(l10n.labelDialogCancel),
               onPressed: () => Navigator.pop(context, false)),
           ElevatedButton(
-              child: const Text('復元'),
+              child: Text(l10n.labelUndoRecoverBtn),
               onPressed: () => Navigator.pop(context, true)),
         ],
       ),
@@ -58,15 +60,9 @@ class UndoHelper {
     if (shouldUndo == true) {
       await provider.undo();
 
-      // Optional: Show result toast/dialog?
-      // ToolbarPanel didn't show result dialog in my LAST edit (I copied logic and simplified it).
-      // Checking old HomeScreen logic... it DID show a result dialog.
-      // My previous ToolbarPanel code: `if (shouldUndo == true) { await provider.undo(); }`
-      // I should probably show a success message?
-      // Let's add a simple snackbar for success.
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('復元しました')),
+          SnackBar(content: Text(l10n.labelMsgUndoSuccess)),
         );
       }
     }

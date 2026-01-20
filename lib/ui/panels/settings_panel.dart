@@ -6,6 +6,7 @@ import 'tabs/main_tab.dart';
 import 'tabs/sub_tab.dart';
 import 'tabs/extra_tab.dart';
 import 'tabs/etc_tab.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SettingsPanel extends StatefulWidget {
   const SettingsPanel({super.key});

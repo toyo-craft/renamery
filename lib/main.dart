@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'ui/home_screen.dart';
 import 'core/directory_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:window_manager/window_manager.dart';
 import 'core/settings_service.dart';
@@ -86,6 +87,7 @@ class ReNameryApp extends StatelessWidget {
         return MaterialApp(
           title: 'ReNamery',
           themeMode: provider.themeMode,
+          locale: provider.currentLocale,
           theme: ThemeData(
             colorScheme: lightScheme,
             visualDensity: provider.isCompactMode
@@ -145,15 +147,8 @@ class ReNameryApp extends StatelessWidget {
             ),
           ),
           home: const HomeScreen(),
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [
-            Locale('ja', 'JP'),
-            Locale('en', 'US'),
-          ],
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         );
       },
     );

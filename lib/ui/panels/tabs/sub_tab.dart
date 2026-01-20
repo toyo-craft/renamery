@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/directory_provider.dart';
 import '../../../core/rename_engine.dart';
 import '../../widgets/history_text_field.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SubTab extends StatefulWidget {
   const SubTab({super.key});
@@ -37,12 +38,12 @@ class _SubTabState extends State<SubTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<DirectoryProvider>();
     final isCompact = provider.isCompactMode;
     final double spacing = isCompact ? 4.0 : 8.0; // 4dp grid
     final double blockSpacing = isCompact ? 12.0 : 20.0; // 4dp grid
 
-    // Sync controllers
     // Sync controllers
     if (provider.extensionChangeText != _extensionChangeController.text) {
       _extensionChangeController.text = provider.extensionChangeText;
@@ -60,7 +61,7 @@ class _SubTabState extends State<SubTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // --- Extension Section ---
-          Text(provider.labelSubExtChangeTitle,
+          Text(l10n.labelSubExtChangeTitle,
               style: const TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: spacing),
 
@@ -69,7 +70,7 @@ class _SubTabState extends State<SubTab> {
             context,
             provider,
             RenameMode.extension,
-            provider.labelOpExtChange,
+            l10n.labelOpExtChange,
             _extensionChangeController,
             (val) => context.read<DirectoryProvider>().updateRenameSettings(
                 extensionChangeText: val, mode: RenameMode.extension),
@@ -78,12 +79,11 @@ class _SubTabState extends State<SubTab> {
             history: provider.extensionHistory, // Pass history
           ),
 
-          // ... (Extension Add block is fine with labelOpExtAdd) ...
           _buildRadioWithInput(
             context,
             provider,
             RenameMode.extensionAdd,
-            provider.labelOpExtAdd,
+            l10n.labelOpExtAdd,
             _extensionAddController,
             (val) => context.read<DirectoryProvider>().updateRenameSettings(
                 extensionAddText: val, mode: RenameMode.extensionAdd),
@@ -96,7 +96,7 @@ class _SubTabState extends State<SubTab> {
             context,
             provider,
             RenameMode.extensionRemove,
-            provider.labelOpExtRemove,
+            l10n.labelOpExtRemove,
             spacing: spacing,
           ),
 
@@ -107,7 +107,7 @@ class _SubTabState extends State<SubTab> {
                   context,
                   provider,
                   RenameMode.extensionUpper,
-                  provider.labelOpExtUpper,
+                  l10n.labelOpExtUpper,
                   spacing: spacing,
                 ),
               ),
@@ -116,33 +116,37 @@ class _SubTabState extends State<SubTab> {
                   context,
                   provider,
                   RenameMode.extensionLower,
-                  provider.labelOpExtLower,
+                  l10n.labelOpExtLower,
                   spacing: spacing,
                 ),
               ),
             ],
           ),
 
-          Divider(thickness: 1, height: blockSpacing, color: Colors.green),
-
-          // ...
+          Divider(
+              thickness: 1,
+              height: blockSpacing,
+              color: Theme.of(context).colorScheme.outlineVariant),
 
           // --- Format Words Section ---
-          Text(provider.labelSubFormatTitle,
+          Text(l10n.labelSubFormatTitle,
               style: const TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: spacing),
           _buildRadioTile(
             context,
             provider,
             RenameMode.formatProperCase,
-            provider.labelSubFormatProperCase,
+            l10n.labelSubFormatProperCase,
             spacing: spacing,
           ),
 
-          Divider(thickness: 1, height: blockSpacing, color: Colors.green),
+          Divider(
+              thickness: 1,
+              height: blockSpacing,
+              color: Theme.of(context).colorScheme.outlineVariant),
 
           // --- List Rename Section ---
-          Text(provider.labelSubListTitle,
+          Text(l10n.labelSubListTitle,
               style: const TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: spacing),
 
@@ -162,7 +166,7 @@ class _SubTabState extends State<SubTab> {
                 ),
               ),
               const SizedBox(width: 8),
-              // Dropdown Mockup
+              // Dropdown
               Expanded(
                 child: DropdownButton<String>(
                   value: 'text_input',
@@ -171,30 +175,24 @@ class _SubTabState extends State<SubTab> {
                   style: Theme.of(context).textTheme.bodyMedium,
                   underline: Container(
                     height: 1,
-                    color: Colors.grey,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   items: [
                     DropdownMenuItem(
                       value: 'text_input',
-                      child: Text(provider.labelSubListModeText),
+                      child: Text(l10n.labelSubListModeText),
                     ),
                     DropdownMenuItem(
                       value: 'sample_chapter',
-                      child: Text(provider.labelSubListSample1),
+                      child: Text(l10n.labelSubListSample1),
                     ),
                     DropdownMenuItem(
                       value: 'sample_ext',
-                      child: Text(provider.labelSubListSample2),
+                      child: Text(l10n.labelSubListSample2),
                     ),
                     DropdownMenuItem(
                       value: 'sample_replace',
-                      child: Text(provider.labelSubListSample3),
-                    ),
-                    const DropdownMenuItem(
-                      value: 'file_read',
-                      enabled: false,
-                      child: Text('File Read (Coming Soon)',
-                          style: TextStyle(color: Colors.grey)),
+                      child: Text(l10n.labelSubListSample3),
                     ),
                   ],
                   onChanged: (val) {
@@ -203,16 +201,6 @@ class _SubTabState extends State<SubTab> {
                     String sampleText = '';
                     switch (val) {
                       case 'sample_chapter':
-                        sampleText =
-                            '01_chapter_intro.mp4\t01_chapter_intro.mp4\n02_chapter_main.mp4\t02_chapter_main.mp4\n03_chapter_end.mp4\t03_chapter_end.mp4';
-                        // User manual says: list rename is "Original [TAB] New".
-                        // Actually the user sample "01_chapter_intro.mp4" (single column) implies "Target" or "New"?
-                        // If single column, it usually implies "Original" to remain "Original"? Or "New" if matching by index?
-                        // Let's re-read the engine logic or assume Tab separated.
-                        // Wait, list rename usually maps Original -> New.
-                        // If the user wants to *rename to* chapter files, they probably providing target names?
-                        // Let's use the exact sample the user gave previously for the default text area: "01_chapter_intro.mp4\n..."
-                        // Maybe simpler: just put the text.
                         sampleText =
                             '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
                         break;
@@ -250,8 +238,7 @@ class _SubTabState extends State<SubTab> {
                   .bodySmall
                   ?.copyWith(fontFamily: 'Consolas'),
               decoration: InputDecoration(
-                hintText: provider.labelSubListHint,
-                // border: OutlineInputBorder(), // Removed for global theme
+                hintText: l10n.labelSubListHint,
                 isDense: true,
               ),
               onChanged: (val) => context

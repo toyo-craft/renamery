@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/directory_provider.dart';
 import 'dart:io';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class FileListPanel extends StatefulWidget {
   const FileListPanel({super.key});
@@ -139,6 +140,7 @@ class _FileListPanelState extends State<FileListPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Consumer<DirectoryProvider>(
       builder: (context, provider, child) {
         // Sync text field with provider if not focused or just loaded
@@ -183,11 +185,12 @@ class _FileListPanelState extends State<FileListPanel> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        provider.labelFullPath,
+                        l10n.labelFullPath,
                         style: const TextStyle(fontSize: 13),
                       ),
                       Expanded(
                         child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
                           // Simple box for styling
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.surface,
@@ -218,7 +221,7 @@ class _FileListPanelState extends State<FileListPanel> {
                           Icons.arrow_forward,
                           color: Theme.of(context).colorScheme.primary,
                         ),
-                        tooltip: '移動',
+                        tooltip: l10n.labelMenuGo,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () {
@@ -241,14 +244,13 @@ class _FileListPanelState extends State<FileListPanel> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
-                          child: Text(provider.labelSelectAll),
+                          child: Text(l10n.labelSelectAll),
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                // Main Content
                 // Main Content
                 Expanded(
                   child: Focus(
@@ -267,10 +269,11 @@ class _FileListPanelState extends State<FileListPanel> {
                           }
                           if (provider.currentDirectory == null) {
                             return Center(
-                                child: Text('${provider.termFolder}を選択してください'));
+                                child: Text(l10n.labelSelectFolderPrompt(
+                                    l10n.labelTermFolder)));
                           }
                           if (files.isEmpty) {
-                            return const Center(child: Text('ファイルがありません'));
+                            return Center(child: Text(l10n.labelNoFiles));
                           }
                           return Scrollbar(
                             controller: _horizontalController, // Horizontal
@@ -321,11 +324,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 1. Name
-                                          _buildHeaderCell(
-                                              provider.labelColName,
-                                              _colWidthOriginal,
-                                              0,
-                                              provider),
+                                          _buildHeaderCell(l10n.labelColName,
+                                              _colWidthOriginal, 0, provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthOriginal =
                                                   (_colWidthOriginal +
@@ -334,11 +334,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 2. New Name
-                                          _buildHeaderCell(
-                                              provider.labelColNewName,
-                                              _colWidthNew,
-                                              1,
-                                              provider),
+                                          _buildHeaderCell(l10n.labelColNewName,
+                                              _colWidthNew, 1, provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthNew =
                                                   (_colWidthNew + d.delta.dx)
@@ -346,11 +343,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 3. Size
-                                          _buildHeaderCell(
-                                              provider.labelColSize,
-                                              _colWidthSize,
-                                              2,
-                                              provider),
+                                          _buildHeaderCell(l10n.labelColSize,
+                                              _colWidthSize, 2, provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthSize =
                                                   (_colWidthSize + d.delta.dx)
@@ -358,11 +352,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 4. Relative Path
-                                          _buildHeaderCell(
-                                              provider.labelColPath,
-                                              _colWidthPath,
-                                              3,
-                                              provider),
+                                          _buildHeaderCell(l10n.labelColPath,
+                                              _colWidthPath, 3, provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthPath =
                                                   (_colWidthPath + d.delta.dx)
@@ -370,11 +361,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 5. Type
-                                          _buildHeaderCell(
-                                              provider.labelColType,
-                                              _colWidthType,
-                                              4,
-                                              provider),
+                                          _buildHeaderCell(l10n.labelColType,
+                                              _colWidthType, 4, provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthType =
                                                   (_colWidthType + d.delta.dx)
@@ -382,11 +370,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 6. Modified
-                                          _buildHeaderCell(
-                                              provider.labelColDate,
-                                              _colWidthDate,
-                                              5,
-                                              provider),
+                                          _buildHeaderCell(l10n.labelColDate,
+                                              _colWidthDate, 5, provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthDate =
                                                   (_colWidthDate + d.delta.dx)
@@ -394,11 +379,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 7. Attributes
-                                          _buildHeaderCell(
-                                              provider.labelColAttr,
-                                              _colWidthAttr,
-                                              6,
-                                              provider),
+                                          _buildHeaderCell(l10n.labelColAttr,
+                                              _colWidthAttr, 6, provider),
                                         ],
                                       ),
                                     ),
