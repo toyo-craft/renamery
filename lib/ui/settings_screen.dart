@@ -56,6 +56,10 @@ class SettingsScreen extends StatelessWidget {
                         value: MenuLabelType.chinese,
                         label: Text(l10n.labelSettingsLangCN),
                         icon: const Icon(Icons.language)),
+                    ButtonSegment(
+                        value: MenuLabelType.spanish,
+                        label: Text(l10n.labelSettingsLangES),
+                        icon: const Icon(Icons.language)),
                   ],
                   selected: {provider.menuLabelType},
                   onSelectionChanged: (Set<MenuLabelType> newSelection) {

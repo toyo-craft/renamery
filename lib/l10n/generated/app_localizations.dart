@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
 import 'app_localizations_ja.dart';
 import 'app_localizations_zh.dart';
 
@@ -96,6 +97,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
+    Locale('es'),
     Locale('ja'),
     Locale('ja', 'NM'),
     Locale('zh')
@@ -815,6 +817,12 @@ abstract class AppLocalizations {
   /// **'中国語'**
   String get labelSettingsLangCN;
 
+  /// No description provided for @labelSettingsLangES.
+  ///
+  /// In ja, this message translates to:
+  /// **'スペイン語'**
+  String get labelSettingsLangES;
+
   /// No description provided for @labelSettingsThemeTitle.
   ///
   /// In ja, this message translates to:
@@ -1193,7 +1201,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'ja', 'zh'].contains(locale.languageCode);
+      <String>['en', 'es', 'ja', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -1216,6 +1224,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
     case 'ja':
       return AppLocalizationsJa();
     case 'zh':

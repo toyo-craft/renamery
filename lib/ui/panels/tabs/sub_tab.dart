@@ -282,7 +282,9 @@ class _SubTabState extends State<SubTab> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            Expanded(
+              child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            ),
           ],
         ),
       ),

@@ -9,34 +9,39 @@ import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:window_manager/window_manager.dart';
 import 'core/settings_service.dart';
 
+import 'dart:io';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await windowManager.ensureInitialized();
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    await windowManager.ensureInitialized();
+  }
   await SettingsService().loadSettings(); // Load settings early
 
-  // Restore Window State
   // Restore Window State
   final width = SettingsService().getDouble('windowWidth') ?? 1024.0;
   final height = SettingsService().getDouble('windowHeight') ?? 768.0;
   final x = SettingsService().getDouble('windowX');
   final y = SettingsService().getDouble('windowY');
 
-  WindowOptions windowOptions = WindowOptions(
-    size: Size(width, height),
-    center: x == null || y == null, // Center if no position saved
-    backgroundColor: Colors.transparent,
-    skipTaskbar: false,
-    titleBarStyle: TitleBarStyle.normal,
-    title: 'ReNamery',
-  );
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    WindowOptions windowOptions = WindowOptions(
+      size: Size(width, height),
+      center: x == null || y == null, // Center if no position saved
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+      title: 'ReNamery',
+    );
 
-  await windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-    if (x != null && y != null) {
-      await windowManager.setPosition(Offset(x, y));
-    }
-  });
+    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+      if (x != null && y != null) {
+        await windowManager.setPosition(Offset(x, y));
+      }
+    });
+  }
 
   runApp(
     MultiProvider(

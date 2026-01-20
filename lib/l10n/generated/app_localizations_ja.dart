@@ -368,6 +368,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelSettingsLangCN => '中国語';
 
   @override
+  String get labelSettingsLangES => 'スペイン語';
+
+  @override
   String get labelSettingsThemeTitle => 'テーマモード';
 
   @override
@@ -935,10 +938,13 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelSettingsLangEN => '英語';
 
   @override
-  String get labelSettingsLangCN => '中国語';
+  String get labelSettingsLangCN => '中国';
 
   @override
-  String get labelSettingsThemeTitle => 'テーマモード';
+  String get labelSettingsLangES => 'スペイン';
+
+  @override
+  String get labelSettingsThemeTitle => '見た目';
 
   @override
   String get labelSettingsThemeSystem => 'システム';

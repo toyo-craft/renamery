@@ -21,6 +21,7 @@ enum MenuLabelType {
   namery, // Namery互換
   english, // English
   chinese, // 中国語
+  spanish, // Spanish
 }
 
 class DirectoryProvider extends ChangeNotifier {
@@ -969,13 +970,14 @@ class DirectoryProvider extends ChangeNotifier {
   // Back history: Items BEFORE _navIndex, reversed (closest first)
   List<String> get backHistory {
     if (_navIndex <= 0) return [];
-    return _navHistory.sublist(0, _navIndex).reversed.toList();
+    // Return unique history for dropdown (Set preserves insertion order, Reversed first)
+    return _navHistory.sublist(0, _navIndex).reversed.toSet().toList();
   }
 
   // Forward history: Items AFTER _navIndex
   List<String> get forwardHistory {
     if (_navIndex >= _navHistory.length - 1) return [];
-    return _navHistory.sublist(_navIndex + 1);
+    return _navHistory.sublist(_navIndex + 1).toSet().toList();
   }
 
   Future<void> jumpToHistory(String path) async {
@@ -1289,12 +1291,7 @@ class DirectoryProvider extends ChangeNotifier {
     target.remove(value);
     target.insert(0, value);
 
-    if (target.length > 20) {
-      // Increased limit slightly or keep logic
-      target.removeRange(20, target.length);
-    }
-    // Limit was 10, keeping 10 or increasing? User didn't specify size, just duplicates.
-    // Existing code had 10. Let's stick to 10 but ensure removal works.
+    // Limit History Size (Max 10)
     if (target.length > 10) {
       target.removeRange(10, target.length);
     }
@@ -1648,6 +1645,8 @@ class DirectoryProvider extends ChangeNotifier {
         return const Locale('en');
       case MenuLabelType.chinese:
         return const Locale('zh');
+      case MenuLabelType.spanish:
+        return const Locale('es');
     }
   }
 }

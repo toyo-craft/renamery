@@ -14,6 +14,7 @@ import 'panels/home_app_bar.dart'; // Import new AppBar
 
 import 'helpers/undo_helper.dart';
 import 'helpers/copy_helper.dart';
+import 'dart:io';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,7 +31,9 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   @override
   void initState() {
     super.initState();
-    windowManager.addListener(this);
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      windowManager.addListener(this);
+    }
 
     // Initialize 3-Pane Controller (Desktop)
     _threePaneController = MultiSplitViewController(
@@ -59,7 +62,9 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
   @override
   void dispose() {
-    windowManager.removeListener(this);
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      windowManager.removeListener(this);
+    }
     super.dispose();
   }
 
@@ -74,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   }
 
   Future<void> _saveWindowState() async {
+    if (Platform.isAndroid || Platform.isIOS) return;
     final size = await windowManager.getSize();
     final pos = await windowManager.getPosition();
     final s = SettingsService();

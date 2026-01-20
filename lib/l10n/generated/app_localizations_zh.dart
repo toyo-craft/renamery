@@ -366,6 +366,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelSettingsLangCN => '中文';
 
   @override
+  String get labelSettingsLangES => 'スペイン語';
+
+  @override
   String get labelSettingsThemeTitle => '主题模式';
 
   @override

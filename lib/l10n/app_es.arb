@@ -1,0 +1,248 @@
+{
+  "@@locale": "es",
+  "labelMainTab": "Principal",
+  "labelSubTab": "Sub",
+  "labelExtraTab": "Extra",
+  "labelEtcTab": "Atributos",
+  "labelStringInput": "Cadena",
+  "labelColName": "Nombre",
+  "labelColNewName": "Nuevo Nombre",
+  "labelColSize": "Tamaño",
+  "labelColPath": "Ruta",
+  "labelColType": "Tipo",
+  "labelColDate": "Fecha Modificación",
+  "labelColAttr": "Atributos",
+  "labelOpPrefix": "Prefijo",
+  "labelOpSuffix": "Sufijo",
+  "labelOpInsert": "Insertar",
+  "labelOpDeleteStart": "Borrar Inicio",
+  "labelOpDeleteEnd": "Borrar Final",
+  "labelOpDeleteFrom": "Borrar desde",
+  "labelOpCapitalize": "Capitalizar",
+  "labelOpUpper": "Mayúsculas",
+  "labelOpLower": "Minúsculas",
+  "labelOpExtChange": "Cambiar Ext",
+  "labelOpExtAdd": "Añadir Ext",
+  "labelOpExtRemove": "Quitar Ext",
+  "labelOpExtUpper": "Ext Mayús",
+  "labelOpExtLower": "Ext Minús",
+  "labelSubExtChangeTitle": "Extensión",
+  "labelSubFormatTitle": "Formato",
+  "labelSubFormatProperCase": "Capitalizar Palabras",
+  "labelSubListTitle": "Renombrar Lista",
+  "labelSubListModeText": "Entrada Texto",
+  "labelSubListSample1": "Ejemplo: Secuencial",
+  "labelSubListSample2": "Ejemplo: Reemplazo Ext",
+  "labelSubListSample3": "Ejemplo: Reemplazo Car",
+  "labelSubListHint": "viejo.txt\tnuevo.txt",
+  "labelExtraAppendDate": "Añadir Fecha",
+  "labelExtraDateFormatHint": "Formato Fecha",
+  "labelExtraPosition": "Posición",
+  "labelExtraFront": "Inicio",
+  "labelExtraBack": "Final",
+  "labelExtraConvHalfToFull": "Medio a Completo",
+  "labelExtraConvFullToHalf": "Completo a Medio",
+  "labelExtraConvKataToHira": "Katakana a Hiragana",
+  "labelExtraConvHiraToKata": "Hiragana a Katakana",
+  "labelExtraConvFullAlphaToHalf": "Alfa Completo a Medio",
+  "labelExtraConvNumToHalf": "Num a Medio",
+  "labelEtcAttribReadOnly": "Lectura",
+  "labelEtcAttribHidden": "Oculto",
+  "labelEtcAttribArchive": "Archivo",
+  "labelEtcAttribSystem": "Sistema",
+  "labelEtcTimestampChange": "Cambiar Fecha",
+  "labelEtcPickTime": "Elegir Hora",
+  "labelEtcPickDateTooltip": "Elegir Fecha y Hora",
+  "labelEtcTimestampNote": "(Ej 2002/03/30 17:30)",
+  "labelEtcAttributeChange": "Cambiar Atributos",
+  "labelEtcCautionTitle": "Sin Deshacer",
+  "labelEtcCautionMessage": "Cambios de fecha/atributo no se pueden deshacer.",
+  "labelUndo": "Deshacer",
+  "labelExecute": "Ejecutar",
+  "labelErrorInvalidFilename": "Error: Nombre inválido",
+  "labelCopyName": "Copiar Nombre",
+  "labelCopyPath": "Copiar Ruta",
+  "labelCopyFullPath": "Copiar Ruta Completa",
+  "labelCopyOptions": "Opciones Copia",
+  "labelCopyUndo": "Copiar Log Deshacer",
+  "labelCopyListClipboard": "Copiar Lista (Ruta)",
+  "labelMoveUp": "Subir",
+  "labelMoveDown": "Bajar",
+  "labelRefresh": "Actualizar",
+  "labelMenuMore": "Más Acciones",
+  "labelMenuSettings": "Configuración",
+  "labelMenuFolder": "Menú",
+  "labelNumStringNumber": "Txt + Num",
+  "labelNumOriginalNumber": "Orig + Num",
+  "labelNumNumberString": "Num + Txt",
+  "labelNumNumberOriginal": "Num + Orig",
+  "labelNumBaseStringNumber": "Base + Txt + Num",
+  "labelNumBaseStringOriginal": "Base + Txt + Orig",
+  "labelNumRelativeStringNumber": "Rel + Txt + Num",
+  "labelNumRelativeStringOriginal": "Rel + Txt + Orig",
+  "labelNumNumberStringBase": "Num + Txt + Base",
+  "labelNumNumberStringRelative": "Num + Txt + Rel",
+  "labelReplaceFrom": "Buscar",
+  "labelReplaceTo": "Reemplazar",
+  "labelFullPath": "Ubicación > ",
+  "labelSelectAll": "Seleccionar Todo",
+  "labelSettingsFilterTitle": "Filtros",
+  "labelFilterAll": "Todos",
+  "labelFilterSpecific": "Específico",
+  "labelFilterHideSystem": "Ocultar Sistema",
+  "labelFilterRecursive": "Recursivo",
+  "labelFilterPreview": "Vista Previa",
+  "labelExtensionLower": "Extensión Minúsculas",
+  "labelNavBack": "Atrás",
+  "labelNavForward": "Adelante",
+  "labelHistoryBack": "Historial (Atrás)",
+  "labelHistoryForward": "Historial (Adelante)",
+  "labelNavQuickAccess": "Acceso Rápido",
+  "labelDeleteFront": "Desde Inicio",
+  "labelDeleteBack": "Desde Final",
+  "labelDeleteUntil": "Borrar Hasta",
+  "labelFindHint": "Buscar",
+  "labelReplaceHint": "Reemplazar",
+  "labelRegex": "Regex",
+  "labelString": "Texto",
+  "labelStartDigit": "Inicio/Dígitos",
+  "labelSettingsTitle": "Configuración",
+  "labelSettingsSectionDisplay": "Pantalla",
+  "labelSettingsSectionAppearance": "Apariencia",
+  "labelSettingsSectionOS": "Modo Op.",
+  "labelSettingsSectionInitialDir": "Carpeta Inicial",
+  "labelSettingsSectionReset": "Restablecer",
+  "labelSettingsTouchModeTitle": "Modo Táctil",
+  "labelSettingsTouchModeSubtitle": "Mejora uso táctil",
+  "labelSettingsMenuLabelTitle": "Idioma",
+  "labelSettingsLangJP": "Japonés",
+  "labelSettingsLangNamery": "Namery",
+  "labelSettingsLangEN": "Inglés",
+  "labelSettingsLangCN": "Chino",
+  "labelSettingsLangES": "Español",
+  "labelSettingsThemeTitle": "Tema",
+  "labelSettingsThemeSystem": "Sistema",
+  "labelSettingsThemeLight": "Claro",
+  "labelSettingsThemeDark": "Oscuro",
+  "labelSettingsThemeGray": "Gris",
+  "labelSettingsColorTitle": "Color Tema",
+  "labelSettingsOSTitle": "Modo OS",
+  "labelSettingsOSSubtitle": "Adapta validación a OS",
+  "labelSettingsOSAuto": "Auto",
+  "labelSettingsInitDirTitle": "Ubicación Inicio",
+  "labelSettingsInitDirLast": "Última Usada",
+  "labelSettingsInitDirFixed": "Ruta Fija",
+  "labelSettingsClearHistory": "Borrar Historial",
+  "labelSettingsClearHistorySub": "Borrar historial entrada",
+  "labelSettingsResetAll": "Restablecer Todo",
+  "labelSettingsResetAllSub": "Restaura configuración",
+  "labelDialogCancel": "Cancelar",
+  "labelDialogDelete": "Borrar",
+  "labelDialogReset": "Restablecer",
+  "labelMsgHistoryCleared": "Historial borrado",
+  "labelMsgSettingsReset": "Configuración restablecida",
+  "labelFilterHideFolders": "Ocultar Carpetas",
+  "labelFilterShowFolders": "Mostrar Carpetas",
+  "labelPreviewNoSelection": "Sin selección",
+  "labelPreviewSelectedCount": "{count} archivos seleccionados",
+  "@labelPreviewSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelPreviewImageLoadFailed": "Error carga imagen",
+  "labelPreviewUnavailable": "Vista no disponible",
+  "labelPreviewOmitted": "... (omitido: total {size} KB)",
+  "@labelPreviewOmitted": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "labelPreviewBinaryError": "Vista no disponible: Binario",
+  "labelGoRenamery": "Go ReNamery!!!",
+  "labelTermFolder": "Carpeta",
+  "labelTermFile": "Archivo",
+  "labelSettingsOSMac": "Mac (Finder)",
+  "labelSettingsOSLinux": "Linux",
+  "labelSettingsOSiOS": "iOS (iPhone/iPad)",
+  "labelSettingsOSAndroid": "Android",
+  "labelMsgExecutedCount": "Renombrados {count} archivos",
+  "@labelMsgExecutedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelMsgNoSelection": "Ningún archivo seleccionado",
+  "labelCopyListPath": "Copiar lista (Ruta)",
+  "labelMenuGo": "Ir",
+  "labelNoFiles": "Sin archivos",
+  "labelSelectFolderPrompt": "Seleccione {term}",
+  "labelNavTitle": "Navegación",
+  "labelNavPC": "PC",
+  "labelNumSaveSequenceTooltip": "Guardar número secuencia (continuar siguiente vez)",
+  "labelStatusDisplayCount": "Vista: {current} / Total: {total} : Selec {selected}",
+  "@labelStatusDisplayCount": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" },
+      "selected": { "type": "int" }
+    }
+  },
+  "labelStatusTotalCount": "Total {total} : Selec {selected}",
+  "@labelStatusTotalCount": {
+    "placeholders": {
+      "total": { "type": "int" },
+      "selected": { "type": "int" }
+    }
+  },
+  "labelStatusProcessing": "Procesando...",
+  "labelStatusReady": "Listo",
+  "labelDeleteConfirmTitle": "Confirmar Borrado",
+  "labelDeleteConfirmMessage": "¿Seguro que desea borrar {count} archivos permanentemente?\nNo se puede deshacer.",
+  "@labelDeleteConfirmMessage": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelMsgDeletedCount": "Borrados {count} archivos",
+  "@labelMsgDeletedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelUndoTitle": "Deshacer Operación",
+  "labelUndoConfirm": "¿Deshacer los últimos {count} cambios?",
+  "@labelUndoConfirm": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelMsgUndoSuccess": "Restaurado con éxito",
+  "labelUndoRecoverBtn": "Restaurar",
+  "labelMsgNoUndoRecord": "Sin registros previos",
+  "labelMsgUndoRecordCopied": "Log copiado al portapapeles",
+  "labelMsgCopyNamesSuccess": "Copiados {count} nombres",
+  "@labelMsgCopyNamesSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelMsgCopyRelativePathsSuccess": "Copiadas {count} rutas relativas",
+  "@labelMsgCopyRelativePathsSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelMsgCopyFullPathsSuccess": "Copiadas {count} rutas completas",
+  "@labelMsgCopyFullPathsSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+}

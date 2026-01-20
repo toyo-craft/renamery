@@ -367,6 +367,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelSettingsLangCN => 'Chinese';
 
   @override
+  String get labelSettingsLangES => 'Spanish';
+
+  @override
   String get labelSettingsThemeTitle => 'Theme Mode';
 
   @override
