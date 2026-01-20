@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/services.dart'; // For Clipboard
+// For Clipboard
 import '../../core/directory_provider.dart';
 import '../helpers/undo_helper.dart';
 import '../helpers/copy_helper.dart';
@@ -12,7 +12,7 @@ class ToolbarPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<DirectoryProvider>();
     final iconColor = Colors.green[700]; // Namery Green-ish
-    final iconSize = 28.0;
+    const iconSize = 28.0;
 
     return Container(
       height: 48,

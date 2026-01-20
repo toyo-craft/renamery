@@ -29,7 +29,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               builder: (context) => IconButton(
                 icon: const Icon(Icons.folder),
                 color: Theme.of(context).colorScheme.primary,
-                tooltip: 'メニュー (フォルダ)',
+                tooltip: provider.labelMenuFolder,
                 onPressed: () {
                   Scaffold.of(context).openDrawer();
                 },
@@ -47,9 +47,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               // 1. Back Group
               IconButton(
                 icon: const Icon(Icons.arrow_back),
-                // color: iconColor, // Use Theme Default
                 iconSize: iconSize,
-                tooltip: '戻る',
+                tooltip: provider.labelNavBack,
                 onPressed: provider.canGoBack ? () => provider.goBack() : null,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -69,7 +68,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     );
                   });
                 },
-                tooltip: '履歴 (戻る)',
+                tooltip: provider.labelHistoryBack,
               ),
 
               // 2. Forward Group
@@ -77,7 +76,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 icon: const Icon(Icons.arrow_forward),
                 // color: iconColor,
                 iconSize: iconSize,
-                tooltip: '進む',
+                tooltip: provider.labelNavForward,
                 onPressed:
                     provider.canGoForward ? () => provider.goForward() : null,
                 padding: EdgeInsets.zero,
@@ -98,33 +97,38 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     );
                   });
                 },
-                tooltip: '履歴 (進む)',
+                tooltip: provider.labelHistoryForward,
               ),
 
               const SizedBox(
                   height: 24,
                   child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
 
-              // 3. Execute
-              IconButton(
-                icon: const Icon(Icons.play_arrow),
-                // color: iconColor,
-                iconSize: iconSize,
-                tooltip: provider.hasInvalidFilenames
-                    ? 'エラー：ファイル名に禁止文字が含まれています'
-                    : '実行',
-                onPressed:
-                    (provider.canExecute && !provider.hasInvalidFilenames)
-                        ? () => _confirmAndExecute(context, provider)
-                        : null,
+              // 3. Execute (Go ReNamery!!!)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(provider.labelGoRenamery,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                  onPressed:
+                      (provider.canExecute && !provider.hasInvalidFilenames)
+                          ? () => _confirmAndExecute(context, provider)
+                          : null,
+                ), // Tooltip handled by button? Or wrap? FilledButton handles tooltip if standard? No, need explicit Tooltip widget if desired, but text is self-explanatory.
               ),
 
               // 4. Undo
               if (!isNarrow)
                 TextButton.icon(
                   icon: const Icon(Icons.undo),
-                  label: Text(
-                      provider.canUndo ? '戻す (${provider.undoCount})' : '戻す'),
+                  label: Text(provider.canUndo
+                      ? '${provider.labelUndo} (${provider.undoCount})'
+                      : provider.labelUndo),
                   style: TextButton.styleFrom(
                     // foregroundColor: iconColor, // Use theme
                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -138,8 +142,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   icon: const Icon(Icons.undo),
                   // color: iconColor,
                   iconSize: iconSize,
-                  tooltip:
-                      provider.canUndo ? '戻す (${provider.undoCount})' : '戻す',
+                  tooltip: provider.canUndo
+                      ? '${provider.labelUndo} (${provider.undoCount})'
+                      : provider.labelUndo,
                   onPressed: provider.canUndo
                       ? () => UndoHelper.handleUndo(context, provider)
                       : null,
@@ -156,7 +161,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   icon: const Icon(Icons.content_copy),
                   // color: Colors.grey[700], // Use Theme
                   iconSize: iconSize,
-                  tooltip: 'コピー (現在名)',
+                  tooltip: provider.labelCopyName,
                   onPressed: provider.currentFiles.any((f) => f.isSelected)
                       ? () => CopyHelper.handleCopy(context, provider)
                       : null,
@@ -172,7 +177,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     await CopyHelper.handleCopyMenu(context, provider, value);
                   },
                   itemBuilder: (context) => _buildCopyMenuItems(provider),
-                  tooltip: 'コピーオプション',
+                  tooltip: provider.labelCopyOptions,
                 ),
 
                 const SizedBox(
@@ -184,7 +189,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   icon: const Icon(Icons.arrow_upward),
                   // color: iconColor,
                   iconSize: iconSize,
-                  tooltip: '上に移動',
+                  tooltip: provider.labelMoveUp,
                   onPressed: provider.canMoveUp
                       ? () => provider.moveSelection(true)
                       : null,
@@ -193,7 +198,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   icon: const Icon(Icons.arrow_downward),
                   // color: iconColor,
                   iconSize: iconSize,
-                  tooltip: '下に移動',
+                  tooltip: provider.labelMoveDown,
                   onPressed: provider.canMoveDown
                       ? () => provider.moveSelection(false)
                       : null,
@@ -208,7 +213,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   icon: const Icon(Icons.refresh),
                   // color: iconColor,
                   iconSize: iconSize,
-                  tooltip: '全て更新',
+                  tooltip: provider.labelRefresh,
                   onPressed: () => provider.refresh(),
                 ),
               ] else ...[
@@ -216,7 +221,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 const Spacer(),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert), //, color: iconColor),
-                  tooltip: 'その他の操作',
+                  tooltip: provider.labelMenuMore,
                   onSelected: (value) async {
                     switch (value) {
                       case 'copy_name':
@@ -283,9 +288,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                         ),
                       ),
                       if (hasUndo)
-                        PopupMenuItem(
+                        const PopupMenuItem(
                           value: 'copy_undo',
-                          child: const Row(
+                          child: Row(
                             children: [
                               Icon(Icons.history, size: 20),
                               SizedBox(width: 8),
@@ -347,7 +352,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             );
           },
-          tooltip: 'アプリ設定',
+          tooltip: provider.labelMenuSettings,
         ),
       ],
     );
@@ -380,27 +385,30 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         value: 1,
         height: 32,
         enabled: hasSelection,
-        child: const Text('クリップボードへ現在のリストをコピー', style: TextStyle(fontSize: 12)),
+        child: Text(provider.labelCopyListClipboard,
+            style: const TextStyle(fontSize: 12)),
       ),
       PopupMenuItem(
         value: 2,
         height: 32,
         enabled: hasSelection,
-        child: const Text('クリップボードへ現在のリストをコピー (Path)',
-            style: TextStyle(fontSize: 12)),
+        child: Text(
+            '${provider.labelCopyListClipboard} (Path)', // Partially distinct? Or add labelCopyListPath
+            style: const TextStyle(fontSize: 12)),
       ),
       PopupMenuItem(
         value: 3,
         height: 32,
         enabled: hasSelection,
-        child:
-            const Text('クリップボードへフルパスリストをコピー', style: TextStyle(fontSize: 12)),
+        child: Text(provider.labelCopyFullPath,
+            style: const TextStyle(fontSize: 12)),
       ),
       PopupMenuItem(
         value: 4,
         height: 32,
         enabled: hasUndo,
-        child: const Text('直前の変更記録をクリップボードへ', style: TextStyle(fontSize: 12)),
+        child:
+            Text(provider.labelCopyUndo, style: const TextStyle(fontSize: 12)),
       ),
     ];
   }

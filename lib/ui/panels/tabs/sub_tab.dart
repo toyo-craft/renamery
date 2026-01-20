@@ -60,7 +60,8 @@ class _SubTabState extends State<SubTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // --- Extension Section ---
-          const Text('拡張子変更', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(provider.labelSubExtChangeTitle,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: spacing),
 
           // Extension Change (with input)
@@ -68,7 +69,7 @@ class _SubTabState extends State<SubTab> {
             context,
             provider,
             RenameMode.extension,
-            '拡張子を変更',
+            provider.labelOpExtChange,
             _extensionChangeController,
             (val) => context.read<DirectoryProvider>().updateRenameSettings(
                 extensionChangeText: val, mode: RenameMode.extension),
@@ -77,16 +78,12 @@ class _SubTabState extends State<SubTab> {
             history: provider.extensionHistory, // Pass history
           ),
 
-          // Extension Add (with input or reuse?)
-          // Usually Add is also just text input.
-          // Let's use the SAME input for simplicity, or should we switch inputs?
-          // The provider has one 'extensionText'. Using same input is fine.
-
+          // ... (Extension Add block is fine with labelOpExtAdd) ...
           _buildRadioWithInput(
             context,
             provider,
             RenameMode.extensionAdd,
-            '拡張子を追加',
+            provider.labelOpExtAdd,
             _extensionAddController,
             (val) => context.read<DirectoryProvider>().updateRenameSettings(
                 extensionAddText: val, mode: RenameMode.extensionAdd),
@@ -99,7 +96,7 @@ class _SubTabState extends State<SubTab> {
             context,
             provider,
             RenameMode.extensionRemove,
-            '拡張子を削除',
+            provider.labelOpExtRemove,
             spacing: spacing,
           ),
 
@@ -110,7 +107,7 @@ class _SubTabState extends State<SubTab> {
                   context,
                   provider,
                   RenameMode.extensionUpper,
-                  '大文字化',
+                  provider.labelOpExtUpper,
                   spacing: spacing,
                 ),
               ),
@@ -119,7 +116,7 @@ class _SubTabState extends State<SubTab> {
                   context,
                   provider,
                   RenameMode.extensionLower,
-                  '小文字化',
+                  provider.labelOpExtLower,
                   spacing: spacing,
                 ),
               ),
@@ -128,21 +125,25 @@ class _SubTabState extends State<SubTab> {
 
           Divider(thickness: 1, height: blockSpacing, color: Colors.green),
 
+          // ...
+
           // --- Format Words Section ---
-          const Text('英単語整形', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(provider.labelSubFormatTitle,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: spacing),
           _buildRadioTile(
             context,
             provider,
             RenameMode.formatProperCase,
-            '単語の先頭を大文字化 (Space/Hyphen/Underscore)',
+            provider.labelSubFormatProperCase,
             spacing: spacing,
           ),
 
           Divider(thickness: 1, height: blockSpacing, color: Colors.green),
 
           // --- List Rename Section ---
-          const Text('リストリネーム', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(provider.labelSubListTitle,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: spacing),
 
           Row(
@@ -172,27 +173,27 @@ class _SubTabState extends State<SubTab> {
                     height: 1,
                     color: Colors.grey,
                   ),
-                  items: const [
+                  items: [
                     DropdownMenuItem(
                       value: 'text_input',
-                      child: Text('テキスト入力 (Original[TAB]New)'),
+                      child: Text(provider.labelSubListModeText),
                     ),
                     DropdownMenuItem(
                       value: 'sample_chapter',
-                      child: Text('サンプル: 連番ファイル (01_chapter...)'),
+                      child: Text(provider.labelSubListSample1),
                     ),
                     DropdownMenuItem(
                       value: 'sample_ext',
-                      child: Text('サンプル: 拡張子一括置換 (.jpg[TAB].png)'),
+                      child: Text(provider.labelSubListSample2),
                     ),
                     DropdownMenuItem(
                       value: 'sample_replace',
-                      child: Text('サンプル: 特定文字の置換 (old[TAB]new)'),
+                      child: Text(provider.labelSubListSample3),
                     ),
-                    DropdownMenuItem(
+                    const DropdownMenuItem(
                       value: 'file_read',
                       enabled: false,
-                      child: Text('ファイル読込 (Coming Soon)',
+                      child: Text('File Read (Coming Soon)',
                           style: TextStyle(color: Colors.grey)),
                     ),
                   ],
@@ -248,8 +249,8 @@ class _SubTabState extends State<SubTab> {
                   .textTheme
                   .bodySmall
                   ?.copyWith(fontFamily: 'Consolas'),
-              decoration: const InputDecoration(
-                hintText: 'old_name.txt\tnew_name.txt\nfile01.png\timage01.png',
+              decoration: InputDecoration(
+                hintText: provider.labelSubListHint,
                 // border: OutlineInputBorder(), // Removed for global theme
                 isDense: true,
               ),

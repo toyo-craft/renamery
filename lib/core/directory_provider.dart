@@ -16,6 +16,13 @@ enum AppThemeType {
   darkGray, // New Custom Theme
 }
 
+enum MenuLabelType {
+  standard, // 日本語
+  namery, // Namery互換
+  english, // English
+  chinese, // 中国語
+}
+
 class DirectoryProvider extends ChangeNotifier {
   Directory? _currentDirectory;
   List<FileModel> _currentFiles = [];
@@ -52,6 +59,16 @@ class DirectoryProvider extends ChangeNotifier {
     if (seedColorVal != null) {
       _seedColor = Color(seedColorVal);
     }
+
+    // Menu Label (SYNC)
+    final menuLabelStr = s.getString('menuLabelType') ??
+        'namery'; // Default to Namery for existing users? Or Standard? User asked to change from current. Current is Namery. So Default Namery or Standard?
+    // "各種メニューを現行のものからより一般的でわかりやすい名称にしてください" -> Implies Standard should be NEW default?
+    // Let's set Standard as default for new, but keep Namery if explicitly set?
+    // Actually, explicit request "Make it more general... but allow changing to Namery". Defaults to Standard seems appropriate for "Make it...".
+    _menuLabelType = MenuLabelType.values.firstWhere(
+        (e) => e.name == menuLabelStr,
+        orElse: () => MenuLabelType.standard);
 
     // Navigation History (Restored from settings)
     final savedNavHistory = s.getList<String>('navHistory');
@@ -212,6 +229,8 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('saveSequenceNumber', _saveSequenceNumber);
     s.set('isCompactMode', _isCompactMode);
     s.set('appTheme', _appTheme.name);
+    s.set('menuLabelType', _menuLabelType.name);
+    s.set('seedColor', _seedColor.value);
     s.set('seedColor', _seedColor.value);
 
     s.set('navHistory', _navHistory);
@@ -321,6 +340,7 @@ class DirectoryProvider extends ChangeNotifier {
 
   // Theme State
   AppThemeType _appTheme = AppThemeType.light; // Default: Light
+  MenuLabelType _menuLabelType = MenuLabelType.standard; // Default: Standard
   Color _seedColor = Colors.green;
 
   // Extra Tab State
@@ -452,6 +472,9 @@ class DirectoryProvider extends ChangeNotifier {
   bool get isCompactMode => _isCompactMode;
 
   AppThemeType get appTheme => _appTheme;
+  MenuLabelType get menuLabelType => _menuLabelType;
+
+  // Dynamic Label Getters
 
   // Helper for MaterialApp to consume (Mapping)
   ThemeMode get themeMode {
@@ -520,6 +543,12 @@ class DirectoryProvider extends ChangeNotifier {
 
   void setAppTheme(AppThemeType theme) {
     _appTheme = theme;
+    _saveState();
+    notifyListeners();
+  }
+
+  void setMenuLabelType(MenuLabelType type) {
+    _menuLabelType = type;
     _saveState();
     notifyListeners();
   }
@@ -620,8 +649,9 @@ class DirectoryProvider extends ChangeNotifier {
     if (digit != null) _digits = digit;
     if (digits != null) _digits = digits;
 
-    if (extensionToLowerCase != null)
+    if (extensionToLowerCase != null) {
       _extensionToLowerCase = extensionToLowerCase;
+    }
     if (useRegex != null) _useRegex = useRegex;
 
     // Extra Tab
@@ -757,6 +787,7 @@ class DirectoryProvider extends ChangeNotifier {
   void resetSettings() {
     // 1. Theme
     _appTheme = AppThemeType.light;
+    _menuLabelType = MenuLabelType.standard;
     _seedColor = Colors.green;
     _isCompactMode = false;
 
@@ -1586,6 +1617,362 @@ class DirectoryProvider extends ChangeNotifier {
         break;
     }
   }
+
+  // --- Terminology Helper ---
+  String _l({
+    required String jp,
+    required String namery,
+    required String en,
+    required String cn,
+  }) {
+    switch (_menuLabelType) {
+      case MenuLabelType.standard:
+        return jp;
+      case MenuLabelType.namery:
+        return namery;
+      case MenuLabelType.english:
+        return en;
+      case MenuLabelType.chinese:
+        return cn;
+    }
+  }
+
+  // --- Terminology Getters ---
+
+  // Tabs
+  String get labelMainTab => _l(jp: '基本', namery: 'Main', en: 'Main', cn: '基本');
+  String get labelSubTab => _l(jp: '拡張', namery: 'Sub', en: 'Sub', cn: '扩展');
+  String get labelExtraTab =>
+      _l(jp: '高度', namery: 'Extra', en: 'Extra', cn: '高级');
+  String get labelEtcTab =>
+      _l(jp: '属性', namery: 'etc...', en: 'Attributes', cn: '属性');
+
+  String get labelStringInput =>
+      _l(jp: '文字列', namery: 'String', en: 'String', cn: '文本');
+
+  // Columns (Central Panel)
+  String get labelColName =>
+      _l(jp: '現在のファイル名', namery: '名前', en: 'Name', cn: '文件名');
+  String get labelColNewName =>
+      _l(jp: '新しいファイル名', namery: '変更後ファイル名', en: 'New Name', cn: '新文件名');
+  String get labelColSize => _l(jp: 'サイズ', namery: 'サイズ', en: 'Size', cn: '大小');
+  String get labelColPath => _l(jp: 'パス', namery: '相対パス', en: 'Path', cn: '路径');
+  String get labelColType =>
+      _l(jp: '種別', namery: 'ファイルの種類', en: 'Type', cn: '类型');
+  String get labelColDate =>
+      _l(jp: '更新日時', namery: '更新日時', en: 'Date Modified', cn: '修改日期');
+  String get labelColAttr =>
+      _l(jp: '属性', namery: '属性', en: 'Attributes', cn: '属性');
+
+  // Operations (Main Tab)
+  String get labelOpPrefix =>
+      _l(jp: '先頭に追加', namery: 'Prefix(前方追加)', en: 'Add Prefix', cn: '添加前缀');
+  String get labelOpSuffix =>
+      _l(jp: '末尾に追加', namery: 'Suffix(後方追加)', en: 'Add Suffix', cn: '添加后缀');
+  String get labelOpInsert =>
+      _l(jp: '指定位置に挿入', namery: '文字列挿入', en: 'Insert at', cn: '插入字符');
+  String get labelOpDeleteStart => _l(
+      jp: '先頭から削除', namery: '先頭から桁数分削除', en: 'Delete from Start', cn: '删除头部');
+  String get labelOpDeleteEnd =>
+      _l(jp: '末尾から削除', namery: '後ろから桁数分削除', en: 'Delete from End', cn: '删除尾部');
+  String get labelOpDeleteFrom => _l(
+      jp: '指定位置から削除',
+      namery: '開始数字から桁数削除',
+      en: 'Delete from Pos',
+      cn: '删除指定位置');
+  String get labelOpCapitalize =>
+      _l(jp: '先頭を大文字化', namery: '先頭文字を大文字化', en: 'Capitalize', cn: '首字母大写');
+  String get labelOpUpper =>
+      _l(jp: 'すべて大文字化', namery: '大文字化', en: 'To Upper Case', cn: '全部大写');
+  String get labelOpLower =>
+      _l(jp: 'すべて小文字化', namery: '小文字化', en: 'To Lower Case', cn: '全部小写');
+
+  // Operations (Sub Tab)
+  String get labelOpExtChange =>
+      _l(jp: '拡張子を変更', namery: '拡張子を変更', en: 'Change Ext', cn: '修改后缀');
+  String get labelOpExtAdd =>
+      _l(jp: '拡張子を追加', namery: '拡張子を追加', en: 'Add Extension', cn: '添加后缀');
+  String get labelOpExtRemove =>
+      _l(jp: '拡張子を削除', namery: '拡張子を削除', en: 'Remove Ext', cn: '删除后缀');
+  String get labelOpExtUpper =>
+      _l(jp: '拡張子を大文字化', namery: '拡張子を大文字化', en: 'Ext to Upper', cn: '后缀大写');
+  String get labelOpExtLower =>
+      _l(jp: '拡張子を小文字化', namery: '拡張子を小文字化', en: 'Ext to Lower', cn: '后缀小写');
+  String get labelSubExtChangeTitle =>
+      _l(jp: '拡張子変更', namery: 'Extension', en: 'Extension', cn: '后缀修改');
+  String get labelSubFormatTitle =>
+      _l(jp: '英単語整形', namery: 'Format', en: 'Format', cn: '格式化');
+  String get labelSubFormatProperCase => _l(
+      jp: '単語の先頭を大文字化 (Space/Hyphen/Underscore)',
+      namery: 'Capitalize (Proper Case)',
+      en: 'Capitalize Words',
+      cn: '首字母大写');
+  String get labelSubListTitle =>
+      _l(jp: 'リストリネーム', namery: 'List Rename', en: 'List Rename', cn: '列表重命名');
+  String get labelSubListModeText => _l(
+      jp: 'テキスト入力 (Original[TAB]New)',
+      namery: 'Text Input',
+      en: 'Text Input',
+      cn: '文本输入');
+  String get labelSubListSample1 => _l(
+      jp: 'サンプル: 連番ファイル',
+      namery: 'Sample: Sequential',
+      en: 'Sample: Sequential',
+      cn: '示例: 序号');
+  String get labelSubListSample2 => _l(
+      jp: 'サンプル: 拡張子一括置換',
+      namery: 'Sample: Ext Replace',
+      en: 'Sample: Ext Replace',
+      cn: '示例: 后缀替换');
+  String get labelSubListSample3 => _l(
+      jp: 'サンプル: 特定文字の置換',
+      namery: 'Sample: Char Replace',
+      en: 'Sample: Char Replace',
+      cn: '示例: 字符替换');
+  String get labelSubListHint => _l(
+      jp: 'old_name.txt\tnew_name.txt\nfile01.png\timage01.png',
+      namery: 'old.txt\tnew.txt',
+      en: 'old.txt\tnew.txt',
+      cn: 'old.txt\tnew.txt');
+
+  // Operations (Extra Tab)
+  String get labelExtraAppendDate => _l(
+      jp: 'ファイルの日付を付加', namery: 'Append Date', en: 'Append Date', cn: '添加日期');
+  String get labelExtraDateFormatHint => _l(
+      jp: '日付フォーマット (例: yyyymmdd_)',
+      namery: 'Date Format (ex: yyyymmdd_)',
+      en: 'Date Format',
+      cn: '日期格式');
+  String get labelExtraPosition =>
+      _l(jp: '位置', namery: 'Position', en: 'Position', cn: '位置');
+  String get labelExtraFront =>
+      _l(jp: '前方', namery: 'Front', en: 'Front', cn: '前');
+  String get labelExtraBack =>
+      _l(jp: '後方', namery: 'Back', en: 'Back', cn: '后');
+  String get labelExtraConvHalfToFull => _l(
+      jp: '半角を全角にする', namery: 'Half to Full', en: 'Half to Full', cn: '半角转全角');
+  String get labelExtraConvFullToHalf => _l(
+      jp: '全角を半角にする', namery: 'Full to Half', en: 'Full to Half', cn: '全角转半角');
+  String get labelExtraConvKataToHira => _l(
+      jp: '全角カナをひらがなにする',
+      namery: 'Kata to Hira',
+      en: 'Katakana to Hiragana',
+      cn: '片假名转平假名');
+  String get labelExtraConvHiraToKata => _l(
+      jp: 'ひらがなを全角カナにする',
+      namery: 'Hira to Kata',
+      en: 'Hiragana to Katakana',
+      cn: '平假名转片假名');
+  String get labelExtraConvFullAlphaToHalf => _l(
+      jp: '全角英字を半角にする',
+      namery: 'Full Alpha to Half',
+      en: 'Full Alpha to Half',
+      cn: '全角英转半角');
+  String get labelExtraConvNumToHalf =>
+      _l(jp: '数字を半角にする', namery: 'Num to Half', en: 'Num to Half', cn: '数字转半角');
+
+  // Operations (Etc Tab)
+  String get labelEtcAttribReadOnly =>
+      _l(jp: '読み取り専用', namery: 'ReadOnly', en: 'Read Only', cn: '只读');
+  String get labelEtcAttribHidden =>
+      _l(jp: '隠しファイル', namery: 'Hidden', en: 'Hidden', cn: '隐藏');
+  String get labelEtcAttribArchive =>
+      _l(jp: 'アーカイブ', namery: 'Archive', en: 'Archive', cn: '存档');
+  String get labelEtcAttribSystem =>
+      _l(jp: 'システムファイル', namery: 'System', en: 'System', cn: '系统');
+
+  String get labelEtcTimestampChange => _l(
+      jp: 'タイムスタンプを変更する',
+      namery: 'Change Timestamp',
+      en: 'Change Timestamp',
+      cn: '修改时间戳');
+  String get labelEtcPickTime =>
+      _l(jp: '時刻を選択してください', namery: 'Pick Time', en: 'Pick Time', cn: '选择时间');
+  String get labelEtcPickDateTooltip => _l(
+      jp: '日付と時刻を選択',
+      namery: 'Pick Date & Time',
+      en: 'Pick Date & Time',
+      cn: '选择日期和时间');
+  String get labelEtcTimestampNote => _l(
+      jp: '(Ex 2002/03/30 17:30 のように指定します。)',
+      namery: '(Ex 2002/03/30 17:30)',
+      en: '(Ex 2002/03/30 17:30)',
+      cn: '(例如 2002/03/30 17:30)');
+  String get labelEtcAttributeChange => _l(
+      jp: '属性を変更する',
+      namery: 'Change Attributes',
+      en: 'Change Attributes',
+      cn: '修改属性');
+  String get labelEtcCautionTitle =>
+      _l(jp: '取り消し操作不能', namery: 'No Undo', en: 'No Undo', cn: '无法撤销');
+  String get labelEtcCautionMessage => _l(
+      jp: 'このカテゴリ（タイムスタンプ・属性）の変更は、アンドゥ機能で元に戻すことができません。慎重に操作してください。',
+      namery: 'Changes to timestamp/attributes cannot be undone.',
+      en: 'Timestamp/Attribute changes cannot be undone.',
+      cn: '时间戳和属性的修改无法撤销。');
+
+  // Toolbar & Menu
+  String get labelUndo => _l(jp: '戻す', namery: 'Undo', en: 'Undo', cn: '撤销');
+  String get labelExecute =>
+      _l(jp: '実行', namery: 'Execute', en: 'Execute', cn: '执行');
+  String get labelErrorInvalidFilename => _l(
+      jp: 'エラー：ファイル名に禁止文字が含まれています',
+      namery: 'Error: Invalid Filename',
+      en: 'Error: Invalid Filename',
+      cn: '错误: 文件名包含非法字符');
+  String get labelCopyName =>
+      _l(jp: 'コピー (現在名)', namery: 'Copy Name', en: 'Copy Name', cn: '复制文件名');
+  String get labelCopyPath =>
+      _l(jp: 'コピー (パス)', namery: 'Copy Path', en: 'Copy Path', cn: '复制路径');
+  String get labelCopyFullPath => _l(
+      jp: 'コピー (フルパス)',
+      namery: 'Copy Full Path',
+      en: 'Copy Full Path',
+      cn: '复制完整路径');
+  String get labelCopyOptions => _l(
+      jp: 'コピーオプション', namery: 'Copy Options', en: 'Copy Options', cn: '复制选项');
+  String get labelCopyUndo => _l(
+      jp: '変更記録をコピー',
+      namery: 'Copy Undo Log',
+      en: 'Copy Undo Log',
+      cn: '复制撤销记录');
+  String get labelCopyListClipboard => _l(
+      jp: 'クリップボードへ現在のリストをコピー',
+      namery: 'Copy List to Clipboard',
+      en: 'Copy List to Clipboard',
+      cn: '复制列表到剪贴板');
+  String get labelMoveUp =>
+      _l(jp: '上に移動', namery: 'Move Up', en: 'Move Up', cn: '上移');
+  String get labelMoveDown =>
+      _l(jp: '下に移動', namery: 'Move Down', en: 'Move Down', cn: '下移');
+  String get labelRefresh =>
+      _l(jp: '全て更新', namery: 'Refresh All', en: 'Refresh All', cn: '刷新所有');
+  String get labelMenuMore =>
+      _l(jp: 'その他の操作', namery: 'More Actions', en: 'More Actions', cn: '更多操作');
+  String get labelMenuSettings =>
+      _l(jp: 'アプリ設定', namery: 'Settings', en: 'Settings', cn: '设置');
+  String get labelMenuFolder =>
+      _l(jp: 'メニュー (フォルダ)', namery: 'Menu', en: 'Menu', cn: '菜单');
+
+  // Numbering Modes (Main Tab)
+  String get labelNumStringNumber =>
+      _l(jp: '文字列 + 連番', namery: '文字列 + 連番', en: 'Str + Num', cn: '字符 + 序号');
+  String get labelNumOriginalNumber => _l(
+      jp: '現在名 + 連番', namery: '現在名 + 連番', en: 'Original + Num', cn: '原名 + 序号');
+  String get labelNumNumberString =>
+      _l(jp: '連番 + 文字列', namery: '連番 + 文字列', en: 'Num + Str', cn: '序号 + 字符');
+  String get labelNumNumberOriginal => _l(
+      jp: '連番 + 現在名', namery: '連番 + 現在名', en: 'Num + Original', cn: '序号 + 原名');
+
+  // Complex Numbering Modes
+  String get labelNumBaseStringNumber => _l(
+      jp: '基本名 + 文字列 + 連番',
+      namery: 'Base + Str + Num',
+      en: 'Base + Str + Num',
+      cn: '基本名 + 字符 + 序号');
+  String get labelNumBaseStringOriginal => _l(
+      jp: '基本名 + 文字列 + 現在名',
+      namery: 'Base + Str + Original',
+      en: 'Base + Str + Original',
+      cn: '基本名 + 字符 + 原名');
+  String get labelNumRelativeStringNumber => _l(
+      jp: '相対名 + 文字列 + 連番',
+      namery: 'Relative + Str + Num',
+      en: 'Relative + Str + Num',
+      cn: '相对名 + 字符 + 序号');
+  String get labelNumRelativeStringOriginal => _l(
+      jp: '相対名 + 文字列 + 現在名',
+      namery: 'Relative + Str + Original',
+      en: 'Relative + Str + Original',
+      cn: '相对名 + 字符 + 原名');
+  String get labelNumNumberStringBase => _l(
+      jp: '連番 + 文字列 + 基本名',
+      namery: 'Num + Str + Base',
+      en: 'Num + Str + Base',
+      cn: '序号 + 字符 + 基本名');
+  String get labelNumNumberStringRelative => _l(
+      jp: '連番 + 文字列 + 相対名',
+      namery: 'Num + Str + Relative',
+      en: 'Num + Str + Relative',
+      cn: '序号 + 字符 + 相对名');
+
+  // Replace Labels (Main Tab)
+  String get labelReplaceFrom =>
+      _l(jp: 'を', namery: 'を', en: 'Replace', cn: '将');
+  String get labelReplaceTo =>
+      _l(jp: 'に置換', namery: 'に置換', en: 'With', cn: '替换为');
+
+  // Address Bar (File List Panel)
+  String get labelFullPath =>
+      _l(jp: '現在の場所 > ', namery: 'フルパス > ', en: 'Location > ', cn: '当前位置 > ');
+  String get labelSelectAll =>
+      _l(jp: 'すべて選択', namery: '全選択', en: 'Select All', cn: '全选');
+
+  // Settings & Filter
+  String get labelSettingsFilterTitle => _l(
+      jp: '表示設定 (フィルタ)',
+      namery: 'Filter Settings',
+      en: 'Filter Settings',
+      cn: '筛选设置');
+  String get labelFilterAll =>
+      _l(jp: '全てのファイル', namery: 'All Files', en: 'All Files', cn: '所有文件');
+  String get labelFilterSpecific =>
+      _l(jp: '指定', namery: 'Specific', en: 'Specific', cn: '指定');
+  String get labelFilterHideSystem => _l(
+      jp: 'システムファイルを非表示',
+      namery: 'Hide System Files',
+      en: 'Hide System Files',
+      cn: '隐藏系统文件');
+  String get labelFilterRecursive => _l(
+      jp: '下位フォルダ検索',
+      namery: 'Recursive Search',
+      en: 'Recursive Search',
+      cn: '递归搜索');
+  String get labelFilterPreview =>
+      _l(jp: 'プレビュー表示', namery: 'Show Preview', en: 'Show Preview', cn: '显示预览');
+  String get labelExtensionLower => _l(
+      jp: '拡張子は小文字化',
+      namery: 'Lowercase Extension',
+      en: 'Lowercase Extension',
+      cn: '后缀小写');
+
+  // Navigation
+  String get labelNavBack => _l(jp: '戻る', namery: '戻る', en: 'Back', cn: '后退');
+  String get labelNavForward =>
+      _l(jp: '進む', namery: '進む', en: 'Forward', cn: '前进');
+  String get labelHistoryBack => _l(
+      jp: '履歴 (戻る)',
+      namery: 'History (Back)',
+      en: 'History (Back)',
+      cn: '历史 (后退)');
+  String get labelHistoryForward => _l(
+      jp: '履歴 (進む)',
+      namery: 'History (Forward)',
+      en: 'History (Forward)',
+      cn: '历史 (前进)');
+
+  // Navigation
+  String get labelNavQuickAccess => _l(
+      jp: 'クイックアクセス', namery: 'Quick Access', en: 'Quick Access', cn: '快速访问');
+
+  // Main Tab (Delete / Find / Numbering)
+  String get labelDeleteFront =>
+      _l(jp: '前から', namery: 'Front', en: 'From Front', cn: '从前');
+  String get labelDeleteBack =>
+      _l(jp: '後から', namery: 'Back', en: 'From Back', cn: '从后');
+  String get labelDeleteUntil =>
+      _l(jp: 'まで削除', namery: 'Delete Until', en: 'Delete Until', cn: '删除至');
+  String get labelFindHint =>
+      _l(jp: '検索 (Find)', namery: 'Find', en: 'Find', cn: '查找');
+  String get labelReplaceHint =>
+      _l(jp: '置換 (Replace)', namery: 'Replace', en: 'Replace', cn: '替换');
+  String get labelRegex =>
+      _l(jp: '正規表現', namery: 'Regex', en: 'Regex', cn: '正则表达式');
+  // Numbering
+  String get labelString =>
+      _l(jp: '文字列', namery: 'String', en: 'String', cn: '字符');
+  String get labelStartDigit =>
+      _l(jp: '開始/桁', namery: 'Start/Digit', en: 'Start/Digits', cn: '开始/位数');
 }
 
 enum InitialDirectoryMode {

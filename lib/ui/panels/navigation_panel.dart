@@ -46,8 +46,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<DirectoryProvider>();
-    final currentDir = provider.currentDirectory;
+    // final provider = context.watch<DirectoryProvider>();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -85,7 +84,9 @@ class _NavigationPanelState extends State<NavigationPanel> {
                                 children: [
                                   // Quick Access Section
                                   if (_quickAccess.isNotEmpty) ...[
-                                    _buildSectionHeader('クイックアクセス'),
+                                    _buildSectionHeader(context
+                                        .watch<DirectoryProvider>()
+                                        .labelNavQuickAccess),
                                     ..._quickAccess.map(
                                       (dir) => _DirectoryTile(
                                         directory: dir,

@@ -1,6 +1,10 @@
 # Miscellaneous
 *.class
 *.log
+*.lock
+debug_log.txt
+permission_check.txt
+shortpaths.txt
 *.pyc
 *.swp
 .DS_Store
@@ -27,6 +31,7 @@ migrate_working_dir/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.dart_tool_old/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
@@ -43,3 +48,17 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# User Docs
+docs/issues.md
+docs/md3_gap_report.md
+docs/prompt_history.md
+
+# Local Environment Scripts
+mount_*.bat
+mount_*.ps1
+run_mount_ps.bat
+clean_rebuild.bat
+force_cleanup.bat
+run_app.bat
+run_debug.bat

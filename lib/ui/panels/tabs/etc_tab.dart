@@ -5,7 +5,7 @@ import '../../../../core/rename_engine.dart';
 import 'package:intl/intl.dart';
 
 class EtcTab extends StatefulWidget {
-  const EtcTab({Key? key}) : super(key: key);
+  const EtcTab({super.key});
 
   @override
   State<EtcTab> createState() => _EtcTabState();
@@ -85,7 +85,7 @@ class _EtcTabState extends State<EtcTab> {
       final TimeOfDay? time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(initialDate),
-        helpText: '時刻を選択してください',
+        helpText: context.read<DirectoryProvider>().labelEtcPickTime,
         builder: (context, child) {
           return Localizations.override(
             context: context,
@@ -168,7 +168,7 @@ class _EtcTabState extends State<EtcTab> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '取り消し操作不能',
+                            provider.labelEtcCautionTitle,
                             style: TextStyle(
                               color: Colors.amber.shade900,
                               fontWeight: FontWeight.bold,
@@ -177,7 +177,7 @@ class _EtcTabState extends State<EtcTab> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'このカテゴリ（タイムスタンプ・属性）の変更は、アンドゥ機能で元に戻すことができません。慎重に操作してください。',
+                            provider.labelEtcCautionMessage,
                             style: TextStyle(
                               color: Colors.amber.shade900,
                               fontSize: 12,
@@ -216,7 +216,7 @@ class _EtcTabState extends State<EtcTab> {
                       mode: RenameMode.changeTimestamp, immediate: true);
                 },
               ),
-              const Text('タイムスタンプを変更する'),
+              Text(provider.labelEtcTimestampChange),
             ],
           ),
         ),
@@ -233,7 +233,7 @@ class _EtcTabState extends State<EtcTab> {
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.calendar_month),
                     onPressed: () => _pickDateTime(context),
-                    tooltip: '日付と時刻を選択',
+                    tooltip: provider.labelEtcPickDateTooltip,
                   ),
                 ),
                 onChanged: (val) {
@@ -244,9 +244,9 @@ class _EtcTabState extends State<EtcTab> {
                 },
               ),
               const SizedBox(height: 4),
-              const Text(
-                '(Ex 2002/03/30 17:30 のように指定します。)',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+              Text(
+                provider.labelEtcTimestampNote,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
           ),
@@ -275,7 +275,7 @@ class _EtcTabState extends State<EtcTab> {
                       mode: RenameMode.changeAttributes, immediate: true);
                 },
               ),
-              const Text('属性を変更する'),
+              Text(provider.labelEtcAttributeChange),
             ],
           ),
         ),
@@ -283,25 +283,33 @@ class _EtcTabState extends State<EtcTab> {
           padding: const EdgeInsets.only(left: 32, right: 8, bottom: 8),
           child: Column(
             children: [
-              _buildCheckbox('ReadOnly', provider.etcAttribReadOnly, (val) {
+              _buildCheckbox(
+                  provider.labelEtcAttribReadOnly, provider.etcAttribReadOnly,
+                  (val) {
                 _updateSettings(context,
                     readOnly: val,
                     mode: RenameMode.changeAttributes, // Auto-select mode
                     immediate: true);
               }),
-              _buildCheckbox('Hidden', provider.etcAttribHidden, (val) {
+              _buildCheckbox(
+                  provider.labelEtcAttribHidden, provider.etcAttribHidden,
+                  (val) {
                 _updateSettings(context,
                     hidden: val,
                     mode: RenameMode.changeAttributes, // Auto-select mode
                     immediate: true);
               }),
-              _buildCheckbox('Archive', provider.etcAttribArchive, (val) {
+              _buildCheckbox(
+                  provider.labelEtcAttribArchive, provider.etcAttribArchive,
+                  (val) {
                 _updateSettings(context,
                     archive: val,
                     mode: RenameMode.changeAttributes, // Auto-select mode
                     immediate: true);
               }),
-              _buildCheckbox('System', provider.etcAttribSystem, (val) {
+              _buildCheckbox(
+                  provider.labelEtcAttribSystem, provider.etcAttribSystem,
+                  (val) {
                 _updateSettings(context,
                     system: val,
                     mode: RenameMode.changeAttributes, // Auto-select mode

@@ -22,3 +22,37 @@
 [User Request] OKです。現在のナビゲーターペイント、ファイルエクスプローラーに差異があります。これをなるべく近づけてほしい。但し将来LinuxやMacへの展開も念頭に置いてください。まずはすぐに実装に映らず考慮して、私にも相談してください
 [User Feedback] 見た目に関しはUXを向上させる分には問題ありませんが、見た目をWindowsに近づけたいわけではありません
 [User Request] 前言撤回します。提示された設計案: Implementation Plan (Phase 2.5)で勧めていきましょう。これはFlutterの仕様上、実装可能でしょうか？
+
+[implementation_plan.md] 設定にベーステーマ、ダークモード、ライトモード、システムテーマに準拠　を追加したい
+
+[main.dart] テーマに合わせてアイコンの色も変更してください。またアイコンのBOLDはマックスにしてください
+
+[DirectoryProvider] 各種履歴は重複は除外してください。実装前に、変更する履歴のリストを出力して私に確認してください
+
+[User Request] 各種履歴（戻る/進む含む）の重複除外、履歴表示の短縮（名のみ）、アイコン色のテーマ適用
+
+[User Feedback] アイコンがテーマカラーにならず（黒/白）、太字にもなっていない。修正依頼。
+
+[Question] 中央ペインのフォルダアイコンの色は何に基づいているか調査
+
+[Settings] デフォルト設定の仕様変更依頼（初期値およびリセット時の挙動）
+
+[.gitignore] .gitignore に docs/issues.md docs/md3_gap_report.md docs/prompt_history.md を追加してください
+
+[User Request] 各種メニューを現行のものからより一般的でわかりやすい名称にしてください。但し、設定から「標準」と「Namery」に変更することができるようにしてください
+
+[User Request] それ以外の各種文言も適切に考慮してください
+
+[User Request] Android Build Error: Dependency requires at least JVM runtime version 11. This build uses a Java 8 JVM.
+
+[User Action] Ran `javac -version` -> Failed (Command not found). implies JDK not in PATH.
+
+[User Request] Android Build Error: Your project path contains non-ASCII characters. Add 'android.overridePathCheck=true' to gradle.properties.
+
+[User Request] "C:\Users\s.kodatai\OneDrive - 株式会社セラフ\source"をRドライブにマウントしてください
+
+[User Request] 日本語でレスポンスしてください。意味がわかりません
+
+[User Request] 現在、OneDriveからR:\ドライブへ切り替えています。どうしたら良いでしょうか？
+
+[User Request] "C:\Users\s.kodatai\OneDrive - 株式会社セラフ\source"をRドライブに永久的にマウントしてください

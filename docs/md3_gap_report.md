@@ -15,19 +15,26 @@
 - **対策**: `GoogleFonts` で Roboto/Noto を導入し、`Theme.of(context).textTheme.bodyMedium` などを利用。必要なら `copyWith` で微調整。
 
 ## 3. コンポーネント
-| コンポーネント          | 現状                         | MD3 期待                                                | ギャップ             | 対策                                  |
-| ---------------- | -------------------------- | ----------------------------------------------------- | ---------------- | ----------------------------------- |
-| Buttons          | `ElevatedButton` にカスタムスタイル | 角丸 20dp、Elevation が状態に連動                              | カスタムスタイルが残る      | `styleFrom` を削除しデフォルトに任せる           |
-| TextField        | `OutlineInputBorder` 使用    | Filled スタイルが推奨                                        | スタイルは許容範囲        | 必要なら `filled: true` に変更             |
-| NavigationDrawer | 独自ツリービュー実装                 | 標準 `NavigationDrawer` + `NavigationDrawerDestination` | 階層構造が MD3 に合わない  | 現状維持（MD3 ではフラットリスト）                 |
-| Tabs             | `TabBar` 使用                | Primary/Secondary Tab の区別、Indicator カスタマイズ            | Indicator がデフォルト | `TabBarTheme` で `indicatorSize` 等設定 |
-| Dialogs          | `AlertDialog` 使用           | 角丸 28dp、タイトル配置                                        | ほぼ準拠             | 追加調整不要                              |
+| カテゴリ | 項目 | 状態 | 優先度 | 備考 |
+|---|---|---|---|---|
+| **Typography** | Type Scale | ✅ OK | 高 | `GoogleFonts.notoSansJpTextTheme` 適用済み。 |
+| **Icon** | Menu Icon | ✅ OK | 高 | 戻るボタンは標準。メニューアイコンを `Icons.folder` (Primary Color) に統一。 |
+| **Color** | Color Scheme | ✅ OK | 高 | `fromSeed` 使用。`primaryContainer`, `surfaceContainer` 等のロールを適用済み。 |
+| **Color** | Dark Theme | ✅ OK | 高 | `ThemeMode` 設定 (System/Light/Dark) を実装済み。 |
+| **Shape** | Corner Radius | ⚠️ N/A | 中 | デフォルトのM3形状を使用。特段のカスタマイズなし。 |
+| **Layout** | Spacing | ✅ OK | 高 | 4dpグリッド (8dp/16dp/24dp) を適用済み。 |
+| **Layout** | Breakpoints | ⚠️ 独自 | 高 | PC向け3ペイン維持のため、MD3標準 (840dp) より広い 1100dp を閾値として採用。 |
+| **Motion** | Easing/Duration | 📝 Ready | 中 | `AppAnim` クラスに定数定義済み。実装時の標準として使用。 |
+| **Component** | AppBar | ✅ OK | 中 | `SliverAppBar` ではないが、M3スタイルに準拠。 |
+| **Component** | FAB | ⚠️ N/A | 低 | ReNameryではFAB未使用 (RunボタンはBottom Action)。 |
+| **Component** | Navigation | ✅ OK | 高 | NavigationRail / Drawer 相当の機能を3ペインで実装。 |
 
 ## 4. レイアウト・スペーシング
-- **現状**: `VisualDensity.compact`、固定マージン。
-- **MD3**: 4dp グリッド、`compact` は -2dp、`-4dp` が最小。
-- **ギャップ**: マージンが 8/12/16 の倍数でないケースあり。
-- **対策**: パディング・マージンを 4 の倍数に統一し、ブレークポイントを公式 (600dp, 840dp) に合わせる。
+- **現状**: `VisualDensity.compact`、固定マージン (4dp Grid)。
+- **MD3 仕様**: 4dp グリッド、ブレークポイント (600, 840)。
+- **対応**: 
+    - マージン/パディングを 4dp/8dp に統一 (✅ 対応済み)。
+    - ブレークポイント: 実用性優先のため独自設定 (1100/700) を維持 (⚠️ 独自仕様)。
 
 ## 5. モーション
 - **現状**: デフォルト `Curves.ease`、Duration 150‑300ms。

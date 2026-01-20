@@ -4,7 +4,7 @@ import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
 
 class ExtraTab extends StatefulWidget {
-  const ExtraTab({Key? key}) : super(key: key);
+  const ExtraTab({super.key});
 
   @override
   State<ExtraTab> createState() => _ExtraTabState();
@@ -93,7 +93,7 @@ class _ExtraTabState extends State<ExtraTab> {
                   _updateSettings(context, mode: val, immediate: true);
                 },
               ),
-              const Text('ファイルの日付を付加'),
+              Text(provider.labelExtraAppendDate),
             ],
           ),
         ),
@@ -111,10 +111,10 @@ class _ExtraTabState extends State<ExtraTab> {
                     true, // Use enabled/disabled based on mode? Or always allow edit?
                 // Usually Namery allows edit even if not selected, but highlights when selected.
                 // Let's keep enabled.
-                decoration: const InputDecoration(
-                  labelText: '日付フォーマット (例: yyyymmdd_)',
+                decoration: InputDecoration(
+                  labelText: provider.labelExtraDateFormatHint,
                   isDense: true,
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
                 onChanged: (val) {
                   // If mode is active, update immediate?
@@ -136,18 +136,19 @@ class _ExtraTabState extends State<ExtraTab> {
               const SizedBox(height: 8),
 
               // Position Radios (Front / Back)
-              Text('位置', style: Theme.of(context).textTheme.bodySmall),
+              Text(provider.labelExtraPosition,
+                  style: Theme.of(context).textTheme.bodySmall),
               const SizedBox(height: 8),
               SegmentedButton<DatePosition>(
                 showSelectedIcon: false,
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: DatePosition.front,
-                    label: Text('前方'),
+                    label: Text(provider.labelExtraFront),
                   ),
                   ButtonSegment(
                     value: DatePosition.back,
-                    label: Text('後方'),
+                    label: Text(provider.labelExtraBack),
                   ),
                 ],
                 selected: {provider.datePosition},
@@ -170,15 +171,18 @@ class _ExtraTabState extends State<ExtraTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSimpleRadio(context, RenameMode.convHalfToFull, '半角を全角にする', mode),
-        _buildSimpleRadio(context, RenameMode.convFullToHalf, '全角を半角にする', mode),
-        _buildSimpleRadio(
-            context, RenameMode.convFullKataToHira, '全角カナをひらがなにする', mode),
-        _buildSimpleRadio(
-            context, RenameMode.convHiraToFullKata, 'ひらがなを全角カナにする', mode),
-        _buildSimpleRadio(
-            context, RenameMode.convFullAlphaToHalfAlpha, '全角英字を半角にする', mode),
-        _buildSimpleRadio(context, RenameMode.convNumToHalf, '数字を半角にする', mode),
+        _buildSimpleRadio(context, RenameMode.convHalfToFull,
+            provider.labelExtraConvHalfToFull, mode),
+        _buildSimpleRadio(context, RenameMode.convFullToHalf,
+            provider.labelExtraConvFullToHalf, mode),
+        _buildSimpleRadio(context, RenameMode.convFullKataToHira,
+            provider.labelExtraConvKataToHira, mode),
+        _buildSimpleRadio(context, RenameMode.convHiraToFullKata,
+            provider.labelExtraConvHiraToKata, mode),
+        _buildSimpleRadio(context, RenameMode.convFullAlphaToHalfAlpha,
+            provider.labelExtraConvFullAlphaToHalf, mode),
+        _buildSimpleRadio(context, RenameMode.convNumToHalf,
+            provider.labelExtraConvNumToHalf, mode),
       ],
     );
   }

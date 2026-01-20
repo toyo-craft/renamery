@@ -135,7 +135,7 @@ class _MainTabState extends State<MainTab> {
                     append: val,
                     mode: isStringMode ? null : provider.lastStringMode);
               },
-              label: '文字列',
+              label: provider.labelStringInput,
               focusNode: _appendFocus,
               isCompact: isCompact),
 
@@ -171,7 +171,7 @@ class _MainTabState extends State<MainTab> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 60, child: Text('開始/桁')),
+                SizedBox(width: 60, child: Text(provider.labelStartDigit)),
                 _buildSpinner(
                   context,
                   _startController,
@@ -235,43 +235,43 @@ class _MainTabState extends State<MainTab> {
                       items: [
                         DropdownMenuItem(
                           value: NumberingMode.stringNumber,
-                          child: Text('文字列 + 連番'),
+                          child: Text(provider.labelNumStringNumber),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.originalNumber,
-                          child: Text('現在名 + 連番'),
+                          child: Text(provider.labelNumOriginalNumber),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.numberString,
-                          child: Text('連番 + 文字列'),
+                          child: Text(provider.labelNumNumberString),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.numberOriginal,
-                          child: Text('連番 + 現在名'),
+                          child: Text(provider.labelNumNumberOriginal),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.baseStringNumber,
-                          child: Text('基本${provider.termFolder}名 + 文字列 + 連番'),
+                          child: Text(provider.labelNumBaseStringNumber),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.baseStringOriginal,
-                          child: Text('基本${provider.termFolder}名 + 文字列 + 現在名'),
+                          child: Text(provider.labelNumBaseStringOriginal),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.relativeStringNumber,
-                          child: Text('相対${provider.termFolder}名 + 文字列 + 連番'),
+                          child: Text(provider.labelNumRelativeStringNumber),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.relativeStringOriginal,
-                          child: Text('相対${provider.termFolder}名 + 文字列 + 現在名'),
+                          child: Text(provider.labelNumRelativeStringOriginal),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.numberStringBase,
-                          child: Text('連番 + 文字列 + 基本${provider.termFolder}名'),
+                          child: Text(provider.labelNumNumberStringBase),
                         ),
                         DropdownMenuItem(
                           value: NumberingMode.numberStringRelative,
-                          child: Text('連番 + 文字列 + 相対${provider.termFolder}名'),
+                          child: Text(provider.labelNumNumberStringRelative),
                         ),
                       ],
                       onChanged: (val) {
@@ -289,21 +289,24 @@ class _MainTabState extends State<MainTab> {
             context,
             provider,
             RenameMode.prepend,
-            'Prefix(前方追加)',
+            provider.labelOpPrefix,
             spacing: spacing,
           ),
-          _buildRadioTile(context, provider, RenameMode.append, 'Suffix(後方追加)',
+          _buildRadioTile(
+              context, provider, RenameMode.append, provider.labelOpSuffix,
               spacing: spacing),
           _buildRadioTile(
             context,
             provider,
             RenameMode.capitalize,
-            '先頭文字を大文字化',
+            provider.labelOpCapitalize,
             spacing: spacing,
           ),
-          _buildRadioTile(context, provider, RenameMode.upper, '大文字化',
+          _buildRadioTile(
+              context, provider, RenameMode.upper, provider.labelOpUpper,
               spacing: spacing),
-          _buildRadioTile(context, provider, RenameMode.lower, '小文字化',
+          _buildRadioTile(
+              context, provider, RenameMode.lower, provider.labelOpLower,
               spacing: spacing),
 
           // String Insertion
@@ -325,7 +328,8 @@ class _MainTabState extends State<MainTab> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text('文字列挿入', style: Theme.of(context).textTheme.bodyMedium),
+                Text(provider.labelOpInsert,
+                    style: Theme.of(context).textTheme.bodyMedium),
                 const Spacer(),
                 // Re-use StartController/Spinner or create new?
                 // RenameEngine uses startNumber as index.
@@ -354,7 +358,7 @@ class _MainTabState extends State<MainTab> {
             context,
             provider,
             RenameMode.deleteStart,
-            '先頭から桁数分削除',
+            provider.labelOpDeleteStart,
             spacing: spacing,
           ),
           // 2. Delete End
@@ -362,7 +366,7 @@ class _MainTabState extends State<MainTab> {
             context,
             provider,
             RenameMode.deleteEnd,
-            '後ろから桁数分削除',
+            provider.labelOpDeleteEnd,
             spacing: spacing,
           ),
           // 3. Delete From (Index)
@@ -370,7 +374,7 @@ class _MainTabState extends State<MainTab> {
             context,
             provider,
             RenameMode.deleteFrom,
-            '開始数字から桁数削除',
+            provider.labelOpDeleteFrom,
             spacing: spacing,
           ),
 
@@ -410,16 +414,15 @@ class _MainTabState extends State<MainTab> {
                               (provider.renameMode == RenameMode.deleteBackTo)
                                   ? RenameMode.deleteBackTo
                                   : RenameMode.deleteFrontTo,
-                          style: const TextStyle(
-                              fontSize: 13, color: Colors.black),
-                          items: const [
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          items: [
                             DropdownMenuItem(
                               value: RenameMode.deleteFrontTo,
-                              child: Text('前から'),
+                              child: Text(provider.labelDeleteFront),
                             ),
                             DropdownMenuItem(
                               value: RenameMode.deleteBackTo,
-                              child: Text('後から'),
+                              child: Text(provider.labelDeleteBack),
                             ),
                           ],
                           onChanged: (val) {
@@ -455,7 +458,7 @@ class _MainTabState extends State<MainTab> {
                             isCompact: isCompact),
                       ),
                       const SizedBox(width: 8),
-                      const Text('まで削除'),
+                      Text(provider.labelDeleteUntil),
                     ],
                   ),
                 ),
@@ -495,7 +498,7 @@ class _MainTabState extends State<MainTab> {
                           focusNode: _findFocus,
                           controller: _findController,
                           history: provider.findHistory,
-                          hintText: '検索 (Find)',
+                          hintText: provider.labelFindHint,
                           isCompact: isCompact,
                           onChanged: (val) => context
                               .read<DirectoryProvider>()
@@ -503,9 +506,9 @@ class _MainTabState extends State<MainTab> {
                                   find: val, mode: RenameMode.replace),
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4.0),
-                        child: Text('を'),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        child: Text(provider.labelReplaceFrom),
                       ),
                     ],
                   ),
@@ -525,7 +528,7 @@ class _MainTabState extends State<MainTab> {
                     focusNode: _replaceFocus,
                     controller: _replaceController,
                     history: provider.replaceHistory,
-                    hintText: '置換 (Replace)',
+                    hintText: provider.labelReplaceHint,
                     isCompact: isCompact,
                     onChanged: (val) => context
                         .read<DirectoryProvider>()
@@ -533,9 +536,9 @@ class _MainTabState extends State<MainTab> {
                             replace: val, mode: RenameMode.replace),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Text('に置換'),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Text(provider.labelReplaceTo),
                 ),
               ],
             ),
@@ -557,7 +560,8 @@ class _MainTabState extends State<MainTab> {
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   const SizedBox(width: 8),
-                  Text('正規表現', style: Theme.of(context).textTheme.bodyMedium),
+                  Text(provider.labelRegex,
+                      style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
             ),

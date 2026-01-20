@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/directory_provider.dart';
 import 'dart:io';
@@ -66,7 +65,7 @@ class _FileListPanelState extends State<FileListPanel> {
       onHorizontalDragUpdate: onDrag,
       child: MouseRegion(
         cursor: SystemMouseCursors.resizeColumn,
-        child: Container(
+        child: SizedBox(
           width: 16,
           height: double.infinity,
           child: Center(
@@ -183,9 +182,9 @@ class _FileListPanelState extends State<FileListPanel> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
-                        'フルパス > ',
-                        style: TextStyle(fontSize: 13),
+                      Text(
+                        provider.labelFullPath,
+                        style: const TextStyle(fontSize: 13),
                       ),
                       Expanded(
                         child: Container(
@@ -227,6 +226,23 @@ class _FileListPanelState extends State<FileListPanel> {
                             Directory(_pathController.text),
                           );
                         },
+                      ),
+                      const SizedBox(width: 8),
+                      // Select All Button
+                      SizedBox(
+                        height: 32, // Match TextField/Button height roughly
+                        child: ElevatedButton(
+                          onPressed: () {
+                            provider.selectAll(true);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          child: Text(provider.labelSelectAll),
+                        ),
                       ),
                     ],
                   ),
@@ -305,8 +321,11 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 1. Name
-                                          _buildHeaderCell('名前',
-                                              _colWidthOriginal, 0, provider),
+                                          _buildHeaderCell(
+                                              provider.labelColName,
+                                              _colWidthOriginal,
+                                              0,
+                                              provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthOriginal =
                                                   (_colWidthOriginal +
@@ -315,8 +334,11 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 2. New Name
-                                          _buildHeaderCell('変更後ファイル名',
-                                              _colWidthNew, 1, provider),
+                                          _buildHeaderCell(
+                                              provider.labelColNewName,
+                                              _colWidthNew,
+                                              1,
+                                              provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthNew =
                                                   (_colWidthNew + d.delta.dx)
@@ -324,8 +346,11 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 3. Size
-                                          _buildHeaderCell('サイズ', _colWidthSize,
-                                              2, provider),
+                                          _buildHeaderCell(
+                                              provider.labelColSize,
+                                              _colWidthSize,
+                                              2,
+                                              provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthSize =
                                                   (_colWidthSize + d.delta.dx)
@@ -333,8 +358,11 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 4. Relative Path
-                                          _buildHeaderCell('相対パス',
-                                              _colWidthPath, 3, provider),
+                                          _buildHeaderCell(
+                                              provider.labelColPath,
+                                              _colWidthPath,
+                                              3,
+                                              provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthPath =
                                                   (_colWidthPath + d.delta.dx)
@@ -342,8 +370,11 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 5. Type
-                                          _buildHeaderCell('ファイルの種類',
-                                              _colWidthType, 4, provider),
+                                          _buildHeaderCell(
+                                              provider.labelColType,
+                                              _colWidthType,
+                                              4,
+                                              provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthType =
                                                   (_colWidthType + d.delta.dx)
@@ -351,8 +382,11 @@ class _FileListPanelState extends State<FileListPanel> {
                                           SizedBox(width: _widthSpace),
 
                                           // 6. Modified
-                                          _buildHeaderCell('更新日時',
-                                              _colWidthDate, 5, provider),
+                                          _buildHeaderCell(
+                                              provider.labelColDate,
+                                              _colWidthDate,
+                                              5,
+                                              provider),
                                           _buildResizeHandle((d) => setState(
                                               () => _colWidthDate =
                                                   (_colWidthDate + d.delta.dx)
@@ -361,7 +395,10 @@ class _FileListPanelState extends State<FileListPanel> {
 
                                           // 7. Attributes
                                           _buildHeaderCell(
-                                              '属性', _colWidthAttr, 6, provider),
+                                              provider.labelColAttr,
+                                              _colWidthAttr,
+                                              6,
+                                              provider),
                                         ],
                                       ),
                                     ),

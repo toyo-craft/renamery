@@ -28,8 +28,8 @@ class UndoHelper {
                 child: ListView.builder(
                   itemCount: transaction.length,
                   itemBuilder: (context, index) {
-                    final padding =
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2);
+                    const padding =
+                        EdgeInsets.symmetric(horizontal: 4, vertical: 2);
                     final item = transaction[index];
                     final oldName = p.basename(item.oldPath);
                     final newName = p.basename(item.newPath);

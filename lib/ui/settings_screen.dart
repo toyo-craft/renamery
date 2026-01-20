@@ -34,6 +34,34 @@ class SettingsScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text('メニュー表記 (タブ名称など)'),
+                    const SizedBox(height: 8),
+                    SegmentedButton<MenuLabelType>(
+                      segments: const [
+                        ButtonSegment(
+                            value: MenuLabelType.standard,
+                            label: Text('日本語'),
+                            icon: Icon(Icons.language)),
+                        ButtonSegment(
+                            value: MenuLabelType.namery,
+                            label: Text('Namery'),
+                            icon: Icon(Icons.history)),
+                        ButtonSegment(
+                            value: MenuLabelType.english,
+                            label: Text('English'),
+                            icon: Icon(Icons.language)),
+                        ButtonSegment(
+                            value: MenuLabelType.chinese,
+                            label: Text('中国語'),
+                            icon: Icon(Icons.language)),
+                      ],
+                      selected: {provider.menuLabelType},
+                      onSelectionChanged: (Set<MenuLabelType> newSelection) {
+                        provider.setMenuLabelType(newSelection.first);
+                      },
+                      showSelectedIcon: false,
+                    ),
+                    const SizedBox(height: 16),
                     const Text('テーマモード'),
                     const SizedBox(height: 8),
                     SegmentedButton<AppThemeType>(
@@ -151,9 +179,9 @@ class SettingsScreen extends StatelessWidget {
                     }
                   },
                   items: [
-                    DropdownMenuItem(
+                    const DropdownMenuItem(
                       value: InitialDirectoryMode.lastUsed,
-                      child: const Text('前回終了時の場所'),
+                      child: Text('前回終了時の場所'),
                     ),
                     DropdownMenuItem(
                       value: InitialDirectoryMode.fixed,

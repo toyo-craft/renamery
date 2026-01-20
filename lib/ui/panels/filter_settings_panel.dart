@@ -37,185 +37,176 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
       _filterController.text = provider.filterText;
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        border: const Border(
-          top: BorderSide(color: Colors.grey, width: 1.0),
-        ),
-        color: Theme.of(context).colorScheme.surface,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min, // Hug content
-        children: [
-          // Header / Toggle
-          Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: 8.0, vertical: isCompact ? 4.0 : 8.0),
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: Row(
-              children: [
-                Icon(Icons.filter_list,
-                    size: 16, color: Theme.of(context).colorScheme.onSurface),
-                const SizedBox(width: 8),
-                Text(
-                  '表示設定 (フィルタ)',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const Spacer(),
-                Tooltip(
-                  message: 'リストに${provider.termFolder}を表示',
-                  child: InkWell(
-                    onTap: () => context
-                        .read<DirectoryProvider>()
-                        .updateFilterSettings(
-                            showFolders:
-                                !context.read<DirectoryProvider>().showFolders),
-                    borderRadius: BorderRadius.circular(4),
-                    child: Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Icon(
-                        Icons.folder,
-                        size: 18,
-                        color: context.watch<DirectoryProvider>().showFolders
-                            ? Colors.amber
-                            : Theme.of(context).colorScheme.outline,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Handle unbounded width (e.g. inside ScrollView)
+        final width =
+            constraints.maxWidth.isFinite ? constraints.maxWidth : 300.0;
+
+        return Container(
+          width: width,
+          decoration: BoxDecoration(
+            border: const Border(
+              top: BorderSide(color: Colors.grey, width: 1.0),
             ),
+            color: Theme.of(context).colorScheme.surface,
           ),
-          Padding(
-            padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Filter Mode Radio: All vs Specify
-                InkWell(
-                  onTap: () => context
-                      .read<DirectoryProvider>()
-                      .updateFilterSettings(filter: ''),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: spacing),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: Radio<bool>(
-                            value: true,
-                            groupValue: provider.filterText.isEmpty,
-                            onChanged: (val) {
-                              context
-                                  .read<DirectoryProvider>()
-                                  .updateFilterSettings(filter: '');
-                            },
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Text('全てのファイル', style: TextStyle(fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                ),
-                // Radio "Specify" + TextField
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: spacing),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: Radio<bool>(
-                          value: false,
-                          groupValue: provider.filterText.isEmpty,
-                          onChanged: (val) {
-                            // Focus text field?
-                          },
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min, // Hug content
+            children: [
+              // Header / Toggle
+              Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: 8.0, vertical: isCompact ? 4.0 : 8.0),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: Row(
+                  children: [
+                    Icon(Icons.filter_list,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurface),
+                    const SizedBox(width: 8),
+                    Text(
+                      provider.labelSettingsFilterTitle,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
-                      const SizedBox(width: 4),
-                      const Text('指定', style: TextStyle(fontSize: 12)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: SizedBox(
-                          height: isCompact ? 28 : 32,
-                          child: TextField(
-                            controller: _filterController,
-                            style: const TextStyle(fontSize: 12),
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: isCompact ? 8 : 12),
-                              border: const OutlineInputBorder(),
-                              isDense: true,
+                    ),
+                    const Spacer(),
+                    InkWell(
+                      onTap: () => context
+                          .read<DirectoryProvider>()
+                          .updateFilterSettings(filter: null),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: spacing),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: Radio<bool>(
+                                value: true,
+                                groupValue: provider.filterText.isEmpty,
+                                onChanged: (val) {
+                                  context
+                                      .read<DirectoryProvider>()
+                                      .updateFilterSettings(filter: null);
+                                },
+                                visualDensity: VisualDensity.compact,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
                             ),
-                            onChanged: (val) {
-                              context
-                                  .read<DirectoryProvider>()
-                                  .updateFilterSettings(filter: val);
-                            },
-                          ),
+                            const SizedBox(width: 4),
+                            Text(provider.labelFilterAll,
+                                style: const TextStyle(fontSize: 12)),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: spacing),
-                // Checkboxes
-                _buildCheckbox(
-                  context,
-                  'システムファイルを非表示',
-                  provider.hideSystemFiles,
-                  (val) => context
-                      .read<DirectoryProvider>()
-                      .updateFilterSettings(hideSystem: val),
-                  isCompact,
-                ),
-                _buildCheckbox(
-                  context,
-                  '下位${provider.termFolder}検索',
-                  provider.recursiveSearch,
-                  (val) => context
-                      .read<DirectoryProvider>()
-                      .updateFilterSettings(recursive: val),
-                  isCompact,
-                ),
-                _buildCheckbox(
-                  context,
-                  'プレビュー表示',
-                  provider.showPreview,
-                  (val) => context
-                      .read<DirectoryProvider>()
-                      .updateFilterSettings(preview: val),
-                  isCompact,
-                ),
-              ],
-            ),
-          ),
-          // Preview Area
-          if (provider.showPreview)
-            Container(
-              height: 150,
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Colors.grey, width: 0.5)),
               ),
-              child: _buildPreviewContent(provider),
-            ),
-        ],
-      ),
+              // Filter Content
+              Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Radio "Specify" + TextField
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: spacing),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: Radio<bool>(
+                                  value: false,
+                                  groupValue: provider.filterText.isEmpty,
+                                  onChanged: (val) {
+                                    // Focus text field logic
+                                  },
+                                  visualDensity: VisualDensity.compact,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(provider.labelFilterSpecific,
+                                  style: const TextStyle(fontSize: 12)),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: SizedBox(
+                                  height: isCompact ? 28 : 32,
+                                  child: TextField(
+                                    controller: _filterController,
+                                    style: const TextStyle(fontSize: 12),
+                                    decoration: InputDecoration(
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: isCompact ? 8 : 12),
+                                      border: const OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                    onChanged: (val) {
+                                      context
+                                          .read<DirectoryProvider>()
+                                          .updateFilterSettings(filter: val);
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: spacing),
+                        // Checkboxes
+                        _buildCheckbox(
+                          context,
+                          provider.labelFilterHideSystem,
+                          provider.hideSystemFiles,
+                          (val) => context
+                              .read<DirectoryProvider>()
+                              .updateFilterSettings(hideSystem: val),
+                          isCompact,
+                        ),
+                        _buildCheckbox(
+                          context,
+                          provider.labelFilterRecursive,
+                          provider.recursiveSearch,
+                          (val) => context
+                              .read<DirectoryProvider>()
+                              .updateFilterSettings(recursive: val),
+                          isCompact,
+                        ),
+                        _buildCheckbox(
+                          context,
+                          provider.labelFilterPreview,
+                          provider.showPreview,
+                          (val) => context
+                              .read<DirectoryProvider>()
+                              .updateFilterSettings(preview: val),
+                          isCompact,
+                        ),
+                      ])),
+              // Preview Area
+              if (provider.showPreview)
+                Container(
+                  height: 150,
+                  decoration: const BoxDecoration(
+                    border:
+                        Border(top: BorderSide(color: Colors.grey, width: 0.5)),
+                  ),
+                  child: _buildPreviewContent(provider),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
