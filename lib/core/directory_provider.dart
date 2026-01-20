@@ -50,6 +50,7 @@ class DirectoryProvider extends ChangeNotifier {
     _showFolders = s.getBool('showFolders') ?? true;
     _saveSequenceNumber = s.getBool('saveSequenceNumber') ?? false;
     _isCompactMode = s.getBool('isCompactMode') ?? true; // Default to Compact
+    _isFilterSpecific = _filterText.isNotEmpty; // Init specific if text exists
 
     // Theme (SYNC)
     final appThemeStr = s.getString('appTheme') ?? 'light';
@@ -331,6 +332,7 @@ class DirectoryProvider extends ChangeNotifier {
 
   // Filter State
   String _filterText = '';
+  bool _isFilterSpecific = false;
   bool _hideSystemFiles = true;
   bool _recursiveSearch = false;
   bool _showPreview = true;
@@ -470,6 +472,7 @@ class DirectoryProvider extends ChangeNotifier {
   bool get showFolders => _showFolders;
   bool get saveSequenceNumber => _saveSequenceNumber;
   bool get isCompactMode => _isCompactMode;
+  bool get isFilterSpecific => _isFilterSpecific;
 
   AppThemeType get appTheme => _appTheme;
   MenuLabelType get menuLabelType => _menuLabelType;
@@ -498,12 +501,28 @@ class DirectoryProvider extends ChangeNotifier {
     bool? recursive,
     bool? preview,
     bool? showFolders,
+    bool? isSpecific,
   }) {
     bool needRescan = false;
     bool needRefilter = false;
 
+    if (isSpecific != null) {
+      if (_isFilterSpecific != isSpecific) {
+        _isFilterSpecific = isSpecific;
+        if (!isSpecific) {
+          _filterText = ''; // Clear text if switching to All Files?
+          // Or keep it? If we keep it, we need _applyFilters to check _isFilterSpecific.
+          // Let's clear it for simplicity and standard behavior (All Files usually means resetting filter).
+        }
+        needRefilter = true;
+      }
+    }
+
     if (filter != null) {
       _filterText = filter;
+      if (filter.isNotEmpty) {
+        _isFilterSpecific = true; // Auto-enable specific mode on input
+      }
       needRefilter = true;
     }
     if (hideSystem != null) {
@@ -1959,6 +1978,119 @@ class DirectoryProvider extends ChangeNotifier {
       _l(jp: '文字列', namery: '文字列', en: 'String', cn: '字符');
   String get labelStartDigit =>
       _l(jp: '開始/桁', namery: '開始/桁', en: 'Start/Digits', cn: '开始/位数');
+
+  // Settings Screen
+  String get labelSettingsTitle =>
+      _l(jp: '設定', namery: '設定', en: 'Settings', cn: '设置');
+
+  // Section Headers
+  String get labelSettingsSectionDisplay =>
+      _l(jp: '表示設定', namery: '表示設定', en: 'Display', cn: '显示');
+  String get labelSettingsSectionAppearance =>
+      _l(jp: '外観', namery: '外観', en: 'Appearance', cn: '外观');
+  String get labelSettingsSectionOS => _l(
+      jp: '動作モード (OS設定)',
+      namery: '動作モード (OS設定)',
+      en: 'Operating Mode',
+      cn: '操作模式');
+  String get labelSettingsSectionInitialDir =>
+      _l(jp: '初期フォルダ', namery: '初期フォルダ', en: 'Initial Folder', cn: '初始文件夹');
+  String get labelSettingsSectionReset =>
+      _l(jp: 'リセット', namery: 'リセット', en: 'Reset', cn: '重置');
+
+  // Display
+  String get labelSettingsTouchModeTitle => _l(
+      jp: 'タッチモード (ゆったり表示)',
+      namery: 'タッチモード (ゆったり表示)',
+      en: 'Touch Mode',
+      cn: '触摸模式');
+  String get labelSettingsTouchModeSubtitle => _l(
+      jp: 'リストやボタンの間隔を広げます',
+      namery: 'リストやボタンの間隔を広げます',
+      en: 'Improves touch usage',
+      cn: '增加列表和按钮间距');
+
+  // Appearance
+  String get labelSettingsMenuLabelTitle =>
+      _l(jp: 'メニュー表記 (言語)', namery: 'メニュー表記 (言語)', en: 'Language', cn: '语言');
+  String get labelSettingsLangJP =>
+      _l(jp: '日本語', namery: '日本語', en: 'Japanese', cn: '日语');
+  String get labelSettingsLangNamery => _l(
+      jp: 'Namery',
+      namery: 'Namery',
+      en: 'Namery',
+      cn: 'Namery'); // Kept distinct but can be mapped
+  String get labelSettingsLangEN =>
+      _l(jp: '英語', namery: '英語', en: 'English', cn: '英语');
+  String get labelSettingsLangCN =>
+      _l(jp: '中国語', namery: '中国語', en: 'Chinese', cn: '中文');
+
+  String get labelSettingsThemeTitle =>
+      _l(jp: 'テーマモード', namery: 'テーマモード', en: 'Theme Mode', cn: '主题模式');
+  String get labelSettingsThemeSystem =>
+      _l(jp: 'システム', namery: 'システム', en: 'System', cn: '系统');
+  String get labelSettingsThemeLight =>
+      _l(jp: 'ライト', namery: 'ライト', en: 'Light', cn: '亮色');
+  String get labelSettingsThemeDark =>
+      _l(jp: 'ダーク', namery: 'ダーク', en: 'Dark', cn: '暗色');
+  String get labelSettingsThemeGray =>
+      _l(jp: 'グレー', namery: 'グレー', en: 'Gray', cn: '灰色');
+
+  String get labelSettingsColorTitle =>
+      _l(jp: 'テーマカラー', namery: 'テーマカラー', en: 'Theme Color', cn: '主题颜色');
+
+  // OS Mode
+  String get labelSettingsOSTitle =>
+      _l(jp: 'OSモード', namery: 'OSモード', en: 'OS Mode', cn: '系统模式');
+  String get labelSettingsOSSubtitle => _l(
+      jp: 'ファイル名の文字制限などをOSに合わせます',
+      namery: 'ファイル名の文字制限などをOSに合わせます',
+      en: 'Adapts validation to OS',
+      cn: '适应系统的文件名限制');
+  String get labelSettingsOSAuto =>
+      _l(jp: '自動', namery: '自動', en: 'Auto', cn: '自动');
+
+  // Initial Dir
+  String get labelSettingsInitDirTitle =>
+      _l(jp: '起動時の場所', namery: '起動時の場所', en: 'Startup Location', cn: '启动位置');
+  String get labelSettingsInitDirLast =>
+      _l(jp: '前回終了時の場所', namery: '前回終了時の場所', en: 'Last Used', cn: '上次位置');
+  String get labelSettingsInitDirFixed =>
+      _l(jp: '指定した場所', namery: '指定した場所', en: 'Fixed Path', cn: '指定位置');
+
+  // Reset
+  String get labelSettingsClearHistory =>
+      _l(jp: '入力履歴を削除', namery: '入力履歴を削除', en: 'Clear History', cn: '清除历史');
+  String get labelSettingsClearHistorySub => _l(
+      jp: '文字列補完などの入力履歴を削除します',
+      namery: '文字列補完などの入力履歴を削除します',
+      en: 'Clears input history',
+      cn: '清除输入历史');
+  String get labelSettingsResetAll => _l(
+      jp: '全設定をリセット',
+      namery: '全設定をリセット',
+      en: 'Reset All Settings',
+      cn: '重置所有设置');
+  String get labelSettingsResetAllSub => _l(
+      jp: '初期状態に戻します',
+      namery: '初期状態に戻します',
+      en: 'Restores default settings',
+      cn: '恢复默认设置');
+
+  // Dialogs
+  String get labelDialogCancel =>
+      _l(jp: 'キャンセル', namery: 'キャンセル', en: 'Cancel', cn: '取消');
+  String get labelDialogDelete =>
+      _l(jp: '削除', namery: '削除', en: 'Delete', cn: '删除');
+  String get labelDialogReset =>
+      _l(jp: 'リセット', namery: 'リセット', en: 'Reset', cn: '重置');
+  String get labelMsgHistoryCleared => _l(
+      jp: '履歴を削除しました', namery: '履歴を削除しました', en: 'History cleared', cn: '历史已清除');
+  String get labelMsgSettingsReset => _l(
+      jp: '設定をリセットしました',
+      namery: '設定をリセットしました',
+      en: 'Settings reset',
+      cn: '设置已重置');
 }
 
 enum InitialDirectoryMode {

@@ -8,19 +8,23 @@ class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('設定'),
+        title: Consumer<DirectoryProvider>(
+          builder: (context, provider, _) => Text(provider.labelSettingsTitle),
+        ),
       ),
       body: Consumer<DirectoryProvider>(
         builder: (context, provider, child) {
           return ListView(
             children: [
-              _buildSectionHeader(context, '表示設定'),
+              _buildSectionHeader(
+                  context, provider.labelSettingsSectionDisplay),
               SwitchListTile(
-                title: const Text('タッチモード (ゆったり表示)'),
-                subtitle: const Text('リストやボタンの間隔を広げます'),
+                title: Text(provider.labelSettingsTouchModeTitle),
+                subtitle: Text(provider.labelSettingsTouchModeSubtitle),
                 value: !provider.isCompactMode,
                 onChanged: (val) {
                   provider.setCompactMode(!val);
@@ -28,32 +32,33 @@ class SettingsScreen extends StatelessWidget {
               ),
               const Divider(),
               const Divider(),
-              _buildSectionHeader(context, '外観'),
+              _buildSectionHeader(
+                  context, provider.labelSettingsSectionAppearance),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('メニュー表記 (タブ名称など)'),
+                    Text(provider.labelSettingsMenuLabelTitle),
                     const SizedBox(height: 8),
                     SegmentedButton<MenuLabelType>(
-                      segments: const [
+                      segments: [
                         ButtonSegment(
                             value: MenuLabelType.standard,
-                            label: Text('日本語'),
-                            icon: Icon(Icons.language)),
+                            label: Text(provider.labelSettingsLangJP),
+                            icon: const Icon(Icons.language)),
                         ButtonSegment(
                             value: MenuLabelType.namery,
-                            label: Text('Namery'),
-                            icon: Icon(Icons.history)),
+                            label: Text(provider.labelSettingsLangNamery),
+                            icon: const Icon(Icons.history)),
                         ButtonSegment(
                             value: MenuLabelType.english,
-                            label: Text('English'),
-                            icon: Icon(Icons.language)),
+                            label: Text(provider.labelSettingsLangEN),
+                            icon: const Icon(Icons.language)),
                         ButtonSegment(
                             value: MenuLabelType.chinese,
-                            label: Text('中国語'),
-                            icon: Icon(Icons.language)),
+                            label: Text(provider.labelSettingsLangCN),
+                            icon: const Icon(Icons.language)),
                       ],
                       selected: {provider.menuLabelType},
                       onSelectionChanged: (Set<MenuLabelType> newSelection) {
@@ -62,26 +67,26 @@ class SettingsScreen extends StatelessWidget {
                       showSelectedIcon: false,
                     ),
                     const SizedBox(height: 16),
-                    const Text('テーマモード'),
+                    Text(provider.labelSettingsThemeTitle),
                     const SizedBox(height: 8),
                     SegmentedButton<AppThemeType>(
-                      segments: const [
+                      segments: [
                         ButtonSegment(
                             value: AppThemeType.system,
-                            label: Text('システム'),
-                            icon: Icon(Icons.brightness_auto)),
+                            label: Text(provider.labelSettingsThemeSystem),
+                            icon: const Icon(Icons.brightness_auto)),
                         ButtonSegment(
                             value: AppThemeType.light,
-                            label: Text('ライト'),
-                            icon: Icon(Icons.brightness_high)),
+                            label: Text(provider.labelSettingsThemeLight),
+                            icon: const Icon(Icons.brightness_high)),
                         ButtonSegment(
                             value: AppThemeType.dark,
-                            label: Text('ダーク'),
-                            icon: Icon(Icons.brightness_4)),
+                            label: Text(provider.labelSettingsThemeDark),
+                            icon: const Icon(Icons.brightness_4)),
                         ButtonSegment(
                             value: AppThemeType.darkGray,
-                            label: Text('グレー'),
-                            icon: Icon(Icons.contrast)),
+                            label: Text(provider.labelSettingsThemeGray),
+                            icon: const Icon(Icons.contrast)),
                       ],
                       selected: {provider.appTheme},
                       onSelectionChanged: (Set<AppThemeType> newSelection) {
@@ -90,7 +95,7 @@ class SettingsScreen extends StatelessWidget {
                       showSelectedIcon: false,
                     ),
                     const SizedBox(height: 16),
-                    const Text('テーマカラー'),
+                    Text(provider.labelSettingsColorTitle),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -126,11 +131,10 @@ class SettingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Divider(),
-              _buildSectionHeader(context, '動作モード (OS設定)'),
+              _buildSectionHeader(context, provider.labelSettingsSectionOS),
               ListTile(
-                title: const Text('OSモード'),
-                subtitle: Text(
-                    'ファイル名の文字制限や、アプリ内での用語（${provider.termFolder}）をOSに合わせて切り替えます'),
+                title: Text(provider.labelSettingsOSTitle),
+                subtitle: Text(provider.labelSettingsOSSubtitle),
                 trailing: DropdownButton<ValidationType>(
                   value: provider.validationType,
                   onChanged: (ValidationType? newValue) {
@@ -138,28 +142,28 @@ class SettingsScreen extends StatelessWidget {
                       provider.updateRenameSettings(validationType: newValue);
                     }
                   },
-                  items: const [
+                  items: [
                     DropdownMenuItem(
                       value: ValidationType.auto,
-                      child: Text('自動 (現在のOS)'),
+                      child: Text('${provider.labelSettingsOSAuto} (OS)'),
                     ),
-                    DropdownMenuItem(
+                    const DropdownMenuItem(
                       value: ValidationType.windows,
                       child: Text('Windows'),
                     ),
-                    DropdownMenuItem(
+                    const DropdownMenuItem(
                       value: ValidationType.mac,
-                      child: Text('Mac (Finder互換)'),
+                      child: Text('Mac (Finder compatible)'),
                     ),
-                    DropdownMenuItem(
+                    const DropdownMenuItem(
                       value: ValidationType.linux,
                       child: Text('Linux'),
                     ),
-                    DropdownMenuItem(
+                    const DropdownMenuItem(
                       value: ValidationType.ios,
                       child: Text('iOS (iPhone/iPad)'),
                     ),
-                    DropdownMenuItem(
+                    const DropdownMenuItem(
                       value: ValidationType.android,
                       child: Text('Android'),
                     ),
@@ -167,9 +171,10 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
               const Divider(),
-              _buildSectionHeader(context, '初期${provider.termFolder}'),
+              _buildSectionHeader(
+                  context, provider.labelSettingsSectionInitialDir),
               ListTile(
-                title: Text('起動時の${provider.termFolder}'),
+                title: Text(provider.labelSettingsInitDirTitle),
                 trailing: DropdownButton<InitialDirectoryMode>(
                   value: provider.initialDirectoryMode,
                   onChanged: (InitialDirectoryMode? newValue) {
@@ -179,13 +184,13 @@ class SettingsScreen extends StatelessWidget {
                     }
                   },
                   items: [
-                    const DropdownMenuItem(
+                    DropdownMenuItem(
                       value: InitialDirectoryMode.lastUsed,
-                      child: Text('前回終了時の場所'),
+                      child: Text(provider.labelSettingsInitDirLast),
                     ),
                     DropdownMenuItem(
                       value: InitialDirectoryMode.fixed,
-                      child: Text('指定した${provider.termFolder}'),
+                      child: Text(provider.labelSettingsInitDirFixed),
                     ),
                   ],
                 ),
@@ -199,7 +204,7 @@ class SettingsScreen extends StatelessWidget {
                         child: TextFormField(
                           initialValue: provider.fixedInitialDirectory,
                           decoration: InputDecoration(
-                            hintText: '${provider.termFolder}パスを入力',
+                            hintText: '${provider.termFolder} Path',
                             border: const OutlineInputBorder(),
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 8),
@@ -227,27 +232,27 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
               const Divider(),
-              _buildSectionHeader(context, 'リセット'),
+              _buildSectionHeader(context, provider.labelSettingsSectionReset),
               ListTile(
-                title: const Text('入力履歴を削除'),
-                subtitle: const Text('文字列補完などの入力履歴を削除します'),
+                title: Text(provider.labelSettingsClearHistory),
+                subtitle: Text(provider.labelSettingsClearHistorySub),
                 leading: const Icon(Icons.history, color: Colors.orange),
                 onTap: () async {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('入力履歴の削除'),
-                      content: const Text('すべての入力履歴を削除しますか？'),
+                      title: Text(provider.labelSettingsClearHistory),
+                      content: Text(provider.labelSettingsClearHistorySub),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: const Text('キャンセル'),
+                          child: Text(provider.labelDialogCancel),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
                           style:
                               TextButton.styleFrom(foregroundColor: Colors.red),
-                          child: const Text('削除'),
+                          child: Text(provider.labelDialogDelete),
                         ),
                       ],
                     ),
@@ -257,7 +262,8 @@ class SettingsScreen extends StatelessWidget {
                     provider.clearInputHistory();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('入力履歴を削除しました')),
+                        SnackBar(
+                            content: Text(provider.labelMsgHistoryCleared)),
                       );
                     }
                   }
@@ -265,25 +271,26 @@ class SettingsScreen extends StatelessWidget {
               ),
               const Divider(),
               ListTile(
-                title: const Text('全設定をリセット'),
-                subtitle: const Text('リネーム設定やフィルター設定を初期状態に戻します'),
+                title: Text(provider.labelSettingsResetAll),
+                subtitle: Text(provider.labelSettingsResetAllSub),
                 leading: const Icon(Icons.restore, color: Colors.red),
                 onTap: () async {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('設定のリセット'),
-                      content: const Text('すべての設定を初期化しますか？'),
+                      title: Text(provider.labelSettingsResetAll),
+                      content: Text(
+                          provider.labelSettingsResetAllSub), // Or similar msg
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: const Text('キャンセル'),
+                          child: Text(provider.labelDialogCancel),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
                           style:
                               TextButton.styleFrom(foregroundColor: Colors.red),
-                          child: const Text('リセット'),
+                          child: Text(provider.labelDialogReset),
                         ),
                       ],
                     ),
@@ -293,7 +300,7 @@ class SettingsScreen extends StatelessWidget {
                     provider.resetSettings();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('設定をリセットしました')),
+                        SnackBar(content: Text(provider.labelMsgSettingsReset)),
                       );
                     }
                   }

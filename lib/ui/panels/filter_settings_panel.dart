@@ -58,141 +58,181 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
               // Header / Toggle
               Container(
                 padding: EdgeInsets.symmetric(
-                    horizontal: 8.0, vertical: isCompact ? 4.0 : 8.0),
+                    horizontal: 8.0, vertical: isCompact ? 2.0 : 4.0),
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: Row(
                   children: [
-                    Icon(Icons.filter_list,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.onSurface),
-                    const SizedBox(width: 8),
+                    // Title
                     Text(
                       provider.labelSettingsFilterTitle,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        fontSize: 12, // Compact
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const Spacer(),
-                    InkWell(
-                      onTap: () => context
-                          .read<DirectoryProvider>()
-                          .updateFilterSettings(filter: null),
-                      borderRadius: BorderRadius.circular(4),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: spacing),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: Radio<bool>(
-                                value: true,
-                                groupValue: provider.filterText.isEmpty,
-                                onChanged: (val) {
-                                  context
-                                      .read<DirectoryProvider>()
-                                      .updateFilterSettings(filter: null);
-                                },
-                                visualDensity: VisualDensity.compact,
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(provider.labelFilterAll,
-                                style: const TextStyle(fontSize: 12)),
-                          ],
-                        ),
-                      ),
+                    // Toggle Button (Folder Icon)
+                    // "Yellow fill and grey fill" -> Using Stack to layer icons or just Amber folder
+                    // User requested specific colors.
+                    IconButton(
+                      icon: const Icon(Icons.folder,
+                          size: 16), // Always filled folder
+                      padding: EdgeInsets.zero,
+                      color: provider.showFolders
+                          ? Colors.amber[700]
+                          : Colors.grey, // Active: Amber, Inactive: Grey
+                      tooltip: provider.showFolders
+                          ? 'Hide Folders'
+                          : 'Show Folders',
+                      onPressed: () {
+                        context.read<DirectoryProvider>().updateFilterSettings(
+                            showFolders: !provider.showFolders);
+                      },
                     ),
                   ],
                 ),
               ),
               // Filter Content
               Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Radio "Specify" + TextField
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: spacing),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: Radio<bool>(
-                                  value: false,
-                                  groupValue: provider.filterText.isEmpty,
-                                  onChanged: (val) {
-                                    // Focus text field logic
-                                  },
-                                  visualDensity: VisualDensity.compact,
-                                  materialTapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 1. All Files Radio
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: spacing),
+                      child: Row(
+                        children: [
+                          Container(
+                            height: 24,
+                            width: 24,
+                            margin: const EdgeInsets.only(right: 8),
+                            child: Radio<bool>(
+                              value: false,
+                              groupValue: provider.isFilterSpecific,
+                              onChanged: (val) {
+                                context
+                                    .read<DirectoryProvider>()
+                                    .updateFilterSettings(isSpecific: false);
+                              },
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                          Text(provider.labelFilterAll,
+                              style: const TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    // 2. Specify Radio + TextField
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: spacing),
+                      child: Row(
+                        children: [
+                          Container(
+                            height: 24,
+                            width: 24,
+                            margin: const EdgeInsets.only(right: 8),
+                            child: Radio<bool>(
+                              value: true,
+                              groupValue: provider.isFilterSpecific,
+                              onChanged: (val) {
+                                context
+                                    .read<DirectoryProvider>()
+                                    .updateFilterSettings(isSpecific: true);
+                                // Focus logic usually handled by tap or just enabling logic
+                              },
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                          Text(provider.labelFilterSpecific,
+                              style: const TextStyle(fontSize: 12)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _filterController,
+                              style: const TextStyle(fontSize: 12),
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide:
+                                      const BorderSide(color: Colors.grey),
                                 ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(provider.labelFilterSpecific,
-                                  style: const TextStyle(fontSize: 12)),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: SizedBox(
-                                  height: isCompact ? 28 : 32,
-                                  child: TextField(
-                                    controller: _filterController,
-                                    style: const TextStyle(fontSize: 12),
-                                    decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: isCompact ? 8 : 12),
-                                      border: const OutlineInputBorder(),
-                                      isDense: true,
-                                    ),
-                                    onChanged: (val) {
-                                      context
-                                          .read<DirectoryProvider>()
-                                          .updateFilterSettings(filter: val);
-                                    },
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.withOpacity(0.5),
                                   ),
                                 ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                isDense: true,
+                                filled: true,
+                                fillColor: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerLow,
                               ),
-                            ],
+                              onTap: () {
+                                // Auto-select Specify if tapped
+                                if (!provider.isFilterSpecific) {
+                                  context
+                                      .read<DirectoryProvider>()
+                                      .updateFilterSettings(isSpecific: true);
+                                }
+                              },
+                              onChanged: (val) {
+                                context
+                                    .read<DirectoryProvider>()
+                                    .updateFilterSettings(filter: val);
+                              },
+                            ),
                           ),
-                        ),
-                        SizedBox(height: spacing),
-                        // Checkboxes
-                        _buildCheckbox(
-                          context,
-                          provider.labelFilterHideSystem,
-                          provider.hideSystemFiles,
-                          (val) => context
-                              .read<DirectoryProvider>()
-                              .updateFilterSettings(hideSystem: val),
-                          isCompact,
-                        ),
-                        _buildCheckbox(
-                          context,
-                          provider.labelFilterRecursive,
-                          provider.recursiveSearch,
-                          (val) => context
-                              .read<DirectoryProvider>()
-                              .updateFilterSettings(recursive: val),
-                          isCompact,
-                        ),
-                        _buildCheckbox(
-                          context,
-                          provider.labelFilterPreview,
-                          provider.showPreview,
-                          (val) => context
-                              .read<DirectoryProvider>()
-                              .updateFilterSettings(preview: val),
-                          isCompact,
-                        ),
-                      ])),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: spacing),
+                    // Checkboxes
+                    _buildCheckbox(
+                      context,
+                      provider.labelFilterHideSystem,
+                      provider.hideSystemFiles,
+                      (val) => context
+                          .read<DirectoryProvider>()
+                          .updateFilterSettings(hideSystem: val),
+                      isCompact,
+                    ),
+                    _buildCheckbox(
+                      context,
+                      provider.labelFilterRecursive,
+                      provider.recursiveSearch,
+                      (val) => context
+                          .read<DirectoryProvider>()
+                          .updateFilterSettings(recursive: val),
+                      isCompact,
+                    ),
+                    _buildCheckbox(
+                      context,
+                      provider.labelFilterPreview,
+                      provider.showPreview,
+                      (val) => context
+                          .read<DirectoryProvider>()
+                          .updateFilterSettings(preview: val),
+                      isCompact,
+                    ),
+                  ],
+                ),
+              ),
               // Preview Area
               if (provider.showPreview)
                 Container(
