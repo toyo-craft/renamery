@@ -56,3 +56,5 @@
 [User Request] 現在、OneDriveからR:\ドライブへ切り替えています。どうしたら良いでしょうか？
 
 [User Request] "C:\Users\s.kodatai\OneDrive - 株式会社セラフ\source"をRドライブに永久的にマウントしてください
+[docs/user_manual.md] @[docs/user_manual.md] を実装を元に記述してください。特にSubタブのリストネームがわかりやすく解説してください。また、Nameryのマニュアル @[namery_manuals] を参考に記述するのも良いでしょう。英語版と日本語版を作ってください
+[docs/prompt_history.md] @[docs/prompt_history.md] はgitignoreにしてください

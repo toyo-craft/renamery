@@ -29,7 +29,7 @@
   "labelSubExtChangeTitle": "Extension",
   "labelSubFormatTitle": "英単語を区切って整形",
   "labelSubFormatProperCase": "単語の先頭を大文字化 (Space/Hyphen/Underscore)",
-  "labelSubListTitle": "リストリネーム",
+  "labelSubListTitle": "文字列リネーム",
   "labelSubListModeText": "テキスト入力 (Original[TAB]New)",
   "labelSubListSample1": "サンプル: 連番ファイル",
   "labelSubListSample2": "サンプル: 拡張子一括置換",
