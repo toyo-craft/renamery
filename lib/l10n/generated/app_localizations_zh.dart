@@ -574,4 +574,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String labelMsgCopyFullPathsSuccess(int count) {
     return '已复制 $count 个完整路径';
   }
+
+  @override
+  String get labelSettingsAboutTitle => '关于应用';
+
+  @override
+  String get labelAboutVersion => '版本';
+
+  @override
+  String get labelAboutOriginal => '原案・原创';
+
+  @override
+  String get labelAboutDev => '开发・制作';
+
+  @override
+  String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
+
+  @override
+  String get labelAboutRespect => '本应用是出于对 Jun Arai 先生的 \'Namery\' 的致敬而制作的。';
+
+  @override
+  String get labelAboutVisitWebsite => '访问网站';
 }

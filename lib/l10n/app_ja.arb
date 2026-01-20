@@ -240,6 +240,13 @@
     }
   },
   "labelMsgCopyFullPathsSuccess": "{count} 件のフルパスをコピーしました",
+  "labelSettingsAboutTitle": "アプリについて",
+  "labelAboutVersion": "バージョン",
+  "labelAboutOriginal": "原案・オリジナル",
+  "labelAboutDev": "企画・開発",
+  "labelAboutCopyright": "© 2024 Toyo Craft Lab.",
+  "labelAboutRespect": "当アプリは、Jun Arai 様の 'Namery' をリスペクトして作成されました。",
+  "labelAboutVisitWebsite": "ウェブサイトを表示",
   "@labelMsgCopyFullPathsSuccess": {
     "placeholders": {
       "count": { "type": "int" }

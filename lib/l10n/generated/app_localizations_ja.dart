@@ -576,6 +576,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String labelMsgCopyFullPathsSuccess(int count) {
     return '$count 件のフルパスをコピーしました';
   }
+
+  @override
+  String get labelSettingsAboutTitle => 'アプリについて';
+
+  @override
+  String get labelAboutVersion => 'バージョン';
+
+  @override
+  String get labelAboutOriginal => '原案・オリジナル';
+
+  @override
+  String get labelAboutDev => '企画・開発';
+
+  @override
+  String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
+
+  @override
+  String get labelAboutRespect =>
+      '当アプリは、Jun Arai 様の \'Namery\' をリスペクトして作成されました。';
+
+  @override
+  String get labelAboutVisitWebsite => 'ウェブサイトを表示';
 }
 
 /// The translations for Japanese (`ja_NM`).
@@ -1149,4 +1171,26 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String labelMsgCopyFullPathsSuccess(int count) {
     return '$count 件のフルパスをコピーしました';
   }
+
+  @override
+  String get labelSettingsAboutTitle => 'アプリについて';
+
+  @override
+  String get labelAboutVersion => 'バージョン';
+
+  @override
+  String get labelAboutOriginal => '原案・オリジナル';
+
+  @override
+  String get labelAboutDev => '企画・開発';
+
+  @override
+  String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
+
+  @override
+  String get labelAboutRespect =>
+      '当アプリは、Jun Arai 様の \'Namery\' をリスペクトして作成されました。';
+
+  @override
+  String get labelAboutVisitWebsite => 'ウェブサイトを表示';
 }

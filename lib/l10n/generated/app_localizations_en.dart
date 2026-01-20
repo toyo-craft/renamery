@@ -577,4 +577,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String labelMsgCopyFullPathsSuccess(int count) {
     return 'Copied $count full paths';
   }
+
+  @override
+  String get labelSettingsAboutTitle => 'About';
+
+  @override
+  String get labelAboutVersion => 'Version';
+
+  @override
+  String get labelAboutOriginal => 'Original Idea';
+
+  @override
+  String get labelAboutDev => 'Developed by';
+
+  @override
+  String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
+
+  @override
+  String get labelAboutRespect =>
+      'This app was created with respect for \'Namery\' by Jun Arai.';
+
+  @override
+  String get labelAboutVisitWebsite => 'Visit Website';
 }

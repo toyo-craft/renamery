@@ -576,4 +576,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String labelMsgCopyFullPathsSuccess(int count) {
     return 'Copiadas $count rutas completas';
   }
+
+  @override
+  String get labelSettingsAboutTitle => 'Acerca de';
+
+  @override
+  String get labelAboutVersion => 'Versión';
+
+  @override
+  String get labelAboutOriginal => 'Idea Original';
+
+  @override
+  String get labelAboutDev => 'Desarrollado por';
+
+  @override
+  String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
+
+  @override
+  String get labelAboutRespect =>
+      'Esta aplicación fue creada con respeto por \'Namery\' de Jun Arai.';
+
+  @override
+  String get labelAboutVisitWebsite => 'Visitar Sitio Web';
 }

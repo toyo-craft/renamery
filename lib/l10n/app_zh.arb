@@ -243,5 +243,12 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+  "labelSettingsAboutTitle": "关于应用",
+  "labelAboutVersion": "版本",
+  "labelAboutOriginal": "原案・原创",
+  "labelAboutDev": "开发・制作",
+  "labelAboutCopyright": "© 2024 Toyo Craft Lab.",
+  "labelAboutRespect": "本应用是出于对 Jun Arai 先生的 'Namery' 的致敬而制作的。",
+  "labelAboutVisitWebsite": "访问网站"
 }

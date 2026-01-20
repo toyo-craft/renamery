@@ -240,6 +240,13 @@
     }
   },
   "labelMsgCopyFullPathsSuccess": "Copiadas {count} rutas completas",
+  "labelSettingsAboutTitle": "Acerca de",
+  "labelAboutVersion": "Versión",
+  "labelAboutOriginal": "Idea Original",
+  "labelAboutDev": "Desarrollado por",
+  "labelAboutCopyright": "© 2024 Toyo Craft Lab.",
+  "labelAboutRespect": "Esta aplicación fue creada con respeto por 'Namery' de Jun Arai.",
+  "labelAboutVisitWebsite": "Visitar Sitio Web",
   "@labelMsgCopyFullPathsSuccess": {
     "placeholders": {
       "count": { "type": "int" }

@@ -240,6 +240,13 @@
     }
   },
   "labelMsgCopyFullPathsSuccess": "Copied {count} full paths",
+  "labelSettingsAboutTitle": "About",
+  "labelAboutVersion": "Version",
+  "labelAboutOriginal": "Original Idea",
+  "labelAboutDev": "Developed by",
+  "labelAboutCopyright": "© 2024 Toyo Craft Lab.",
+  "labelAboutRespect": "This app was created with respect for 'Namery' by Jun Arai.",
+  "labelAboutVisitWebsite": "Visit Website",
   "@labelMsgCopyFullPathsSuccess": {
     "placeholders": {
       "count": { "type": "int" }

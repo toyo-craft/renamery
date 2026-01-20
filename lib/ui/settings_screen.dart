@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/directory_provider.dart';
 import '../../core/rename_engine.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import 'package:renamery/ui/dialogs/about_dialog.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -298,6 +299,17 @@ class SettingsScreen extends StatelessWidget {
                   );
                 }
               }
+            },
+          ),
+          const Divider(),
+          ListTile(
+            title: Text(l10n.labelSettingsAboutTitle),
+            leading: const Icon(Icons.info_outline),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => const AboutAppDialog(),
+              );
             },
           ),
         ],

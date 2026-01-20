@@ -1188,6 +1188,48 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'{count} 件のフルパスをコピーしました'**
   String labelMsgCopyFullPathsSuccess(int count);
+
+  /// No description provided for @labelSettingsAboutTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'アプリについて'**
+  String get labelSettingsAboutTitle;
+
+  /// No description provided for @labelAboutVersion.
+  ///
+  /// In ja, this message translates to:
+  /// **'バージョン'**
+  String get labelAboutVersion;
+
+  /// No description provided for @labelAboutOriginal.
+  ///
+  /// In ja, this message translates to:
+  /// **'原案・オリジナル'**
+  String get labelAboutOriginal;
+
+  /// No description provided for @labelAboutDev.
+  ///
+  /// In ja, this message translates to:
+  /// **'企画・開発'**
+  String get labelAboutDev;
+
+  /// No description provided for @labelAboutCopyright.
+  ///
+  /// In ja, this message translates to:
+  /// **'© 2024 Toyo Craft Lab.'**
+  String get labelAboutCopyright;
+
+  /// No description provided for @labelAboutRespect.
+  ///
+  /// In ja, this message translates to:
+  /// **'当アプリは、Jun Arai 様の \'Namery\' をリスペクトして作成されました。'**
+  String get labelAboutRespect;
+
+  /// No description provided for @labelAboutVisitWebsite.
+  ///
+  /// In ja, this message translates to:
+  /// **'ウェブサイトを表示'**
+  String get labelAboutVisitWebsite;
 }
 
 class _AppLocalizationsDelegate
