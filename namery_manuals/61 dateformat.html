@@ -1,0 +1,178 @@
+<html>
+
+<head>
+<title>日付指定</title>
+<link href="help.css" type="text/css" rel="stylesheet">
+</head>
+
+<body class="BaseBody">
+
+<b class="Menu">日付の指定方法</b><br>
+<br>
+<img src="Images/Help_93_Tutorial_Date.png" border=1><br>
+<br>
+日付の指定文字列には、特殊文字を使用します。<br>
+これによってフレキシブルな設定が可能になりましたが、多少難しくなりました。<br>
+特殊文字の組み合わせで、色々なフォーマットを指定することが出来ます。
+プログラマになったつもりで遊んでみてください。<br>
+<br>
+<br>
+
+<b class="Menu">特殊文字一覧</b><br>
+<table border>
+  <tr align=center bgcolor="#dddddd">
+    <td nowrap>特殊文字</td><td>解説</td><td>例</td>
+  </tr>
+  <tr>
+    <td>d</td><td>日付を先頭のゼロなしで表示する（1 から 31 まで）</td><td>1 - 31</td>
+  </tr>
+  <tr>
+    <td>dd</td><td>日付を先頭のゼロも含めて表示する（01 から 31 まで）</td><td>01 - 31</td>
+  </tr>
+  <tr>
+    <td>ddd</td><td>曜日を省略形（Sun-Sat）で表示する</td><td>日 - 土</td>
+  </tr>
+  <tr>
+    <td>dddd</td><td>曜日を完全な形（Sunday-Saturday）で表示する</td><td>日曜 - 土曜</td>
+  </tr>
+  <tr>
+    <td>ddddd</td><td>使用できません</td><td>2002/04/25</td>
+  </tr>
+  <tr>
+    <td>dddddd</td><td>LongDateFormat グローバル変数で与えられた形式で日付を表示する</td><td>2002年4月25日</td>
+  </tr>
+  <tr>
+    <td>m</td><td>先頭にゼロのない数字として月を表示する。<br>
+    h 指定子または hh 指定子の直後に m 指定子を指定すると、月ではなく分が表示される</td><td>1 - 12</td>
+  </tr>
+  <tr>
+    <td>mm</td><td>先頭にゼロのある数字として月を表示する。<br>
+    h 指定子または hh 指定子の直後に mm 指定子を指定すると，月ではなく分が表示される</td><td>01 - 12</td>
+  </tr>
+  <tr>
+    <td>mmm</td><td>月を省略形（Jan-Dec）で表示する</td><td>1 - 12</td>
+  </tr>
+  <tr>
+    <td>mmmm</td><td>月を完全な形（January-December）で表示する</td><td>1月 - 12月</td>
+  </tr>
+  <tr>
+    <td>y or yy</td><td>年を 2 桁の数字（00-99）で表示する</td><td>00 - 99</td>
+  </tr>
+  <tr>
+    <td>yyy or yyyy</td><td>年を 4 桁の数字（0000-9999）で表示する</td><td>1900 - 2099</td>
+  </tr>
+  <tr>
+    <td>h</td><td>先頭にゼロのない数字（0-23）として時を表示する</td><td>0 - 23</td>
+  </tr>
+  <tr>
+    <td>hh</td><td>先頭にゼロのある数字（00-23）として時を表示する</td><td>00 - 23</td>
+  </tr>
+  <tr>
+    <td>n</td><td>先頭にゼロのない数字（0-59）として分を表示する</td><td>0 - 59</td>
+  </tr>
+  <tr>
+    <td>nn</td><td>先頭にゼロのある数字（00-59）として分を表示する</td><td>00 - 59</td>
+  </tr>
+  <tr>
+    <td>s</td><td>先頭にゼロのない数字（0-59）として秒を表示する</td><td>0 - 59</td>
+  </tr>
+  <tr>
+    <td>ss</td><td>先頭にゼロのある数字（00-59）として秒を表示する</td><td>00 - 59</td>
+  </tr>
+  <tr>
+    <td>am/pm</td><td>先行する h 指定子または hh 指定子に 12 時間形式の時刻値を使い，
+    正午以前の時間には「am」を，正午以降の時間には「pm」を表示する。am/pm 指定子には，
+    大文字，小文字，大文字と小文字の両方が使え，指定のとおりに結果が表示される</td><td>am or pm</td>
+  </tr>
+  <tr>
+    <td>a/p</td><td>先行する h 指定子または hh 指定子に 12 時間形式の時刻値を使い，
+    正午以前の時間には「a」を，正午以降の時間には「p」を表示する。a/p 指定子には，
+    大文字，小文字，大文字と小文字の両方が使え，指定のとおりに結果が表示される</td><td>a or p</td>
+  </tr>
+  <tr>
+    <td>ampm</td><td>先行する h 指定子または hh 指定子に 12 時間形式の時刻値を使い，
+    正午以前の時間には TimeAMString グローバル変数の値を，
+    正午以降の時間には TimePMString グローバル変数の値を表示する</td><td>午前 or 午後</td>
+  </tr>
+  <tr>
+    <td>'xx' "xx"</td><td>一重または二重の引用符で囲まれた文字はそのまま表示され，形式には影響を与えない</td><td></td>
+  </tr>
+  <tr>
+    <td>c</td><td>使用できません</td><td>2002/04/25 17:30:45</td>
+  </tr>
+  <tr>
+    <td>t</td><td>使用できません</td><td>17:30</td>
+  </tr>
+  <tr>
+    <td>tt</td><td>使用できません</td><td>17:30:45</td>
+  </tr>
+  <tr>
+    <td></td><td></td><td></td>
+  </tr>
+</table>
+<p>
+<b class="Menu">指定例</b><br>
+<br>
+Ex) ファイル名 Name.tst タイムスタンプが 2002/4/01 14:05 の場合の例<br>
+<br>
+<table border=1>
+  <tr align=center bgcolor="#dddddd">
+    <td>指定文字列</td><td>変更後ファイル名</td><td>補足</td>
+  </tr>
+  <tr>
+    <td>○『yyyy_mmdd_』</td><td>『2002_0401_Name.tst』</td>
+    <td>アンダーバーを使用出来ます</td>
+  </tr>
+  <tr>
+    <td>○『yymm dd 』</td><td>『0204 01 Name.tst』</td>
+    <td>半角空白を使用出来ます</td>
+  </tr>
+  <tr>
+    <td>○『yymm"　"dd 』</td><td>『0204　01 Name.tst』</td>
+    <td>全角空白は""で囲む</td>
+  </tr>
+  <tr>
+    <td>○『yyy_hhnn 』</td><td>『2002_1405 Name.tst』</td>
+  </tr>
+  <tr>
+    <td>○『yymm_hhmm 』</td><td>『0204_1405 Name.tst』</td>
+    <td>hの後のmはnと同じ</td>
+  </tr>
+  <tr>
+    <td>○『ymd_hn 』</td><td>『0241_145 Name.tst』</td>
+    <td>頭に0を付けたい場合は yymmddhhnn のように2桁づつ指定する</td>
+  </tr>
+  <tr>
+    <td>○『yymm_dddd 』</td><td>『0204_月曜日 Name.tst』</td>
+    <td>システムの地域によって"Monday"などに変化する</td>
+  </tr>
+  <tr>
+    <td>○『dddddd』</td><td>『2002年4月1日Name.tst』</td>
+  </tr>
+  <tr>
+    <td><font color=red>×</font>『yamada yy』</td><td>『02a4a1a 02Name.tst』</td>
+    <td>文字列指定しないと正しく表示できない</td>
+  </tr>
+  <tr>
+    <td>○『"yamada" yy』</td><td>『yamada 02Name.tst』</td>
+  </tr>
+  <tr>
+    <td>○『am/pmh"時" 』</td><td>『pm2時 Name.tst』</td>
+  </tr>
+  <tr>
+    <td>○『am/PMh"時" 』</td><td>『PM2時 Name.tst』</td>
+    <td>午前の場合はam、午後の場合はPMと、指定したとおりに付加できる</td>
+  </tr>
+  <tr>
+    <td>○『ampmh"時" 』</td><td>『午後2時 Name.tst』</td>
+    <td>システムの地域によって"PM"などに変化する</td>
+  </tr>
+  <tr>
+    <td><font color=red>×</font>『yyyy/mm/dd_hh:nn 』</td><td>『2002/04/01_14:05 Name.tst』</td>
+    <td>/や：はファイル名で使用出来ない</td>
+  </tr>
+</table>
+<br>
+※半角であれば、大文字/小文字どちらでも指定できます。<br>
+</body>
+</html>

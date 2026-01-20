@@ -1,0 +1,247 @@
+{
+  "@@locale": "ja_NM",
+  "labelMainTab": "Main",
+  "labelSubTab": "Sub",
+  "labelExtraTab": "Extra",
+  "labelEtcTab": "etc...",
+  "labelStringInput": "文字列",
+  "labelColName": "名前",
+  "labelColNewName": "変更後ファイル名",
+  "labelColSize": "サイズ",
+  "labelColPath": "相対パス",
+  "labelColType": "ファイルの種類",
+  "labelColDate": "更新日時",
+  "labelColAttr": "属性",
+  "labelOpPrefix": "Prefix(前方追加)",
+  "labelOpSuffix": "Suffix(後方追加)",
+  "labelOpInsert": "文字列挿入",
+  "labelOpDeleteStart": "先頭から桁数分削除",
+  "labelOpDeleteEnd": "後ろから桁数分削除",
+  "labelOpDeleteFrom": "開始数字から桁数削除",
+  "labelOpCapitalize": "先頭文字を大文字化",
+  "labelOpUpper": "大文字化",
+  "labelOpLower": "小文字化",
+  "labelOpExtChange": "拡張子を変更",
+  "labelOpExtAdd": "拡張子を追加",
+  "labelOpExtRemove": "拡張子を削除",
+  "labelOpExtUpper": "拡張子を大文字化",
+  "labelOpExtLower": "拡張子を小文字化",
+  "labelSubExtChangeTitle": "Extension",
+  "labelSubFormatTitle": "英単語を区切って整形",
+  "labelSubFormatProperCase": "単語の先頭を大文字化 (Space/Hyphen/Underscore)",
+  "labelSubListTitle": "リストリネーム",
+  "labelSubListModeText": "テキスト入力 (Original[TAB]New)",
+  "labelSubListSample1": "サンプル: 連番ファイル",
+  "labelSubListSample2": "サンプル: 拡張子一括置換",
+  "labelSubListSample3": "Sample: Char Replace",
+  "labelSubListHint": "old.txt\tnew.txt",
+  "labelExtraAppendDate": "ファイルの日付を付加",
+  "labelExtraDateFormatHint": "日付フォーマット (例: yyyymmdd_)",
+  "labelExtraPosition": "位置",
+  "labelExtraFront": "前方",
+  "labelExtraBack": "後方",
+  "labelExtraConvHalfToFull": "半角を全角にする",
+  "labelExtraConvFullToHalf": "全角を半角にする",
+  "labelExtraConvKataToHira": "全角カナをひらがなにする",
+  "labelExtraConvHiraToKata": "ひらがなを全角カナにする",
+  "labelExtraConvFullAlphaToHalf": "全角英字を半角にする",
+  "labelExtraConvNumToHalf": "数字を半角にする",
+  "labelEtcAttribReadOnly": "ReadOnly",
+  "labelEtcAttribHidden": "Hidden",
+  "labelEtcAttribArchive": "Archive",
+  "labelEtcAttribSystem": "System",
+  "labelEtcTimestampChange": "タイムスタンプを変更する",
+  "labelEtcPickTime": "時刻を選択してください",
+  "labelEtcPickDateTooltip": "日付と時刻を選択",
+  "labelEtcTimestampNote": "(Ex 2002/03/30 17:30 のように指定します。)",
+  "labelEtcAttributeChange": "属性を変更する",
+  "labelEtcCautionTitle": "取り消し操作不能",
+  "labelEtcCautionMessage": "このカテゴリ（タイムスタンプ・属性）の変更は、アンドゥ機能で元に戻すことができません。慎重に操作してください。",
+  "labelUndo": "戻す",
+  "labelExecute": "実行",
+  "labelErrorInvalidFilename": "エラー：ファイル名に禁止文字が含まれています",
+  "labelCopyName": "コピー (現在名)",
+  "labelCopyPath": "コピー (パス)",
+  "labelCopyFullPath": "コピー (フルパス)",
+  "labelCopyOptions": "コピーオプション",
+  "labelCopyUndo": "変更記録をコピー",
+  "labelCopyListClipboard": "クリップボードへ現在のリストをコピー",
+  "labelMoveUp": "上に移動",
+  "labelMoveDown": "下に移動",
+  "labelRefresh": "全て更新",
+  "labelMenuMore": "その他の操作",
+  "labelMenuSettings": "アプリ設定",
+  "labelMenuFolder": "メニュー (フォルダ)",
+  "labelNumStringNumber": "文字列 + 連番",
+  "labelNumOriginalNumber": "現在名 + 連番",
+  "labelNumNumberString": "連番 + 文字列",
+  "labelNumNumberOriginal": "連番 + 現在名",
+  "labelNumBaseStringNumber": "基本名 + 文字列 + 連番",
+  "labelNumBaseStringOriginal": "基本名 + 文字列 + 現在名",
+  "labelNumRelativeStringNumber": "相対名 + 文字列 + 連番",
+  "labelNumRelativeStringOriginal": "相対名 + 文字列 + 現在名",
+  "labelNumNumberStringBase": "連番 + 文字列 + 基本名",
+  "labelNumNumberStringRelative": "連番 + 文字列 + 相対名",
+  "labelReplaceFrom": "を",
+  "labelReplaceTo": "に置換",
+  "labelFullPath": "フルパス > ",
+  "labelSelectAll": "全選択",
+  "labelSettingsFilterTitle": "表示設定 (フィルタ)",
+  "labelFilterAll": "全てのファイル",
+  "labelFilterSpecific": "指定",
+  "labelFilterHideSystem": "システムファイルを非表示",
+  "labelFilterRecursive": "下位フォルダ検索",
+  "labelFilterPreview": "プレビュー表示",
+  "labelExtensionLower": "拡張子は小文字化",
+  "labelNavBack": "戻る",
+  "labelNavForward": "進む",
+  "labelHistoryBack": "履歴 (戻る)",
+  "labelHistoryForward": "履歴 (進む)",
+  "labelNavQuickAccess": "クイックアクセス",
+  "labelDeleteFront": "前から",
+  "labelDeleteBack": "後から",
+  "labelDeleteUntil": "まで削除",
+  "labelFindHint": "検索 (Find)",
+  "labelReplaceHint": "置換 (Replace)",
+  "labelRegex": "正規表現",
+  "labelString": "文字列",
+  "labelStartDigit": "開始/桁",
+  "labelSettingsTitle": "設定",
+  "labelSettingsSectionDisplay": "表示設定",
+  "labelSettingsSectionAppearance": "外観",
+  "labelSettingsSectionOS": "動作モード (OS設定)",
+  "labelSettingsSectionInitialDir": "初期フォルダ",
+  "labelSettingsSectionReset": "リセット",
+  "labelSettingsTouchModeTitle": "タッチモード (ゆったり表示)",
+  "labelSettingsTouchModeSubtitle": "リストやボタンの間隔を広げます",
+  "labelSettingsMenuLabelTitle": "メニュー表記 (言語)",
+  "labelSettingsLangJP": "日本語",
+  "labelSettingsLangNamery": "Namery",
+  "labelSettingsLangEN": "英語",
+  "labelSettingsLangCN": "中国語",
+  "labelSettingsThemeTitle": "テーマモード",
+  "labelSettingsThemeSystem": "システム",
+  "labelSettingsThemeLight": "ライト",
+  "labelSettingsThemeDark": "ダーク",
+  "labelSettingsThemeGray": "グレー",
+  "labelSettingsColorTitle": "テーマカラー",
+  "labelSettingsOSTitle": "OSモード",
+  "labelSettingsOSSubtitle": "ファイル名の文字制限などをOSに合わせます",
+  "labelSettingsOSAuto": "自動",
+  "labelSettingsInitDirTitle": "起動時の場所",
+  "labelSettingsInitDirLast": "前回終了時の場所",
+  "labelSettingsInitDirFixed": "指定した場所",
+  "labelSettingsClearHistory": "入力履歴を削除",
+  "labelSettingsClearHistorySub": "文字列補完などの入力履歴を削除します",
+  "labelSettingsResetAll": "全設定をリセット",
+  "labelSettingsResetAllSub": "初期状態に戻します",
+  "labelDialogCancel": "キャンセル",
+  "labelDialogDelete": "削除",
+  "labelDialogReset": "リセット",
+  "labelMsgHistoryCleared": "履歴を削除しました",
+  "labelMsgSettingsReset": "まっさらにしたぞ",
+  "labelFilterHideFolders": "ハコは隠すんべ",
+  "labelFilterShowFolders": "ハコも見せるんべ",
+  "labelPreviewNoSelection": "なーんも選んでねぇ",
+  "labelPreviewSelectedCount": "{count} つのモノを選んでっぞ",
+  "@labelPreviewSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelPreviewImageLoadFailed": "絵が出ねぇぞ",
+  "labelPreviewUnavailable": "中身が見れねぇべ",
+  "labelPreviewOmitted": "... (端折ったぞ: 全部で {size} KB)",
+  "@labelPreviewOmitted": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "labelPreviewBinaryError": "中身が見れねぇ: 暗号か何かっぺ？",
+  "labelGoRenamery": "ReNameryの刑だっ!!!",
+  "labelTermFolder": "ハコ",
+  "labelTermFile": "モノ",
+  "labelSettingsOSMac": "シャレオツなMac (Finder互換だっぺ)",
+  "labelSettingsOSLinux": "ペンギンのやつ (Linuxだっぺ)",
+  "labelSettingsOSiOS": "リンゴの電話 (iPhoneだっぺ)",
+  "labelSettingsOSAndroid": "ドロイド君 (Androidだっぺ)",
+  "labelMsgExecutedCount": "{count} つのモノの名前をひっくり返したぞ",
+  "@labelMsgExecutedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelMsgNoSelection": "何も選んでねぇっぺよ",
+  "labelCopyListPath": "全部まるっと書き写す (Path)",
+  "labelMenuGo": "行けっ!!!",
+  "labelNoFiles": "何も無ぇっぺ",
+  "labelSelectFolderPrompt": "{term}を選んでくんねぇか",
+  "labelNavTitle": "道しるべ",
+  "labelNavPC": "この箱",
+  "labelNumSaveSequenceTooltip": "今の数字を覚えとく（次はこっから始めるべ）",
+  "labelStatusDisplayCount": "今見えてんの: {current} / 全部で: {total} 個 : 選んだの {selected} 個だっぺ",
+  "@labelStatusDisplayCount": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" },
+      "selected": { "type": "int" }
+    }
+  },
+  "labelStatusTotalCount": "全部で {total} 個 : 選んだの {selected} 個だっぺ",
+  "@labelStatusTotalCount": {
+    "placeholders": {
+      "total": { "type": "int" },
+      "selected": { "type": "int" }
+    }
+  },
+  "labelStatusProcessing": "やってっから待ってろ...",
+  "labelStatusReady": "準備OKだんべ",
+  "labelDeleteConfirmTitle": "消してもいいんか？",
+  "labelDeleteConfirmMessage": "{count} 個まるごと消しちまうけどいいんか？\nもう元には戻せねぇぞ。",
+  "@labelDeleteConfirmMessage": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelMsgDeletedCount": "{count} 個消してやったべ",
+  "@labelMsgDeletedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelUndoTitle": "元に戻すべ",
+  "labelUndoConfirm": "さっきやった {count} 個の変更、元に戻していいんか？",
+  "@labelUndoConfirm": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelMsgUndoSuccess": "元通りにしてやったべ",
+  "labelUndoRecoverBtn": "元に戻す",
+  "labelMsgNoUndoRecord": "元に戻すもんがねぇべ",
+  "labelMsgUndoRecordCopied": "さっきの記録、クリップボードに放り込んどいたべ",
+  "labelMsgCopyNamesSuccess": "{count} 個の名前をコピーしたべ",
+  "@labelMsgCopyNamesSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelMsgCopyRelativePathsSuccess": "{count} 個の相対パスをコピーしたべ",
+  "@labelMsgCopyRelativePathsSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelMsgCopyFullPathsSuccess": "{count} 個のフルパスをコピーしたべ",
+  "@labelMsgCopyFullPathsSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+}

@@ -1,0 +1,82 @@
+<html>
+
+<head>
+<title>etc</title>
+<link href="help.css" type="text/css" rel="stylesheet">
+</head>
+
+<body class="BaseBody">
+
+<b class="Menu">その他の機能</b><br>
+<br>
+<b class="Menu">★リストの D&D 並べ替え</b><br>
+<br>
+リストを並び替える事で、連番のファイル順を任意に操作できます。<br>
+<br>
+●Step１<br>
+ファイルを選択しておきます。<br>
+ファイル名の空欄部分をD&Dで選択することも可能です。<br>
+<img src=Images/Help_91_Tutorial_DD01.jpg border=1><br>
+<br>
+●Step２<br>
+ファイルをつかみ、目的の場所へドロップします。<br>
+<img src=Images/Help_91_Tutorial_DD02.jpg border=1><br>
+<br>
+●Step３<br>
+ドロップしたファイルの上にファイルが移動します。<br>
+<img src=Images/Help_91_Tutorial_DD03.jpg border=1><br>
+
+<br>
+<br>
+<b class="Menu">★選択ファイルを先頭に移動</b><br>
+<br>
+D&D移動の補助機能です。<br>
+ポップアップメニューから「選択ファイルを先頭に移動」を選ぶ事で
+D&D移動を簡潔に行うことが出来ます。<br>
+移動時にソートはしません。選択ファイルの順番を維持します。<br>
+<br>
+<img src=Images/Help_94_Tutorial_SelectMove.png border=1><br>
+
+<br>
+<br>
+<b class="Menu">★ファイル・フォルダをリストへD&D</b><br>
+<br>
+Explorerからファイル又はフォルダをリストへD&Dすると、
+そのフォルダを取得する事が出来ます。<br>
+<br>
+フォルダをD&Dした場合、フォルダ中の全ファイルを選択状態にします。<br>
+ファイルの場合はD&Dしたファイルのみ選択します。<br>
+<br>
+<br>
+
+<b class="Menu"><a name="static">★固定リスト</a></b><br>
+<br>
+入力項目をダブルクリックする事で、事前に登録しておいたワードを入力する事が出来ます。
+登録法方は、StaticList.txt を直接編集する事で可能です。書式はファイル内部に
+書かれています。<br>
+<br>
+<font color=red>プルダウンメニュー [ファイル]→[固定リストの新規作成]を選択すると、
+プログラムのあるフォルダに StaticList.txt が作成されます。</font><br>
+<br>
+<img src=Images/Help_15_StaticList.png border=1><br>
+<br>
+起動が遅い場合は、StaticList.txt の名前を変えるなどして読み込ませないようにして下さい。
+多少起動が早くなります。<br>
+<br>
+<br>
+
+<b class="Menu">★履歴リスト</b><br>
+<br>
+文字列を入力すると、履歴に残ります。履歴の数はレジストリを書き換える事で増減できます。<br>
+HKEY_CURRENT_USER\Software\JUN\Namery\HList にある各項目を書き換えてください。<br>
+<br>
+　・WMaxListCount ... 履歴リスト最大数<br>
+　・WMaxDropCount ... 履歴リストの同時ドロップダウン数<br>
+<br>
+　・CExMaxListCount ... 連続置換の履歴リスト最大数<br>
+　・CExMaxDropCount ... 連続置換の履歴リストの同時ドロップダウン数<br>
+<br>
+<br>
+
+</body>
+</html>

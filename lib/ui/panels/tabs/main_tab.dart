@@ -1,0 +1,679 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/directory_provider.dart';
+import '../../../core/rename_engine.dart';
+import '../../widgets/history_text_field.dart';
+import 'package:renamery/l10n/generated/app_localizations.dart';
+
+class MainTab extends StatefulWidget {
+  const MainTab({super.key});
+
+  @override
+  State<MainTab> createState() => _MainTabState();
+}
+
+class _MainTabState extends State<MainTab> {
+  late TextEditingController _findController;
+  late TextEditingController _replaceController;
+  late TextEditingController _appendController;
+  late TextEditingController _deleteToController;
+  late TextEditingController _startController;
+  late TextEditingController _insertController; // For Insert Index
+  late TextEditingController _digitController;
+
+  late FocusNode _findFocus;
+  late FocusNode _replaceFocus;
+  late FocusNode _appendFocus;
+  late FocusNode _deleteToFocus;
+  late FocusNode _startFocus; // For Start/Digit spinner
+  late FocusNode _startInsertFocus; // For Insert mode spinner
+  late FocusNode _digitFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    final provider = context.read<DirectoryProvider>();
+    _findController = TextEditingController(text: provider.findText);
+    _replaceController = TextEditingController(text: provider.replaceText);
+    _appendController = TextEditingController(text: provider.appendText);
+    _deleteToController = TextEditingController(text: provider.deleteToText);
+    _startController = TextEditingController(
+      text: provider.startNumber.toString(),
+    );
+    _insertController = TextEditingController(
+      text: provider.insertIndex.toString(),
+    );
+    _digitController = TextEditingController(text: provider.digits.toString());
+
+    _findFocus = FocusNode();
+    _replaceFocus = FocusNode();
+    _appendFocus = FocusNode();
+    _deleteToFocus = FocusNode();
+    _startFocus = FocusNode();
+    _startInsertFocus = FocusNode();
+    _digitFocus = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _findController.dispose();
+    _replaceController.dispose();
+    _appendController.dispose();
+    _deleteToController.dispose();
+    _startController.dispose();
+    _insertController.dispose();
+    _digitController.dispose();
+
+    _findFocus.dispose();
+    _replaceFocus.dispose();
+    _appendFocus.dispose();
+    _deleteToFocus.dispose();
+    _startFocus.dispose();
+    _startInsertFocus.dispose();
+    _digitFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final provider = context.watch<DirectoryProvider>();
+    final isCompact = provider.isCompactMode;
+    final double spacing = isCompact ? 4.0 : 8.0; // 4dp grid
+    final double blockSpacing = isCompact ? 12.0 : 20.0; // 4dp grid
+
+    // Sync controllers if NOT focused
+    if (provider.findText != _findController.text && !_findFocus.hasFocus) {
+      _findController.text = provider.findText ?? '';
+    }
+    if (provider.replaceText != _replaceController.text &&
+        !_replaceFocus.hasFocus) {
+      _replaceController.text = provider.replaceText ?? '';
+    }
+    if (provider.appendText != _appendController.text &&
+        !_appendFocus.hasFocus) {
+      _appendController.text = provider.appendText ?? '';
+    }
+    if (provider.deleteToText != _deleteToController.text &&
+        !_deleteToFocus.hasFocus) {
+      _deleteToController.text = provider.deleteToText ?? '';
+    }
+    // Sync start number
+    if (provider.startNumber.toString() != _startController.text &&
+        !_startFocus.hasFocus) {
+      _startController.text = provider.startNumber.toString();
+    }
+    // Sync insert index
+    if (provider.insertIndex.toString() != _insertController.text &&
+        !_startInsertFocus.hasFocus) {
+      _insertController.text = provider.insertIndex.toString();
+    }
+    // Sync digits
+    if (provider.digits.toString() != _digitController.text &&
+        !_digitFocus.hasFocus) {
+      _digitController.text = provider.digits.toString();
+    }
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // --- Top Section: Common Inputs ---
+          // String Input with History
+          HistoryTextField(
+              controller: _appendController,
+              history: provider.appendHistory,
+              onChanged: (val) {
+                final provider = context.read<DirectoryProvider>();
+                final current = provider.renameMode;
+                final isStringMode = current == RenameMode.append ||
+                    current == RenameMode.prepend ||
+                    current == RenameMode.insert ||
+                    current == RenameMode.numbering;
+                provider.updateRenameSettings(
+                    append: val,
+                    mode: isStringMode ? null : provider.lastStringMode);
+              },
+              label: l10n.labelStringInput,
+              focusNode: _appendFocus,
+              isCompact: isCompact),
+
+          SizedBox(height: spacing),
+          // --- Numbering Inputs (Spinner Style) ---
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                // Pin Icon
+                Tooltip(
+                  message: l10n.labelNumSaveSequenceTooltip,
+                  child: InkWell(
+                    onTap: () => context
+                        .read<DirectoryProvider>()
+                        .updateRenameSettings(
+                            saveSequenceNumber: !context
+                                .read<DirectoryProvider>()
+                                .saveSequenceNumber),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Icon(
+                        context.watch<DirectoryProvider>().saveSequenceNumber
+                            ? Icons.push_pin
+                            : Icons.push_pin_outlined,
+                        size: 20,
+                        color: context
+                                .watch<DirectoryProvider>()
+                                .saveSequenceNumber
+                            ? Theme.of(context).colorScheme.tertiary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 60, child: Text(l10n.labelStartDigit)),
+                _buildSpinner(
+                  context,
+                  _startController,
+                  (val) => context
+                      .read<DirectoryProvider>()
+                      .updateRenameSettings(start: val, immediate: true),
+                  focusNode: _startFocus,
+                  isCompact: isCompact,
+                ),
+                const SizedBox(width: 8),
+                _buildSpinner(
+                  context,
+                  _digitController,
+                  (val) => context
+                      .read<DirectoryProvider>()
+                      .updateRenameSettings(digits: val, immediate: true),
+                  focusNode: _digitFocus,
+                  isCompact: isCompact,
+                ),
+              ],
+            ),
+          ),
+          Divider(
+            thickness: 1,
+            height: blockSpacing,
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ), // Divider
+
+          // --- Mode Radio Group ---
+          // 1. Numbering with Dropdown
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: spacing),
+            child: Row(
+              children: [
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Radio<RenameMode>(
+                    value: RenameMode.numbering,
+                    groupValue: provider.renameMode,
+                    onChanged: (val) => context
+                        .read<DirectoryProvider>()
+                        .updateRenameSettings(mode: val, immediate: true),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SizedBox(
+                    height: isCompact ? 32 : null,
+                    child: DropdownButton<NumberingMode>(
+                      value: provider.numberingMode,
+                      isDense: true,
+                      isExpanded: true,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      underline: Container(
+                        height: 1,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: NumberingMode.stringNumber,
+                          child: Text(l10n.labelNumStringNumber),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.originalNumber,
+                          child: Text(l10n.labelNumOriginalNumber),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.numberString,
+                          child: Text(l10n.labelNumNumberString),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.numberOriginal,
+                          child: Text(l10n.labelNumNumberOriginal),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.baseStringNumber,
+                          child: Text(l10n.labelNumBaseStringNumber),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.baseStringOriginal,
+                          child: Text(l10n.labelNumBaseStringOriginal),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.relativeStringNumber,
+                          child: Text(l10n.labelNumRelativeStringNumber),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.relativeStringOriginal,
+                          child: Text(l10n.labelNumRelativeStringOriginal),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.numberStringBase,
+                          child: Text(l10n.labelNumNumberStringBase),
+                        ),
+                        DropdownMenuItem(
+                          value: NumberingMode.numberStringRelative,
+                          child: Text(l10n.labelNumNumberStringRelative),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        context.read<DirectoryProvider>().updateRenameSettings(
+                            mode: RenameMode.numbering, numberingMode: val);
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          _buildRadioTile(
+            context,
+            provider,
+            RenameMode.prepend,
+            l10n.labelOpPrefix,
+            spacing: spacing,
+          ),
+          _buildRadioTile(
+              context, provider, RenameMode.append, l10n.labelOpSuffix,
+              spacing: spacing),
+          _buildRadioTile(
+            context,
+            provider,
+            RenameMode.capitalize,
+            l10n.labelOpCapitalize,
+            spacing: spacing,
+          ),
+          _buildRadioTile(
+              context, provider, RenameMode.upper, l10n.labelOpUpper,
+              spacing: spacing),
+          _buildRadioTile(
+              context, provider, RenameMode.lower, l10n.labelOpLower,
+              spacing: spacing),
+
+          // String Insertion
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: spacing),
+            child: Row(
+              children: [
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Radio<RenameMode>(
+                    value: RenameMode.insert,
+                    groupValue: provider.renameMode,
+                    onChanged: (val) => context
+                        .read<DirectoryProvider>()
+                        .updateRenameSettings(mode: val, immediate: true),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(l10n.labelOpInsert,
+                    style: Theme.of(context).textTheme.bodyMedium),
+                const Spacer(),
+                _buildSpinner(
+                  context,
+                  _insertController, // Separate controller
+                  (val) => context
+                      .read<DirectoryProvider>()
+                      .updateRenameSettings(insertIndex: val, immediate: true),
+                  focusNode: _startInsertFocus,
+                  isCompact: isCompact,
+                ),
+              ],
+            ),
+          ),
+
+          Divider(
+              thickness: 1,
+              height: blockSpacing,
+              color: Theme.of(context).colorScheme.outlineVariant),
+
+          // --- Delete Section ---
+          // 1. Delete Start
+          _buildRadioTile(
+            context,
+            provider,
+            RenameMode.deleteStart,
+            l10n.labelOpDeleteStart,
+            spacing: spacing,
+          ),
+          // 2. Delete End
+          _buildRadioTile(
+            context,
+            provider,
+            RenameMode.deleteEnd,
+            l10n.labelOpDeleteEnd,
+            spacing: spacing,
+          ),
+          // 3. Delete From (Index)
+          _buildRadioTile(
+            context,
+            provider,
+            RenameMode.deleteFrom,
+            l10n.labelOpDeleteFrom,
+            spacing: spacing,
+          ),
+
+          // 4. Delete To (String/Complex)
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: spacing),
+            child: Row(
+              children: [
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Radio<bool>(
+                    value: true,
+                    groupValue:
+                        (provider.renameMode == RenameMode.deleteFrontTo ||
+                            provider.renameMode == RenameMode.deleteBackTo),
+                    onChanged: (val) {
+                      if (val == true) {
+                        // Default to Front if switching into this mode
+                        context.read<DirectoryProvider>().updateRenameSettings(
+                            mode: RenameMode.deleteFrontTo);
+                      }
+                    },
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Row(
+                    children: [
+                      // Dropdown for Direction
+                      SizedBox(
+                        height: isCompact ? 32 : null,
+                        child: DropdownButton<RenameMode>(
+                          value:
+                              (provider.renameMode == RenameMode.deleteBackTo)
+                                  ? RenameMode.deleteBackTo
+                                  : RenameMode.deleteFrontTo,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          items: [
+                            DropdownMenuItem(
+                              value: RenameMode.deleteFrontTo,
+                              child: Text(l10n.labelDeleteFront),
+                            ),
+                            DropdownMenuItem(
+                              value: RenameMode.deleteBackTo,
+                              child: Text(l10n.labelDeleteBack),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) {
+                              context
+                                  .read<DirectoryProvider>()
+                                  .updateRenameSettings(mode: val);
+                            }
+                          },
+                          underline: Container(
+                            height: 1,
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                          isDense: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Input Field
+                      Expanded(
+                        child: HistoryTextField(
+                            controller: _deleteToController,
+                            history: provider.deleteToHistory,
+                            onChanged: (val) => context
+                                .read<DirectoryProvider>()
+                                .updateRenameSettings(
+                                    deleteTo: val,
+                                    mode: provider.renameMode ==
+                                            RenameMode.deleteBackTo
+                                        ? RenameMode.deleteBackTo
+                                        : RenameMode.deleteFrontTo),
+                            label: '', // No label
+                            focusNode: _deleteToFocus,
+                            isCompact: isCompact),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(l10n.labelDeleteUntil),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Divider(
+              thickness: 1,
+              height: blockSpacing,
+              color: Theme.of(context).colorScheme.outlineVariant),
+
+          // --- Replace Section ---
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: spacing),
+            child: Row(
+              children: [
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Radio<RenameMode>(
+                    value: RenameMode.replace,
+                    groupValue: provider.renameMode,
+                    onChanged: (val) => context
+                        .read<DirectoryProvider>()
+                        .updateRenameSettings(mode: val, immediate: true),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: HistoryTextField(
+                          focusNode: _findFocus,
+                          controller: _findController,
+                          history: provider.findHistory,
+                          hintText: l10n.labelFindHint,
+                          isCompact: isCompact,
+                          onChanged: (val) => context
+                              .read<DirectoryProvider>()
+                              .updateRenameSettings(
+                                  find: val, mode: RenameMode.replace),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        child: Text(l10n.labelReplaceFrom),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+              left: 32.0,
+              top: spacing,
+            ), // Indent to align with radio
+            child: Row(
+              children: [
+                Expanded(
+                  child: HistoryTextField(
+                    focusNode: _replaceFocus,
+                    controller: _replaceController,
+                    history: provider.replaceHistory,
+                    hintText: l10n.labelReplaceHint,
+                    isCompact: isCompact,
+                    onChanged: (val) => context
+                        .read<DirectoryProvider>()
+                        .updateRenameSettings(
+                            replace: val, mode: RenameMode.replace),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Text(l10n.labelReplaceTo),
+                ),
+              ],
+            ),
+          ),
+          InkWell(
+            onTap: () => context.read<DirectoryProvider>().updateRenameSettings(
+                useRegex: !provider.useRegex, immediate: true),
+            borderRadius: BorderRadius.circular(4.0),
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: spacing),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: provider.useRegex,
+                    onChanged: (val) => context
+                        .read<DirectoryProvider>()
+                        .updateRenameSettings(useRegex: val, immediate: true),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(l10n.labelRegex,
+                      style: Theme.of(context).textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper Methods
+
+  Widget _buildRadioTile(
+    BuildContext context,
+    DirectoryProvider provider,
+    RenameMode mode,
+    String label, {
+    double spacing = 4.0,
+  }) {
+    return InkWell(
+      onTap: () => context
+          .read<DirectoryProvider>()
+          .updateRenameSettings(mode: mode, immediate: true),
+      borderRadius: BorderRadius.circular(4.0),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: spacing),
+        child: Row(
+          children: [
+            SizedBox(
+              height: 24,
+              width: 24,
+              child: Radio<RenameMode>(
+                value: mode,
+                groupValue: provider.renameMode,
+                onChanged: (val) => context
+                    .read<DirectoryProvider>()
+                    .updateRenameSettings(mode: val, immediate: true),
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpinner(
+    BuildContext context,
+    TextEditingController controller,
+    Function(int) onChanged, {
+    FocusNode? focusNode,
+    bool isCompact = false,
+  }) {
+    return SizedBox(
+      width: 80,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              focusNode: focusNode,
+              controller: controller,
+              style: Theme.of(context).textTheme.bodyMedium,
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: isCompact ? 6 : 8,
+                  horizontal: 4,
+                ),
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (val) {
+                final n = int.tryParse(val);
+                if (n != null) onChanged(n);
+                int? value = int.tryParse(val);
+                if (value != null) {
+                  if (value < 1) {
+                    value = 1; // Enforce min 1
+                    controller.text = '1';
+                  }
+                  onChanged(value);
+                }
+              },
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: () {
+                  focusNode?.requestFocus();
+                  int current = int.tryParse(controller.text) ?? 1;
+                  current++;
+                  controller.text = current.toString();
+                  onChanged(current);
+                },
+                child: const Icon(Icons.arrow_drop_up, size: 18),
+              ),
+              InkWell(
+                onTap: () {
+                  focusNode?.requestFocus();
+                  int current = int.tryParse(controller.text) ?? 1;
+                  if (current > 1) {
+                    current--;
+                    controller.text = current.toString();
+                    onChanged(current);
+                  }
+                },
+                child: const Icon(Icons.arrow_drop_down, size: 18),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
