@@ -1,5 +1,3 @@
-// ignore: unused_import
-import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -177,8 +175,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelEtcCautionTitle => 'No Undo';
 
   @override
-  String get labelEtcCautionMessage =>
-      'Timestamp/Attribute changes cannot be undone.';
+  String get labelEtcCautionMessage => 'Timestamp/Attribute changes cannot be undone.';
 
   @override
   String get labelUndo => 'Undo';
@@ -458,8 +455,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get labelPreviewBinaryError =>
-      'Preview unavailable: Binary or unknown encoding';
+  String get labelPreviewBinaryError => 'Preview unavailable: Binary or unknown encoding';
 
   @override
   String get labelGoRenamery => 'Go ReNamery!!!';
@@ -511,8 +507,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelNavPC => 'PC';
 
   @override
-  String get labelNumSaveSequenceTooltip =>
-      'Save sequence number (continue numbering next time)';
+  String get labelNumSaveSequenceTooltip => 'Save sequence number (continue numbering next time)';
 
   @override
   String labelStatusDisplayCount(int current, int total, int selected) {
@@ -594,8 +589,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
 
   @override
-  String get labelAboutRespect =>
-      'This app was created with respect for \'Namery\' by Jun Arai.';
+  String get labelAboutRespect => 'This app was created with respect for \'Namery\' by Jun Arai.';
 
   @override
   String get labelAboutVisitWebsite => 'Visit Website';

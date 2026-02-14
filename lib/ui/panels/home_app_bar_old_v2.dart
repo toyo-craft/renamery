@@ -283,9 +283,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                         ),
                       ),
                       if (hasUndo)
-                        PopupMenuItem(
+                        const PopupMenuItem(
                           value: 'copy_undo',
-                          child: const Row(
+                          child: Row(
                             children: [
                               Icon(Icons.history, size: 20),
                               SizedBox(width: 8),

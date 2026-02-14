@@ -58,3 +58,8 @@
 [User Request] "C:\Users\s.kodatai\OneDrive - 株式会社セラフ\source"をRドライブに永久的にマウントしてください
 [docs/user_manual.md] @[docs/user_manual.md] を実装を元に記述してください。特にSubタブのリストネームがわかりやすく解説してください。また、Nameryのマニュアル @[namery_manuals] を参考に記述するのも良いでしょう。英語版と日本語版を作ってください
 [docs/prompt_history.md] @[docs/prompt_history.md] はgitignoreにしてください
+[Release] Windows版の配布版をリリースしたい
+[MSIX] Microsoft Store用 (MSIX) の対応に進めてください
+[Feature] 左ペインのフォルダ階層ですが、現在カレントフォルダはオープンして階層が表示される挙動です。しかしその状態で親のフォルダをクリックしても、カレントディレクトリが存在する親（先祖）のディレクトリは階層を閉じることができません。しかしこれだと視認性が悪い。そのため、カレントディレクトリが選択され場合、カレントディレクトリの親（先祖）を開きますが、改めて親（先祖）ディレクトリをクリックした場合、子（子孫）ディレクトリの階層を閉じる事ができるようにして下さい。
+[Question] Windowsのビルドをする場合、IDEからどの様に実施しますか？
+[Question] Failed to find the 'go' binary...

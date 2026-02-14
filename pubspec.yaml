@@ -22,11 +22,11 @@ dependencies:
   path_provider: ^2.1.5
   window_manager: ^0.5.1
 
-  shared_preferences: ^2.5.4
-  intl: ^0.20.2
+  shared_preferences: ^2.3.2
+  intl: ^0.19.0
   flutter_localizations:
     sdk: flutter
-  google_fonts: ^7.0.2
+  google_fonts: ^6.2.1
   url_launcher: ^6.2.1
 
 dev_dependencies:
@@ -34,6 +34,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^3.0.1
   flutter_launcher_icons: ^0.14.3
+  msix: ^3.16.12
 
 flutter:
   generate: true
@@ -47,3 +48,12 @@ flutter_launcher_icons:
     generate: true
     image_path: "assets/icon/app_icon.png"
     icon_size: 48
+
+msix_config:
+  display_name: ReNamery
+  publisher_display_name: Toyo Craft Lab
+  identity_name: ToyoCraftLab.ReNamery
+  publisher: "CN=ToyoCraftLab"
+  msix_version: 0.1.0.0
+  logo_path: assets/icon/app_icon.png
+  store: true

@@ -82,14 +82,18 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                         itemBuilder: (context) =>
                             _buildCopyMenuItems(provider, l10n),
                         onSelected: (val) {
-                          if (val == 1)
+                          if (val == 1) {
                             CopyHelper.handleCopyMenu(context, provider, 1);
-                          if (val == 2)
+                          }
+                          if (val == 2) {
                             CopyHelper.handleCopyMenu(context, provider, 2);
-                          if (val == 3)
+                          }
+                          if (val == 3) {
                             CopyHelper.handleCopyMenu(context, provider, 3);
-                          if (val == 4)
+                          }
+                          if (val == 4) {
                             CopyHelper.handleCopyMenu(context, provider, 4);
+                          }
                         },
                         child: _ActionButton(
                           icon: Icons.copy,
@@ -146,12 +150,15 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                       if (val == 2) UndoHelper.handleUndo(context, provider);
                       if (val == 3) provider.refresh();
                       // Values from _buildCopyMenuItems
-                      if (val == 101)
+                      if (val == 101) {
                         CopyHelper.handleCopyMenu(context, provider, 1);
-                      if (val == 102)
+                      }
+                      if (val == 102) {
                         CopyHelper.handleCopyMenu(context, provider, 2);
-                      if (val == 103)
+                      }
+                      if (val == 103) {
                         CopyHelper.handleCopyMenu(context, provider, 3);
+                      }
                     },
                   ),
                 ),

@@ -241,6 +241,10 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     }
   }
 
+  // State to track the last selection path we handled for auto-expansion.
+  // This prevents re-expanding a node if the user manually collapses it while the selection is still inside.
+  String? _lastHandledSelectionPath;
+
   @override
   Widget build(BuildContext context) {
     // Determine Display Name
@@ -290,7 +294,9 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     }
 
     // Auto-expand Logic
-    if (currentDir != null && !_isExpanded) {
+    // We only check for auto-expansion if the current selection hash has changed from what we last handled.
+    if (currentDir != null && currentDir.path != _lastHandledSelectionPath) {
+      // Allow expansion check
       bool shouldAutoExpand = false;
       bool isDescendant = false;
 
@@ -319,7 +325,6 @@ class _DirectoryTileState extends State<_DirectoryTile> {
           if (widget.isRoot) {
             if (myContextRoot == activeContextRoot) {
               // I am the Active Root (or containing it?)
-              // Wait, if I am the Active Root, I should expand if descendant.
               if (isDescendant) shouldAutoExpand = true;
             } else {
               // I am NOT the active root. Suppress.
@@ -341,23 +346,33 @@ class _DirectoryTileState extends State<_DirectoryTile> {
       }
       // 3. Unknown Source (External/Initial)
       else {
-        // Default behavior (expand all physical matches) ??
-        // Maybe conservative: Expand if descendant.
         if (isDescendant) shouldAutoExpand = true;
       }
 
       // Also expand if Selected (Exact Match) AND valid context
+      // Note: Usually exact match doesn't need to expand *itself* (it has no children visible inside it in the tree view usually, unless we want to see subfolders)
+      // Standard tree behavior is usually to expand *parents* of selected.
+      // But if we want to show children of selected, we expand.
       if (isSelected) {
         shouldAutoExpand = true;
       }
 
-      if (shouldAutoExpand) {
+      if (shouldAutoExpand && !_isExpanded) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && !_isExpanded) {
+          if (mounted) {
             _toggleExpand();
           }
         });
       }
+
+      // Update the last handled path so we don't force-expand again for this selection
+      // We do this inside a post frame callback usually to avoid side effects during build,
+      // but since it's just a local state tracker for this build logic, we can set it here
+      // (but generally setting state in build is bad).
+      // Actually, we should just update the member variable directly without setState since we are IN build.
+      _lastHandledSelectionPath = currentDir.path;
+    } else if (currentDir == null) {
+      _lastHandledSelectionPath = null;
     }
 
     return Column(
