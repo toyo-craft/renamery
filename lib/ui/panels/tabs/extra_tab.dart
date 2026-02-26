@@ -51,20 +51,28 @@ class _ExtraTabState extends State<ExtraTab> {
         final double spacing = isCompact ? 4.0 : 8.0; // 4dp grid
         final double blockSpacing = isCompact ? 12.0 : 20.0; // 4dp grid
 
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDateSection(
-                  context, provider, provider.renameMode, spacing, l10n),
-              Divider(
-                  height: blockSpacing,
-                  thickness: 1,
-                  color: Theme.of(context).colorScheme.outlineVariant),
-              _buildConversionSection(
-                  context, provider, provider.renameMode, spacing, l10n),
-            ],
+        return RadioGroup<RenameMode>(
+          groupValue: provider.renameMode,
+          onChanged: (mode) {
+            if (mode != null) {
+              _updateSettings(context, mode: mode, immediate: true);
+            }
+          },
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDateSection(
+                    context, provider, provider.renameMode, spacing, l10n),
+                Divider(
+                    height: blockSpacing,
+                    thickness: 1,
+                    color: Theme.of(context).colorScheme.outlineVariant),
+                _buildConversionSection(
+                    context, provider, provider.renameMode, spacing, l10n),
+              ],
+            ),
           ),
         );
       },
@@ -84,13 +92,12 @@ class _ExtraTabState extends State<ExtraTab> {
           },
           child: Row(
             children: [
-              Radio<RenameMode>(
+              const Radio<RenameMode>(
                 value: RenameMode.appendDate,
-                groupValue: mode,
-                onChanged: (val) {
-                  _updateSettings(context, mode: val, immediate: true);
-                },
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
+              const SizedBox(width: 8),
               Text(l10n.labelExtraAppendDate),
             ],
           ),
@@ -189,12 +196,10 @@ class _ExtraTabState extends State<ExtraTab> {
           children: [
             Radio<RenameMode>(
               value: targetMode,
-              groupValue: currentMode,
               visualDensity: VisualDensity.compact,
-              onChanged: (val) {
-                _updateSettings(context, mode: targetMode, immediate: true);
-              },
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
+            const SizedBox(width: 8),
             Text(label),
           ],
         ),

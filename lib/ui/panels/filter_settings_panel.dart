@@ -95,139 +95,137 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
               // Filter Content
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // 1. All Files Radio
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: spacing),
-                      child: Row(
-                        children: [
-                          Container(
-                            height: 24,
-                            width: 24,
-                            margin: const EdgeInsets.only(right: 8),
-                            child: Radio<bool>(
-                              value: false,
-                              groupValue: provider.isFilterSpecific,
-                              onChanged: (val) {
-                                context
-                                    .read<DirectoryProvider>()
-                                    .updateFilterSettings(isSpecific: false);
-                              },
-                              visualDensity: VisualDensity.compact,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                          Text(l10n.labelFilterAll,
-                              style: const TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    // 2. Specify Radio + TextField
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: spacing),
-                      child: Row(
-                        children: [
-                          Container(
-                            height: 24,
-                            width: 24,
-                            margin: const EdgeInsets.only(right: 8),
-                            child: Radio<bool>(
-                              value: true,
-                              groupValue: provider.isFilterSpecific,
-                              onChanged: (val) {
-                                context
-                                    .read<DirectoryProvider>()
-                                    .updateFilterSettings(isSpecific: true);
-                              },
-                              visualDensity: VisualDensity.compact,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                          Text(l10n.labelFilterSpecific,
-                              style: const TextStyle(fontSize: 12)),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _filterController,
-                              style: const TextStyle(fontSize: 12),
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                  borderSide:
-                                      const BorderSide(color: Colors.grey),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.withOpacity(0.5),
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                  borderSide: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  ),
-                                ),
-                                isDense: true,
-                                filled: true,
-                                fillColor: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerLow,
+                child: RadioGroup<bool>(
+                  groupValue: provider.isFilterSpecific,
+                  onChanged: (val) {
+                    if (val != null) {
+                      context
+                          .read<DirectoryProvider>()
+                          .updateFilterSettings(isSpecific: val);
+                    }
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // 1. All Files Radio
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: spacing),
+                        child: Row(
+                          children: [
+                            Container(
+                              height: 24,
+                              width: 24,
+                              margin: const EdgeInsets.only(right: 8),
+                              child: const Radio<bool>(
+                                value: false,
+                                visualDensity: VisualDensity.compact,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
                               ),
-                              onTap: () {
-                                if (!provider.isFilterSpecific) {
+                            ),
+                            Text(l10n.labelFilterAll,
+                                style: const TextStyle(fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      // 2. Specify Radio + TextField
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: spacing),
+                        child: Row(
+                          children: [
+                            Container(
+                              height: 24,
+                              width: 24,
+                              margin: const EdgeInsets.only(right: 8),
+                              child: const Radio<bool>(
+                                value: true,
+                                visualDensity: VisualDensity.compact,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                            Text(l10n.labelFilterSpecific,
+                                style: const TextStyle(fontSize: 12)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextField(
+                                controller: _filterController,
+                                style: const TextStyle(fontSize: 12),
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                    borderSide:
+                                        const BorderSide(color: Colors.grey),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey.withValues(alpha: 0.5),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                    borderSide: BorderSide(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                  isDense: true,
+                                  filled: true,
+                                  fillColor: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerLow,
+                                ),
+                                onTap: () {
+                                  if (!provider.isFilterSpecific) {
+                                    context
+                                        .read<DirectoryProvider>()
+                                        .updateFilterSettings(isSpecific: true);
+                                  }
+                                },
+                                onChanged: (val) {
                                   context
                                       .read<DirectoryProvider>()
-                                      .updateFilterSettings(isSpecific: true);
-                                }
-                              },
-                              onChanged: (val) {
-                                context
-                                    .read<DirectoryProvider>()
-                                    .updateFilterSettings(filter: val);
-                              },
+                                      .updateFilterSettings(filter: val);
+                                },
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(height: spacing),
-                    // Checkboxes
-                    _buildCheckbox(
-                      context,
-                      l10n.labelFilterHideSystem,
-                      provider.hideSystemFiles,
-                      (val) => context
-                          .read<DirectoryProvider>()
-                          .updateFilterSettings(hideSystem: val),
-                      isCompact,
-                    ),
-                    _buildCheckbox(
-                      context,
-                      l10n.labelFilterRecursive,
-                      provider.recursiveSearch,
-                      (val) => context
-                          .read<DirectoryProvider>()
-                          .updateFilterSettings(recursive: val),
-                      isCompact,
-                    ),
-                    _buildCheckbox(
-                      context,
-                      l10n.labelFilterPreview,
-                      provider.showPreview,
-                      (val) => context
-                          .read<DirectoryProvider>()
-                          .updateFilterSettings(preview: val),
-                      isCompact,
-                    ),
-                  ],
+                      SizedBox(height: spacing),
+                      // Checkboxes
+                      _buildCheckbox(
+                        context,
+                        l10n.labelFilterHideSystem,
+                        provider.hideSystemFiles,
+                        (val) => context
+                            .read<DirectoryProvider>()
+                            .updateFilterSettings(hideSystem: val),
+                        isCompact,
+                      ),
+                      _buildCheckbox(
+                        context,
+                        l10n.labelFilterRecursive,
+                        provider.recursiveSearch,
+                        (val) => context
+                            .read<DirectoryProvider>()
+                            .updateFilterSettings(recursive: val),
+                        isCompact,
+                      ),
+                      _buildCheckbox(
+                        context,
+                        l10n.labelFilterPreview,
+                        provider.showPreview,
+                        (val) => context
+                            .read<DirectoryProvider>()
+                            .updateFilterSettings(preview: val),
+                        isCompact,
+                      ),
+                    ],
+                  ),
                 ),
               ),
               // Preview Area

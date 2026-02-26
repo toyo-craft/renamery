@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -175,7 +177,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelEtcCautionTitle => 'Sin Deshacer';
 
   @override
-  String get labelEtcCautionMessage => 'Cambios de fecha/atributo no se pueden deshacer.';
+  String get labelEtcCautionMessage =>
+      'Cambios de fecha/atributo no se pueden deshacer.';
 
   @override
   String get labelUndo => 'Deshacer';
@@ -507,7 +510,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelNavPC => 'PC';
 
   @override
-  String get labelNumSaveSequenceTooltip => 'Guardar número secuencia (continuar siguiente vez)';
+  String get labelNumSaveSequenceTooltip =>
+      'Guardar número secuencia (continuar siguiente vez)';
 
   @override
   String labelStatusDisplayCount(int current, int total, int selected) {
@@ -589,7 +593,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
 
   @override
-  String get labelAboutRespect => 'Esta aplicación fue creada con respeto por \'Namery\' de Jun Arai.';
+  String get labelAboutRespect =>
+      'Esta aplicación fue creada con respeto por \'Namery\' de Jun Arai.';
 
   @override
   String get labelAboutVisitWebsite => 'Visitar Sitio Web';

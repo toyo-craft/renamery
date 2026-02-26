@@ -123,68 +123,76 @@ class _EtcTabState extends State<EtcTab> {
         final double spacing = isCompact ? 4.0 : 8.0; // 4dp grid
         final double blockSpacing = isCompact ? 12.0 : 20.0; // 4dp grid
 
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Timestamp Section
-              _buildTimestampSection(
-                  context, provider, provider.renameMode, spacing, l10n),
+        return RadioGroup<RenameMode>(
+          groupValue: provider.renameMode,
+          onChanged: (mode) {
+            if (mode != null) {
+              _updateSettings(context, mode: mode, immediate: true);
+            }
+          },
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Timestamp Section
+                _buildTimestampSection(
+                    context, provider, provider.renameMode, spacing, l10n),
 
-              Divider(
-                  height: blockSpacing,
-                  thickness: 1,
-                  color: Theme.of(context).colorScheme.outlineVariant),
+                Divider(
+                    height: blockSpacing,
+                    thickness: 1,
+                    color: Theme.of(context).colorScheme.outlineVariant),
 
-              // Attribute Section
-              _buildAttributeSection(
-                  context, provider, provider.renameMode, spacing, l10n),
+                // Attribute Section
+                _buildAttributeSection(
+                    context, provider, provider.renameMode, spacing, l10n),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // Caution Message
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.amber.shade200),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.warning_amber_rounded,
-                        color: Colors.amber.shade800),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.labelEtcCautionTitle,
-                            style: TextStyle(
-                              color: Colors.amber.shade900,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                // Caution Message
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded,
+                          color: Colors.amber.shade800),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.labelEtcCautionTitle,
+                              style: TextStyle(
+                                color: Colors.amber.shade900,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.labelEtcCautionMessage,
-                            style: TextStyle(
-                              color: Colors.amber.shade900,
-                              fontSize: 12,
+                            const SizedBox(height: 4),
+                            Text(
+                              l10n.labelEtcCautionMessage,
+                              style: TextStyle(
+                                color: Colors.amber.shade900,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -207,13 +215,8 @@ class _EtcTabState extends State<EtcTab> {
           },
           child: Row(
             children: [
-              Radio<RenameMode>(
+              const Radio<RenameMode>(
                 value: RenameMode.changeTimestamp,
-                groupValue: mode,
-                onChanged: (val) {
-                  _updateSettings(context,
-                      mode: RenameMode.changeTimestamp, immediate: true);
-                },
               ),
               Text(l10n.labelEtcTimestampChange),
             ],
@@ -270,13 +273,8 @@ class _EtcTabState extends State<EtcTab> {
           },
           child: Row(
             children: [
-              Radio<RenameMode>(
+              const Radio<RenameMode>(
                 value: RenameMode.changeAttributes,
-                groupValue: mode,
-                onChanged: (val) {
-                  _updateSettings(context,
-                      mode: RenameMode.changeAttributes, immediate: true);
-                },
               ),
               Text(l10n.labelEtcAttributeChange),
             ],

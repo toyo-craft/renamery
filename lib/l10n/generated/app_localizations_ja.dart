@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -109,7 +111,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelSubListSample3 => 'サンプル: 特定文字の置換';
 
   @override
-  String get labelSubListHint => 'old_name.txt\tnew_name.txt\nfile01.png\timage01.png';
+  String get labelSubListHint =>
+      'old_name.txt\tnew_name.txt\nfile01.png\timage01.png';
 
   @override
   String get labelExtraAppendDate => 'ファイルの日付を付加';
@@ -175,7 +178,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelEtcCautionTitle => '取り消し操作不能';
 
   @override
-  String get labelEtcCautionMessage => 'このカテゴリ（タイムスタンプ・属性）の変更は、アンドゥ機能で元に戻すことができません。慎重に操作してください。';
+  String get labelEtcCautionMessage =>
+      'このカテゴリ（タイムスタンプ・属性）の変更は、アンドゥ機能で元に戻すことができません。慎重に操作してください。';
 
   @override
   String get labelUndo => '戻す';
@@ -589,7 +593,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
 
   @override
-  String get labelAboutRespect => '当アプリは、Jun Arai 様の \'Namery\' をリスペクトして作成されました。';
+  String get labelAboutRespect =>
+      '当アプリは、Jun Arai 様の \'Namery\' をリスペクトして作成されました。';
 
   @override
   String get labelAboutVisitWebsite => 'ウェブサイトを表示';
@@ -597,7 +602,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
 /// The translations for Japanese (`ja_NM`).
 class AppLocalizationsJaNm extends AppLocalizationsJa {
-  AppLocalizationsJaNm(): super('ja_NM');
+  AppLocalizationsJaNm() : super('ja_NM');
 
   @override
   String get labelMainTab => 'Main';
@@ -768,7 +773,8 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelEtcCautionTitle => '取り消し操作不能';
 
   @override
-  String get labelEtcCautionMessage => 'このカテゴリ（タイムスタンプ・属性）の変更は、アンドゥ機能で元に戻すことができません。慎重に操作してください。';
+  String get labelEtcCautionMessage =>
+      'このカテゴリ（タイムスタンプ・属性）の変更は、アンドゥ機能で元に戻すことができません。慎重に操作してください。';
 
   @override
   String get labelUndo => '戻す';
@@ -1182,7 +1188,8 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
 
   @override
-  String get labelAboutRespect => '当アプリは、Jun Arai 様の \'Namery\' をリスペクトして作成されました。';
+  String get labelAboutRespect =>
+      '当アプリは、Jun Arai 様の \'Namery\' をリスペクトして作成されました。';
 
   @override
   String get labelAboutVisitWebsite => 'ウェブサイトを表示';
