@@ -168,8 +168,7 @@ class _FileListPanelState extends State<FileListPanel> {
             _colWidthDate +
             16 +
             _colWidthAttr +
-            _colWidthAttr +
-            40.0;
+            32.0;
 
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -289,12 +288,14 @@ class _FileListPanelState extends State<FileListPanel> {
                                   minHeight: constraints.maxHeight - 40,
                                 ),
                                 child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     // Header
                                     Container(
+                                      width: totalWidth,
                                       height: 36, // Slightly taller Header
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0,
+                                        horizontal: 16.0,
                                       ),
                                       decoration: BoxDecoration(
                                         color: Theme.of(context)
@@ -390,6 +391,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                       child: SizedBox(
                                         width: totalWidth,
                                         child: ReorderableListView.builder(
+                                          padding: EdgeInsets.zero,
                                           buildDefaultDragHandles: false,
                                           itemCount: files.length,
                                           onReorder: (oldIndex, newIndex) {
@@ -416,307 +418,411 @@ class _FileListPanelState extends State<FileListPanel> {
                                                 _editingFilePath ==
                                                     fileModel.entity.path;
 
-                                            return InkWell(
+                                            return GestureDetector(
                                               key: key,
-                                              onTap: () =>
+                                              onSecondaryTapDown:
+                                                  (TapDownDetails
+                                                      details) async {
+                                                // If not selected, select it first
+                                                if (!fileModel.isSelected) {
                                                   provider.toggleSelection(
-                                                fileModel,
-                                              ),
-                                              child: Container(
-                                                margin: const EdgeInsets
-                                                    .symmetric(
-                                                    horizontal: 8.0,
-                                                    vertical:
-                                                        1.0), // Margin for floating effect
-                                                decoration: BoxDecoration(
-                                                  color: isSelected
-                                                      ? Theme.of(context)
-                                                          .colorScheme
-                                                          .secondaryContainer
-                                                          .withValues(
-                                                              alpha: 0.5)
-                                                      : (index % 2 == 0
-                                                          ? Theme.of(context)
-                                                              .colorScheme
-                                                              .surface
-                                                          : Theme.of(context)
-                                                              .colorScheme
-                                                              .surfaceContainerLow),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          8), // Rounded
-                                                  border: isSelected
-                                                      ? Border.all(
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary
-                                                                  .withValues(
-                                                                      alpha:
-                                                                          0.3))
-                                                      : null,
-                                                ),
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                  horizontal: 8.0,
-                                                  vertical:
-                                                      4.0, // Comfortable height
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    SizedBox(
-                                                      width: _widthDragHandle,
-                                                      child:
-                                                          ReorderableDragStartListener(
-                                                        index: index,
-                                                        child: Icon(
-                                                          Icons.drag_indicator,
-                                                          size: 16,
-                                                          color: isSelected
-                                                              ? Theme.of(
-                                                                      context)
-                                                                  .colorScheme
-                                                                  .primary
-                                                              : Theme.of(
-                                                                      context)
-                                                                  .colorScheme
-                                                                  .onSurfaceVariant,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      width: _widthCheckbox,
-                                                      child: Checkbox(
-                                                        value: isSelected,
-                                                        onChanged: (val) =>
-                                                            provider
-                                                                .toggleSelection(
-                                                          fileModel,
-                                                        ),
-                                                        visualDensity:
-                                                            VisualDensity
-                                                                .compact,
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                        width: _widthSpace),
+                                                      fileModel);
+                                                }
 
-                                                    // 1. Name (with Double Click Edit)
-                                                    SizedBox(
-                                                      width: _colWidthOriginal,
-                                                      child: isEditing
-                                                          ? TextField(
-                                                              controller:
-                                                                  _renameController,
-                                                              focusNode:
-                                                                  _renameFocusNode,
-                                                              autofocus: true,
-                                                              style:
-                                                                  const TextStyle(
-                                                                      fontSize:
-                                                                          12),
-                                                              decoration:
-                                                                  const InputDecoration(
-                                                                isDense: true,
-                                                                contentPadding:
-                                                                    EdgeInsets
-                                                                        .all(4),
-                                                                border:
-                                                                    OutlineInputBorder(),
-                                                              ),
-                                                              onSubmitted:
-                                                                  (val) {
-                                                                provider
-                                                                    .renameOneFile(
-                                                                        fileModel,
-                                                                        val);
-                                                                setState(() {
-                                                                  _editingFilePath =
-                                                                      null;
-                                                                });
-                                                                provider
-                                                                    .setInlineRenaming(
-                                                                        false);
-                                                              },
-                                                            )
-                                                          : GestureDetector(
-                                                              onDoubleTap: () {
-                                                                setState(() {
-                                                                  _editingFilePath =
-                                                                      fileModel
-                                                                          .entity
-                                                                          .path;
-                                                                  _renameController
-                                                                          .text =
-                                                                      fileModel
-                                                                          .originalName;
-                                                                });
-                                                                provider
-                                                                    .setInlineRenaming(
-                                                                        true);
-                                                              },
-                                                              child: Row(
-                                                                children: [
-                                                                  Icon(
-                                                                    isDir
-                                                                        ? Icons
-                                                                            .folder
-                                                                        : Icons
-                                                                            .insert_drive_file,
-                                                                    color: isDir
-                                                                        ? Theme.of(context)
-                                                                            .colorScheme
-                                                                            .tertiary
-                                                                        : Theme.of(context)
-                                                                            .colorScheme
-                                                                            .secondary,
-                                                                    size: 18,
-                                                                  ),
-                                                                  const SizedBox(
-                                                                      width: 8),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      fileModel
-                                                                          .originalName,
-                                                                      overflow:
-                                                                          TextOverflow
-                                                                              .ellipsis,
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontSize:
-                                                                            12,
-                                                                        fontWeight: isSelected
-                                                                            ? FontWeight.w600
-                                                                            : FontWeight.normal,
-                                                                        decoration: isSelected
-                                                                            ? TextDecoration.underline
-                                                                            : null, // M3 doesn't underline usually, but helpful
-                                                                        decorationColor: Theme.of(context)
-                                                                            .colorScheme
-                                                                            .primary,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                    ),
-                                                    SizedBox(
-                                                        width:
-                                                            _widthSpace + 16),
+                                                final RenderBox overlay =
+                                                    Overlay.of(context)
+                                                            .context
+                                                            .findRenderObject()
+                                                        as RenderBox;
 
-                                                    // New Name Cell with specific layout for Error Icon
-                                                    SizedBox(
-                                                      width: _colWidthNew,
+                                                final result =
+                                                    await showMenu<String>(
+                                                  context: context,
+                                                  position:
+                                                      RelativeRect.fromRect(
+                                                    details.globalPosition &
+                                                        const Size(40, 40),
+                                                    Offset.zero & overlay.size,
+                                                  ),
+                                                  items: [
+                                                    PopupMenuItem(
+                                                      value: 'delete',
                                                       child: Row(
                                                         children: [
-                                                          Expanded(
-                                                            child: Text(
-                                                              fileModel.newName,
+                                                          const Icon(
+                                                              Icons.delete,
+                                                              color: Colors.red,
+                                                              size: 20),
+                                                          const SizedBox(
+                                                              width: 8),
+                                                          Text('選択項目の削除',
                                                               style: TextStyle(
-                                                                color: fileModel.hasValidationError
-                                                                    ? Theme.of(
-                                                                            context)
-                                                                        .colorScheme
-                                                                        .error
-                                                                    : (isModified
-                                                                        ? Theme.of(context)
-                                                                            .colorScheme
-                                                                            .primary
-                                                                        : Theme.of(context)
-                                                                            .colorScheme
-                                                                            .onSurface),
-                                                                fontWeight: isModified
-                                                                    ? FontWeight
-                                                                        .bold
-                                                                    : FontWeight
-                                                                        .normal,
-                                                                fontSize: 12,
-                                                              ),
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                            ),
-                                                          ),
-                                                          if (fileModel
-                                                              .hasValidationError)
-                                                            Tooltip(
-                                                              message: fileModel
-                                                                      .validationErrorMessage ??
-                                                                  'エラー',
-                                                              child:
-                                                                  const Padding(
-                                                                padding: EdgeInsets
-                                                                    .only(
-                                                                        left:
-                                                                            4),
-                                                                child: Icon(
-                                                                    Icons
-                                                                        .error_outline,
-                                                                    color: Colors
-                                                                        .red,
-                                                                    size: 16),
-                                                              ),
-                                                            ),
+                                                                  color: Theme.of(
+                                                                          context)
+                                                                      .colorScheme
+                                                                      .error)),
                                                         ],
                                                       ),
                                                     ),
-                                                    SizedBox(
-                                                        width:
-                                                            _widthSpace + 16),
-
-                                                    // 3. Size
-                                                    _buildCell(fileModel.size,
-                                                        _colWidthSize,
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .onSurface),
-                                                    SizedBox(
-                                                        width:
-                                                            _widthSpace + 16),
-
-                                                    // 4. Relative Path
-                                                    _buildCell(
-                                                        fileModel
-                                                            .displayRelativePath,
-                                                        _colWidthPath,
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .onSurfaceVariant),
-                                                    SizedBox(
-                                                        width:
-                                                            _widthSpace + 16),
-
-                                                    // 5. Type
-                                                    _buildCell(
-                                                        fileModel.fileType,
-                                                        _colWidthType,
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .onSurface),
-                                                    SizedBox(
-                                                        width:
-                                                            _widthSpace + 16),
-
-                                                    // 6. Modified
-                                                    _buildCell(
-                                                        fileModel.dateModified,
-                                                        _colWidthDate,
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .onSurface),
-                                                    SizedBox(
-                                                        width:
-                                                            _widthSpace + 16),
-
-                                                    // 7. Attributes
-                                                    _buildCell(
-                                                        fileModel.attributes,
-                                                        _colWidthAttr,
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .onSurfaceVariant),
                                                   ],
+                                                );
+
+                                                if (result == 'delete') {
+                                                  // Confirm dialog
+                                                  final confirm =
+                                                      await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (context) =>
+                                                        AlertDialog(
+                                                      title:
+                                                          const Text('項目の削除'),
+                                                      content: const Text(
+                                                          '選択したファイルをゴミ箱に移動しますか？'),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                  context,
+                                                                  false),
+                                                          child: const Text(
+                                                              'キャンセル'),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                  context,
+                                                                  true),
+                                                          style: TextButton
+                                                              .styleFrom(
+                                                                  foregroundColor:
+                                                                      Colors
+                                                                          .red),
+                                                          child:
+                                                              const Text('削除'),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+
+                                                  if (confirm == true) {
+                                                    await provider
+                                                        .deleteSelectedFiles();
+                                                  }
+                                                }
+                                              },
+                                              child: InkWell(
+                                                onTap: () =>
+                                                    provider.toggleSelection(
+                                                  fileModel,
+                                                ),
+                                                child: Container(
+                                                  margin: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 8.0,
+                                                      vertical:
+                                                          1.0), // Margin for floating effect
+                                                  decoration: BoxDecoration(
+                                                    color: isSelected
+                                                        ? Theme.of(context)
+                                                            .colorScheme
+                                                            .secondaryContainer
+                                                            .withValues(
+                                                                alpha: 0.5)
+                                                        : (index % 2 == 0
+                                                            ? Theme.of(context)
+                                                                .colorScheme
+                                                                .surface
+                                                            : Theme.of(context)
+                                                                .colorScheme
+                                                                .surfaceContainerLow),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8), // Rounded
+                                                    border: isSelected
+                                                        ? Border.all(
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .primary
+                                                                .withValues(
+                                                                    alpha: 0.3))
+                                                        : null,
+                                                  ),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 8.0,
+                                                    vertical:
+                                                        4.0, // Comfortable height
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      SizedBox(
+                                                        width: _widthDragHandle,
+                                                        child:
+                                                            ReorderableDragStartListener(
+                                                          index: index,
+                                                          child: Icon(
+                                                            Icons
+                                                                .drag_indicator,
+                                                            size: 16,
+                                                            color: isSelected
+                                                                ? Theme.of(
+                                                                        context)
+                                                                    .colorScheme
+                                                                    .primary
+                                                                : Theme.of(
+                                                                        context)
+                                                                    .colorScheme
+                                                                    .onSurfaceVariant,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: _widthCheckbox,
+                                                        child: Checkbox(
+                                                          value: isSelected,
+                                                          onChanged: (val) =>
+                                                              provider
+                                                                  .toggleSelection(
+                                                            fileModel,
+                                                          ),
+                                                          visualDensity:
+                                                              VisualDensity
+                                                                  .compact,
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                          width: _widthSpace),
+
+                                                      // 1. Name (with Double Click Edit)
+                                                      SizedBox(
+                                                        width:
+                                                            _colWidthOriginal,
+                                                        child: isEditing
+                                                            ? TextField(
+                                                                controller:
+                                                                    _renameController,
+                                                                focusNode:
+                                                                    _renameFocusNode,
+                                                                autofocus: true,
+                                                                style:
+                                                                    const TextStyle(
+                                                                        fontSize:
+                                                                            12),
+                                                                decoration:
+                                                                    const InputDecoration(
+                                                                  isDense: true,
+                                                                  contentPadding:
+                                                                      EdgeInsets
+                                                                          .all(
+                                                                              4),
+                                                                  border:
+                                                                      OutlineInputBorder(),
+                                                                ),
+                                                                onSubmitted:
+                                                                    (val) {
+                                                                  provider.renameOneFile(
+                                                                      fileModel,
+                                                                      val);
+                                                                  setState(() {
+                                                                    _editingFilePath =
+                                                                        null;
+                                                                  });
+                                                                  provider
+                                                                      .setInlineRenaming(
+                                                                          false);
+                                                                },
+                                                              )
+                                                            : GestureDetector(
+                                                                onDoubleTap:
+                                                                    () {
+                                                                  setState(() {
+                                                                    _editingFilePath =
+                                                                        fileModel
+                                                                            .entity
+                                                                            .path;
+                                                                    _renameController
+                                                                            .text =
+                                                                        fileModel
+                                                                            .originalName;
+                                                                  });
+                                                                  provider
+                                                                      .setInlineRenaming(
+                                                                          true);
+                                                                },
+                                                                child: Row(
+                                                                  children: [
+                                                                    Icon(
+                                                                      isDir
+                                                                          ? Icons
+                                                                              .folder
+                                                                          : Icons
+                                                                              .insert_drive_file,
+                                                                      color: isDir
+                                                                          ? Theme.of(context)
+                                                                              .colorScheme
+                                                                              .tertiary
+                                                                          : Theme.of(context)
+                                                                              .colorScheme
+                                                                              .secondary,
+                                                                      size: 18,
+                                                                    ),
+                                                                    const SizedBox(
+                                                                        width:
+                                                                            8),
+                                                                    Expanded(
+                                                                      child:
+                                                                          Text(
+                                                                        fileModel
+                                                                            .originalName,
+                                                                        overflow:
+                                                                            TextOverflow.ellipsis,
+                                                                        style:
+                                                                            TextStyle(
+                                                                          fontSize:
+                                                                              12,
+                                                                          fontWeight: isSelected
+                                                                              ? FontWeight.w600
+                                                                              : FontWeight.normal,
+                                                                          decoration: isSelected
+                                                                              ? TextDecoration.underline
+                                                                              : null, // M3 doesn't underline usually, but helpful
+                                                                          decorationColor: Theme.of(context)
+                                                                              .colorScheme
+                                                                              .primary,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                      ),
+                                                      SizedBox(
+                                                          width:
+                                                              _widthSpace + 16),
+
+                                                      // New Name Cell with specific layout for Error Icon
+                                                      SizedBox(
+                                                        width: _colWidthNew,
+                                                        child: Row(
+                                                          children: [
+                                                            Expanded(
+                                                              child: Text(
+                                                                fileModel
+                                                                    .newName,
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: fileModel
+                                                                          .hasValidationError
+                                                                      ? Theme.of(
+                                                                              context)
+                                                                          .colorScheme
+                                                                          .error
+                                                                      : (isModified
+                                                                          ? Theme.of(context)
+                                                                              .colorScheme
+                                                                              .primary
+                                                                          : Theme.of(context)
+                                                                              .colorScheme
+                                                                              .onSurface),
+                                                                  fontWeight: isModified
+                                                                      ? FontWeight
+                                                                          .bold
+                                                                      : FontWeight
+                                                                          .normal,
+                                                                  fontSize: 12,
+                                                                ),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                            ),
+                                                            if (fileModel
+                                                                .hasValidationError)
+                                                              Tooltip(
+                                                                message: fileModel
+                                                                        .validationErrorMessage ??
+                                                                    'エラー',
+                                                                child:
+                                                                    const Padding(
+                                                                  padding: EdgeInsets
+                                                                      .only(
+                                                                          left:
+                                                                              4),
+                                                                  child: Icon(
+                                                                      Icons
+                                                                          .error_outline,
+                                                                      color: Colors
+                                                                          .red,
+                                                                      size: 16),
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                          width:
+                                                              _widthSpace + 16),
+
+                                                      // 3. Size
+                                                      _buildCell(fileModel.size,
+                                                          _colWidthSize,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onSurface),
+                                                      SizedBox(
+                                                          width:
+                                                              _widthSpace + 16),
+
+                                                      // 4. Relative Path
+                                                      _buildCell(
+                                                          fileModel
+                                                              .displayRelativePath,
+                                                          _colWidthPath,
+                                                          color: Theme.of(
+                                                                  context)
+                                                              .colorScheme
+                                                              .onSurfaceVariant),
+                                                      SizedBox(
+                                                          width:
+                                                              _widthSpace + 16),
+
+                                                      // 5. Type
+                                                      _buildCell(
+                                                          fileModel.fileType,
+                                                          _colWidthType,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onSurface),
+                                                      SizedBox(
+                                                          width:
+                                                              _widthSpace + 16),
+
+                                                      // 6. Modified
+                                                      _buildCell(
+                                                          fileModel
+                                                              .dateModified,
+                                                          _colWidthDate,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onSurface),
+                                                      SizedBox(
+                                                          width:
+                                                              _widthSpace + 16),
+
+                                                      // 7. Attributes
+                                                      _buildCell(
+                                                          fileModel.attributes,
+                                                          _colWidthAttr,
+                                                          color: Theme.of(
+                                                                  context)
+                                                              .colorScheme
+                                                              .onSurfaceVariant),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             );

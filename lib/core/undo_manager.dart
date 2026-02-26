@@ -39,12 +39,14 @@ class UndoManager {
     // Reverse order for safety
     for (var action in lastTransaction.reversed) {
       try {
-        final file = File(action.newPath);
-        if (await file.exists()) {
-          await file.rename(action.originalPath);
+        if (await File(action.newPath).exists()) {
+          await File(action.newPath).rename(action.originalPath);
+          successCount++;
+        } else if (await Directory(action.newPath).exists()) {
+          await Directory(action.newPath).rename(action.originalPath);
           successCount++;
         } else {
-          errors.add('${p.basename(action.newPath)}: File not found');
+          errors.add('${p.basename(action.newPath)}: File/Directory not found');
         }
       } catch (e) {
         errors.add('${p.basename(action.newPath)}: $e');

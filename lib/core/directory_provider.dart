@@ -29,9 +29,11 @@ class DirectoryProvider extends ChangeNotifier {
   List<FileModel> _currentFiles = [];
   bool _isLoading = false;
   bool _isInlineRenaming = false;
+  bool _enableBetaFeatures = false;
   final UndoManager _undoManager = UndoManager();
 
   bool get isInlineRenaming => _isInlineRenaming;
+  bool get enableBetaFeatures => _enableBetaFeatures;
 
   void setInlineRenaming(bool isRenaming) {
     if (_isInlineRenaming != isRenaming) {
@@ -52,6 +54,7 @@ class DirectoryProvider extends ChangeNotifier {
     _saveSequenceNumber = s.getBool('saveSequenceNumber') ?? false;
     _isCompactMode = s.getBool('isCompactMode') ?? true; // Default to Compact
     _isFilterSpecific = _filterText.isNotEmpty; // Init specific if text exists
+    _enableBetaFeatures = s.getBool('enableBetaFeatures') ?? false;
 
     // Theme (SYNC)
     final appThemeStr = s.getString('appTheme') ?? 'light';
@@ -96,10 +99,10 @@ class DirectoryProvider extends ChangeNotifier {
       _numberingMode = NumberingMode.values[nModeIndex];
     }
 
-    _findText = s.getString('findText');
-    _replaceText = s.getString('replaceText');
-    _appendText = s.getString('appendText');
-    _deleteToText = s.getString('deleteToText');
+    _findText = '';
+    _replaceText = '';
+    _appendText = '';
+    _deleteToText = '';
     _startNumber = s.getInt('startNumber') ?? 1;
     _digits = s.getInt('digits') ?? 3;
     _extensionToLowerCase = s.getBool('extensionToLowerCase') ?? true;
@@ -230,6 +233,7 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('showFolders', _showFolders);
     s.set('saveSequenceNumber', _saveSequenceNumber);
     s.set('isCompactMode', _isCompactMode);
+    s.set('enableBetaFeatures', _enableBetaFeatures);
     s.set('appTheme', _appTheme.name);
     s.set('menuLabelType', _menuLabelType.name);
     s.set('seedColor', _seedColor.toARGB32());
@@ -560,6 +564,12 @@ class DirectoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setEnableBetaFeatures(bool enable) {
+    _enableBetaFeatures = enable;
+    _saveState();
+    notifyListeners();
+  }
+
   void setAppTheme(AppThemeType theme) {
     _appTheme = theme;
     _saveState();
@@ -787,6 +797,7 @@ class DirectoryProvider extends ChangeNotifier {
       datePosition: _datePosition,
       validationType: _validationType,
     );
+    notifyListeners();
   }
 
   // Sort State
@@ -1202,7 +1213,9 @@ class DirectoryProvider extends ChangeNotifier {
           final oldPath = p.join(file.parentPath, file.originalName);
           final newPath = p.join(file.parentPath, file.newName);
 
-          final fsEntity = File(oldPath);
+          final isDir = file.entity is Directory;
+          final FileSystemEntity fsEntity =
+              isDir ? Directory(oldPath) : File(oldPath);
           if (await fsEntity.exists()) {
             await fsEntity.rename(newPath);
             file.markRenamed();
@@ -1245,7 +1258,9 @@ class DirectoryProvider extends ChangeNotifier {
       final oldPath = p.join(file.parentPath, file.originalName);
       final newPath = p.join(file.parentPath, newName);
 
-      final fsEntity = File(oldPath);
+      final isDir = file.entity is Directory;
+      final FileSystemEntity fsEntity =
+          isDir ? Directory(oldPath) : File(oldPath);
       if (await fsEntity.exists()) {
         await fsEntity.rename(newPath);
         // We re-list directory to ensure state sync,
@@ -1531,9 +1546,29 @@ class DirectoryProvider extends ChangeNotifier {
 
     for (var f in targets) {
       try {
-        // Use try-catch per file to avoid stopping everything
-        await f.entity.delete(recursive: true);
-        count++;
+        if (Platform.isWindows) {
+          // Use PowerShell to move to Recycle Bin
+          final isDir = f.entity is Directory;
+          final pathStr = f.entity.path
+              .replaceAll("'", "''"); // Escape single quotes for PowerShell
+
+          final script = '''
+Add-Type -AssemblyName Microsoft.VisualBasic
+[Microsoft.VisualBasic.FileIO.FileSystem]::Delete${isDir ? 'Directory' : 'File'}('$pathStr', 'OnlyErrorDialogs', 'SendToRecycleBin')
+''';
+          final result = await Process.run('powershell', ['-Command', script]);
+          if (result.exitCode == 0) {
+            count++;
+          } else {
+            if (kDebugMode) {
+              print('Recycle Bin error for ${f.entity.path}: ${result.stderr}');
+            }
+          }
+        } else {
+          // Fallback for non-Windows (direct delete as recycle bin is OS-specific)
+          await f.entity.delete(recursive: true);
+          count++;
+        }
       } catch (e) {
         if (kDebugMode) {
           print('Delete error: $e');

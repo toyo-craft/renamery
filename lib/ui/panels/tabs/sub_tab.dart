@@ -155,103 +155,105 @@ class _SubTabState extends State<SubTab> {
                 color: Theme.of(context).colorScheme.outlineVariant),
 
             // --- List Rename Section ---
-            Text(l10n.labelSubListTitle,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: spacing),
-
-            Row(
-              children: [
-                const SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: Radio<RenameMode>(
-                    value: RenameMode.listRename,
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Dropdown
-                Expanded(
-                  child: DropdownButton<String>(
-                    value: 'text_input',
-                    isDense: true,
-                    isExpanded: true,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    underline: Container(
-                      height: 1,
-                      color: Theme.of(context).colorScheme.outline,
+            if (provider.enableBetaFeatures) ...[
+              Text(l10n.labelSubListTitle,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: spacing),
+              Row(
+                children: [
+                  const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: Radio<RenameMode>(
+                      value: RenameMode.listRename,
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    items: [
-                      DropdownMenuItem(
-                        value: 'text_input',
-                        child: Text(l10n.labelSubListModeText),
-                      ),
-                      DropdownMenuItem(
-                        value: 'sample_chapter',
-                        child: Text(l10n.labelSubListSample1),
-                      ),
-                      DropdownMenuItem(
-                        value: 'sample_ext',
-                        child: Text(l10n.labelSubListSample2),
-                      ),
-                      DropdownMenuItem(
-                        value: 'sample_replace',
-                        child: Text(l10n.labelSubListSample3),
-                      ),
-                    ],
-                    onChanged: (val) {
-                      if (val == 'text_input' || val == null) return;
-
-                      String sampleText = '';
-                      switch (val) {
-                        case 'sample_chapter':
-                          sampleText =
-                              '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
-                          break;
-                        case 'sample_ext':
-                          sampleText =
-                              'image01.jpg\timage01.png\nimage02.jpg\timage02.png\nimage03.jpg\timage03.png';
-                          break;
-                        case 'sample_replace':
-                          sampleText =
-                              'old_report.docx\tnew_report.docx\ndraft_v1.txt\tdraft_final.txt';
-                          break;
-                      }
-
-                      if (sampleText.isNotEmpty) {
-                        context.read<DirectoryProvider>().updateRenameSettings(
-                            listText: sampleText,
-                            mode: RenameMode.listRename,
-                            immediate: true);
-                        _listController.text = sampleText;
-                      }
-                    },
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  // Dropdown
+                  Expanded(
+                    child: DropdownButton<String>(
+                      value: 'text_input',
+                      isDense: true,
+                      isExpanded: true,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      underline: Container(
+                        height: 1,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'text_input',
+                          child: Text(l10n.labelSubListModeText),
+                        ),
+                        DropdownMenuItem(
+                          value: 'sample_chapter',
+                          child: Text(l10n.labelSubListSample1),
+                        ),
+                        DropdownMenuItem(
+                          value: 'sample_ext',
+                          child: Text(l10n.labelSubListSample2),
+                        ),
+                        DropdownMenuItem(
+                          value: 'sample_replace',
+                          child: Text(l10n.labelSubListSample3),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        if (val == 'text_input' || val == null) return;
 
-            Padding(
-              padding: const EdgeInsets.only(left: 32.0, top: 4.0),
-              child: TextField(
-                controller: _listController,
-                maxLines: 8,
-                minLines: 3,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(fontFamily: 'Consolas'),
-                decoration: InputDecoration(
-                  hintText: l10n.labelSubListHint,
-                  isDense: true,
-                ),
-                onChanged: (val) => context
-                    .read<DirectoryProvider>()
-                    .updateRenameSettings(
-                        listText: val, mode: RenameMode.listRename),
+                        String sampleText = '';
+                        switch (val) {
+                          case 'sample_chapter':
+                            sampleText =
+                                '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
+                            break;
+                          case 'sample_ext':
+                            sampleText =
+                                'image01.jpg\timage01.png\nimage02.jpg\timage02.png\nimage03.jpg\timage03.png';
+                            break;
+                          case 'sample_replace':
+                            sampleText =
+                                'old_report.docx\tnew_report.docx\ndraft_v1.txt\tdraft_final.txt';
+                            break;
+                        }
+
+                        if (sampleText.isNotEmpty) {
+                          context
+                              .read<DirectoryProvider>()
+                              .updateRenameSettings(
+                                  listText: sampleText,
+                                  mode: RenameMode.listRename,
+                                  immediate: true);
+                          _listController.text = sampleText;
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.only(left: 32.0, top: 4.0),
+                child: TextField(
+                  controller: _listController,
+                  maxLines: 8,
+                  minLines: 3,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(fontFamily: 'Consolas'),
+                  decoration: InputDecoration(
+                    hintText: l10n.labelSubListHint,
+                    isDense: true,
+                  ),
+                  onChanged: (val) => context
+                      .read<DirectoryProvider>()
+                      .updateRenameSettings(
+                          listText: val, mode: RenameMode.listRename),
+                ),
+              ),
+            ],
           ],
         ),
       ),

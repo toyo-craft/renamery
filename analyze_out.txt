@@ -1,0 +1,16 @@
+Analyzing renamery...                                           
+
+   info - Don't use 'BuildContext's across async gaps - lib\ui\panels\file_list_panel.dart:463:53 - use_build_context_synchronously
+  error - Expected to find ')' - lib\ui\panels\file_list_panel.dart:790:46 - expected_token
+warning - The value of the local variable 'provider' isn't used - lib\ui\panels\navigation_panel.dart:51:11 - unused_local_variable
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:214:21 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:215:21 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:322:21 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:323:21 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:388:21 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:391:21 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:481:21 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:482:21 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:594:17 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:595:17 - deprecated_member_use
+

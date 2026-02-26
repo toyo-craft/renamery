@@ -121,11 +121,22 @@ class RenameEngine {
         continue;
       }
 
-      String originalBaseName = p.basenameWithoutExtension(file.originalName);
-      String extension = p.extension(file.originalName);
-      String newBaseName = originalBaseName;
-
       // 1. Primary Rename Logic
+      String originalBaseName;
+      String extension;
+      String newBaseName;
+
+      // ID 001: フォルダの場合はドットを含めて全体をベース名として扱う
+      if (file.entity is Directory) {
+        originalBaseName = file.originalName;
+        extension = '';
+        newBaseName = originalBaseName;
+      } else {
+        originalBaseName = p.basenameWithoutExtension(file.originalName);
+        extension = p.extension(file.originalName);
+        newBaseName = originalBaseName;
+      }
+
       switch (mode) {
         // ... (previous cases) ...
         case RenameMode.numbering:

@@ -302,6 +302,16 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
           const Divider(),
+          _buildSectionHeader(context, 'Development / Testing'),
+          SwitchListTile(
+            title: const Text('Beta版機能を有効にする'),
+            subtitle: const Text('テスト中の新機能を表示します（例：リストリネーム）'),
+            value: provider.enableBetaFeatures,
+            onChanged: (val) {
+              provider.setEnableBetaFeatures(val);
+            },
+          ),
+          const Divider(),
           ListTile(
             title: Text(l10n.labelSettingsAboutTitle),
             leading: const Icon(Icons.info_outline),
