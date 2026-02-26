@@ -227,23 +227,31 @@ class _EtcTabState extends State<EtcTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
-                controller: _timestampController,
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: 'yyyy/MM/dd HH:mm',
-                  suffixIcon: IconButton(
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _timestampController,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        hintText: 'yyyy/MM/dd HH:mm',
+                      ),
+                      onChanged: (val) {
+                        _updateSettings(context,
+                            timestamp: val,
+                            mode: RenameMode.changeTimestamp,
+                            immediate: false);
+                      },
+                    ),
+                  ),
+                  // MD3: trailing icon outside TextField to avoid
+                  // Flutter desktop suffixIcon tap interception bug
+                  IconButton(
                     icon: const Icon(Icons.calendar_month),
                     onPressed: () => _pickDateTime(context, l10n),
                     tooltip: l10n.labelEtcPickDateTooltip,
                   ),
-                ),
-                onChanged: (val) {
-                  _updateSettings(context,
-                      timestamp: val,
-                      mode: RenameMode.changeTimestamp, // Auto-select mode
-                      immediate: false);
-                },
+                ],
               ),
               const SizedBox(height: 4),
               Text(
