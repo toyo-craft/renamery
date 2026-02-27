@@ -10,8 +10,20 @@ import 'core/settings_service.dart';
 
 import 'dart:io';
 
-void main() async {
+import 'package:windows_single_instance/windows_single_instance.dart';
+
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isWindows) {
+    await WindowsSingleInstance.ensureSingleInstance(
+        args, "ToyoCraftLab.ReNamery.SingleInstance",
+        onSecondWindow: (args) async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
+
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
   }
