@@ -365,6 +365,19 @@ class _DirectoryTileState extends State<_DirectoryTile> {
         });
       }
 
+      if (isSelected) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Scrollable.ensureVisible(
+              context,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+            );
+          }
+        });
+      }
+
       // Update the last handled path so we don't force-expand again for this selection
       // We do this inside a post frame callback usually to avoid side effects during build,
       // but since it's just a local state tracker for this build logic, we can set it here
