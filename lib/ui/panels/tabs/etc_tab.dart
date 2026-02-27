@@ -227,29 +227,35 @@ class _EtcTabState extends State<EtcTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              Stack(
+                alignment: Alignment.centerRight,
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _timestampController,
-                      decoration: const InputDecoration(
-                        isDense: true,
-                        hintText: 'yyyy/MM/dd HH:mm',
+                  TextField(
+                    controller: _timestampController,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      hintText: 'yyyy/MM/dd HH:mm',
+                      contentPadding: EdgeInsets.only(
+                        top: 8,
+                        bottom: 8,
+                        left: 8,
+                        right: 48, // Padding so text doesn't overlap the icon
                       ),
-                      onChanged: (val) {
-                        _updateSettings(context,
-                            timestamp: val,
-                            mode: RenameMode.changeTimestamp,
-                            immediate: false);
-                      },
                     ),
+                    onChanged: (val) {
+                      _updateSettings(context,
+                          timestamp: val,
+                          mode: RenameMode.changeTimestamp,
+                          immediate: false);
+                    },
                   ),
-                  // MD3: trailing icon outside TextField to avoid
-                  // Flutter desktop suffixIcon tap interception bug
-                  IconButton(
-                    icon: const Icon(Icons.calendar_month),
-                    onPressed: () => _pickDateTime(context, l10n),
-                    tooltip: l10n.labelEtcPickDateTooltip,
+                  Positioned(
+                    right: 4,
+                    child: IconButton(
+                      icon: const Icon(Icons.calendar_month),
+                      onPressed: () => _pickDateTime(context, l10n),
+                      tooltip: l10n.labelEtcPickDateTooltip,
+                    ),
                   ),
                 ],
               ),

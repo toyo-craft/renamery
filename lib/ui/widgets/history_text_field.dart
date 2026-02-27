@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class HistoryTextField extends StatelessWidget {
+class HistoryTextField extends StatefulWidget {
   final TextEditingController controller;
   final List<String> history;
   final Function(String) onChanged;
@@ -25,64 +25,97 @@ class HistoryTextField extends StatelessWidget {
   });
 
   @override
+  State<HistoryTextField> createState() => _HistoryTextFieldState();
+}
+
+class _HistoryTextFieldState extends State<HistoryTextField> {
+  final MenuController _menuController = MenuController();
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Row(
       children: [
-        if (label.isNotEmpty) ...[
+        if (widget.label.isNotEmpty) ...[
           SizedBox(
-              width: 60, child: Text(label, style: theme.textTheme.bodyMedium)),
+              width: 60,
+              child: Text(widget.label, style: theme.textTheme.bodyMedium)),
           const SizedBox(width: 8),
         ],
+        // MenuAnchor is the official Material Design 3 menu component.
         Expanded(
-          child: TextField(
-            focusNode: focusNode,
-            controller: controller,
-            style: theme.textTheme.bodyMedium,
-            decoration: InputDecoration(
-              isDense: true,
-              hintText: hintText,
-              contentPadding: EdgeInsets.symmetric(
-                vertical: isCompact ? 6 : 8,
-                horizontal: 8,
+          child: LayoutBuilder(builder: (context, constraints) {
+            return MenuAnchor(
+              controller: _menuController,
+              style: MenuStyle(
+                minimumSize:
+                    WidgetStateProperty.all(Size(constraints.maxWidth, 0)),
               ),
-              // filled and border are inherited from InputDecorationTheme
-            ),
-            onChanged: (val) => onChanged(val),
-            onTap: onTap,
-            onSubmitted: (val) {
-              if (onSubmitted != null) {
-                onSubmitted!(val, history);
-              }
-            },
-          ),
-        ),
-        // MD3: trailing icon as independent touch target (min 48dp)
-        // Placed outside TextField to avoid Flutter desktop tap interception bug
-        SizedBox(
-          width: 48,
-          height: 48,
-          child: PopupMenuButton<String>(
-            icon: Icon(Icons.arrow_drop_down,
-                color: colorScheme.onSurfaceVariant),
-            splashRadius: 20,
-            padding: EdgeInsets.zero,
-            onSelected: (String value) {
-              controller.text = value;
-              onChanged(value);
-            },
-            enabled: history.isNotEmpty,
-            itemBuilder: (BuildContext context) {
-              return history.map((String value) {
-                return PopupMenuItem<String>(
-                  value: value,
-                  child: Text(value),
+              menuChildren: widget.history.map((String value) {
+                // Force menu item (and thus the menu) to have the exact width of the TextField
+                return SizedBox(
+                  width: constraints.maxWidth,
+                  child: MenuItemButton(
+                    onPressed: () {
+                      widget.controller.text = value;
+                      widget.onChanged(value);
+                    },
+                    child: Text(value),
+                  ),
                 );
-              }).toList();
-            },
-          ),
+              }).toList(),
+              builder: (BuildContext context, MenuController controller,
+                  Widget? child) {
+                // We use a Stack to place the dropdown icon visually inside the TextField.
+                // This completely avoids the Flutter Desktop TextField.suffixIcon tap interception bug,
+                // while preserving the perfect MD3 "Exposed Dropdown Menu" visual design.
+                return Stack(
+                  alignment: Alignment.centerRight,
+                  children: [
+                    TextField(
+                      focusNode: widget.focusNode,
+                      controller: widget.controller,
+                      style: theme.textTheme.bodyMedium,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        hintText: widget.hintText,
+                        contentPadding: EdgeInsets.only(
+                          top: widget.isCompact ? 6 : 8,
+                          bottom: widget.isCompact ? 6 : 8,
+                          left: 8,
+                          right: 48, // Padding so text doesn't overlap the icon
+                        ),
+                      ),
+                      onChanged: (val) => widget.onChanged(val),
+                      onTap: widget.onTap,
+                      onSubmitted: (val) {
+                        if (widget.onSubmitted != null) {
+                          widget.onSubmitted!(val, widget.history);
+                        }
+                      },
+                    ),
+                    Positioned(
+                      right: 4,
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_drop_down),
+                        tooltip: '履歴を表示',
+                        onPressed: widget.history.isNotEmpty
+                            ? () {
+                                if (controller.isOpen) {
+                                  controller.close();
+                                } else {
+                                  controller.open();
+                                }
+                              }
+                            : null,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          }),
         ),
       ],
     );
