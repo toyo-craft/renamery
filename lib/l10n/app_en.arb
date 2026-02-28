@@ -148,6 +148,8 @@
   "labelSettingsClearHistorySub": "Clears input history",
   "labelSettingsResetAll": "Reset All Settings",
   "labelSettingsResetAllSub": "Restores default settings",
+  "labelSettingsBetaTitle": "Enable Beta Features",
+  "labelSettingsBetaSubtitle": "Shows experimental features (e.g., List Rename)",
   "labelDialogCancel": "Cancel",
   "labelDialogDelete": "Delete",
   "labelDialogReset": "Reset",

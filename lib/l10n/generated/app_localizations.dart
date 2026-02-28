@@ -997,6 +997,18 @@ abstract class AppLocalizations {
   /// **'初期状態に戻します'**
   String get labelSettingsResetAllSub;
 
+  /// No description provided for @labelSettingsBetaTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'Beta版機能を有効にする'**
+  String get labelSettingsBetaTitle;
+
+  /// No description provided for @labelSettingsBetaSubtitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'テスト中の新機能を表示します（例：リストリネーム）'**
+  String get labelSettingsBetaSubtitle;
+
   /// No description provided for @labelDialogCancel.
   ///
   /// In ja, this message translates to:

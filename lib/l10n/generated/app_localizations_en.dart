@@ -458,6 +458,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelSettingsResetAllSub => 'Restores default settings';
 
   @override
+  String get labelSettingsBetaTitle => 'Enable Beta Features';
+
+  @override
+  String get labelSettingsBetaSubtitle =>
+      'Shows experimental features (e.g., List Rename)';
+
+  @override
   String get labelDialogCancel => 'Cancel';
 
   @override

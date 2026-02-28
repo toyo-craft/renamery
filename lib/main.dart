@@ -162,6 +162,17 @@ class ReNameryApp extends StatelessWidget {
           home: const HomeScreen(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
+          localeResolutionCallback: (deviceLocale, supportedLocales) {
+            if (deviceLocale != null) {
+              for (var locale in supportedLocales) {
+                if (locale.languageCode == deviceLocale.languageCode) {
+                  return deviceLocale;
+                }
+              }
+            }
+            // Fallback to English if the language is unsupported
+            return const Locale('en');
+          },
         );
       },
     );

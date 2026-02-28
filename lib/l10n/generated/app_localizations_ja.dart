@@ -458,6 +458,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelSettingsResetAllSub => '初期状態に戻します';
 
   @override
+  String get labelSettingsBetaTitle => 'Beta版機能を有効にする';
+
+  @override
+  String get labelSettingsBetaSubtitle => 'テスト中の新機能を表示します（例：リストリネーム）';
+
+  @override
   String get labelDialogCancel => 'キャンセル';
 
   @override
@@ -918,6 +924,39 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelFilterRecursive => '下位フォルダ検索';
 
   @override
+  String get labelCtxUpOneFolder => '一つ上のフォルダへ';
+
+  @override
+  String get labelCtxRenameGeneral => '名前の変更 (一般)';
+
+  @override
+  String get labelCtxBatchRename => '一括変更 (Namery)';
+
+  @override
+  String get labelCtxOpenWithAssoc => '関連付けで開く';
+
+  @override
+  String get labelCtxMoveToTop => '選択項目を先頭に移動';
+
+  @override
+  String get labelCtxMoveToBottom => '選択項目を最後尾に移動';
+
+  @override
+  String get labelCtxDeleteItems => '選択項目を削除 (Del)';
+
+  @override
+  String get labelCtxMoveCaret => 'キャレット移動';
+
+  @override
+  String get labelCtxCaretSettings => 'キャレットの設定';
+
+  @override
+  String get labelCtxRefresh => '最新の情報に更新 (F5)';
+
+  @override
+  String get labelCtxProperties => 'プロパティ(R)';
+
+  @override
   String get labelFilterPreview => 'プレビュー表示';
 
   @override
@@ -1051,6 +1090,12 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
 
   @override
   String get labelSettingsResetAllSub => '初期状態に戻します';
+
+  @override
+  String get labelSettingsBetaTitle => 'Beta版機能を有効にする';
+
+  @override
+  String get labelSettingsBetaSubtitle => 'テスト中の新機能を表示します（例：リストリネーム）';
 
   @override
   String get labelDialogCancel => 'キャンセル';

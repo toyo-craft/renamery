@@ -149,6 +149,8 @@
   "labelSettingsClearHistorySub": "文字列補完などの入力履歴を削除します",
   "labelSettingsResetAll": "全設定をリセット",
   "labelSettingsResetAllSub": "初期状態に戻します",
+  "labelSettingsBetaTitle": "Beta版機能を有効にする",
+  "labelSettingsBetaSubtitle": "テスト中の新機能を表示します（例：リストリネーム）",
   "labelDialogCancel": "キャンセル",
   "labelDialogDelete": "削除",
   "labelDialogReset": "リセット",
