@@ -21,15 +21,15 @@ class AboutAppDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // 1. Logo / App Name
-              Container(
+              Image.asset(
+                'assets/icon/app_icon.png',
                 width: 64,
                 height: 64,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  shape: BoxShape.circle,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.edit_note,
+                  size: 64,
                 ),
-                child: Icon(Icons.edit_note,
-                    size: 40, color: colorScheme.onPrimaryContainer),
               ),
               const SizedBox(height: 16),
               Text(
