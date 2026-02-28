@@ -284,6 +284,42 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelFilterRecursive => '下位フォルダ検索';
 
   @override
+  String get labelBetaListRenameHint => '※ ベータ版が有効なため表示されています';
+
+  @override
+  String get labelCtxUpOneFolder => '一つ上のフォルダへ';
+
+  @override
+  String get labelCtxRenameGeneral => '名前の変更 (一般)';
+
+  @override
+  String get labelCtxBatchRename => '一括変更 (Namery)';
+
+  @override
+  String get labelCtxOpenWithAssoc => '関連付けで開く';
+
+  @override
+  String get labelCtxMoveToTop => '選択項目を先頭に移動';
+
+  @override
+  String get labelCtxMoveToBottom => '選択項目を最後尾に移動';
+
+  @override
+  String get labelCtxDeleteItems => '選択項目を削除 (Del)';
+
+  @override
+  String get labelCtxMoveCaret => 'キャレット移動';
+
+  @override
+  String get labelCtxCaretSettings => 'キャレットの設定';
+
+  @override
+  String get labelCtxRefresh => '最新の情報に更新 (F5)';
+
+  @override
+  String get labelCtxProperties => 'プロパティ(R)';
+
+  @override
   String get labelFilterPreview => 'プレビュー表示';
 
   @override
@@ -294,6 +330,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get labelNavForward => '進む';
+
+  @override
+  String get labelNavUp => '一つ上のフォルダへ';
 
   @override
   String get labelHistoryBack => '履歴 (戻る)';

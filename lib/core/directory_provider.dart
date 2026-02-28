@@ -1162,6 +1162,35 @@ class DirectoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void moveSelectedToTop() {
+    final selected = _currentFiles.where((f) => f.isSelected).toList();
+    final unselected = _currentFiles.where((f) => !f.isSelected).toList();
+    if (selected.isNotEmpty) {
+      _currentFiles = [...selected, ...unselected];
+      _updatePreviews();
+      notifyListeners();
+    }
+  }
+
+  void moveSelectedToBottom() {
+    final selected = _currentFiles.where((f) => f.isSelected).toList();
+    final unselected = _currentFiles.where((f) => !f.isSelected).toList();
+    if (selected.isNotEmpty) {
+      _currentFiles = [...unselected, ...selected];
+      _updatePreviews();
+      notifyListeners();
+    }
+  }
+
+  Future<void> goUp() async {
+    if (_currentDirectory != null) {
+      final parent = _currentDirectory!.parent;
+      if (parent.path != _currentDirectory!.path) {
+        await setDirectory(parent);
+      }
+    }
+  }
+
   Future<int> executeRename() async {
     if (_currentFiles.isEmpty) return 0;
 

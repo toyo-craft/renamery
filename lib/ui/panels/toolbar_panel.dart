@@ -191,7 +191,7 @@ class ToolbarPanel extends StatelessWidget {
 
           // 6. Up
           IconButton(
-            icon: const Icon(Icons.arrow_upward),
+            icon: const Icon(Icons.expand_less),
             color: iconColor,
             iconSize: iconSize,
             tooltip: '上に移動',
@@ -201,7 +201,7 @@ class ToolbarPanel extends StatelessWidget {
 
           // 7. Down
           IconButton(
-            icon: const Icon(Icons.arrow_downward),
+            icon: const Icon(Icons.expand_more),
             color: iconColor,
             iconSize: iconSize,
             tooltip: '下に移動',

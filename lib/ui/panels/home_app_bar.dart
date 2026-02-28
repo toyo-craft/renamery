@@ -41,7 +41,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 0,
       title: LayoutBuilder(
         builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 600;
+          final isNarrow = constraints.maxWidth < 650;
           return Row(
             children: [
               const SizedBox(width: 8),
@@ -96,6 +96,18 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   });
                 },
                 tooltip: l10n.labelHistoryForward,
+              ),
+
+              // 2.5. Up Group
+              IconButton(
+                icon: const Icon(Icons.arrow_upward),
+                iconSize: iconSize,
+                tooltip: l10n.labelNavUp,
+                onPressed: provider.currentDirectory?.parent != null
+                    ? () => provider.goUp()
+                    : null,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
 
               const SizedBox(
@@ -175,7 +187,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
                 // 6. Up/Down
                 IconButton(
-                  icon: const Icon(Icons.arrow_upward),
+                  icon: const Icon(Icons.expand_less),
                   iconSize: iconSize,
                   tooltip: l10n.labelMoveUp,
                   onPressed: provider.canMoveUp
@@ -183,7 +195,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                       : null,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.arrow_downward),
+                  icon: const Icon(Icons.expand_more),
                   iconSize: iconSize,
                   tooltip: l10n.labelMoveDown,
                   onPressed: provider.canMoveDown
@@ -291,7 +303,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                         enabled: provider.canMoveUp,
                         child: Row(
                           children: [
-                            const Icon(Icons.arrow_upward, size: 20),
+                            const Icon(Icons.expand_less, size: 20),
                             const SizedBox(width: 8),
                             Text(l10n.labelMoveUp),
                           ],
@@ -302,7 +314,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                         enabled: provider.canMoveDown,
                         child: Row(
                           children: [
-                            const Icon(Icons.arrow_downward, size: 20),
+                            const Icon(Icons.expand_more, size: 20),
                             const SizedBox(width: 8),
                             Text(l10n.labelMoveDown),
                           ],

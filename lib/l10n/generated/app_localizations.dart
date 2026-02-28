@@ -649,6 +649,78 @@ abstract class AppLocalizations {
   /// **'下位フォルダ検索'**
   String get labelFilterRecursive;
 
+  /// No description provided for @labelBetaListRenameHint.
+  ///
+  /// In ja, this message translates to:
+  /// **'※ ベータ版が有効なため表示されています'**
+  String get labelBetaListRenameHint;
+
+  /// No description provided for @labelCtxUpOneFolder.
+  ///
+  /// In ja, this message translates to:
+  /// **'一つ上のフォルダへ'**
+  String get labelCtxUpOneFolder;
+
+  /// No description provided for @labelCtxRenameGeneral.
+  ///
+  /// In ja, this message translates to:
+  /// **'名前の変更 (一般)'**
+  String get labelCtxRenameGeneral;
+
+  /// No description provided for @labelCtxBatchRename.
+  ///
+  /// In ja, this message translates to:
+  /// **'一括変更 (Namery)'**
+  String get labelCtxBatchRename;
+
+  /// No description provided for @labelCtxOpenWithAssoc.
+  ///
+  /// In ja, this message translates to:
+  /// **'関連付けで開く'**
+  String get labelCtxOpenWithAssoc;
+
+  /// No description provided for @labelCtxMoveToTop.
+  ///
+  /// In ja, this message translates to:
+  /// **'選択項目を先頭に移動'**
+  String get labelCtxMoveToTop;
+
+  /// No description provided for @labelCtxMoveToBottom.
+  ///
+  /// In ja, this message translates to:
+  /// **'選択項目を最後尾に移動'**
+  String get labelCtxMoveToBottom;
+
+  /// No description provided for @labelCtxDeleteItems.
+  ///
+  /// In ja, this message translates to:
+  /// **'選択項目を削除 (Del)'**
+  String get labelCtxDeleteItems;
+
+  /// No description provided for @labelCtxMoveCaret.
+  ///
+  /// In ja, this message translates to:
+  /// **'キャレット移動'**
+  String get labelCtxMoveCaret;
+
+  /// No description provided for @labelCtxCaretSettings.
+  ///
+  /// In ja, this message translates to:
+  /// **'キャレットの設定'**
+  String get labelCtxCaretSettings;
+
+  /// No description provided for @labelCtxRefresh.
+  ///
+  /// In ja, this message translates to:
+  /// **'最新の情報に更新 (F5)'**
+  String get labelCtxRefresh;
+
+  /// No description provided for @labelCtxProperties.
+  ///
+  /// In ja, this message translates to:
+  /// **'プロパティ(R)'**
+  String get labelCtxProperties;
+
   /// No description provided for @labelFilterPreview.
   ///
   /// In ja, this message translates to:
@@ -672,6 +744,12 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'進む'**
   String get labelNavForward;
+
+  /// No description provided for @labelNavUp.
+  ///
+  /// In ja, this message translates to:
+  /// **'一つ上のフォルダへ'**
+  String get labelNavUp;
 
   /// No description provided for @labelHistoryBack.
   ///

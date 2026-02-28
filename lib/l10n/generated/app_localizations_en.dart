@@ -108,7 +108,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelSubListSample2 => 'Sample: Ext Replace';
 
   @override
-  String get labelSubListSample3 => 'Sample: Char Replace';
+  String get labelSubListSample3 => 'サンプル: 特定文字の置換';
 
   @override
   String get labelSubListHint => 'old.txt\tnew.txt';
@@ -283,6 +283,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelFilterRecursive => 'Recursive Search';
 
   @override
+  String get labelBetaListRenameHint =>
+      '* Shown because Beta features are enabled';
+
+  @override
+  String get labelCtxUpOneFolder => 'Up one folder';
+
+  @override
+  String get labelCtxRenameGeneral => 'Rename (General)';
+
+  @override
+  String get labelCtxBatchRename => 'Batch Rename (Namery)';
+
+  @override
+  String get labelCtxOpenWithAssoc => 'Open with association';
+
+  @override
+  String get labelCtxMoveToTop => 'Move selected to top';
+
+  @override
+  String get labelCtxMoveToBottom => 'Move selected to bottom';
+
+  @override
+  String get labelCtxDeleteItems => 'Delete selected (Del)';
+
+  @override
+  String get labelCtxMoveCaret => 'Move caret';
+
+  @override
+  String get labelCtxCaretSettings => 'Caret settings';
+
+  @override
+  String get labelCtxRefresh => 'Refresh (F5)';
+
+  @override
+  String get labelCtxProperties => 'Properties (R)';
+
+  @override
   String get labelFilterPreview => 'Show Preview';
 
   @override
@@ -293,6 +330,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelNavForward => 'Forward';
+
+  @override
+  String get labelNavUp => 'Up one folder';
 
   @override
   String get labelHistoryBack => 'History (Back)';

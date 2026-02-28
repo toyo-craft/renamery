@@ -181,7 +181,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
                 // 6. Up/Down
                 IconButton(
-                  icon: const Icon(Icons.arrow_upward),
+                  icon: const Icon(Icons.expand_less),
                   // color: iconColor,
                   iconSize: iconSize,
                   tooltip: '上に移動',
@@ -190,7 +190,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                       : null,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.arrow_downward),
+                  icon: const Icon(Icons.expand_more),
                   // color: iconColor,
                   iconSize: iconSize,
                   tooltip: '下に移動',
@@ -300,7 +300,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                         enabled: provider.canMoveUp,
                         child: const Row(
                           children: [
-                            Icon(Icons.arrow_upward, size: 20),
+                            Icon(Icons.expand_less, size: 20),
                             SizedBox(width: 8),
                             Text('上に移動'),
                           ],
@@ -311,7 +311,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                         enabled: provider.canMoveDown,
                         child: const Row(
                           children: [
-                            Icon(Icons.arrow_downward, size: 20),
+                            Icon(Icons.expand_more, size: 20),
                             SizedBox(width: 8),
                             Text('下に移動'),
                           ],
