@@ -1456,11 +1456,11 @@ class DirectoryProvider extends ChangeNotifier {
 
   Future<void> _loadAttributes(Directory dir) async {
     try {
-      // Run attrib *
+      // Run attrib * /D (to include directories)
       // Note: attributes might be localized? No, A S H R are standard.
       // Output format: A   H  R    C:\Path\To\File.txt
       final result =
-          await Process.run('attrib', ['*'], workingDirectory: dir.path);
+          await Process.run('attrib', ['*', '/D'], workingDirectory: dir.path);
       if (result.exitCode == 0) {
         final lines = (result.stdout as String).split('\n');
         final Map<String, String> attrMap = {};

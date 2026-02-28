@@ -368,12 +368,16 @@ class _DirectoryTileState extends State<_DirectoryTile> {
       if (isSelected) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            Scrollable.ensureVisible(
-              context,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
-            );
+            final verticalScrollable =
+                Scrollable.maybeOf(context, axis: Axis.vertical);
+            final renderObject = context.findRenderObject();
+            if (verticalScrollable != null && renderObject != null) {
+              verticalScrollable.position.ensureVisible(
+                renderObject,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            }
           }
         });
       }

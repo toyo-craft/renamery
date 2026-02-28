@@ -18,7 +18,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelExtraTab => '额外';
 
   @override
-  String get labelEtcTab => '属性';
+  String get labelEtcTab => '其它';
 
   @override
   String get labelStringInput => '文本';
@@ -285,7 +285,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelBetaListRenameHint => '* 显示是因为已启用 Beta 功能';
 
   @override
-  String get labelCtxUpOneFolder => '上一个文件夹';
+  String get labelCtxUpOneFolder => '向上移至父文件夹';
 
   @override
   String get labelCtxRenameGeneral => '重命名 (常规)';
@@ -330,7 +330,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelNavForward => '前进';
 
   @override
-  String get labelNavUp => '上一个文件夹';
+  String get labelNavUp => '返回上级';
 
   @override
   String get labelHistoryBack => '历史记录 (后退)';
