@@ -62,3 +62,9 @@ clean_rebuild.bat
 force_cleanup.bat
 run_app.bat
 run_debug.bat
+
+# Debug logs
+*_log.txt
+*_log2.txt
+chrome_log*.txt
+final_crash_log.txt
