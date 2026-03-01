@@ -37,30 +37,36 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.labelSettingsMenuLabelTitle),
+                Row(
+                  children: [
+                    const Icon(Icons.language, size: 20),
+                    const SizedBox(width: 8),
+                    Text(l10n.labelSettingsMenuLabelTitle),
+                  ],
+                ),
                 const SizedBox(height: 8),
                 SegmentedButton<MenuLabelType>(
-                  segments: [
+                  segments: const [
                     ButtonSegment(
-                        value: MenuLabelType.namery,
-                        label: Text(l10n.labelSettingsLangNamery),
-                        icon: const Icon(Icons.history)),
+                      value: MenuLabelType.namery,
+                      label: Text('Namery (JP)'),
+                    ),
                     ButtonSegment(
-                        value: MenuLabelType.standard,
-                        label: Text(l10n.labelSettingsLangJP),
-                        icon: const Icon(Icons.language)),
+                      value: MenuLabelType.standard,
+                      label: Text('日本語'),
+                    ),
                     ButtonSegment(
-                        value: MenuLabelType.english,
-                        label: Text(l10n.labelSettingsLangEN),
-                        icon: const Icon(Icons.language)),
+                      value: MenuLabelType.english,
+                      label: Text('English'),
+                    ),
                     ButtonSegment(
-                        value: MenuLabelType.chinese,
-                        label: Text(l10n.labelSettingsLangCN),
-                        icon: const Icon(Icons.language)),
+                      value: MenuLabelType.chinese,
+                      label: Text('中文'),
+                    ),
                     ButtonSegment(
-                        value: MenuLabelType.spanish,
-                        label: Text(l10n.labelSettingsLangES),
-                        icon: const Icon(Icons.language)),
+                      value: MenuLabelType.spanish,
+                      label: Text('Español'),
+                    ),
                   ],
                   selected: {provider.menuLabelType},
                   onSelectionChanged: (Set<MenuLabelType> newSelection) {
