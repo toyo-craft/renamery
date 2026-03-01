@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 class SettingsService {
@@ -41,8 +40,18 @@ class SettingsService {
   }
 
   Future<File> _getSettingsFile() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final path = p.join(directory.path, 'ReNamery', 'settings.json');
+    // Portable mode: Save settings next to the executable
+    final exePath = Platform.resolvedExecutable;
+    final String directoryPath;
+
+    // For debugging in IDE, resolvedExecutable might be dart.exe or flutter_tool
+    if (kDebugMode && !exePath.toLowerCase().endsWith('renamery.exe')) {
+      directoryPath = Directory.current.path;
+    } else {
+      directoryPath = p.dirname(exePath);
+    }
+
+    final path = p.join(directoryPath, 'settings.json');
     final file = File(path);
     if (!await file.parent.exists()) {
       await file.parent.create(recursive: true);
