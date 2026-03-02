@@ -145,6 +145,71 @@ class _FileListPanelState extends State<FileListPanel> {
     );
   }
 
+  TextSpan _buildDiffTextSpan(
+      BuildContext context, String oldText, String newText, bool hasError) {
+    if (oldText == newText || hasError) {
+      return TextSpan(
+        text: newText,
+        style: TextStyle(
+          fontSize: 12,
+          color: hasError
+              ? Theme.of(context).colorScheme.error
+              : Theme.of(context).colorScheme.onSurface,
+        ),
+      );
+    }
+
+    int prefixLen = 0;
+    while (prefixLen < oldText.length &&
+        prefixLen < newText.length &&
+        oldText[prefixLen] == newText[prefixLen]) {
+      prefixLen++;
+    }
+
+    int suffixLen = 0;
+    while (suffixLen < oldText.length - prefixLen &&
+        suffixLen < newText.length - prefixLen &&
+        oldText[oldText.length - 1 - suffixLen] ==
+            newText[newText.length - 1 - suffixLen]) {
+      suffixLen++;
+    }
+
+    final prefix = oldText.substring(0, prefixLen);
+    final deleted = oldText.substring(prefixLen, oldText.length - suffixLen);
+    final added = newText.substring(prefixLen, newText.length - suffixLen);
+    final suffix = oldText.substring(oldText.length - suffixLen);
+
+    return TextSpan(
+      style: const TextStyle(fontSize: 12),
+      children: [
+        if (prefix.isNotEmpty)
+          TextSpan(
+              text: prefix,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        if (deleted.isNotEmpty)
+          TextSpan(
+            text: deleted,
+            style: TextStyle(
+              color: Colors.red.withOpacity(0.7),
+              decoration: TextDecoration.lineThrough,
+            ),
+          ),
+        if (added.isNotEmpty)
+          TextSpan(
+            text: added,
+            style: const TextStyle(
+              color: Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        if (suffix.isNotEmpty)
+          TextSpan(
+              text: suffix,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -457,9 +522,6 @@ class _FileListPanelState extends State<FileListPanel> {
                                               final fileModel = files[index];
                                               final isDir =
                                                   fileModel.entity is Directory;
-                                              final isModified =
-                                                  fileModel.originalName !=
-                                                      fileModel.newName;
                                               final isSelected =
                                                   fileModel.isSelected;
                                               final key = ValueKey(
@@ -888,27 +950,15 @@ class _FileListPanelState extends State<FileListPanel> {
                                                           child: Row(
                                                             children: [
                                                               Expanded(
-                                                                child: Text(
-                                                                  fileModel
-                                                                      .newName,
-                                                                  style:
-                                                                      TextStyle(
-                                                                    color: fileModel
-                                                                            .hasValidationError
-                                                                        ? Theme.of(context)
-                                                                            .colorScheme
-                                                                            .error
-                                                                        : (isModified
-                                                                            ? Theme.of(context).colorScheme.primary
-                                                                            : Theme.of(context).colorScheme.onSurface),
-                                                                    fontWeight: isModified
-                                                                        ? FontWeight
-                                                                            .bold
-                                                                        : FontWeight
-                                                                            .normal,
-                                                                    fontSize:
-                                                                        12,
-                                                                  ),
+                                                                child: RichText(
+                                                                  text: _buildDiffTextSpan(
+                                                                      context,
+                                                                      fileModel
+                                                                          .originalName,
+                                                                      fileModel
+                                                                          .newName,
+                                                                      fileModel
+                                                                          .hasValidationError),
                                                                   overflow:
                                                                       TextOverflow
                                                                           .ellipsis,

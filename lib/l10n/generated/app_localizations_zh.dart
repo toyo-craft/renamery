@@ -21,6 +21,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelEtcTab => '其它';
 
   @override
+  String get labelCategoryAdd => 'テキストの追加';
+
+  @override
+  String get labelCategoryRemove => 'テキストの削除';
+
+  @override
+  String get labelCategoryReplace => '置換と変換';
+
+  @override
+  String get labelCategoryNumbering => '連番 (ナンバリング)';
+
+  @override
+  String get labelCategoryExtension => '拡張子';
+
+  @override
+  String get labelCategoryAdvanced => '高度な操作';
+
+  @override
   String get labelStringInput => '文本';
 
   @override

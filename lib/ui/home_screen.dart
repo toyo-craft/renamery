@@ -232,42 +232,95 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           ],
         ),
         bottomNavigationBar: Container(
-          height: 24,
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          color: Colors.grey[200],
-          child: Consumer<DirectoryProvider>(
-            builder: (context, provider, child) {
-              final total = provider.allFilesCount;
-              final current = provider.currentFiles.length;
-              final selected =
-                  provider.currentFiles.where((f) => f.isSelected).length;
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: SafeArea(
+            child: Consumer<DirectoryProvider>(
+              builder: (context, provider, child) {
+                final total = provider.allFilesCount;
+                final current = provider.currentFiles.length;
+                final selected =
+                    provider.currentFiles.where((f) => f.isSelected).length;
 
-              String countText = '';
-              if (current != total) {
-                countText =
-                    l10n.labelStatusDisplayCount(current, total, selected);
-              } else {
-                countText = l10n.labelStatusTotalCount(total, selected);
-              }
+                String countText = '';
+                if (current != total) {
+                  countText =
+                      l10n.labelStatusDisplayCount(current, total, selected);
+                } else {
+                  countText = l10n.labelStatusTotalCount(total, selected);
+                }
 
-              String statusText = provider.isLoading
-                  ? l10n.labelStatusProcessing
-                  : l10n.labelStatusReady;
+                String statusText = provider.isLoading
+                    ? l10n.labelStatusProcessing
+                    : l10n.labelStatusReady;
 
-              return Row(
-                children: [
-                  Text(
-                    countText,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  const Spacer(),
-                  Text(
-                    statusText,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              );
-            },
+                final canExecute =
+                    provider.canExecute && !provider.hasInvalidFilenames;
+
+                return Row(
+                  children: [
+                    // Status
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            countText,
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            statusText,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Action Button
+                    SizedBox(
+                      height: 48,
+                      width: 200,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onPrimary,
+                        ),
+                        onPressed: canExecute
+                            ? () => _confirmAndExecute(context, provider, l10n)
+                            : null,
+                        icon: const Icon(Icons.play_arrow_rounded, size: 24),
+                        label: Text(
+                          l10n.labelGoRenamery,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ),
         floatingActionButton: !showRightPane
@@ -280,6 +333,24 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
             : null,
       ),
     );
+  }
+
+  Future<void> _confirmAndExecute(BuildContext context,
+      DirectoryProvider provider, AppLocalizations l10n) async {
+    if (!provider.currentFiles.any((f) => f.isSelected)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No files selected')),
+      );
+      return;
+    }
+
+    final executedCount = await provider.executeRename();
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.labelMsgExecutedCount(executedCount))),
+      );
+    }
   }
 
   Widget _buildBody(bool showLeftPane, bool showRightPane) {

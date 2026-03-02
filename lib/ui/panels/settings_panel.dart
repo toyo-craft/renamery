@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../core/directory_provider.dart';
-import '../../core/rename_engine.dart';
-import 'tabs/main_tab.dart';
-import 'tabs/sub_tab.dart';
-import 'tabs/extra_tab.dart';
-import 'tabs/etc_tab.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+
+import 'categories/category_add.dart';
+import 'categories/category_remove.dart';
+import 'categories/category_replace.dart';
+import 'categories/category_numbering.dart';
+import 'categories/category_extension.dart';
+import 'categories/category_advanced.dart';
 
 class SettingsPanel extends StatefulWidget {
   const SettingsPanel({super.key});
@@ -15,163 +15,115 @@ class SettingsPanel extends StatefulWidget {
   State<SettingsPanel> createState() => _SettingsPanelState();
 }
 
-class _SettingsPanelState extends State<SettingsPanel>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _SettingsPanelState extends State<SettingsPanel> {
+  int _selectedIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(_handleTabSelection);
-  }
-
-  @override
-  void dispose() {
-    _tabController.removeListener(_handleTabSelection);
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  void _handleTabSelection() {
-    if (_tabController.indexIsChanging) {
-      // Animation ...
-    } else {
-      final provider = context.read<DirectoryProvider>();
-      final index = _tabController.index;
-
-      RenameMode? targetMode;
-      if (index == 0) {
-        // Main Tab
-        // If current mode is NOT Main, switch to last Main.
-        if (!provider.isMainMode(provider.renameMode)) {
-          targetMode = provider.lastMainMode;
-        }
-      } else if (index == 1) {
-        // Sub Tab
-        if (!provider.isSubMode(provider.renameMode)) {
-          targetMode = provider.lastSubMode;
-        }
-      } else if (index == 2) {
-        // Extra Tab
-        if (!provider.isExtraMode(provider.renameMode)) {
-          targetMode = provider.lastExtraMode;
-        }
-      } else if (index == 3) {
-        // Etc Tab
-        if (!provider.isEtcMode(provider.renameMode)) {
-          targetMode = provider.lastEtcMode;
-        }
-      }
-
-      if (targetMode != null) {
-        provider.updateRenameSettings(mode: targetMode, immediate: true);
-      }
-    }
-  }
+  final List<Widget> _pages = const [
+    CategoryAddText(),
+    CategoryRemoveText(),
+    CategoryReplaceConvert(),
+    CategoryNumbering(),
+    CategoryExtension(),
+    CategoryAdvanced(),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<DirectoryProvider>();
     final l10n = AppLocalizations.of(context)!;
-
-    final isCompact = provider.isCompactMode;
-    final double padding = isCompact ? 4.0 : 8.0; // 4dp grid
 
     return Column(
       children: [
-        Container(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            labelPadding:
-                const EdgeInsets.symmetric(horizontal: 16.0), // Consistent
-            tabs: [
-              Tab(text: l10n.labelMainTab),
-              Tab(text: l10n.labelSubTab),
-              Tab(text: l10n.labelExtraTab),
-              Tab(text: l10n.labelEtcTab),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
         Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: const [
-              MainTab(),
-              SubTab(),
-              ExtraTab(),
-              EtcTab(),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Container(
-          padding: EdgeInsets.all(padding),
-          width: double.infinity,
-          color: Theme.of(context).colorScheme.surface,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Footer Options
-              InkWell(
-                onTap: () => context
-                    .read<DirectoryProvider>()
-                    .updateRenameSettings(
-                        extensionToLowerCase: !context
-                            .read<DirectoryProvider>()
-                            .extensionToLowerCase,
-                        immediate: true),
-                borderRadius: BorderRadius.circular(4.0),
-                child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(vertical: isCompact ? 2.0 : 4.0),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: Checkbox(
-                          value: context
-                              .watch<DirectoryProvider>()
-                              .extensionToLowerCase,
-                          onChanged: (val) => context
-                              .read<DirectoryProvider>()
-                              .updateRenameSettings(
-                                  extensionToLowerCase: val, immediate: true),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          l10n.labelExtensionLower,
-                          style: const TextStyle(fontSize: 13),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+              NavigationRail(
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: (int index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                labelType: NavigationRailLabelType.all,
+                useIndicator: true,
+                indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
+                    .withOpacity(0.5),
+                destinations: [
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.add_circle_outline),
+                    selectedIcon: const Icon(Icons.add_circle),
+                    label: Text(l10n.labelCategoryAdd,
+                        style: const TextStyle(fontSize: 11)),
                   ),
-                ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.remove_circle_outline),
+                    selectedIcon: const Icon(Icons.remove_circle),
+                    label: Text(l10n.labelCategoryRemove,
+                        style: const TextStyle(fontSize: 11)),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.find_replace_outlined),
+                    selectedIcon: const Icon(Icons.find_replace),
+                    label: Text(l10n.labelCategoryReplace,
+                        style: const TextStyle(fontSize: 11)),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.format_list_numbered),
+                    selectedIcon: const Icon(Icons.format_list_numbered),
+                    label: Text(l10n.labelCategoryNumbering,
+                        style: const TextStyle(fontSize: 11)),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.extension_outlined),
+                    selectedIcon: const Icon(Icons.extension),
+                    label: Text(l10n.labelCategoryExtension,
+                        style: const TextStyle(fontSize: 11)),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.settings_applications_outlined),
+                    selectedIcon: const Icon(Icons.settings_applications),
+                    label: Text(l10n.labelCategoryAdvanced,
+                        style: const TextStyle(fontSize: 11)),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: isCompact ? 40 : 48,
-                child: FilledButton.icon(
-                  onPressed:
-                      (provider.canExecute && !provider.hasInvalidFilenames)
-                          ? () => _confirmAndExecute(context, provider)
-                          : null,
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text(l10n.labelGoRenamery,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  // style: defaults to Theme.of(context).colorScheme.primary
+              const VerticalDivider(thickness: 1, width: 1),
+              // Body
+              Expanded(
+                child: Container(
+                  color: Theme.of(context).colorScheme.surface,
+                  child: IndexedStack(
+                    index: _selectedIndex,
+                    children: _pages
+                        .map((page) => SingleChildScrollView(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 4.0),
+                                child: Card(
+                                  elevation: 0,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerLow,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant,
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: page,
+                                  ),
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                  ),
                 ),
               ),
             ],
@@ -179,23 +131,5 @@ class _SettingsPanelState extends State<SettingsPanel>
         ),
       ],
     );
-  }
-
-  Future<void> _confirmAndExecute(
-      BuildContext context, DirectoryProvider provider) async {
-    if (!provider.currentFiles.any((f) => f.isSelected)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ファイルが選択されていません')),
-      );
-      return;
-    }
-
-    final executedCount = await provider.executeRename();
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$executedCount 個のファイルをリネームしました')),
-      );
-    }
   }
 }

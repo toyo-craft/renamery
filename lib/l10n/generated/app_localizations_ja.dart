@@ -21,6 +21,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelEtcTab => '属性';
 
   @override
+  String get labelCategoryAdd => 'テキストの追加';
+
+  @override
+  String get labelCategoryRemove => 'テキストの削除';
+
+  @override
+  String get labelCategoryReplace => '置換と変換';
+
+  @override
+  String get labelCategoryNumbering => '連番 (ナンバリング)';
+
+  @override
+  String get labelCategoryExtension => '拡張子';
+
+  @override
+  String get labelCategoryAdvanced => '高度な操作';
+
+  @override
   String get labelStringInput => '文字列';
 
   @override
@@ -507,7 +525,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelPreviewBinaryError => 'プレビューを利用できません: バイナリまたは不明なエンコーディング';
 
   @override
-  String get labelGoRenamery => 'Go ReNamery!!!';
+  String get labelGoRenamery => 'リネームを実行する';
 
   @override
   String get labelTermFolder => 'フォルダー';

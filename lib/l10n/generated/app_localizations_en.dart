@@ -21,6 +21,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelEtcTab => 'Attributes';
 
   @override
+  String get labelCategoryAdd => 'Add Text';
+
+  @override
+  String get labelCategoryRemove => 'Remove Text';
+
+  @override
+  String get labelCategoryReplace => 'Replace & Convert';
+
+  @override
+  String get labelCategoryNumbering => 'Numbering';
+
+  @override
+  String get labelCategoryExtension => 'Extension';
+
+  @override
+  String get labelCategoryAdvanced => 'Advanced';
+
+  @override
   String get labelStringInput => 'String';
 
   @override
@@ -509,7 +527,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Preview unavailable: Binary or unknown encoding';
 
   @override
-  String get labelGoRenamery => 'Go ReNamery!!!';
+  String get labelGoRenamery => 'Execute Rename';
 
   @override
   String get labelTermFolder => 'Folder';

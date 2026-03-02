@@ -127,6 +127,42 @@ abstract class AppLocalizations {
   /// **'属性'**
   String get labelEtcTab;
 
+  /// No description provided for @labelCategoryAdd.
+  ///
+  /// In ja, this message translates to:
+  /// **'テキストの追加'**
+  String get labelCategoryAdd;
+
+  /// No description provided for @labelCategoryRemove.
+  ///
+  /// In ja, this message translates to:
+  /// **'テキストの削除'**
+  String get labelCategoryRemove;
+
+  /// No description provided for @labelCategoryReplace.
+  ///
+  /// In ja, this message translates to:
+  /// **'置換と変換'**
+  String get labelCategoryReplace;
+
+  /// No description provided for @labelCategoryNumbering.
+  ///
+  /// In ja, this message translates to:
+  /// **'連番 (ナンバリング)'**
+  String get labelCategoryNumbering;
+
+  /// No description provided for @labelCategoryExtension.
+  ///
+  /// In ja, this message translates to:
+  /// **'拡張子'**
+  String get labelCategoryExtension;
+
+  /// No description provided for @labelCategoryAdvanced.
+  ///
+  /// In ja, this message translates to:
+  /// **'高度な操作'**
+  String get labelCategoryAdvanced;
+
   /// No description provided for @labelStringInput.
   ///
   /// In ja, this message translates to:
@@ -1090,7 +1126,7 @@ abstract class AppLocalizations {
   /// No description provided for @labelGoRenamery.
   ///
   /// In ja, this message translates to:
-  /// **'Go ReNamery!!!'**
+  /// **'リネームを実行する'**
   String get labelGoRenamery;
 
   /// No description provided for @labelTermFolder.
