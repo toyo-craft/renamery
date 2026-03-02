@@ -97,6 +97,23 @@ class ReNameryApp extends StatelessWidget {
         final useDarkGray = provider.appTheme == AppThemeType.darkGray;
         final targetDarkScheme = useDarkGray ? darkGrayScheme : darkScheme;
 
+        // Determine active scheme and brightness for window color synchronization
+        final bool isDarkMode = provider.themeMode == ThemeMode.dark ||
+            (provider.themeMode == ThemeMode.system &&
+                View.of(context).platformDispatcher.platformBrightness ==
+                    Brightness.dark);
+        final currentScheme = isDarkMode ? targetDarkScheme : lightScheme;
+
+        // Synchronize Windows title bar color with theme
+        if (Platform.isWindows) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            // Set the window brightness to ensure title bar text color is correct
+            await windowManager.setBrightness(isDarkMode ? Brightness.dark : Brightness.light);
+            // Set the window background/title bar color
+            await windowManager.setBackgroundColor(currentScheme.surface);
+          });
+        }
+
         return MaterialApp(
           title: 'ReNamery',
           themeMode: provider.themeMode,
