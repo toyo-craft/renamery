@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'file_model.dart';
 
 enum RenameMode {
@@ -427,9 +428,9 @@ class RenameEngine {
           invalidChars = RegExp(r'[/]'); // Only slash is strictly forbidden
           break;
         case ValidationType.auto:
-          if (Platform.isWindows) {
+          if (!kIsWeb && Platform.isWindows) {
             invalidChars = RegExp(r'[\\/:*?"<>|]');
-          } else if (Platform.isMacOS) {
+          } else if (!kIsWeb && Platform.isMacOS) {
             invalidChars = RegExp(r'[:/]');
           } else {
             invalidChars = RegExp(r'[/]');

@@ -16,6 +16,7 @@ import 'panels/home_app_bar.dart'; // Import new AppBar
 import 'helpers/undo_helper.dart';
 import 'helpers/copy_helper.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,7 +33,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   @override
   void initState() {
     super.initState();
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       windowManager.addListener(this);
     }
 
@@ -63,7 +65,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
   @override
   void dispose() {
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       windowManager.removeListener(this);
     }
     super.dispose();
@@ -80,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   }
 
   Future<void> _saveWindowState() async {
-    if (Platform.isAndroid || Platform.isIOS) return;
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) return;
     final size = await windowManager.getSize();
     final pos = await windowManager.getPosition();
     final s = SettingsService();

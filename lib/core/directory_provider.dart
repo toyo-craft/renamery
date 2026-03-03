@@ -1481,7 +1481,7 @@ class DirectoryProvider extends ChangeNotifier {
       _applyFilters();
 
       // Fetch Attributes in bulk (Windows Only)
-      if (Platform.isWindows) {
+      if (!kIsWeb && Platform.isWindows) {
         await _loadAttributes(_currentDirectory!);
       }
     } catch (e) {
@@ -1570,10 +1570,14 @@ class DirectoryProvider extends ChangeNotifier {
   static Future<List<Directory>> getQuickAccessDirectories() async {
     List<Directory> quickAccess = [];
 
+    if (kIsWeb) {
+      return quickAccess; // Web has no local filesystem access
+    }
+
     String? home;
-    if (Platform.isWindows) {
+    if (!kIsWeb && Platform.isWindows) {
       home = Platform.environment['USERPROFILE'];
-    } else {
+    } else if (!kIsWeb) {
       home = Platform.environment['HOME'];
     }
 
@@ -1618,7 +1622,7 @@ class DirectoryProvider extends ChangeNotifier {
 
     for (var f in targets) {
       try {
-        if (Platform.isWindows) {
+        if (!kIsWeb && Platform.isWindows) {
           // Use PowerShell to move to Recycle Bin
           final isDir = f.entity is Directory;
           final pathStr = f.entity.path
@@ -1666,10 +1670,15 @@ Add-Type -AssemblyName Microsoft.VisualBasic
   static Future<List<Directory>> getLogicalDrives() async {
     List<Directory> drives = [];
 
-    if (Platform.isWindows) {
+    if (kIsWeb) {
+      // Return empty, or mock root for Web? Web doesn't have drives.
+      return drives;
+    }
+
+    if (!kIsWeb && Platform.isWindows) {
       for (var code = 'A'.codeUnitAt(0); code <= 'Z'.codeUnitAt(0); code++) {
         final driveLetter = String.fromCharCode(code);
-        final dir = Directory('$driveLetter:\\');
+        final dir = Directory('$driveLetter:\\\\');
         if (await dir.exists()) {
           drives.add(dir);
         }
@@ -1691,7 +1700,8 @@ Add-Type -AssemblyName Microsoft.VisualBasic
       case ValidationType.android:
         return 'ディレクトリ';
       case ValidationType.auto:
-        if (Platform.isWindows || Platform.isMacOS || Platform.isIOS) {
+        if (!kIsWeb &&
+            (Platform.isWindows || Platform.isMacOS || Platform.isIOS)) {
           return 'フォルダ';
         } else {
           return 'ディレクトリ';

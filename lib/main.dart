@@ -9,13 +9,14 @@ import 'package:window_manager/window_manager.dart';
 import 'core/settings_service.dart';
 
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:windows_single_instance/windows_single_instance.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (Platform.isWindows) {
+  if (!kIsWeb && Platform.isWindows) {
     await WindowsSingleInstance.ensureSingleInstance(
         args, "ToyoCraftLab.ReNamery.SingleInstance",
         onSecondWindow: (args) async {
@@ -24,7 +25,7 @@ void main(List<String> args) async {
     });
   }
 
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     await windowManager.ensureInitialized();
   }
   await SettingsService().loadSettings(); // Load settings early
@@ -35,7 +36,7 @@ void main(List<String> args) async {
   final x = SettingsService().getDouble('windowX');
   final y = SettingsService().getDouble('windowY');
 
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     WindowOptions windowOptions = WindowOptions(
       size: Size(width, height),
       center: x == null || y == null, // Center if no position saved
@@ -105,10 +106,11 @@ class ReNameryApp extends StatelessWidget {
         final currentScheme = isDarkMode ? targetDarkScheme : lightScheme;
 
         // Synchronize Windows title bar color with theme
-        if (Platform.isWindows) {
+        if (!kIsWeb && Platform.isWindows) {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             // Set the window brightness to ensure title bar text color is correct
-            await windowManager.setBrightness(isDarkMode ? Brightness.dark : Brightness.light);
+            await windowManager
+                .setBrightness(isDarkMode ? Brightness.dark : Brightness.light);
             // Set the window background/title bar color
             await windowManager.setBackgroundColor(currentScheme.surface);
           });
