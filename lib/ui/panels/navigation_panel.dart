@@ -402,9 +402,22 @@ class _DirectoryTileState extends State<_DirectoryTile> {
   // State to track the last selection path we handled for auto-expansion.
   // This prevents re-expanding a node if the user manually collapses it while the selection is still inside.
   String? _lastHandledSelectionPath;
+  int _lastTreeVersion = -1;
 
   @override
   Widget build(BuildContext context) {
+    // Check if tree needs to be refreshed (e.g. after file/folder deletion)
+    final provider = context.watch<DirectoryProvider>();
+    if (_loaded &&
+        provider.treeVersion != _lastTreeVersion &&
+        _lastTreeVersion != -1) {
+      _loaded = false;
+      if (_isExpanded) {
+        _toggleExpand(); // Reload subdirectories
+      }
+    }
+    _lastTreeVersion = provider.treeVersion;
+
     // Determine Display Name
     String name = p.basename(widget.directory.path);
     if (widget.directory.path.endsWith(':\\')) {
@@ -422,7 +435,6 @@ class _DirectoryTileState extends State<_DirectoryTile> {
       iconColor = Colors.grey;
     }
 
-    final provider = context.watch<DirectoryProvider>();
     final currentDir = provider.currentDirectory;
     bool isSelected = currentDir?.path == widget.directory.path;
 

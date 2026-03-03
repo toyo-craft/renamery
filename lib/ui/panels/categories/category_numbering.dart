@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
 import 'package:renamery/ui/widgets/number_spin_box.dart';
+import 'package:renamery/ui/widgets/history_text_field.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 
 class CategoryNumbering extends StatefulWidget {
@@ -186,16 +187,16 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
                       NumberingMode.numberStringRelative),
 
                   const SizedBox(height: 16),
-                  TextField(
+                  HistoryTextField(
                     controller: _findController,
                     focusNode: _findFocus,
-                    decoration: InputDecoration(
-                      labelText: l10n.labelStringInput,
-                      border: const OutlineInputBorder(),
-                      isDense: isCompact,
-                    ),
+                    history: provider.findHistory,
+                    hintText: l10n.labelStringInput,
+                    isCompact: isCompact,
                     onChanged: (val) =>
                         provider.updateRenameSettings(findText: val),
+                    onSubmitted: (val, _) =>
+                        provider.addHistory(HistoryType.find, val),
                   ),
                 ],
               ),

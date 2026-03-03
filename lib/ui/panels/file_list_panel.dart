@@ -889,11 +889,15 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                   child: Row(
                                                                     children: [
                                                                       GestureDetector(
-                                                                        onDoubleTap: isDir
+                                                                        onTap: isDir
                                                                             ? () {
                                                                                 provider.setDirectory(fileModel.entity as Directory);
                                                                               }
-                                                                            : null,
+                                                                            : () {
+                                                                                launchUrl(Uri.file(fileModel.entity.path));
+                                                                              },
+                                                                        onDoubleTap:
+                                                                            () {},
                                                                         child:
                                                                             Icon(
                                                                           isDir

@@ -39,10 +39,12 @@ class DirectoryProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isInlineRenaming = false;
   bool _enableBetaFeatures = false;
+  int _treeVersion = 0;
   final UndoManager _undoManager = UndoManager();
 
   bool get isInlineRenaming => _isInlineRenaming;
   bool get enableBetaFeatures => _enableBetaFeatures;
+  int get treeVersion => _treeVersion;
 
   void setInlineRenaming(bool isRenaming) {
     if (_isInlineRenaming != isRenaming) {
@@ -1647,6 +1649,7 @@ Add-Type -AssemblyName Microsoft.VisualBasic
     }
 
     if (count > 0 && _currentDirectory != null) {
+      _treeVersion++;
       setDirectory(_currentDirectory!);
     } else {
       _isLoading = false;
