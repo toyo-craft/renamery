@@ -4,6 +4,7 @@ import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
 import 'package:intl/intl.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class CategoryAdvanced extends StatefulWidget {
   const CategoryAdvanced({super.key});
@@ -103,7 +104,7 @@ class _CategoryAdvancedState extends State<CategoryAdvanced> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.date_range),
+                    icon: const Icon(Symbols.date_range),
                     tooltip: l10n.labelEtcPickDateTooltip,
                     onPressed: () async {
                       DateTime initialDate = DateTime.now();

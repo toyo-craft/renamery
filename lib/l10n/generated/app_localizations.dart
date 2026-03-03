@@ -1126,7 +1126,7 @@ abstract class AppLocalizations {
   /// No description provided for @labelGoRenamery.
   ///
   /// In ja, this message translates to:
-  /// **'リネームを実行する'**
+  /// **'リネームを実行'**
   String get labelGoRenamery;
 
   /// No description provided for @labelTermFolder.

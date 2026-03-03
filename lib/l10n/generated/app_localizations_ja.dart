@@ -525,7 +525,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelPreviewBinaryError => 'プレビューを利用できません: バイナリまたは不明なエンコーディング';
 
   @override
-  String get labelGoRenamery => 'リネームを実行する';
+  String get labelGoRenamery => 'リネームを実行';
 
   @override
   String get labelTermFolder => 'フォルダー';

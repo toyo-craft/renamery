@@ -1,9 +1,10 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:path/path.dart' as p;
 import '../../core/directory_provider.dart';
-import 'filter_settings_panel.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 
 class NavigationPanel extends StatefulWidget {
@@ -53,15 +54,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Title Bar
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: Text(
-            l10n.labelNavTitle,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
+        // Tree view
         Expanded(
           child: _loading
               ? const Center(child: CircularProgressIndicator())
@@ -122,8 +115,39 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   },
                 ),
         ),
-        // Filter & Preview Panel
-        const FilterSettingsPanel(),
+
+        // Preview Panel (ExpansionTile)
+        Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: ExpansionTile(
+            key: const ValueKey('preview_expansion'),
+            initiallyExpanded: provider.showPreview,
+            onExpansionChanged: (expanded) {
+              context
+                  .read<DirectoryProvider>()
+                  .updateFilterSettings(preview: expanded);
+            },
+            dense: true,
+            tilePadding: const EdgeInsets.symmetric(horizontal: 12.0),
+            title: Text(
+              l10n.labelFilterPreview,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+            children: [
+              SizedBox(
+                height: 150,
+                child: _buildPreviewContent(provider, l10n),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -145,16 +169,150 @@ class _NavigationPanelState extends State<NavigationPanel> {
 
   IconData? _getIconForPath(String path) {
     final name = p.basename(path).toLowerCase();
-    if (name == 'desktop') return Icons.desktop_windows;
-    if (name == 'downloads') return Icons.download;
-    if (name == 'documents') return Icons.description;
-    if (name == 'pictures') return Icons.image;
-    if (name == 'music') return Icons.music_note;
-    if (name == 'videos') return Icons.movie;
-    if (name == 'onedrive') return Icons.cloud;
+    if (name == 'desktop') return Symbols.desktop_windows;
+    if (name == 'downloads') return Symbols.download;
+    if (name == 'documents') return Symbols.description;
+    if (name == 'pictures') return Symbols.image;
+    if (name == 'music') return Symbols.music_note;
+    if (name == 'videos') return Symbols.movie;
+    if (name == 'onedrive') return Symbols.cloud;
     // Check if it looks like a user home
-    if (!path.contains(p.separator)) return Icons.home; // Fallback
+    if (!path.contains(p.separator)) return Symbols.home; // Fallback
     return null; // Default folder
+  }
+
+  Widget _buildPreviewContent(
+      DirectoryProvider provider, AppLocalizations l10n) {
+    final selected = provider.currentFiles.where((f) => f.isSelected).toList();
+
+    if (selected.isEmpty) {
+      return Center(
+          child: Text(l10n.labelPreviewNoSelection,
+              style: const TextStyle(color: Colors.grey)));
+    }
+
+    if (selected.length > 1) {
+      return Center(
+          child: Text(l10n.labelPreviewSelectedCount(selected.length),
+              style: const TextStyle(color: Colors.grey)));
+    }
+
+    final file = selected.first;
+    final path = file.entity.path;
+    final ext = path.split('.').last.toLowerCase();
+    final hasExt = path.contains('.');
+
+    if (hasExt &&
+        ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'ico'].contains(ext)) {
+      return Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: Image.file(
+          File(path),
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) =>
+              Center(child: Text(l10n.labelPreviewImageLoadFailed)),
+        ),
+      );
+    }
+
+    // Text Preview
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: FutureBuilder<String>(
+        future: _readTextPreview(File(path), l10n),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+                child: CircularProgressIndicator(strokeWidth: 2));
+          }
+          final text = snapshot.data ?? l10n.labelPreviewUnavailable;
+          return SingleChildScrollView(
+            child: SelectableText(
+              text,
+              style: const TextStyle(fontSize: 11, fontFamily: 'Consolas'),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<String> _readTextPreview(File file, AppLocalizations l10n) async {
+    try {
+      final len = await file.length();
+      const int limit = 50 * 1024; // 50KB
+
+      if (len > limit) {
+        final stream = file.openRead(0, limit);
+        final chunks = await stream.toList();
+        final bytes = chunks.expand((element) => element).toList();
+        String content = utf8.decode(bytes, allowMalformed: true);
+        final sizeStr = (len / 1024).toStringAsFixed(1);
+        return '$content\n\n${l10n.labelPreviewOmitted(sizeStr)}';
+      }
+      return await file.readAsString();
+    } catch (e) {
+      return l10n.labelPreviewBinaryError;
+    }
+  }
+}
+
+// A simple dialog to input a file type filter or clear it
+class _FilterTextDialog extends StatefulWidget {
+  final String initialValue;
+  final bool isSpecific;
+  const _FilterTextDialog(
+      {required this.initialValue, required this.isSpecific});
+
+  @override
+  State<_FilterTextDialog> createState() => _FilterTextDialogState();
+}
+
+class _FilterTextDialogState extends State<_FilterTextDialog> {
+  late TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title:
+          Text(l10n.labelFilterSpecific, style: const TextStyle(fontSize: 14)),
+      content: TextField(
+        controller: _ctrl,
+        autofocus: true,
+        decoration: InputDecoration(
+          hintText: '*.png, *.txt ...',
+          isDense: true,
+          suffixIcon: IconButton(
+            icon: const Icon(Symbols.clear, size: 16),
+            onPressed: () => _ctrl.clear(),
+          ),
+        ),
+        onSubmitted: (val) => Navigator.of(context).pop(val),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(''),
+          child: Text(l10n.labelFilterAll),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_ctrl.text),
+          child: const Text('OK'),
+        ),
+      ],
+    );
   }
 }
 
@@ -428,8 +586,8 @@ class _DirectoryTileState extends State<_DirectoryTile> {
                       onTap: _toggleExpand,
                       child: Icon(
                         _isExpanded
-                            ? Icons.keyboard_arrow_down
-                            : Icons.keyboard_arrow_right,
+                            ? Symbols.keyboard_arrow_down
+                            : Symbols.keyboard_arrow_right,
                         size: 16,
                         color: Colors.grey,
                       ),
@@ -475,7 +633,12 @@ class _DirectoryTileState extends State<_DirectoryTile> {
             ),
             padding: const EdgeInsets.only(left: 12.0), // Tree Indentation
             child: Column(
-              children: _subDirectories.map((dir) {
+              children: _subDirectories.where((dir) {
+                if (provider.hideSystemFiles) {
+                  return !p.basename(dir.path).startsWith('.');
+                }
+                return true;
+              }).map((dir) {
                 // Pass context root down
                 String? childContext = widget.contextRoot;
                 if (widget.isQuickAccess && widget.isRoot) {

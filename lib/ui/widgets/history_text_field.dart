@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class HistoryTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -98,7 +99,7 @@ class _HistoryTextFieldState extends State<HistoryTextField> {
                     Positioned(
                       right: 4,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_drop_down),
+                        icon: const Icon(Symbols.arrow_drop_down),
                         tooltip: '履歴を表示',
                         onPressed: widget.history.isNotEmpty
                             ? () {

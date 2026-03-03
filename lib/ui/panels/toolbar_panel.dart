@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:material_symbols_icons/symbols.dart';
 // For Clipboard
 import '../../core/directory_provider.dart';
 import '../helpers/undo_helper.dart';
@@ -28,7 +29,7 @@ class ToolbarPanel extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back),
+                icon: const Icon(Symbols.arrow_back),
                 color: iconColor,
                 iconSize: iconSize,
                 tooltip: '戻る',
@@ -37,7 +38,7 @@ class ToolbarPanel extends StatelessWidget {
                 constraints: const BoxConstraints(),
               ),
               PopupMenuButton<int>(
-                icon: const Icon(Icons.arrow_drop_down),
+                icon: const Icon(Symbols.arrow_drop_down),
                 color: Colors.white,
                 enabled: provider.backHistory.isNotEmpty,
                 onSelected: (steps) {
@@ -64,7 +65,7 @@ class ToolbarPanel extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_forward),
+                icon: const Icon(Symbols.arrow_forward),
                 color: iconColor,
                 iconSize: iconSize,
                 tooltip: '進む',
@@ -74,7 +75,7 @@ class ToolbarPanel extends StatelessWidget {
                 constraints: const BoxConstraints(),
               ),
               PopupMenuButton<int>(
-                icon: const Icon(Icons.arrow_drop_down),
+                icon: const Icon(Symbols.arrow_drop_down),
                 color: Colors.white,
                 enabled: provider.forwardHistory.isNotEmpty,
                 onSelected: (steps) {
@@ -100,7 +101,7 @@ class ToolbarPanel extends StatelessWidget {
 
           // 3. Execute
           IconButton(
-            icon: const Icon(Icons.play_arrow),
+            icon: const Icon(Symbols.play_arrow),
             color: iconColor,
             iconSize: iconSize,
             tooltip: '実行',
@@ -111,7 +112,7 @@ class ToolbarPanel extends StatelessWidget {
 
           // 4. Undo
           TextButton.icon(
-            icon: const Icon(Icons.undo),
+            icon: const Icon(Symbols.undo),
             label: Text(provider.canUndo ? '戻す (${provider.undoCount})' : '戻す'),
             style: TextButton.styleFrom(
               foregroundColor: iconColor,
@@ -127,7 +128,7 @@ class ToolbarPanel extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.content_copy),
+                icon: const Icon(Symbols.content_copy),
                 color: Colors.grey[700],
                 iconSize: iconSize,
                 tooltip: 'コピー (現在名)',
@@ -138,7 +139,7 @@ class ToolbarPanel extends StatelessWidget {
                 constraints: const BoxConstraints(),
               ),
               PopupMenuButton<int>(
-                icon: const Icon(Icons.arrow_drop_down),
+                icon: const Icon(Symbols.arrow_drop_down),
                 color: Colors.white,
                 // Enable if EITHER selection exists OR undo log exists
                 enabled: provider.currentFiles.any((f) => f.isSelected) ||
@@ -191,7 +192,7 @@ class ToolbarPanel extends StatelessWidget {
 
           // 6. Up
           IconButton(
-            icon: const Icon(Icons.expand_less),
+            icon: const Icon(Symbols.expand_less),
             color: iconColor,
             iconSize: iconSize,
             tooltip: '上に移動',
@@ -201,7 +202,7 @@ class ToolbarPanel extends StatelessWidget {
 
           // 7. Down
           IconButton(
-            icon: const Icon(Icons.expand_more),
+            icon: const Icon(Symbols.expand_more),
             color: iconColor,
             iconSize: iconSize,
             tooltip: '下に移動',
@@ -214,7 +215,7 @@ class ToolbarPanel extends StatelessWidget {
 
           // 8. Refresh
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Symbols.refresh),
             color: iconColor,
             iconSize: iconSize,
             tooltip: '全て更新',

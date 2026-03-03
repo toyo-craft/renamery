@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import 'categories/category_add.dart';
 import 'categories/category_remove.dart';
@@ -60,38 +61,38 @@ class _SettingsPanelState extends State<SettingsPanel> {
                         .withOpacity(0.5),
                     destinations: [
                       NavigationRailDestination(
-                        icon: const Icon(Icons.add_circle_outline),
-                        selectedIcon: const Icon(Icons.add_circle),
+                        icon: const Icon(Symbols.add_circle),
+                        selectedIcon: const Icon(Symbols.add_circle),
                         label: Text(l10n.labelCategoryAdd,
                             style: const TextStyle(fontSize: 11)),
                       ),
                       NavigationRailDestination(
-                        icon: const Icon(Icons.remove_circle_outline),
-                        selectedIcon: const Icon(Icons.remove_circle),
+                        icon: const Icon(Symbols.do_not_disturb_on),
+                        selectedIcon: const Icon(Symbols.do_not_disturb_on),
                         label: Text(l10n.labelCategoryRemove,
                             style: const TextStyle(fontSize: 11)),
                       ),
                       NavigationRailDestination(
-                        icon: const Icon(Icons.find_replace_outlined),
-                        selectedIcon: const Icon(Icons.find_replace),
+                        icon: const Icon(Symbols.find_replace),
+                        selectedIcon: const Icon(Symbols.find_replace),
                         label: Text(l10n.labelCategoryReplace,
                             style: const TextStyle(fontSize: 11)),
                       ),
                       NavigationRailDestination(
-                        icon: const Icon(Icons.format_list_numbered),
-                        selectedIcon: const Icon(Icons.format_list_numbered),
+                        icon: const Icon(Symbols.format_list_numbered),
+                        selectedIcon: const Icon(Symbols.format_list_numbered),
                         label: Text(l10n.labelCategoryNumbering,
                             style: const TextStyle(fontSize: 11)),
                       ),
                       NavigationRailDestination(
-                        icon: const Icon(Icons.extension_outlined),
-                        selectedIcon: const Icon(Icons.extension),
+                        icon: const Icon(Symbols.extension),
+                        selectedIcon: const Icon(Symbols.extension),
                         label: Text(l10n.labelCategoryExtension,
                             style: const TextStyle(fontSize: 11)),
                       ),
                       NavigationRailDestination(
-                        icon: const Icon(Icons.settings_applications_outlined),
-                        selectedIcon: const Icon(Icons.settings_applications),
+                        icon: const Icon(Symbols.settings_applications),
+                        selectedIcon: const Icon(Symbols.settings_applications),
                         label: Text(l10n.labelCategoryAdvanced,
                             style: const TextStyle(fontSize: 11)),
                       ),

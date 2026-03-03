@@ -184,7 +184,7 @@
     }
   },
   "labelPreviewBinaryError": "プレビューを利用できません: バイナリまたは不明なエンコーディング",
-  "labelGoRenamery": "リネームを実行する",
+  "labelGoRenamery": "リネームを実行",
   "labelTermFolder": "フォルダー",
   "labelTermFile": "ファイル",
   "labelSettingsOSMac": "Mac (Finder互換)",

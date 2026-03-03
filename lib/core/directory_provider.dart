@@ -47,7 +47,7 @@ class DirectoryProvider extends ChangeNotifier {
 
     // 1. Restore Filter Settings (SYNC)
     _filterText = s.getString('filterText') ?? '';
-    _hideSystemFiles = s.getBool('hideSystemFiles') ?? true;
+    _hideSystemFiles = s.getBool('hideSystemFiles') ?? false;
     _recursiveSearch = s.getBool('recursiveSearch') ?? false;
     _showPreview = s.getBool('showPreview') ?? true;
     _showFolders = s.getBool('showFolders') ?? true;
@@ -337,7 +337,7 @@ class DirectoryProvider extends ChangeNotifier {
   // Filter State
   String _filterText = '';
   bool _isFilterSpecific = false;
-  bool _hideSystemFiles = true;
+  bool _hideSystemFiles = false;
   bool _recursiveSearch = false;
   bool _showPreview = true;
   bool _showFolders = true;

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/directory_provider.dart';
 import '../../core/rename_engine.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:renamery/ui/dialogs/about_dialog.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -39,7 +40,7 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.language, size: 20),
+                    const Icon(Symbols.language, size: 20),
                     const SizedBox(width: 8),
                     Text(l10n.labelSettingsMenuLabelTitle),
                   ],
@@ -82,19 +83,19 @@ class SettingsScreen extends StatelessWidget {
                     ButtonSegment(
                         value: AppThemeType.system,
                         label: Text(l10n.labelSettingsThemeSystem),
-                        icon: const Icon(Icons.brightness_auto)),
+                        icon: const Icon(Symbols.brightness_auto)),
                     ButtonSegment(
                         value: AppThemeType.light,
                         label: Text(l10n.labelSettingsThemeLight),
-                        icon: const Icon(Icons.brightness_high)),
+                        icon: const Icon(Symbols.brightness_high)),
                     ButtonSegment(
                         value: AppThemeType.dark,
                         label: Text(l10n.labelSettingsThemeDark),
-                        icon: const Icon(Icons.brightness_4)),
+                        icon: const Icon(Symbols.brightness_4)),
                     ButtonSegment(
                         value: AppThemeType.darkGray,
                         label: Text(l10n.labelSettingsThemeGray),
-                        icon: const Icon(Icons.contrast)),
+                        icon: const Icon(Symbols.contrast)),
                   ],
                   selected: {provider.appTheme},
                   onSelectionChanged: (Set<AppThemeType> newSelection) {
@@ -127,7 +128,7 @@ class SettingsScreen extends StatelessWidget {
                           backgroundColor: color,
                           radius: 16,
                           child: provider.seedColor == color
-                              ? const Icon(Icons.check,
+                              ? const Icon(Symbols.check,
                                   size: 16, color: Colors.white)
                               : null,
                         ),
@@ -224,7 +225,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.folder_open),
+                    icon: const Icon(Symbols.folder_open),
                     onPressed: () async {
                       final String? directoryPath = await getDirectoryPath();
                       if (directoryPath != null) {
@@ -241,7 +242,7 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             title: Text(l10n.labelSettingsClearHistory),
             subtitle: Text(l10n.labelSettingsClearHistorySub),
-            leading: const Icon(Icons.history, color: Colors.orange),
+            leading: const Icon(Symbols.history, color: Colors.orange),
             onTap: () async {
               final confirm = await showDialog<bool>(
                 context: context,
@@ -276,7 +277,7 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             title: Text(l10n.labelSettingsResetAll),
             subtitle: Text(l10n.labelSettingsResetAllSub),
-            leading: const Icon(Icons.restore, color: Colors.red),
+            leading: const Icon(Symbols.restore, color: Colors.red),
             onTap: () async {
               final confirm = await showDialog<bool>(
                 context: context,
@@ -320,7 +321,7 @@ class SettingsScreen extends StatelessWidget {
           const Divider(),
           ListTile(
             title: Text(l10n.labelSettingsAboutTitle),
-            leading: const Icon(Icons.info_outline),
+            leading: const Icon(Symbols.info),
             onTap: () {
               showDialog(
                 context: context,

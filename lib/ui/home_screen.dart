@@ -4,6 +4,7 @@ import 'package:multi_split_view/multi_split_view.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/directory_provider.dart';
 import '../../core/settings_service.dart';
@@ -309,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                         onPressed: canExecute
                             ? () => _confirmAndExecute(context, provider, l10n)
                             : null,
-                        icon: const Icon(Icons.play_arrow_rounded, size: 24),
+                        icon: const Icon(Symbols.play_arrow, size: 24),
                         label: Text(
                           l10n.labelGoRenamery,
                           style: const TextStyle(
