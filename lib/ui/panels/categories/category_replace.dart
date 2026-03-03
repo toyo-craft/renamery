@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import '../../widgets/history_text_field.dart';
 
 class CategoryReplaceConvert extends StatefulWidget {
   const CategoryReplaceConvert({super.key});
@@ -81,16 +82,16 @@ class _CategoryReplaceConvertState extends State<CategoryReplaceConvert> {
                   Row(
                     children: [
                       Expanded(
-                        child: TextField(
+                        child: HistoryTextField(
                           controller: _findController,
                           focusNode: _findFocus,
-                          decoration: InputDecoration(
-                            labelText: l10n.labelFindHint,
-                            border: const OutlineInputBorder(),
-                            isDense: isCompact,
-                          ),
+                          history: provider.findHistory,
+                          hintText: l10n.labelFindHint,
+                          isCompact: isCompact,
                           onChanged: (val) =>
                               provider.updateRenameSettings(findText: val),
+                          onSubmitted: (val, _) =>
+                              provider.addHistory(HistoryType.find, val),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -101,16 +102,16 @@ class _CategoryReplaceConvertState extends State<CategoryReplaceConvert> {
                   Row(
                     children: [
                       Expanded(
-                        child: TextField(
+                        child: HistoryTextField(
                           controller: _replaceController,
                           focusNode: _replaceFocus,
-                          decoration: InputDecoration(
-                            labelText: l10n.labelReplaceHint,
-                            border: const OutlineInputBorder(),
-                            isDense: isCompact,
-                          ),
+                          history: provider.replaceHistory,
+                          hintText: l10n.labelReplaceHint,
+                          isCompact: isCompact,
                           onChanged: (val) =>
                               provider.updateRenameSettings(replaceText: val),
+                          onSubmitted: (val, _) =>
+                              provider.addHistory(HistoryType.replace, val),
                         ),
                       ),
                       const SizedBox(width: 8),

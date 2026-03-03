@@ -125,6 +125,8 @@
   "labelRegex": "正規表現",
   "labelString": "文字列",
   "labelStartDigit": "開始/桁",
+  "labelStart": "開始",
+  "labelDigit": "桁",
   "labelSettingsTitle": "設定",
   "labelSettingsSectionDisplay": "表示設定",
   "labelSettingsSectionAppearance": "外観",
@@ -272,5 +274,13 @@
   "labelAboutDev": "企画・開発",
   "labelAboutCopyright": "© 2024 Toyo Craft Lab.",
   "labelAboutRespect": "当アプリは、Jun Arai 様の 'Namery' をリスペクトして作成されました。",
-  "labelAboutVisitWebsite": "ウェブサイトを表示"
+  "labelAboutVisitWebsite": "ウェブサイトを表示",
+  "labelHistoryTooltip": "履歴を表示",
+  "labelSettingsFolders": "フォルダ表示",
+  "labelSettingsShowSystemFiles": "システムファイルを表示",
+  "labelSettingsSystemFiles": "システムファイル",
+  "labelSettingsDisableRecursive": "下位フォルダ検索を無効",
+  "labelSettingsRecursive": "下位フォルダ",
+  "labelDialogTrashTitle": "項目の削除",
+  "labelDialogTrashMessage": "選択したファイルをゴミ箱に移動しますか？"
 }

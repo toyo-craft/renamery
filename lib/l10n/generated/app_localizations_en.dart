@@ -386,6 +386,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelStartDigit => 'Start/Digits';
 
   @override
+  String get labelStart => 'Start';
+
+  @override
+  String get labelDigit => 'Digits';
+
+  @override
   String get labelSettingsTitle => 'Settings';
 
   @override
@@ -664,4 +670,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelAboutVisitWebsite => 'Visit Website';
+
+  @override
+  String get labelHistoryTooltip => 'Show History';
+
+  @override
+  String get labelSettingsFolders => 'Show Folders';
+
+  @override
+  String get labelSettingsShowSystemFiles => 'Show System Files';
+
+  @override
+  String get labelSettingsSystemFiles => 'System Files';
+
+  @override
+  String get labelSettingsDisableRecursive => 'Disable Subfolders';
+
+  @override
+  String get labelSettingsRecursive => 'Subfolders';
+
+  @override
+  String get labelDialogTrashTitle => 'Delete Items';
+
+  @override
+  String get labelDialogTrashMessage =>
+      'Move the selected files to the recycle bin?';
 }

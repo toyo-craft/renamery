@@ -241,7 +241,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                             : Colors.grey,
                       ),
                       label: Text(
-                        'フォルダ表示',
+                        l10n.labelSettingsFolders,
                         style: TextStyle(
                           fontSize: 11,
                           color: provider.showFolders ? null : Colors.grey,
@@ -264,7 +264,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   // System files toggle
                   Tooltip(
                     message: provider.hideSystemFiles
-                        ? 'システムファイルを表示'
+                        ? l10n.labelSettingsShowSystemFiles
                         : l10n.labelFilterHideSystem,
                     child: TextButton.icon(
                       icon: Icon(
@@ -276,7 +276,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                             : Theme.of(context).colorScheme.primary,
                       ),
                       label: Text(
-                        'システムファイル',
+                        l10n.labelSettingsSystemFiles,
                         style: TextStyle(
                           fontSize: 11,
                           color: provider.hideSystemFiles
@@ -300,7 +300,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   // Recursive search toggle
                   Tooltip(
                     message: provider.recursiveSearch
-                        ? '下位フォルダ検索を無効'
+                        ? l10n.labelSettingsDisableRecursive
                         : l10n.labelFilterRecursive,
                     child: TextButton.icon(
                       icon: Icon(
@@ -312,7 +312,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                             : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       label: Text(
-                        '下位フォルダ',
+                        l10n.labelSettingsRecursive,
                         style: TextStyle(
                           fontSize: 11,
                           color: provider.recursiveSearch
@@ -450,7 +450,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                     iconSize: 20,
                     tooltip: provider.hideSystemFiles
-                        ? 'システムファイルを表示'
+                        ? l10n.labelSettingsShowSystemFiles
                         : l10n.labelFilterHideSystem,
                     onPressed: () => context
                         .read<DirectoryProvider>()
@@ -472,7 +472,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                     iconSize: 20,
                     tooltip: provider.recursiveSearch
-                        ? '下位フォルダ検索を無効'
+                        ? l10n.labelSettingsDisableRecursive
                         : l10n.labelFilterRecursive,
                     onPressed: () => context
                         .read<DirectoryProvider>()
@@ -707,7 +707,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Symbols.settings),
+          icon: const Icon(Symbols.settings, fill: 1.0),
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(

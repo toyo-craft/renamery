@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:renamery/l10n/generated/app_localizations.dart';
 
 class HistoryTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -35,6 +36,7 @@ class _HistoryTextFieldState extends State<HistoryTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Row(
       children: [
@@ -81,11 +83,12 @@ class _HistoryTextFieldState extends State<HistoryTextField> {
                       decoration: InputDecoration(
                         isDense: true,
                         hintText: widget.hintText,
+                        border: const OutlineInputBorder(),
                         contentPadding: EdgeInsets.only(
-                          top: widget.isCompact ? 6 : 8,
-                          bottom: widget.isCompact ? 6 : 8,
+                          top: widget.isCompact ? 8 : 12,
+                          bottom: widget.isCompact ? 8 : 12,
                           left: 8,
-                          right: 48, // Padding so text doesn't overlap the icon
+                          right: 36, // Padding so text doesn't overlap the icon
                         ),
                       ),
                       onChanged: (val) => widget.onChanged(val),
@@ -100,7 +103,7 @@ class _HistoryTextFieldState extends State<HistoryTextField> {
                       right: 4,
                       child: IconButton(
                         icon: const Icon(Symbols.arrow_drop_down),
-                        tooltip: '履歴を表示',
+                        tooltip: l10n.labelHistoryTooltip,
                         onPressed: widget.history.isNotEmpty
                             ? () {
                                 if (controller.isOpen) {

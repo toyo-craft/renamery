@@ -21,22 +21,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelEtcTab => '其它';
 
   @override
-  String get labelCategoryAdd => 'テキストの追加';
+  String get labelCategoryAdd => '添加文本';
 
   @override
-  String get labelCategoryRemove => 'テキストの削除';
+  String get labelCategoryRemove => '删除文本';
 
   @override
-  String get labelCategoryReplace => '置換と変換';
+  String get labelCategoryReplace => '替换和转换';
 
   @override
-  String get labelCategoryNumbering => '連番 (ナンバリング)';
+  String get labelCategoryNumbering => '编号';
 
   @override
-  String get labelCategoryExtension => '拡張子';
+  String get labelCategoryExtension => '扩展名';
 
   @override
-  String get labelCategoryAdvanced => '高度な操作';
+  String get labelCategoryAdvanced => '高级操作';
 
   @override
   String get labelStringInput => '文本';
@@ -384,6 +384,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelStartDigit => '起始/位数';
 
   @override
+  String get labelStart => '起始';
+
+  @override
+  String get labelDigit => '位数';
+
+  @override
   String get labelSettingsTitle => '设置';
 
   @override
@@ -523,7 +529,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelPreviewBinaryError => '预览不可用: 二进制或未知编码';
 
   @override
-  String get labelGoRenamery => '执行 ReNamery!!!';
+  String get labelGoRenamery => '执行重命名';
 
   @override
   String get labelTermFolder => '文件夹';
@@ -658,4 +664,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get labelAboutVisitWebsite => '访问网站';
+
+  @override
+  String get labelHistoryTooltip => '显示历史记录';
+
+  @override
+  String get labelSettingsFolders => '显示文件夹';
+
+  @override
+  String get labelSettingsShowSystemFiles => '显示系统文件';
+
+  @override
+  String get labelSettingsSystemFiles => '系统文件';
+
+  @override
+  String get labelSettingsDisableRecursive => '禁用子文件夹';
+
+  @override
+  String get labelSettingsRecursive => '子文件夹';
+
+  @override
+  String get labelDialogTrashTitle => '删除项目';
+
+  @override
+  String get labelDialogTrashMessage => '将选定文件移至回收站？';
 }

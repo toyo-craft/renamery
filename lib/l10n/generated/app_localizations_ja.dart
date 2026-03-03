@@ -386,6 +386,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelStartDigit => '開始/桁';
 
   @override
+  String get labelStart => '開始';
+
+  @override
+  String get labelDigit => '桁';
+
+  @override
   String get labelSettingsTitle => '設定';
 
   @override
@@ -661,6 +667,30 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get labelAboutVisitWebsite => 'ウェブサイトを表示';
+
+  @override
+  String get labelHistoryTooltip => '履歴を表示';
+
+  @override
+  String get labelSettingsFolders => 'フォルダ表示';
+
+  @override
+  String get labelSettingsShowSystemFiles => 'システムファイルを表示';
+
+  @override
+  String get labelSettingsSystemFiles => 'システムファイル';
+
+  @override
+  String get labelSettingsDisableRecursive => '下位フォルダ検索を無効';
+
+  @override
+  String get labelSettingsRecursive => '下位フォルダ';
+
+  @override
+  String get labelDialogTrashTitle => '項目の削除';
+
+  @override
+  String get labelDialogTrashMessage => '選択したファイルをゴミ箱に移動しますか？';
 }
 
 /// The translations for Japanese (`ja_NM`).
@@ -678,6 +708,24 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
 
   @override
   String get labelEtcTab => 'etc...';
+
+  @override
+  String get labelCategoryAdd => 'テキストの追加';
+
+  @override
+  String get labelCategoryRemove => 'テキストの削除';
+
+  @override
+  String get labelCategoryReplace => '置換と変換';
+
+  @override
+  String get labelCategoryNumbering => '連番 (ナンバリング)';
+
+  @override
+  String get labelCategoryExtension => '拡張子';
+
+  @override
+  String get labelCategoryAdvanced => '高度な操作';
 
   @override
   String get labelStringInput => '文字列';
@@ -1020,6 +1068,12 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelStartDigit => '開始/桁';
 
   @override
+  String get labelStart => '開始';
+
+  @override
+  String get labelDigit => '桁';
+
+  @override
   String get labelSettingsTitle => '設定';
 
   @override
@@ -1159,7 +1213,7 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelPreviewBinaryError => 'プレビューを利用できません: バイナリまたは不明なエンコーディング';
 
   @override
-  String get labelGoRenamery => 'Go ReNamery!!!';
+  String get labelGoRenamery => 'リネームを実行';
 
   @override
   String get labelTermFolder => 'フォルダー';
@@ -1295,4 +1349,28 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
 
   @override
   String get labelAboutVisitWebsite => 'ウェブサイトを表示';
+
+  @override
+  String get labelHistoryTooltip => '履歴を表示';
+
+  @override
+  String get labelSettingsFolders => 'フォルダ表示';
+
+  @override
+  String get labelSettingsShowSystemFiles => 'システムファイルを表示';
+
+  @override
+  String get labelSettingsSystemFiles => 'システムファイル';
+
+  @override
+  String get labelSettingsDisableRecursive => '下位フォルダ検索を無効';
+
+  @override
+  String get labelSettingsRecursive => '下位フォルダ';
+
+  @override
+  String get labelDialogTrashTitle => '項目の削除';
+
+  @override
+  String get labelDialogTrashMessage => '選択したファイルをゴミ箱に移動しますか？';
 }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import '../../widgets/history_text_field.dart';
 
 class CategoryExtension extends StatefulWidget {
   const CategoryExtension({super.key});
@@ -64,16 +65,16 @@ class _CategoryExtensionState extends State<CategoryExtension> {
             Padding(
               padding:
                   const EdgeInsets.only(left: 32.0, bottom: 8.0, right: 8.0),
-              child: TextField(
+              child: HistoryTextField(
                 controller: _replaceController,
                 focusNode: _replaceFocus,
-                decoration: const InputDecoration(
-                  labelText: "New Extension (e.g. txt, .png)",
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
+                history: provider.extensionHistory,
+                hintText: "New Extension (e.g. txt, .png)",
+                isCompact: true,
                 onChanged: (val) =>
                     provider.updateRenameSettings(replaceText: val),
+                onSubmitted: (val, _) =>
+                    provider.addHistory(HistoryType.extension, val),
               ),
             ),
 
@@ -94,16 +95,16 @@ class _CategoryExtensionState extends State<CategoryExtension> {
             Padding(
               padding:
                   const EdgeInsets.only(left: 32.0, bottom: 8.0, right: 8.0),
-              child: TextField(
+              child: HistoryTextField(
                 controller: _replaceController,
                 focusNode: _replaceFocus,
-                decoration: const InputDecoration(
-                  labelText: "Extension to Add",
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
+                history: provider.extensionHistory,
+                hintText: "Extension to Add",
+                isCompact: true,
                 onChanged: (val) =>
                     provider.updateRenameSettings(replaceText: val),
+                onSubmitted: (val, _) =>
+                    provider.addHistory(HistoryType.extension, val),
               ),
             ),
 

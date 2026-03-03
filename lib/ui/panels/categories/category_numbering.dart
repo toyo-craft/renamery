@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
+import 'package:renamery/ui/widgets/number_spin_box.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 
 class CategoryNumbering extends StatefulWidget {
@@ -93,48 +94,27 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
                 children: [
                   Row(
                     children: [
-                      Text(l10n.labelStartDigit),
+                      Text(l10n.labelStart),
                       const SizedBox(width: 8),
-                      // Start Number
-                      SizedBox(
-                        width: 60,
-                        child: TextField(
-                          controller: _startController,
-                          focusNode: _startFocus,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            border: const OutlineInputBorder(),
-                            isDense: isCompact,
-                          ),
-                          onChanged: (val) {
-                            final v = int.tryParse(val);
-                            if (v != null) {
-                              provider.updateRenameSettings(startNumber: v);
-                            }
-                          },
-                        ),
+                      NumberSpinBox(
+                        value: provider.startNumber,
+                        isCompact: isCompact,
+                        width: 48,
+                        onChanged: (v) =>
+                            provider.updateRenameSettings(startNumber: v),
                       ),
-                      const SizedBox(width: 8),
-                      const Text("/"),
+                      const SizedBox(width: 16),
+                      Text(l10n.labelDigit),
                       const SizedBox(width: 8),
                       // Digits
-                      SizedBox(
-                        width: 60,
-                        child: TextField(
-                          controller: _digitController,
-                          focusNode: _digitFocus,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            border: const OutlineInputBorder(),
-                            isDense: isCompact,
-                          ),
-                          onChanged: (val) {
-                            final v = int.tryParse(val);
-                            if (v != null) {
-                              provider.updateRenameSettings(digits: v);
-                            }
-                          },
-                        ),
+                      NumberSpinBox(
+                        value: provider.digits,
+                        min: 1,
+                        max: 10,
+                        isCompact: isCompact,
+                        width: 48,
+                        onChanged: (v) =>
+                            provider.updateRenameSettings(digits: v),
                       ),
                     ],
                   ),

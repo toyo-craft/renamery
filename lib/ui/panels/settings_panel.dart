@@ -92,7 +92,8 @@ class _SettingsPanelState extends State<SettingsPanel> {
                       ),
                       NavigationRailDestination(
                         icon: const Icon(Symbols.settings_applications),
-                        selectedIcon: const Icon(Symbols.settings_applications),
+                        selectedIcon: const Icon(Symbols.settings_applications,
+                            fill: 1.0),
                         label: Text(l10n.labelCategoryAdvanced,
                             style: const TextStyle(fontSize: 11)),
                       ),

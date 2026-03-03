@@ -9,6 +9,15 @@ import 'rename_engine.dart';
 import 'undo_manager.dart';
 import 'settings_service.dart';
 
+enum HistoryType {
+  find,
+  replace,
+  add,
+  extension,
+  remove,
+  deleteTo,
+}
+
 enum AppThemeType {
   system,
   light,
@@ -170,24 +179,12 @@ class DirectoryProvider extends ChangeNotifier {
     _etcAttribSystem = s.getBool('etcAttribSystem') ?? false;
 
     // 3. Restore History (SYNC)
-    if (s.getList('appendHistory') != null) {
-      _appendHistory = s.getList<String>('appendHistory')!;
-    }
-    if (s.getList('deleteFromHistory') != null) {
-      _deleteFromHistory = s.getList<String>('deleteFromHistory')!;
-    }
-    if (s.getList('deleteToHistory') != null) {
-      _deleteToHistory = s.getList<String>('deleteToHistory')!;
-    }
-    if (s.getList('findHistory') != null) {
-      _findHistory = s.getList<String>('findHistory')!;
-    }
-    if (s.getList('replaceHistory') != null) {
-      _replaceHistory = s.getList<String>('replaceHistory')!;
-    }
-    if (s.getList('extensionHistory') != null) {
-      _extensionHistory = s.getList<String>('extensionHistory')!;
-    }
+    _appendHistory = s.getStringList('appendHistory');
+    _deleteFromHistory = s.getStringList('deleteFromHistory');
+    _deleteToHistory = s.getStringList('deleteToHistory');
+    _findHistory = s.getStringList('findHistory');
+    _replaceHistory = s.getStringList('replaceHistory');
+    _extensionHistory = s.getStringList('extensionHistory');
 
     // 4. Restore Sort (SYNC)
     _sortColumnIndex = s.getInt('sortColumnIndex') ?? 0;
@@ -1327,29 +1324,73 @@ class DirectoryProvider extends ChangeNotifier {
     return _undoManager.peekLastTransaction();
   }
 
-  void addToHistory(List<String> target, String value) {
+  void addHistory(HistoryType type, String value) {
     if (value.isEmpty) return;
-    // target is passed reference
 
-    // Remove if exists to move to top (prevent duplicates)
+    List<String> target;
+    switch (type) {
+      case HistoryType.find:
+        target = _findHistory;
+        break;
+      case HistoryType.replace:
+        target = _replaceHistory;
+        break;
+      case HistoryType.add:
+        target = _appendHistory; // mapped to appendText
+        break;
+      case HistoryType.extension:
+        target = _extensionHistory;
+        break;
+      case HistoryType.remove:
+        target = _deleteFromHistory; // mapped to removeText/deleteFrom
+        break;
+      case HistoryType.deleteTo:
+        target = _deleteToHistory; // mapped to deleteToText
+        break;
+    }
+
+    // Move to top (prevent duplicates)
     target.remove(value);
     target.insert(0, value);
 
-    // Limit History Size (Max 10)
-    if (target.length > 10) {
-      target.removeRange(10, target.length);
+    // Limit History Size (Max 20)
+    if (target.length > 20) {
+      target.removeRange(20, target.length);
     }
 
-    notifyListeners();
     _saveState();
+    notifyListeners();
   }
 
-  void clearInputHistory() {
-    _appendHistory.clear();
-    _deleteFromHistory.clear();
-    _deleteToHistory.clear();
-    _saveState();
-    notifyListeners();
+  void _saveInputHistory() {
+    switch (_renameMode) {
+      case RenameMode.replace:
+        if (_findText != null) addHistory(HistoryType.find, _findText!);
+        if (_replaceText != null) {
+          addHistory(HistoryType.replace, _replaceText!);
+        }
+        break;
+      case RenameMode.append:
+        if (_appendText != null) addHistory(HistoryType.add, _appendText!);
+        break;
+      case RenameMode.deleteFrontTo:
+      case RenameMode.deleteBackTo:
+      case RenameMode.deleteFrom:
+        if (_deleteToText != null) {
+          addHistory(HistoryType.remove, _deleteToText!);
+        }
+        break;
+      case RenameMode.extension:
+      case RenameMode.extensionAdd:
+        if (_extensionChangeText.isNotEmpty) {
+          addHistory(HistoryType.extension, _extensionChangeText);
+        } else if (_extensionAddText.isNotEmpty) {
+          addHistory(HistoryType.extension, _extensionAddText);
+        }
+        break;
+      default:
+        break;
+    }
   }
 
   Future<void> setDirectory(Directory directory,
@@ -1655,46 +1696,15 @@ Add-Type -AssemblyName Microsoft.VisualBasic
     }
   }
 
-  void _saveInputHistory() {
-    switch (_renameMode) {
-      case RenameMode.append:
-      case RenameMode.prepend:
-      case RenameMode.insert:
-      case RenameMode.numbering:
-        if (_appendText != null) addToHistory(_appendHistory, _appendText!);
-        break;
-      case RenameMode.replace:
-        if (_findText != null) addToHistory(_findHistory, _findText!);
-        if (_replaceText != null) addToHistory(_replaceHistory, _replaceText!);
-        break;
-      case RenameMode.deleteFrontTo:
-      case RenameMode.deleteBackTo:
-      case RenameMode.deleteFrom: // Maybe?
-        if (_deleteToText != null) {
-          addToHistory(_deleteToHistory, _deleteToText!);
-        }
-        break;
-      case RenameMode.extension:
-        if (_extensionChangeText.isNotEmpty) {
-          addToHistory(_extensionHistory, _extensionChangeText);
-        }
-        break;
-      case RenameMode.extensionAdd:
-        if (_extensionAddText.isNotEmpty) {
-          addToHistory(_extensionHistory,
-              _extensionAddText); // Using same history list? Or split history?
-          // User asked for split *items* (fields), history might be shared or split.
-          // Conventionally, extension history is shared.
-          // Let's keep history shared for now unless requested otherwise.
-          addToHistory(_extensionHistory, _extensionAddText);
-        }
-        break;
-      case RenameMode.extensionRemove:
-        // No input usually, or maybe removed extension?
-        break;
-      default:
-        break;
-    }
+  void clearInputHistory() {
+    _findHistory.clear();
+    _replaceHistory.clear();
+    _appendHistory.clear();
+    _extensionHistory.clear();
+    _deleteFromHistory.clear();
+    _deleteToHistory.clear();
+    _saveState();
+    notifyListeners();
   }
 
   // --- Localization Integration ---

@@ -124,6 +124,8 @@
   "labelRegex": "Regex",
   "labelString": "String",
   "labelStartDigit": "Start/Digits",
+  "labelStart": "Start",
+  "labelDigit": "Digits",
   "labelSettingsTitle": "Settings",
   "labelSettingsSectionDisplay": "Display",
   "labelSettingsSectionAppearance": "Appearance",
@@ -271,5 +273,13 @@
   "labelAboutDev": "Developed by",
   "labelAboutCopyright": "© 2024 Toyo Craft Lab.",
   "labelAboutRespect": "This app was created with respect for 'Namery' by Jun Arai.",
-  "labelAboutVisitWebsite": "Visit Website"
+  "labelAboutVisitWebsite": "Visit Website",
+  "labelHistoryTooltip": "Show History",
+  "labelSettingsFolders": "Show Folders",
+  "labelSettingsShowSystemFiles": "Show System Files",
+  "labelSettingsSystemFiles": "System Files",
+  "labelSettingsDisableRecursive": "Disable Subfolders",
+  "labelSettingsRecursive": "Subfolders",
+  "labelDialogTrashTitle": "Delete Items",
+  "labelDialogTrashMessage": "Move the selected files to the recycle bin?"
 }

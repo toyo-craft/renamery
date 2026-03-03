@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
+import 'package:renamery/ui/widgets/number_spin_box.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import '../../widgets/history_text_field.dart';
 
 class CategoryRemoveText extends StatefulWidget {
   const CategoryRemoveText({super.key});
@@ -103,25 +105,15 @@ class _CategoryRemoveTextState extends State<CategoryRemoveText> {
                   const EdgeInsets.only(left: 32.0, bottom: 8.0, right: 8.0),
               child: Row(
                 children: [
-                  Text(l10n.labelStartDigit),
+                  Text(l10n.labelDigit),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 60,
-                    child: TextField(
-                      controller: _digitController,
-                      focusNode: _digitFocus,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        isDense: isCompact,
-                      ),
-                      onChanged: (val) {
-                        final v = int.tryParse(val);
-                        if (v != null) {
-                          provider.updateRenameSettings(digits: v);
-                        }
-                      },
-                    ),
+                  NumberSpinBox(
+                    value: provider.digits,
+                    min: 1,
+                    max: 999,
+                    isCompact: isCompact,
+                    width: 48,
+                    onChanged: (v) => provider.updateRenameSettings(digits: v),
                   ),
                 ],
               ),
@@ -147,47 +139,25 @@ class _CategoryRemoveTextState extends State<CategoryRemoveText> {
                   const EdgeInsets.only(left: 32.0, bottom: 8.0, right: 8.0),
               child: Row(
                 children: [
-                  Text(l10n.labelStartDigit),
+                  Text(l10n.labelStart),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 60,
-                    child: TextField(
-                      controller: _startController,
-                      focusNode: _startFocus,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        isDense: isCompact,
-                      ),
-                      onChanged: (val) {
-                        final v = int.tryParse(val);
-                        if (v != null) {
-                          provider.updateRenameSettings(startNumber: v);
-                        }
-                      },
-                    ),
+                  NumberSpinBox(
+                    value: provider.startNumber,
+                    isCompact: isCompact,
+                    width: 48,
+                    onChanged: (v) =>
+                        provider.updateRenameSettings(startNumber: v),
                   ),
                   const SizedBox(width: 8),
-                  Text(l10n
-                      .labelStartDigit), // Reusing this string for digits, ideally "Digits"
+                  Text(l10n.labelDigit),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 60,
-                    child: TextField(
-                      controller: _digitController,
-                      focusNode: _digitFocus,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        isDense: isCompact,
-                      ),
-                      onChanged: (val) {
-                        final v = int.tryParse(val);
-                        if (v != null) {
-                          provider.updateRenameSettings(digits: v);
-                        }
-                      },
-                    ),
+                  NumberSpinBox(
+                    value: provider.digits,
+                    min: 1,
+                    max: 999,
+                    isCompact: isCompact,
+                    width: 48,
+                    onChanged: (v) => provider.updateRenameSettings(digits: v),
                   ),
                 ],
               ),
@@ -227,16 +197,16 @@ class _CategoryRemoveTextState extends State<CategoryRemoveText> {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: HistoryTextField(
                       controller: _deleteToController,
                       focusNode: _deleteToFocus,
-                      decoration: InputDecoration(
-                        labelText: l10n.labelStringInput,
-                        border: const OutlineInputBorder(),
-                        isDense: isCompact,
-                      ),
+                      history: provider.deleteToHistory,
+                      hintText: l10n.labelStringInput,
+                      isCompact: isCompact,
                       onChanged: (val) =>
                           provider.updateRenameSettings(deleteToText: val),
+                      onSubmitted: (val, _) =>
+                          provider.addHistory(HistoryType.deleteTo, val),
                     ),
                   ),
                   const SizedBox(width: 8),

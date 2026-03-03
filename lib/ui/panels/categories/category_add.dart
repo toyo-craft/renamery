@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/directory_provider.dart';
 import '../../../../core/rename_engine.dart';
+import 'package:renamery/ui/widgets/number_spin_box.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import '../../widgets/history_text_field.dart';
 
 class CategoryAddText extends StatefulWidget {
   const CategoryAddText({super.key});
@@ -95,19 +97,18 @@ class _CategoryAddTextState extends State<CategoryAddText> {
             visualDensity: isCompact ? VisualDensity.compact : null,
           ),
 
-          // String Input for Prepend/Append/Insert
           Padding(
             padding: const EdgeInsets.only(left: 32.0, bottom: 8.0, right: 8.0),
-            child: TextField(
+            child: HistoryTextField(
               controller: _appendController,
               focusNode: _appendFocus,
-              decoration: InputDecoration(
-                labelText: l10n.labelStringInput,
-                border: const OutlineInputBorder(),
-                isDense: isCompact,
-              ),
+              history: provider.appendHistory,
+              hintText: l10n.labelStringInput,
+              isCompact: isCompact,
               onChanged: (val) =>
                   provider.updateRenameSettings(appendText: val),
+              onSubmitted: (val, _) =>
+                  provider.addHistory(HistoryType.add, val),
             ),
           ),
 
@@ -130,23 +131,12 @@ class _CategoryAddTextState extends State<CategoryAddText> {
                 children: [
                   Text(l10n.labelStartDigit),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 60,
-                    child: TextField(
-                      controller: _insertController,
-                      focusNode: _insertFocus,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        isDense: isCompact,
-                      ),
-                      onChanged: (val) {
-                        final v = int.tryParse(val);
-                        if (v != null) {
-                          provider.updateRenameSettings(insertIndex: v);
-                        }
-                      },
-                    ),
+                  NumberSpinBox(
+                    value: provider.insertIndex,
+                    isCompact: isCompact,
+                    width: 48,
+                    onChanged: (v) =>
+                        provider.updateRenameSettings(insertIndex: v),
                   ),
                 ],
               ),

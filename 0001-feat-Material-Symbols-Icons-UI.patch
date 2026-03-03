@@ -1,0 +1,1916 @@
+From 644135e79dba7c07c17340fa3b24f5296fd32de5 Mon Sep 17 00:00:00 2001
+From: ssmxgo <your.email@example.com>
+Date: Tue, 3 Mar 2026 12:23:35 +0900
+Subject: [PATCH] =?UTF-8?q?feat:=20Material=20Symbols=20Icons=E3=81=B8?=
+ =?UTF-8?q?=E3=81=AE=E7=A7=BB=E8=A1=8C=E3=80=81UI=E3=81=AE=E5=86=8D?=
+ =?UTF-8?q?=E6=A7=8B=E7=AF=89=E3=80=81=E3=81=8A=E3=82=88=E3=81=B3=E3=83=97?=
+ =?UTF-8?q?=E3=83=AC=E3=83=93=E3=83=A5=E3=83=BC=E6=A9=9F=E8=83=BD=E3=81=AE?=
+ =?UTF-8?q?=E7=B5=B1=E5=90=88?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- アイコンライブラリを Material Symbols Icons へ全面的に移行
+- NavigationPanel に折りたたみ可能なプレビュー領域を統合
+- UIコンポーネント（HomeAppBar, SettingsPanel, ToolbarPanel）の再構築とレイアウト改善
+- ファイルプレビュー機能（テキスト、画像）の強化
+- 日本語リソース (app_ja.arb) の文言をより自然な表現に調整
+- 静的解析結果に基づき非推奨コードの削除やインポートの整理を実施
+---
+ analyze.txt                                   |  87 ++-
+ analyze_cmd.txt                               |  72 +++
+ analyze_final.txt                             |  72 +++
+ analyze_out.txt                               |  81 ++-
+ lib/core/directory_provider.dart              |   4 +-
+ lib/l10n/app_ja.arb                           |   2 +-
+ lib/l10n/generated/app_localizations.dart     |   2 +-
+ lib/l10n/generated/app_localizations_ja.dart  |   2 +-
+ lib/ui/home_screen.dart                       |   3 +-
+ .../panels/categories/category_advanced.dart  |   3 +-
+ lib/ui/panels/home_app_bar.dart               | 565 +++++++++++++++++-
+ lib/ui/panels/navigation_panel.dart           | 209 ++++++-
+ lib/ui/panels/settings_panel.dart             |  25 +-
+ lib/ui/panels/toolbar_panel.dart              |  23 +-
+ lib/ui/preview_list.dart                      |  57 +-
+ lib/ui/settings_screen.dart                   |  21 +-
+ lib/ui/widgets/history_text_field.dart        |   3 +-
+ pubspec.lock                                  |   8 +
+ pubspec.yaml                                  |   1 +
+ 19 files changed, 1101 insertions(+), 139 deletions(-)
+ create mode 100644 analyze_cmd.txt
+ create mode 100644 analyze_final.txt
+
+diff --git a/analyze.txt b/analyze.txt
+index c2aec8f..08c15af 100644
+--- a/analyze.txt
++++ b/analyze.txt
+@@ -1,20 +1,71 @@
+-Analyzing renamery...
++Analyzing renamery...                                           
+ 
+-  error - lib\ui\panels\file_list_panel.dart:473:65 - The name 'Size' is defined in the libraries 'dart:ffi' and 'dart:ui (via 'package:flutter/material.dart' and 'package:flutter/services.dart')'. Try using 'as prefix' for one of the import directives, or hiding the name from all but one of the imports. - ambiguous_import
+-warning - lib\ui\panels\navigation_panel.dart:51:11 - The value of the local variable 'provider' isn't used. Try removing the variable or using it. - unused_local_variable
+-   info - lib\ui\panels\file_list_panel.dart:8:8 - The imported package 'ffi' isn't a dependency of the importing package. Try adding a dependency for 'ffi' in the 'pubspec.yaml' file. - depend_on_referenced_packages
+-   info - lib\ui\panels\file_list_panel.dart:14:11 - The constant name 'SEE_MASK_INVOKEIDLIST' isn't a lowerCamelCase identifier. Try changing the name to follow the lowerCamelCase style. - constant_identifier_names
+-   info - lib\ui\panels\file_list_panel.dart:584:59 - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check. - use_build_context_synchronously
+-   info - lib\ui\panels\file_list_panel.dart:590:57 - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check. - use_build_context_synchronously
+-   info - lib\ui\panels\tabs\main_tab.dart:214:21 - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+-   info - lib\ui\panels\tabs\main_tab.dart:215:21 - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+-   info - lib\ui\panels\tabs\main_tab.dart:322:21 - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+-   info - lib\ui\panels\tabs\main_tab.dart:323:21 - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+-   info - lib\ui\panels\tabs\main_tab.dart:388:21 - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+-   info - lib\ui\panels\tabs\main_tab.dart:391:21 - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+-   info - lib\ui\panels\tabs\main_tab.dart:481:21 - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+-   info - lib\ui\panels\tabs\main_tab.dart:482:21 - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+-   info - lib\ui\panels\tabs\main_tab.dart:594:17 - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+-   info - lib\ui\panels\tabs\main_tab.dart:595:17 - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\home_screen.dart:239:37 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:79:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:80:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:91:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:92:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:119:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:120:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:162:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:163:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:201:31 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:202:31 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:220:31 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:221:31 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:57:15 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:58:15 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:86:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:87:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:159:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:160:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:57:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:58:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:87:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:88:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:114:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:115:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:127:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:128:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:136:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:137:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:81:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:82:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:238:15 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:239:15 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:79:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:80:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:91:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:92:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:137:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:138:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:203:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:204:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:215:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:216:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:67:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:68:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:154:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:155:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:163:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:164:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:172:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:173:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:181:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:182:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:215:7 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:216:7 - deprecated_member_use
++   info - The imported package 'ffi' isn't a dependency of the importing package - lib\ui\panels\file_list_panel.dart:8:8 - depend_on_referenced_packages
++   info - The constant name 'SEE_MASK_INVOKEIDLIST' isn't a lowerCamelCase identifier - lib\ui\panels\file_list_panel.dart:14:11 - constant_identifier_names
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\file_list_panel.dart:193:33 - deprecated_member_use
++   info - Don't use 'BuildContext's across async gaps - lib\ui\panels\file_list_panel.dart:670:59 - use_build_context_synchronously
++   info - Don't use 'BuildContext's across async gaps - lib\ui\panels\file_list_panel.dart:676:57 - use_build_context_synchronously
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:292:45 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:300:45 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:526:53 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:653:27 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:656:27 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:668:27 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:671:27 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\settings_panel.dart:60:26 - deprecated_member_use
+ 
+-16 issues found.
+diff --git a/analyze_cmd.txt b/analyze_cmd.txt
+new file mode 100644
+index 0000000..c95e238
+--- /dev/null
++++ b/analyze_cmd.txt
+@@ -0,0 +1,72 @@
++Analyzing renamery...                                           
++
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\home_screen.dart:239:37 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:79:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:80:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:91:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:92:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:119:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:120:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:162:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:163:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:201:31 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:202:31 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:220:31 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:221:31 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:57:15 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:58:15 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:86:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:87:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:159:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:160:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:57:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:58:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:87:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:88:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:114:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:115:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:127:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:128:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:136:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:137:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:81:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:82:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:238:15 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:239:15 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:79:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:80:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:91:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:92:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:137:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:138:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:203:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:204:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:215:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:216:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:67:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:68:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:154:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:155:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:163:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:164:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:172:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:173:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:181:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:182:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:215:7 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:216:7 - deprecated_member_use
++   info - The imported package 'ffi' isn't a dependency of the importing package - lib\ui\panels\file_list_panel.dart:8:8 - depend_on_referenced_packages
++   info - The constant name 'SEE_MASK_INVOKEIDLIST' isn't a lowerCamelCase identifier - lib\ui\panels\file_list_panel.dart:14:11 - constant_identifier_names
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\file_list_panel.dart:193:33 - deprecated_member_use
++   info - Don't use 'BuildContext's across async gaps - lib\ui\panels\file_list_panel.dart:670:59 - use_build_context_synchronously
++   info - Don't use 'BuildContext's across async gaps - lib\ui\panels\file_list_panel.dart:676:57 - use_build_context_synchronously
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:292:45 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:300:45 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:526:53 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:653:27 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:656:27 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:668:27 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:671:27 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\settings_panel.dart:61:26 - deprecated_member_use
++
++68 issues found. (ran in 1.7s)
+diff --git a/analyze_final.txt b/analyze_final.txt
+new file mode 100644
+index 0000000..70c5f53
+--- /dev/null
++++ b/analyze_final.txt
+@@ -0,0 +1,72 @@
++Analyzing renamery...                                           
++
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\home_screen.dart:240:37 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:79:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:80:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:91:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:92:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:119:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:120:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:162:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:163:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:201:31 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:202:31 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:220:31 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:221:31 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:58:15 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:59:15 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:87:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:88:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:160:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:161:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:57:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:58:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:87:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:88:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:114:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:115:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:127:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:128:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:136:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:137:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:81:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:82:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:238:15 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:239:15 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:79:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:80:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:91:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:92:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:137:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:138:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:203:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:204:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:215:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:216:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:67:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:68:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:154:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:155:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:163:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:164:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:172:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:173:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:181:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:182:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:215:7 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:216:7 - deprecated_member_use
++   info - The imported package 'ffi' isn't a dependency of the importing package - lib\ui\panels\file_list_panel.dart:8:8 - depend_on_referenced_packages
++   info - The constant name 'SEE_MASK_INVOKEIDLIST' isn't a lowerCamelCase identifier - lib\ui\panels\file_list_panel.dart:14:11 - constant_identifier_names
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\file_list_panel.dart:193:33 - deprecated_member_use
++   info - Don't use 'BuildContext's across async gaps - lib\ui\panels\file_list_panel.dart:670:59 - use_build_context_synchronously
++   info - Don't use 'BuildContext's across async gaps - lib\ui\panels\file_list_panel.dart:676:57 - use_build_context_synchronously
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:292:45 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:300:45 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:526:53 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:653:27 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:656:27 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:668:27 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:671:27 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\settings_panel.dart:61:26 - deprecated_member_use
++
++68 issues found. (ran in 1.7s)
+diff --git a/analyze_out.txt b/analyze_out.txt
+index cb2ccd4..08c15af 100644
+--- a/analyze_out.txt
++++ b/analyze_out.txt
+@@ -1,16 +1,71 @@
+ Analyzing renamery...                                           
+ 
+-   info - Don't use 'BuildContext's across async gaps - lib\ui\panels\file_list_panel.dart:463:53 - use_build_context_synchronously
+-  error - Expected to find ')' - lib\ui\panels\file_list_panel.dart:790:46 - expected_token
+-warning - The value of the local variable 'provider' isn't used - lib\ui\panels\navigation_panel.dart:51:11 - unused_local_variable
+-   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:214:21 - deprecated_member_use
+-   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:215:21 - deprecated_member_use
+-   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:322:21 - deprecated_member_use
+-   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:323:21 - deprecated_member_use
+-   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:388:21 - deprecated_member_use
+-   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:391:21 - deprecated_member_use
+-   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:481:21 - deprecated_member_use
+-   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:482:21 - deprecated_member_use
+-   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:594:17 - deprecated_member_use
+-   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\tabs\main_tab.dart:595:17 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\home_screen.dart:239:37 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:79:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:80:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:91:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:92:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:119:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:120:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:162:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:163:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:201:31 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:202:31 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:220:31 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_add.dart:221:31 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:57:15 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:58:15 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:86:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:87:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:159:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_advanced.dart:160:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:57:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:58:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:87:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:88:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:114:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:115:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:127:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:128:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:136:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_extension.dart:137:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:81:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:82:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:238:15 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_numbering.dart:239:15 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:79:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:80:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:91:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:92:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:137:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:138:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:203:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:204:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:215:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_remove.dart:216:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:67:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:68:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:154:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:155:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:163:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:164:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:172:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:173:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:181:13 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:182:13 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:215:7 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\categories\category_replace.dart:216:7 - deprecated_member_use
++   info - The imported package 'ffi' isn't a dependency of the importing package - lib\ui\panels\file_list_panel.dart:8:8 - depend_on_referenced_packages
++   info - The constant name 'SEE_MASK_INVOKEIDLIST' isn't a lowerCamelCase identifier - lib\ui\panels\file_list_panel.dart:14:11 - constant_identifier_names
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\file_list_panel.dart:193:33 - deprecated_member_use
++   info - Don't use 'BuildContext's across async gaps - lib\ui\panels\file_list_panel.dart:670:59 - use_build_context_synchronously
++   info - Don't use 'BuildContext's across async gaps - lib\ui\panels\file_list_panel.dart:676:57 - use_build_context_synchronously
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:292:45 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:300:45 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\home_app_bar.dart:526:53 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:653:27 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:656:27 - deprecated_member_use
++   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:668:27 - deprecated_member_use
++   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\ui\panels\home_app_bar.dart:671:27 - deprecated_member_use
++   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\panels\settings_panel.dart:60:26 - deprecated_member_use
+ 
+diff --git a/lib/core/directory_provider.dart b/lib/core/directory_provider.dart
+index fd23f4c..fd8e6b4 100644
+--- a/lib/core/directory_provider.dart
++++ b/lib/core/directory_provider.dart
+@@ -47,7 +47,7 @@ class DirectoryProvider extends ChangeNotifier {
+ 
+     // 1. Restore Filter Settings (SYNC)
+     _filterText = s.getString('filterText') ?? '';
+-    _hideSystemFiles = s.getBool('hideSystemFiles') ?? true;
++    _hideSystemFiles = s.getBool('hideSystemFiles') ?? false;
+     _recursiveSearch = s.getBool('recursiveSearch') ?? false;
+     _showPreview = s.getBool('showPreview') ?? true;
+     _showFolders = s.getBool('showFolders') ?? true;
+@@ -337,7 +337,7 @@ class DirectoryProvider extends ChangeNotifier {
+   // Filter State
+   String _filterText = '';
+   bool _isFilterSpecific = false;
+-  bool _hideSystemFiles = true;
++  bool _hideSystemFiles = false;
+   bool _recursiveSearch = false;
+   bool _showPreview = true;
+   bool _showFolders = true;
+diff --git a/lib/l10n/app_ja.arb b/lib/l10n/app_ja.arb
+index 8440e5e..d1e0c33 100644
+--- a/lib/l10n/app_ja.arb
++++ b/lib/l10n/app_ja.arb
+@@ -184,7 +184,7 @@
+     }
+   },
+   "labelPreviewBinaryError": "プレビューを利用できません: バイナリまたは不明なエンコーディング",
+-  "labelGoRenamery": "リネームを実行する",
++  "labelGoRenamery": "リネームを実行",
+   "labelTermFolder": "フォルダー",
+   "labelTermFile": "ファイル",
+   "labelSettingsOSMac": "Mac (Finder互換)",
+diff --git a/lib/l10n/generated/app_localizations.dart b/lib/l10n/generated/app_localizations.dart
+index 543af48..42c4d39 100644
+--- a/lib/l10n/generated/app_localizations.dart
++++ b/lib/l10n/generated/app_localizations.dart
+@@ -1126,7 +1126,7 @@ abstract class AppLocalizations {
+   /// No description provided for @labelGoRenamery.
+   ///
+   /// In ja, this message translates to:
+-  /// **'リネームを実行する'**
++  /// **'リネームを実行'**
+   String get labelGoRenamery;
+ 
+   /// No description provided for @labelTermFolder.
+diff --git a/lib/l10n/generated/app_localizations_ja.dart b/lib/l10n/generated/app_localizations_ja.dart
+index 76c90e5..bf7e57c 100644
+--- a/lib/l10n/generated/app_localizations_ja.dart
++++ b/lib/l10n/generated/app_localizations_ja.dart
+@@ -525,7 +525,7 @@ class AppLocalizationsJa extends AppLocalizations {
+   String get labelPreviewBinaryError => 'プレビューを利用できません: バイナリまたは不明なエンコーディング';
+ 
+   @override
+-  String get labelGoRenamery => 'リネームを実行する';
++  String get labelGoRenamery => 'リネームを実行';
+ 
+   @override
+   String get labelTermFolder => 'フォルダー';
+diff --git a/lib/ui/home_screen.dart b/lib/ui/home_screen.dart
+index cc4cf59..1b2352e 100644
+--- a/lib/ui/home_screen.dart
++++ b/lib/ui/home_screen.dart
+@@ -4,6 +4,7 @@ import 'package:multi_split_view/multi_split_view.dart';
+ import 'package:flutter/services.dart';
+ import 'package:window_manager/window_manager.dart';
+ import 'package:renamery/l10n/generated/app_localizations.dart';
++import 'package:material_symbols_icons/symbols.dart';
+ 
+ import '../../core/directory_provider.dart';
+ import '../../core/settings_service.dart';
+@@ -309,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
+                         onPressed: canExecute
+                             ? () => _confirmAndExecute(context, provider, l10n)
+                             : null,
+-                        icon: const Icon(Icons.play_arrow_rounded, size: 24),
++                        icon: const Icon(Symbols.play_arrow, size: 24),
+                         label: Text(
+                           l10n.labelGoRenamery,
+                           style: const TextStyle(
+diff --git a/lib/ui/panels/categories/category_advanced.dart b/lib/ui/panels/categories/category_advanced.dart
+index 43cf3db..6805ddc 100644
+--- a/lib/ui/panels/categories/category_advanced.dart
++++ b/lib/ui/panels/categories/category_advanced.dart
+@@ -4,6 +4,7 @@ import '../../../../core/directory_provider.dart';
+ import '../../../../core/rename_engine.dart';
+ import 'package:intl/intl.dart';
+ import 'package:renamery/l10n/generated/app_localizations.dart';
++import 'package:material_symbols_icons/symbols.dart';
+ 
+ class CategoryAdvanced extends StatefulWidget {
+   const CategoryAdvanced({super.key});
+@@ -103,7 +104,7 @@ class _CategoryAdvancedState extends State<CategoryAdvanced> {
+                     ),
+                   ),
+                   IconButton(
+-                    icon: const Icon(Icons.date_range),
++                    icon: const Icon(Symbols.date_range),
+                     tooltip: l10n.labelEtcPickDateTooltip,
+                     onPressed: () async {
+                       DateTime initialDate = DateTime.now();
+diff --git a/lib/ui/panels/home_app_bar.dart b/lib/ui/panels/home_app_bar.dart
+index 48dae7f..158dff0 100644
+--- a/lib/ui/panels/home_app_bar.dart
++++ b/lib/ui/panels/home_app_bar.dart
+@@ -1,5 +1,6 @@
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
++import 'package:material_symbols_icons/symbols.dart';
+ import '../../core/directory_provider.dart';
+ import '../helpers/undo_helper.dart';
+ import '../helpers/copy_helper.dart';
+@@ -28,7 +29,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+       leading: showDrawerMenu
+           ? Builder(
+               builder: (context) => IconButton(
+-                icon: const Icon(Icons.folder),
++                icon: const Icon(Symbols.folder_open, fill: 1),
+                 color: Theme.of(context).colorScheme.primary,
+                 tooltip: l10n.labelMenuFolder,
+                 onPressed: () {
+@@ -42,12 +43,14 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+       title: LayoutBuilder(
+         builder: (context, constraints) {
+           final isNarrow = constraints.maxWidth < 650;
++          final isWide = constraints.maxWidth >= 1020;
++          final showIconFilters = !isWide && constraints.maxWidth >= 830;
+           return Row(
+             children: [
+               const SizedBox(width: 8),
+               // 1. Back Group
+               IconButton(
+-                icon: const Icon(Icons.arrow_back),
++                icon: const Icon(Symbols.arrow_back),
+                 iconSize: iconSize,
+                 tooltip: l10n.labelNavBack,
+                 onPressed: provider.canGoBack ? () => provider.goBack() : null,
+@@ -55,7 +58,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                 constraints: const BoxConstraints(),
+               ),
+               PopupMenuButton<int>(
+-                icon: const Icon(Icons.arrow_drop_down),
++                icon: const Icon(Symbols.arrow_drop_down),
+                 enabled: provider.backHistory.isNotEmpty,
+                 onSelected: (steps) => provider.jumpBack(steps),
+                 itemBuilder: (context) {
+@@ -73,7 +76,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+ 
+               // 2. Forward Group
+               IconButton(
+-                icon: const Icon(Icons.arrow_forward),
++                icon: const Icon(Symbols.arrow_forward),
+                 iconSize: iconSize,
+                 tooltip: l10n.labelNavForward,
+                 onPressed:
+@@ -82,7 +85,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                 constraints: const BoxConstraints(),
+               ),
+               PopupMenuButton<int>(
+-                icon: const Icon(Icons.arrow_drop_down),
++                icon: const Icon(Symbols.arrow_drop_down),
+                 enabled: provider.forwardHistory.isNotEmpty,
+                 onSelected: (steps) => provider.jumpForward(steps),
+                 itemBuilder: (context) {
+@@ -100,7 +103,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+ 
+               // 2.5. Up Group
+               IconButton(
+-                icon: const Icon(Icons.arrow_upward),
++                icon: const Icon(Symbols.arrow_upward),
+                 iconSize: iconSize,
+                 tooltip: l10n.labelNavUp,
+                 onPressed: provider.currentDirectory?.parent != null
+@@ -116,7 +119,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+ 
+               // 3. Execute
+               IconButton(
+-                icon: const Icon(Icons.play_arrow),
++                icon: const Icon(Symbols.play_arrow),
+                 iconSize: iconSize,
+                 tooltip: provider.hasInvalidFilenames
+                     ? l10n.labelErrorInvalidFilename
+@@ -130,7 +133,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+               // 4. Undo
+               if (!isNarrow)
+                 TextButton.icon(
+-                  icon: const Icon(Icons.undo),
++                  icon: const Icon(Symbols.undo),
+                   label: Text(provider.canUndo
+                       ? '${l10n.labelUndo} (${provider.undoCount})'
+                       : l10n.labelUndo),
+@@ -143,7 +146,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                 )
+               else
+                 IconButton(
+-                  icon: const Icon(Icons.undo),
++                  icon: const Icon(Symbols.undo),
+                   iconSize: iconSize,
+                   tooltip: provider.canUndo
+                       ? '${l10n.labelUndo} (${provider.undoCount})'
+@@ -161,7 +164,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+ 
+                 // 5. Copy Group
+                 IconButton(
+-                  icon: const Icon(Icons.content_copy),
++                  icon: const Icon(Symbols.content_copy),
+                   iconSize: iconSize,
+                   tooltip: l10n.labelCopyName,
+                   onPressed: provider.currentFiles.any((f) => f.isSelected)
+@@ -171,7 +174,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                   constraints: const BoxConstraints(),
+                 ),
+                 PopupMenuButton<int>(
+-                  icon: const Icon(Icons.arrow_drop_down),
++                  icon: const Icon(Symbols.arrow_drop_down),
+                   enabled: provider.currentFiles.any((f) => f.isSelected) ||
+                       provider.getLastUndoTransaction().isNotEmpty,
+                   onSelected: (value) async {
+@@ -187,7 +190,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+ 
+                 // 6. Up/Down
+                 IconButton(
+-                  icon: const Icon(Icons.expand_less),
++                  icon: const Icon(Symbols.expand_less),
+                   iconSize: iconSize,
+                   tooltip: l10n.labelMoveUp,
+                   onPressed: provider.canMoveUp
+@@ -195,7 +198,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                       : null,
+                 ),
+                 IconButton(
+-                  icon: const Icon(Icons.expand_more),
++                  icon: const Icon(Symbols.expand_more),
+                   iconSize: iconSize,
+                   tooltip: l10n.labelMoveDown,
+                   onPressed: provider.canMoveDown
+@@ -209,16 +212,361 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+ 
+                 // 8. Refresh
+                 IconButton(
+-                  icon: const Icon(Icons.refresh),
++                  icon: const Icon(Symbols.refresh),
+                   iconSize: iconSize,
+                   tooltip: l10n.labelRefresh,
+                   onPressed: () => provider.refresh(),
+                 ),
+-              ] else ...[
++
++                if (isWide) ...[
++                  const SizedBox(
++                      height: 24,
++                      child:
++                          VerticalDivider(width: 20, indent: 4, endIndent: 4)),
++                  // 9. Filter Controls (Individual Toggle Buttons)
++                  // Folder toggle — TextButton.icon style (like Undo), yellow/grey
++                  Tooltip(
++                    message: provider.showFolders
++                        ? l10n.labelFilterHideFolders
++                        : l10n.labelFilterShowFolders,
++                    child: TextButton.icon(
++                      icon: Icon(
++                        provider.showFolders
++                            ? Symbols.folder
++                            : Symbols.folder_off,
++                        size: 20,
++                        fill: 1,
++                        color: provider.showFolders
++                            ? Colors.amber[700]
++                            : Colors.grey,
++                      ),
++                      label: Text(
++                        'フォルダ表示',
++                        style: TextStyle(
++                          fontSize: 11,
++                          color: provider.showFolders ? null : Colors.grey,
++                        ),
++                      ),
++                      onPressed: () => context
++                          .read<DirectoryProvider>()
++                          .updateFilterSettings(
++                              showFolders: !provider.showFolders),
++                      style: TextButton.styleFrom(
++                        padding: const EdgeInsets.symmetric(horizontal: 6),
++                        visualDensity: VisualDensity.compact,
++                        minimumSize: Size.zero,
++                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
++                      ),
++                    ),
++                  ),
++                  const SizedBox(width: 4),
++
++                  // System files toggle
++                  Tooltip(
++                    message: provider.hideSystemFiles
++                        ? 'システムファイルを表示'
++                        : l10n.labelFilterHideSystem,
++                    child: TextButton.icon(
++                      icon: Icon(
++                        Symbols.shield,
++                        size: 20,
++                        fill: provider.hideSystemFiles ? 0 : 1,
++                        color: provider.hideSystemFiles
++                            ? Theme.of(context).colorScheme.onSurfaceVariant
++                            : Theme.of(context).colorScheme.primary,
++                      ),
++                      label: Text(
++                        'システムファイル',
++                        style: TextStyle(
++                          fontSize: 11,
++                          color: provider.hideSystemFiles
++                              ? Theme.of(context).colorScheme.onSurfaceVariant
++                              : Theme.of(context).colorScheme.primary,
++                        ),
++                      ),
++                      onPressed: () => context
++                          .read<DirectoryProvider>()
++                          .updateFilterSettings(
++                              hideSystem: !provider.hideSystemFiles),
++                      style: TextButton.styleFrom(
++                        padding: const EdgeInsets.symmetric(horizontal: 6),
++                        visualDensity: VisualDensity.compact,
++                        minimumSize: Size.zero,
++                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
++                      ),
++                    ),
++                  ),
++                  const SizedBox(width: 4),
++                  // Recursive search toggle
++                  Tooltip(
++                    message: provider.recursiveSearch
++                        ? '下位フォルダ検索を無効'
++                        : l10n.labelFilterRecursive,
++                    child: TextButton.icon(
++                      icon: Icon(
++                        Symbols.account_tree,
++                        size: 20,
++                        fill: provider.recursiveSearch ? 1 : 0,
++                        color: provider.recursiveSearch
++                            ? Theme.of(context).colorScheme.primary
++                            : Theme.of(context).colorScheme.onSurfaceVariant,
++                      ),
++                      label: Text(
++                        '下位フォルダ',
++                        style: TextStyle(
++                          fontSize: 11,
++                          color: provider.recursiveSearch
++                              ? Theme.of(context).colorScheme.primary
++                              : Theme.of(context).colorScheme.onSurfaceVariant,
++                        ),
++                      ),
++                      onPressed: () => context
++                          .read<DirectoryProvider>()
++                          .updateFilterSettings(
++                              recursive: !provider.recursiveSearch),
++                      style: TextButton.styleFrom(
++                        padding: const EdgeInsets.symmetric(horizontal: 6),
++                        visualDensity: VisualDensity.compact,
++                        minimumSize: Size.zero,
++                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
++                      ),
++                    ),
++                  ),
++                  const SizedBox(width: 4),
++                  // Inline filter text input
++                  SizedBox(
++                    width: 130,
++                    height: 28,
++                    child: TextField(
++                      controller: TextEditingController(
++                        text: provider.filterText,
++                      ),
++                      textAlignVertical: TextAlignVertical.center,
++                      decoration: InputDecoration(
++                        hintText: 'ファイル名...',
++                        hintStyle:
++                            const TextStyle(fontSize: 11, color: Colors.grey),
++                        prefixIcon: Icon(
++                          Symbols.search,
++                          size: 14,
++                          color: provider.isFilterSpecific
++                              ? Theme.of(context).colorScheme.primary
++                              : Colors.grey,
++                        ),
++                        prefixIconConstraints:
++                            const BoxConstraints(minWidth: 26, minHeight: 28),
++                        isDense: true,
++                        contentPadding: const EdgeInsets.symmetric(
++                            horizontal: 8, vertical: 0),
++                        border: OutlineInputBorder(
++                          borderRadius: BorderRadius.circular(14),
++                          borderSide: BorderSide(
++                            color: provider.isFilterSpecific
++                                ? Theme.of(context).colorScheme.primary
++                                : Colors.grey.withOpacity(0.4),
++                          ),
++                        ),
++                        enabledBorder: OutlineInputBorder(
++                          borderRadius: BorderRadius.circular(16),
++                          borderSide: BorderSide(
++                            color: provider.isFilterSpecific
++                                ? Theme.of(context).colorScheme.primary
++                                : Colors.grey.withOpacity(0.4),
++                          ),
++                        ),
++                        focusedBorder: OutlineInputBorder(
++                          borderRadius: BorderRadius.circular(16),
++                          borderSide: BorderSide(
++                            color: Theme.of(context).colorScheme.primary,
++                            width: 2,
++                          ),
++                        ),
++                        suffixIcon: provider.isFilterSpecific
++                            ? GestureDetector(
++                                onTap: () => context
++                                    .read<DirectoryProvider>()
++                                    .updateFilterSettings(
++                                        isSpecific: false, filter: ''),
++                                child: const Icon(Symbols.close, size: 14),
++                              )
++                            : null,
++                        suffixIconConstraints:
++                            const BoxConstraints(minWidth: 24),
++                      ),
++                      style: TextStyle(
++                        fontSize: 12,
++                        color: provider.isFilterSpecific
++                            ? Theme.of(context).colorScheme.primary
++                            : null,
++                      ),
++                      onSubmitted: (value) {
++                        context.read<DirectoryProvider>().updateFilterSettings(
++                              isSpecific: value.isNotEmpty,
++                              filter: value,
++                            );
++                      },
++                    ),
++                  ),
++                ],
++
++                if (showIconFilters) ...[
++                  // Icon-only filter controls (no text labels)
++                  const SizedBox(
++                      height: 24,
++                      child:
++                          VerticalDivider(width: 20, indent: 4, endIndent: 4)),
++                  // Folder toggle (icon only)
++                  IconButton(
++                    icon: Icon(
++                      provider.showFolders
++                          ? Symbols.folder
++                          : Symbols.folder_off,
++                      fill: 1,
++                      color: provider.showFolders
++                          ? Colors.amber[700]
++                          : Colors.grey,
++                    ),
++                    iconSize: 20,
++                    tooltip: provider.showFolders
++                        ? l10n.labelFilterHideFolders
++                        : l10n.labelFilterShowFolders,
++                    onPressed: () => context
++                        .read<DirectoryProvider>()
++                        .updateFilterSettings(
++                            showFolders: !provider.showFolders),
++                    padding: const EdgeInsets.all(4),
++                    constraints:
++                        const BoxConstraints(minWidth: 32, minHeight: 32),
++                  ),
++                  const SizedBox(width: 8),
++                  // System files toggle (icon only)
++                  IconButton(
++                    icon: Icon(
++                      Symbols.shield,
++                      fill: provider.hideSystemFiles ? 0 : 1,
++                      color: provider.hideSystemFiles
++                          ? Theme.of(context).colorScheme.onSurfaceVariant
++                          : Theme.of(context).colorScheme.primary,
++                    ),
++                    iconSize: 20,
++                    tooltip: provider.hideSystemFiles
++                        ? 'システムファイルを表示'
++                        : l10n.labelFilterHideSystem,
++                    onPressed: () => context
++                        .read<DirectoryProvider>()
++                        .updateFilterSettings(
++                            hideSystem: !provider.hideSystemFiles),
++                    padding: const EdgeInsets.all(4),
++                    constraints:
++                        const BoxConstraints(minWidth: 32, minHeight: 32),
++                  ),
++                  const SizedBox(width: 8),
++                  // Recursive search toggle (icon only)
++                  IconButton(
++                    icon: Icon(
++                      Symbols.account_tree,
++                      fill: provider.recursiveSearch ? 1 : 0,
++                      color: provider.recursiveSearch
++                          ? Theme.of(context).colorScheme.primary
++                          : Theme.of(context).colorScheme.onSurfaceVariant,
++                    ),
++                    iconSize: 20,
++                    tooltip: provider.recursiveSearch
++                        ? '下位フォルダ検索を無効'
++                        : l10n.labelFilterRecursive,
++                    onPressed: () => context
++                        .read<DirectoryProvider>()
++                        .updateFilterSettings(
++                            recursive: !provider.recursiveSearch),
++                    padding: const EdgeInsets.all(4),
++                    constraints:
++                        const BoxConstraints(minWidth: 32, minHeight: 32),
++                  ),
++                  const SizedBox(width: 8),
++                  // Search field (compact, icon only)
++                  SizedBox(
++                    width: 100,
++                    height: 28,
++                    child: TextField(
++                      controller: TextEditingController(
++                        text: provider.filterText,
++                      ),
++                      textAlignVertical: TextAlignVertical.center,
++                      decoration: InputDecoration(
++                        hintText: 'ファイル名...',
++                        hintStyle:
++                            const TextStyle(fontSize: 11, color: Colors.grey),
++                        prefixIcon: Icon(
++                          Symbols.search,
++                          size: 14,
++                          color: provider.isFilterSpecific
++                              ? Theme.of(context).colorScheme.primary
++                              : Colors.grey,
++                        ),
++                        prefixIconConstraints:
++                            const BoxConstraints(minWidth: 26, minHeight: 28),
++                        isDense: true,
++                        contentPadding: const EdgeInsets.symmetric(
++                            horizontal: 8, vertical: 0),
++                        border: OutlineInputBorder(
++                          borderRadius: BorderRadius.circular(14),
++                          borderSide: BorderSide(
++                            color: provider.isFilterSpecific
++                                ? Theme.of(context).colorScheme.primary
++                                : Colors.grey.withOpacity(0.4),
++                          ),
++                        ),
++                        enabledBorder: OutlineInputBorder(
++                          borderRadius: BorderRadius.circular(14),
++                          borderSide: BorderSide(
++                            color: provider.isFilterSpecific
++                                ? Theme.of(context).colorScheme.primary
++                                : Colors.grey.withOpacity(0.4),
++                          ),
++                        ),
++                        focusedBorder: OutlineInputBorder(
++                          borderRadius: BorderRadius.circular(14),
++                          borderSide: BorderSide(
++                            color: Theme.of(context).colorScheme.primary,
++                            width: 2,
++                          ),
++                        ),
++                        suffixIcon: provider.isFilterSpecific
++                            ? GestureDetector(
++                                onTap: () => context
++                                    .read<DirectoryProvider>()
++                                    .updateFilterSettings(
++                                        isSpecific: false, filter: ''),
++                                child: const Icon(Symbols.close, size: 14),
++                              )
++                            : null,
++                        suffixIconConstraints:
++                            const BoxConstraints(minWidth: 24),
++                      ),
++                      style: TextStyle(
++                        fontSize: 12,
++                        color: provider.isFilterSpecific
++                            ? Theme.of(context).colorScheme.primary
++                            : null,
++                      ),
++                      onSubmitted: (value) {
++                        context.read<DirectoryProvider>().updateFilterSettings(
++                              isSpecific: value.isNotEmpty,
++                              filter: value,
++                            );
++                      },
++                    ),
++                  ),
++                ],
++              ],
++
++              // Unified spacer for right-aligning overflow menus
++              if (isNarrow || (!isWide && !showIconFilters)) const Spacer(),
++
++              if (isNarrow) ...[
+                 // Narrow Layout: Show Overflow Menu
+-                const Spacer(),
+                 PopupMenuButton<String>(
+-                  icon: const Icon(Icons.more_vert),
++                  icon: const Icon(Symbols.more_vert),
+                   tooltip: l10n.labelMenuMore,
+                   onSelected: (value) async {
+                     switch (value) {
+@@ -257,7 +605,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                         enabled: hasSelection,
+                         child: Row(
+                           children: [
+-                            const Icon(Icons.content_copy, size: 20),
++                            const Icon(Symbols.content_copy, size: 20),
+                             const SizedBox(width: 8),
+                             Text(l10n.labelCopyName),
+                           ],
+@@ -268,7 +616,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                         enabled: hasSelection,
+                         child: Row(
+                           children: [
+-                            const Icon(Icons.copy, size: 20),
++                            const Icon(Symbols.copy_all, size: 20),
+                             const SizedBox(width: 8),
+                             Text(l10n.labelCopyPath),
+                           ],
+@@ -279,7 +627,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                         enabled: hasSelection,
+                         child: Row(
+                           children: [
+-                            const Icon(Icons.copy_all, size: 20),
++                            const Icon(Symbols.copy_all, size: 20),
+                             const SizedBox(width: 8),
+                             Text(l10n.labelCopyFullPath),
+                           ],
+@@ -290,7 +638,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                           value: 'copy_undo',
+                           child: Row(
+                             children: [
+-                              const Icon(Icons.history, size: 20),
++                              const Icon(Symbols.history, size: 20),
+                               const SizedBox(width: 8),
+                               Text(l10n.labelCopyUndo),
+                             ],
+@@ -303,7 +651,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                         enabled: provider.canMoveUp,
+                         child: Row(
+                           children: [
+-                            const Icon(Icons.expand_less, size: 20),
++                            const Icon(Symbols.expand_less, size: 20),
+                             const SizedBox(width: 8),
+                             Text(l10n.labelMoveUp),
+                           ],
+@@ -314,7 +662,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                         enabled: provider.canMoveDown,
+                         child: Row(
+                           children: [
+-                            const Icon(Icons.expand_more, size: 20),
++                            const Icon(Symbols.expand_more, size: 20),
+                             const SizedBox(width: 8),
+                             Text(l10n.labelMoveDown),
+                           ],
+@@ -326,7 +674,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                         value: 'refresh',
+                         child: Row(
+                           children: [
+-                            const Icon(Icons.refresh, size: 20),
++                            const Icon(Symbols.refresh, size: 20),
+                             const SizedBox(width: 8),
+                             Text(l10n.labelRefresh),
+                           ],
+@@ -336,13 +684,30 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+                   },
+                 ),
+               ],
++
++              // Filter divider + inline controls for narrow (fold into overflow was done above)
++              // Filter popup when no inline filters
++              if (!isWide && !showIconFilters) ...[
++                Builder(
++                  builder: (context) => IconButton(
++                    icon: Icon(
++                      Symbols.filter_list,
++                      color: _isFilterActive(context)
++                          ? Theme.of(context).colorScheme.primary
++                          : null,
++                    ),
++                    tooltip: l10n.labelSettingsFilterTitle,
++                    onPressed: () => _showFilterPopup(context, l10n),
++                  ),
++                ),
++              ],
+             ],
+           );
+         },
+       ),
+       actions: [
+         IconButton(
+-          icon: const Icon(Icons.settings),
++          icon: const Icon(Symbols.settings),
+           onPressed: () {
+             Navigator.of(context).push(
+               MaterialPageRoute(
+@@ -409,4 +774,154 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+       ),
+     ];
+   }
++
++  bool _isFilterActive(BuildContext context) {
++    final provider = context.read<DirectoryProvider>();
++    return provider.isFilterSpecific ||
++        provider.hideSystemFiles ||
++        provider.recursiveSearch;
++  }
++
++  void _showFilterPopup(BuildContext context, AppLocalizations l10n) {
++    final provider = context.read<DirectoryProvider>();
++    final filterCtrl = TextEditingController(text: provider.filterText);
++
++    showDialog<void>(
++      context: context,
++      barrierColor: Colors.transparent,
++      builder: (ctx) {
++        return Align(
++          alignment: Alignment.topRight,
++          child: Padding(
++            padding: const EdgeInsets.only(top: kToolbarHeight + 4, right: 8),
++            child: Material(
++              elevation: 8,
++              borderRadius: BorderRadius.circular(12),
++              child: Container(
++                width: 300,
++                padding: const EdgeInsets.all(12),
++                child: StatefulBuilder(
++                  builder: (context, setState) {
++                    final p = context.watch<DirectoryProvider>();
++                    return Column(
++                      mainAxisSize: MainAxisSize.min,
++                      crossAxisAlignment: CrossAxisAlignment.start,
++                      children: [
++                        // Title
++                        Text(
++                          l10n.labelSettingsFilterTitle,
++                          style: const TextStyle(
++                              fontWeight: FontWeight.bold, fontSize: 13),
++                        ),
++                        const SizedBox(height: 8),
++                        // Show Folders toggle
++                        Row(children: [
++                          Icon(Symbols.folder,
++                              size: 18,
++                              color: p.showFolders
++                                  ? Colors.amber[700]
++                                  : Colors.grey),
++                          const SizedBox(width: 8),
++                          Text(
++                              p.showFolders
++                                  ? l10n.labelFilterHideFolders
++                                  : l10n.labelFilterShowFolders,
++                              style: const TextStyle(fontSize: 12)),
++                          const Spacer(),
++                          Switch(
++                            value: p.showFolders,
++                            onChanged: (val) {
++                              context
++                                  .read<DirectoryProvider>()
++                                  .updateFilterSettings(showFolders: val);
++                            },
++                          ),
++                        ]),
++                        const Divider(height: 16),
++                        // All Files radio
++                        RadioListTile<bool>(
++                          dense: true,
++                          value: false,
++                          groupValue: p.isFilterSpecific,
++                          title: Text(l10n.labelFilterAll,
++                              style: const TextStyle(fontSize: 12)),
++                          onChanged: (val) {
++                            if (val != null) {
++                              context
++                                  .read<DirectoryProvider>()
++                                  .updateFilterSettings(isSpecific: val);
++                            }
++                          },
++                        ),
++                        // Specific filter radio + text field
++                        RadioListTile<bool>(
++                          dense: true,
++                          value: true,
++                          groupValue: p.isFilterSpecific,
++                          title: Text(l10n.labelFilterSpecific,
++                              style: const TextStyle(fontSize: 12)),
++                          onChanged: (val) {
++                            if (val != null) {
++                              context
++                                  .read<DirectoryProvider>()
++                                  .updateFilterSettings(isSpecific: val);
++                            }
++                          },
++                        ),
++                        if (p.isFilterSpecific)
++                          Padding(
++                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
++                            child: TextField(
++                              controller: filterCtrl,
++                              autofocus: true,
++                              style: const TextStyle(fontSize: 12),
++                              decoration: InputDecoration(
++                                isDense: true,
++                                contentPadding: const EdgeInsets.symmetric(
++                                    horizontal: 10, vertical: 8),
++                                border: OutlineInputBorder(
++                                    borderRadius: BorderRadius.circular(6)),
++                              ),
++                              onChanged: (val) {
++                                context
++                                    .read<DirectoryProvider>()
++                                    .updateFilterSettings(filter: val);
++                              },
++                            ),
++                          ),
++                        const Divider(height: 8),
++                        // Checkboxes
++                        CheckboxListTile(
++                          dense: true,
++                          value: p.hideSystemFiles,
++                          title: Text(l10n.labelFilterHideSystem,
++                              style: const TextStyle(fontSize: 12)),
++                          onChanged: (val) {
++                            context
++                                .read<DirectoryProvider>()
++                                .updateFilterSettings(hideSystem: val ?? false);
++                          },
++                        ),
++                        CheckboxListTile(
++                          dense: true,
++                          value: p.recursiveSearch,
++                          title: Text(l10n.labelFilterRecursive,
++                              style: const TextStyle(fontSize: 12)),
++                          onChanged: (val) {
++                            context
++                                .read<DirectoryProvider>()
++                                .updateFilterSettings(recursive: val ?? false);
++                          },
++                        ),
++                      ],
++                    );
++                  },
++                ),
++              ),
++            ),
++          ),
++        );
++      },
++    ).then((_) => filterCtrl.dispose());
++  }
+ }
+diff --git a/lib/ui/panels/navigation_panel.dart b/lib/ui/panels/navigation_panel.dart
+index d179522..7618f51 100644
+--- a/lib/ui/panels/navigation_panel.dart
++++ b/lib/ui/panels/navigation_panel.dart
+@@ -1,9 +1,10 @@
+ import 'dart:io';
++import 'dart:convert';
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
++import 'package:material_symbols_icons/symbols.dart';
+ import 'package:path/path.dart' as p;
+ import '../../core/directory_provider.dart';
+-import 'filter_settings_panel.dart';
+ import 'package:renamery/l10n/generated/app_localizations.dart';
+ 
+ class NavigationPanel extends StatefulWidget {
+@@ -53,15 +54,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
+     return Column(
+       crossAxisAlignment: CrossAxisAlignment.stretch,
+       children: [
+-        // Title Bar
+-        Container(
+-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+-          child: Text(
+-            l10n.labelNavTitle,
+-            style: const TextStyle(fontWeight: FontWeight.bold),
+-          ),
+-        ),
++        // Tree view
+         Expanded(
+           child: _loading
+               ? const Center(child: CircularProgressIndicator())
+@@ -122,8 +115,39 @@ class _NavigationPanelState extends State<NavigationPanel> {
+                   },
+                 ),
+         ),
+-        // Filter & Preview Panel
+-        const FilterSettingsPanel(),
++
++        // Preview Panel (ExpansionTile)
++        Container(
++          decoration: BoxDecoration(
++            border: Border(
++              top: BorderSide(
++                color: Theme.of(context).dividerColor,
++                width: 0.5,
++              ),
++            ),
++          ),
++          child: ExpansionTile(
++            key: const ValueKey('preview_expansion'),
++            initiallyExpanded: provider.showPreview,
++            onExpansionChanged: (expanded) {
++              context
++                  .read<DirectoryProvider>()
++                  .updateFilterSettings(preview: expanded);
++            },
++            dense: true,
++            tilePadding: const EdgeInsets.symmetric(horizontal: 12.0),
++            title: Text(
++              l10n.labelFilterPreview,
++              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
++            ),
++            children: [
++              SizedBox(
++                height: 150,
++                child: _buildPreviewContent(provider, l10n),
++              ),
++            ],
++          ),
++        ),
+       ],
+     );
+   }
+@@ -145,17 +169,151 @@ class _NavigationPanelState extends State<NavigationPanel> {
+ 
+   IconData? _getIconForPath(String path) {
+     final name = p.basename(path).toLowerCase();
+-    if (name == 'desktop') return Icons.desktop_windows;
+-    if (name == 'downloads') return Icons.download;
+-    if (name == 'documents') return Icons.description;
+-    if (name == 'pictures') return Icons.image;
+-    if (name == 'music') return Icons.music_note;
+-    if (name == 'videos') return Icons.movie;
+-    if (name == 'onedrive') return Icons.cloud;
++    if (name == 'desktop') return Symbols.desktop_windows;
++    if (name == 'downloads') return Symbols.download;
++    if (name == 'documents') return Symbols.description;
++    if (name == 'pictures') return Symbols.image;
++    if (name == 'music') return Symbols.music_note;
++    if (name == 'videos') return Symbols.movie;
++    if (name == 'onedrive') return Symbols.cloud;
+     // Check if it looks like a user home
+-    if (!path.contains(p.separator)) return Icons.home; // Fallback
++    if (!path.contains(p.separator)) return Symbols.home; // Fallback
+     return null; // Default folder
+   }
++
++  Widget _buildPreviewContent(
++      DirectoryProvider provider, AppLocalizations l10n) {
++    final selected = provider.currentFiles.where((f) => f.isSelected).toList();
++
++    if (selected.isEmpty) {
++      return Center(
++          child: Text(l10n.labelPreviewNoSelection,
++              style: const TextStyle(color: Colors.grey)));
++    }
++
++    if (selected.length > 1) {
++      return Center(
++          child: Text(l10n.labelPreviewSelectedCount(selected.length),
++              style: const TextStyle(color: Colors.grey)));
++    }
++
++    final file = selected.first;
++    final path = file.entity.path;
++    final ext = path.split('.').last.toLowerCase();
++    final hasExt = path.contains('.');
++
++    if (hasExt &&
++        ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'ico'].contains(ext)) {
++      return Padding(
++        padding: const EdgeInsets.all(4.0),
++        child: Image.file(
++          File(path),
++          fit: BoxFit.contain,
++          errorBuilder: (context, error, stackTrace) =>
++              Center(child: Text(l10n.labelPreviewImageLoadFailed)),
++        ),
++      );
++    }
++
++    // Text Preview
++    return Padding(
++      padding: const EdgeInsets.all(4.0),
++      child: FutureBuilder<String>(
++        future: _readTextPreview(File(path), l10n),
++        builder: (context, snapshot) {
++          if (snapshot.connectionState == ConnectionState.waiting) {
++            return const Center(
++                child: CircularProgressIndicator(strokeWidth: 2));
++          }
++          final text = snapshot.data ?? l10n.labelPreviewUnavailable;
++          return SingleChildScrollView(
++            child: SelectableText(
++              text,
++              style: const TextStyle(fontSize: 11, fontFamily: 'Consolas'),
++            ),
++          );
++        },
++      ),
++    );
++  }
++
++  Future<String> _readTextPreview(File file, AppLocalizations l10n) async {
++    try {
++      final len = await file.length();
++      const int limit = 50 * 1024; // 50KB
++
++      if (len > limit) {
++        final stream = file.openRead(0, limit);
++        final chunks = await stream.toList();
++        final bytes = chunks.expand((element) => element).toList();
++        String content = utf8.decode(bytes, allowMalformed: true);
++        final sizeStr = (len / 1024).toStringAsFixed(1);
++        return '$content\n\n${l10n.labelPreviewOmitted(sizeStr)}';
++      }
++      return await file.readAsString();
++    } catch (e) {
++      return l10n.labelPreviewBinaryError;
++    }
++  }
++}
++
++// A simple dialog to input a file type filter or clear it
++class _FilterTextDialog extends StatefulWidget {
++  final String initialValue;
++  final bool isSpecific;
++  const _FilterTextDialog(
++      {required this.initialValue, required this.isSpecific});
++
++  @override
++  State<_FilterTextDialog> createState() => _FilterTextDialogState();
++}
++
++class _FilterTextDialogState extends State<_FilterTextDialog> {
++  late TextEditingController _ctrl;
++
++  @override
++  void initState() {
++    super.initState();
++    _ctrl = TextEditingController(text: widget.initialValue);
++  }
++
++  @override
++  void dispose() {
++    _ctrl.dispose();
++    super.dispose();
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    final l10n = AppLocalizations.of(context)!;
++    return AlertDialog(
++      title:
++          Text(l10n.labelFilterSpecific, style: const TextStyle(fontSize: 14)),
++      content: TextField(
++        controller: _ctrl,
++        autofocus: true,
++        decoration: InputDecoration(
++          hintText: '*.png, *.txt ...',
++          isDense: true,
++          suffixIcon: IconButton(
++            icon: const Icon(Symbols.clear, size: 16),
++            onPressed: () => _ctrl.clear(),
++          ),
++        ),
++        onSubmitted: (val) => Navigator.of(context).pop(val),
++      ),
++      actions: [
++        TextButton(
++          onPressed: () => Navigator.of(context).pop(''),
++          child: Text(l10n.labelFilterAll),
++        ),
++        FilledButton(
++          onPressed: () => Navigator.of(context).pop(_ctrl.text),
++          child: const Text('OK'),
++        ),
++      ],
++    );
++  }
+ }
+ 
+ class _DirectoryTile extends StatefulWidget {
+@@ -428,8 +586,8 @@ class _DirectoryTileState extends State<_DirectoryTile> {
+                       onTap: _toggleExpand,
+                       child: Icon(
+                         _isExpanded
+-                            ? Icons.keyboard_arrow_down
+-                            : Icons.keyboard_arrow_right,
++                            ? Symbols.keyboard_arrow_down
++                            : Symbols.keyboard_arrow_right,
+                         size: 16,
+                         color: Colors.grey,
+                       ),
+@@ -475,7 +633,12 @@ class _DirectoryTileState extends State<_DirectoryTile> {
+             ),
+             padding: const EdgeInsets.only(left: 12.0), // Tree Indentation
+             child: Column(
+-              children: _subDirectories.map((dir) {
++              children: _subDirectories.where((dir) {
++                if (provider.hideSystemFiles) {
++                  return !p.basename(dir.path).startsWith('.');
++                }
++                return true;
++              }).map((dir) {
+                 // Pass context root down
+                 String? childContext = widget.contextRoot;
+                 if (widget.isQuickAccess && widget.isRoot) {
+diff --git a/lib/ui/panels/settings_panel.dart b/lib/ui/panels/settings_panel.dart
+index 6d10379..94f02ab 100644
+--- a/lib/ui/panels/settings_panel.dart
++++ b/lib/ui/panels/settings_panel.dart
+@@ -1,5 +1,6 @@
+ import 'package:flutter/material.dart';
+ import 'package:renamery/l10n/generated/app_localizations.dart';
++import 'package:material_symbols_icons/symbols.dart';
+ 
+ import 'categories/category_add.dart';
+ import 'categories/category_remove.dart';
+@@ -60,38 +61,38 @@ class _SettingsPanelState extends State<SettingsPanel> {
+                         .withOpacity(0.5),
+                     destinations: [
+                       NavigationRailDestination(
+-                        icon: const Icon(Icons.add_circle_outline),
+-                        selectedIcon: const Icon(Icons.add_circle),
++                        icon: const Icon(Symbols.add_circle),
++                        selectedIcon: const Icon(Symbols.add_circle),
+                         label: Text(l10n.labelCategoryAdd,
+                             style: const TextStyle(fontSize: 11)),
+                       ),
+                       NavigationRailDestination(
+-                        icon: const Icon(Icons.remove_circle_outline),
+-                        selectedIcon: const Icon(Icons.remove_circle),
++                        icon: const Icon(Symbols.do_not_disturb_on),
++                        selectedIcon: const Icon(Symbols.do_not_disturb_on),
+                         label: Text(l10n.labelCategoryRemove,
+                             style: const TextStyle(fontSize: 11)),
+                       ),
+                       NavigationRailDestination(
+-                        icon: const Icon(Icons.find_replace_outlined),
+-                        selectedIcon: const Icon(Icons.find_replace),
++                        icon: const Icon(Symbols.find_replace),
++                        selectedIcon: const Icon(Symbols.find_replace),
+                         label: Text(l10n.labelCategoryReplace,
+                             style: const TextStyle(fontSize: 11)),
+                       ),
+                       NavigationRailDestination(
+-                        icon: const Icon(Icons.format_list_numbered),
+-                        selectedIcon: const Icon(Icons.format_list_numbered),
++                        icon: const Icon(Symbols.format_list_numbered),
++                        selectedIcon: const Icon(Symbols.format_list_numbered),
+                         label: Text(l10n.labelCategoryNumbering,
+                             style: const TextStyle(fontSize: 11)),
+                       ),
+                       NavigationRailDestination(
+-                        icon: const Icon(Icons.extension_outlined),
+-                        selectedIcon: const Icon(Icons.extension),
++                        icon: const Icon(Symbols.extension),
++                        selectedIcon: const Icon(Symbols.extension),
+                         label: Text(l10n.labelCategoryExtension,
+                             style: const TextStyle(fontSize: 11)),
+                       ),
+                       NavigationRailDestination(
+-                        icon: const Icon(Icons.settings_applications_outlined),
+-                        selectedIcon: const Icon(Icons.settings_applications),
++                        icon: const Icon(Symbols.settings_applications),
++                        selectedIcon: const Icon(Symbols.settings_applications),
+                         label: Text(l10n.labelCategoryAdvanced,
+                             style: const TextStyle(fontSize: 11)),
+                       ),
+diff --git a/lib/ui/panels/toolbar_panel.dart b/lib/ui/panels/toolbar_panel.dart
+index 42124d9..c446993 100644
+--- a/lib/ui/panels/toolbar_panel.dart
++++ b/lib/ui/panels/toolbar_panel.dart
+@@ -1,5 +1,6 @@
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
++import 'package:material_symbols_icons/symbols.dart';
+ // For Clipboard
+ import '../../core/directory_provider.dart';
+ import '../helpers/undo_helper.dart';
+@@ -28,7 +29,7 @@ class ToolbarPanel extends StatelessWidget {
+             mainAxisSize: MainAxisSize.min,
+             children: [
+               IconButton(
+-                icon: const Icon(Icons.arrow_back),
++                icon: const Icon(Symbols.arrow_back),
+                 color: iconColor,
+                 iconSize: iconSize,
+                 tooltip: '戻る',
+@@ -37,7 +38,7 @@ class ToolbarPanel extends StatelessWidget {
+                 constraints: const BoxConstraints(),
+               ),
+               PopupMenuButton<int>(
+-                icon: const Icon(Icons.arrow_drop_down),
++                icon: const Icon(Symbols.arrow_drop_down),
+                 color: Colors.white,
+                 enabled: provider.backHistory.isNotEmpty,
+                 onSelected: (steps) {
+@@ -64,7 +65,7 @@ class ToolbarPanel extends StatelessWidget {
+             mainAxisSize: MainAxisSize.min,
+             children: [
+               IconButton(
+-                icon: const Icon(Icons.arrow_forward),
++                icon: const Icon(Symbols.arrow_forward),
+                 color: iconColor,
+                 iconSize: iconSize,
+                 tooltip: '進む',
+@@ -74,7 +75,7 @@ class ToolbarPanel extends StatelessWidget {
+                 constraints: const BoxConstraints(),
+               ),
+               PopupMenuButton<int>(
+-                icon: const Icon(Icons.arrow_drop_down),
++                icon: const Icon(Symbols.arrow_drop_down),
+                 color: Colors.white,
+                 enabled: provider.forwardHistory.isNotEmpty,
+                 onSelected: (steps) {
+@@ -100,7 +101,7 @@ class ToolbarPanel extends StatelessWidget {
+ 
+           // 3. Execute
+           IconButton(
+-            icon: const Icon(Icons.play_arrow),
++            icon: const Icon(Symbols.play_arrow),
+             color: iconColor,
+             iconSize: iconSize,
+             tooltip: '実行',
+@@ -111,7 +112,7 @@ class ToolbarPanel extends StatelessWidget {
+ 
+           // 4. Undo
+           TextButton.icon(
+-            icon: const Icon(Icons.undo),
++            icon: const Icon(Symbols.undo),
+             label: Text(provider.canUndo ? '戻す (${provider.undoCount})' : '戻す'),
+             style: TextButton.styleFrom(
+               foregroundColor: iconColor,
+@@ -127,7 +128,7 @@ class ToolbarPanel extends StatelessWidget {
+             mainAxisSize: MainAxisSize.min,
+             children: [
+               IconButton(
+-                icon: const Icon(Icons.content_copy),
++                icon: const Icon(Symbols.content_copy),
+                 color: Colors.grey[700],
+                 iconSize: iconSize,
+                 tooltip: 'コピー (現在名)',
+@@ -138,7 +139,7 @@ class ToolbarPanel extends StatelessWidget {
+                 constraints: const BoxConstraints(),
+               ),
+               PopupMenuButton<int>(
+-                icon: const Icon(Icons.arrow_drop_down),
++                icon: const Icon(Symbols.arrow_drop_down),
+                 color: Colors.white,
+                 // Enable if EITHER selection exists OR undo log exists
+                 enabled: provider.currentFiles.any((f) => f.isSelected) ||
+@@ -191,7 +192,7 @@ class ToolbarPanel extends StatelessWidget {
+ 
+           // 6. Up
+           IconButton(
+-            icon: const Icon(Icons.expand_less),
++            icon: const Icon(Symbols.expand_less),
+             color: iconColor,
+             iconSize: iconSize,
+             tooltip: '上に移動',
+@@ -201,7 +202,7 @@ class ToolbarPanel extends StatelessWidget {
+ 
+           // 7. Down
+           IconButton(
+-            icon: const Icon(Icons.expand_more),
++            icon: const Icon(Symbols.expand_more),
+             color: iconColor,
+             iconSize: iconSize,
+             tooltip: '下に移動',
+@@ -214,7 +215,7 @@ class ToolbarPanel extends StatelessWidget {
+ 
+           // 8. Refresh
+           IconButton(
+-            icon: const Icon(Icons.refresh),
++            icon: const Icon(Symbols.refresh),
+             color: iconColor,
+             iconSize: iconSize,
+             tooltip: '全て更新',
+diff --git a/lib/ui/preview_list.dart b/lib/ui/preview_list.dart
+index 199c0f8..d79cef0 100644
+--- a/lib/ui/preview_list.dart
++++ b/lib/ui/preview_list.dart
+@@ -1,4 +1,5 @@
+ import 'package:flutter/material.dart';
++import 'package:material_symbols_icons/symbols.dart';
+ import '../core/file_model.dart';
+ 
+ class PreviewList extends StatelessWidget {
+@@ -17,10 +18,20 @@ class PreviewList extends StatelessWidget {
+           color: Colors.grey[200],
+           child: const Row(
+             children: [
+-              Expanded(flex: 1, child: Text("Original Name", style: TextStyle(fontWeight: FontWeight.bold))),
+-              Icon(Icons.arrow_right_alt, color: Colors.transparent), // Spacer
+-              Expanded(flex: 1, child: Text("New Name (Preview)", style: TextStyle(fontWeight: FontWeight.bold))),
+-              SizedBox(width: 50, child: Text("Status", style: TextStyle(fontWeight: FontWeight.bold))),
++              Expanded(
++                  flex: 1,
++                  child: Text("Original Name",
++                      style: TextStyle(fontWeight: FontWeight.bold))),
++              Icon(Symbols.arrow_right_alt,
++                  color: Colors.transparent), // Spacer
++              Expanded(
++                  flex: 1,
++                  child: Text("New Name (Preview)",
++                      style: TextStyle(fontWeight: FontWeight.bold))),
++              SizedBox(
++                  width: 50,
++                  child: Text("Status",
++                      style: TextStyle(fontWeight: FontWeight.bold))),
+             ],
+           ),
+         ),
+@@ -31,33 +42,38 @@ class PreviewList extends StatelessWidget {
+             itemBuilder: (context, index) {
+               final file = files[index];
+               final isChanged = file.originalName != file.newName;
+-              
++
+               return Container(
+                 decoration: BoxDecoration(
+                   border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+-                  color: index % 2 == 0 ? Colors.white : Colors.grey[50], // Striped rows
++                  color: index % 2 == 0
++                      ? Colors.white
++                      : Colors.grey[50], // Striped rows
+                 ),
+-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
++                padding:
++                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                 child: Row(
+                   children: [
+                     Expanded(
+-                      flex: 1, 
+-                      child: Text(file.originalName, overflow: TextOverflow.ellipsis),
++                      flex: 1,
++                      child: Text(file.originalName,
++                          overflow: TextOverflow.ellipsis),
+                     ),
+                     Icon(
+-                      Icons.arrow_right_alt, 
++                      Symbols.arrow_right_alt,
+                       color: isChanged ? Colors.blue : Colors.grey[300],
+                       size: 20,
+                     ),
+                     Expanded(
+-                      flex: 1, 
++                      flex: 1,
+                       child: Text(
+-                        file.newName, 
++                        file.newName,
+                         overflow: TextOverflow.ellipsis,
+                         style: TextStyle(
+-                          color: isChanged ? Colors.blue[800] : Colors.black,
+-                          fontWeight: isChanged ? FontWeight.bold : FontWeight.normal
+-                        ),
++                            color: isChanged ? Colors.blue[800] : Colors.black,
++                            fontWeight: isChanged
++                                ? FontWeight.bold
++                                : FontWeight.normal),
+                       ),
+                     ),
+                     SizedBox(
+@@ -77,13 +93,16 @@ class PreviewList extends StatelessWidget {
+   Widget _buildStatusIcon(FileStatus status) {
+     switch (status) {
+       case FileStatus.original:
+-        return const Icon(Icons.circle_outlined, size: 16, color: Colors.grey);
++        return const Icon(Symbols.circle,
++            size: 16,
++            color: Colors
++                .grey); // Using circle instead of circle_outlined since we have fill variant if needed or outlined by default
+       case FileStatus.pending:
+-        return const Icon(Icons.pending, size: 16, color: Colors.orange);
++        return const Icon(Symbols.pending, size: 16, color: Colors.orange);
+       case FileStatus.renamed:
+-        return const Icon(Icons.check_circle, size: 16, color: Colors.green);
++        return const Icon(Symbols.check_circle, size: 16, color: Colors.green);
+       case FileStatus.error:
+-        return const Icon(Icons.error, size: 16, color: Colors.red);
++        return const Icon(Symbols.error, size: 16, color: Colors.red);
+     }
+   }
+ }
+diff --git a/lib/ui/settings_screen.dart b/lib/ui/settings_screen.dart
+index 231a898..26bfbb3 100644
+--- a/lib/ui/settings_screen.dart
++++ b/lib/ui/settings_screen.dart
+@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
+ import '../../core/directory_provider.dart';
+ import '../../core/rename_engine.dart';
+ import 'package:renamery/l10n/generated/app_localizations.dart';
++import 'package:material_symbols_icons/symbols.dart';
+ import 'package:renamery/ui/dialogs/about_dialog.dart';
+ 
+ class SettingsScreen extends StatelessWidget {
+@@ -39,7 +40,7 @@ class SettingsScreen extends StatelessWidget {
+               children: [
+                 Row(
+                   children: [
+-                    const Icon(Icons.language, size: 20),
++                    const Icon(Symbols.language, size: 20),
+                     const SizedBox(width: 8),
+                     Text(l10n.labelSettingsMenuLabelTitle),
+                   ],
+@@ -82,19 +83,19 @@ class SettingsScreen extends StatelessWidget {
+                     ButtonSegment(
+                         value: AppThemeType.system,
+                         label: Text(l10n.labelSettingsThemeSystem),
+-                        icon: const Icon(Icons.brightness_auto)),
++                        icon: const Icon(Symbols.brightness_auto)),
+                     ButtonSegment(
+                         value: AppThemeType.light,
+                         label: Text(l10n.labelSettingsThemeLight),
+-                        icon: const Icon(Icons.brightness_high)),
++                        icon: const Icon(Symbols.brightness_high)),
+                     ButtonSegment(
+                         value: AppThemeType.dark,
+                         label: Text(l10n.labelSettingsThemeDark),
+-                        icon: const Icon(Icons.brightness_4)),
++                        icon: const Icon(Symbols.brightness_4)),
+                     ButtonSegment(
+                         value: AppThemeType.darkGray,
+                         label: Text(l10n.labelSettingsThemeGray),
+-                        icon: const Icon(Icons.contrast)),
++                        icon: const Icon(Symbols.contrast)),
+                   ],
+                   selected: {provider.appTheme},
+                   onSelectionChanged: (Set<AppThemeType> newSelection) {
+@@ -127,7 +128,7 @@ class SettingsScreen extends StatelessWidget {
+                           backgroundColor: color,
+                           radius: 16,
+                           child: provider.seedColor == color
+-                              ? const Icon(Icons.check,
++                              ? const Icon(Symbols.check,
+                                   size: 16, color: Colors.white)
+                               : null,
+                         ),
+@@ -224,7 +225,7 @@ class SettingsScreen extends StatelessWidget {
+                   ),
+                   const SizedBox(width: 8),
+                   IconButton(
+-                    icon: const Icon(Icons.folder_open),
++                    icon: const Icon(Symbols.folder_open),
+                     onPressed: () async {
+                       final String? directoryPath = await getDirectoryPath();
+                       if (directoryPath != null) {
+@@ -241,7 +242,7 @@ class SettingsScreen extends StatelessWidget {
+           ListTile(
+             title: Text(l10n.labelSettingsClearHistory),
+             subtitle: Text(l10n.labelSettingsClearHistorySub),
+-            leading: const Icon(Icons.history, color: Colors.orange),
++            leading: const Icon(Symbols.history, color: Colors.orange),
+             onTap: () async {
+               final confirm = await showDialog<bool>(
+                 context: context,
+@@ -276,7 +277,7 @@ class SettingsScreen extends StatelessWidget {
+           ListTile(
+             title: Text(l10n.labelSettingsResetAll),
+             subtitle: Text(l10n.labelSettingsResetAllSub),
+-            leading: const Icon(Icons.restore, color: Colors.red),
++            leading: const Icon(Symbols.restore, color: Colors.red),
+             onTap: () async {
+               final confirm = await showDialog<bool>(
+                 context: context,
+@@ -320,7 +321,7 @@ class SettingsScreen extends StatelessWidget {
+           const Divider(),
+           ListTile(
+             title: Text(l10n.labelSettingsAboutTitle),
+-            leading: const Icon(Icons.info_outline),
++            leading: const Icon(Symbols.info),
+             onTap: () {
+               showDialog(
+                 context: context,
+diff --git a/lib/ui/widgets/history_text_field.dart b/lib/ui/widgets/history_text_field.dart
+index 0dbc691..32b6222 100644
+--- a/lib/ui/widgets/history_text_field.dart
++++ b/lib/ui/widgets/history_text_field.dart
+@@ -1,4 +1,5 @@
+ import 'package:flutter/material.dart';
++import 'package:material_symbols_icons/symbols.dart';
+ 
+ class HistoryTextField extends StatefulWidget {
+   final TextEditingController controller;
+@@ -98,7 +99,7 @@ class _HistoryTextFieldState extends State<HistoryTextField> {
+                     Positioned(
+                       right: 4,
+                       child: IconButton(
+-                        icon: const Icon(Icons.arrow_drop_down),
++                        icon: const Icon(Symbols.arrow_drop_down),
+                         tooltip: '履歴を表示',
+                         onPressed: widget.history.isNotEmpty
+                             ? () {
+diff --git a/pubspec.lock b/pubspec.lock
+index cae923d..1313517 100644
+--- a/pubspec.lock
++++ b/pubspec.lock
+@@ -325,6 +325,14 @@ packages:
+       url: "https://pub.dev"
+     source: hosted
+     version: "0.11.1"
++  material_symbols_icons:
++    dependency: "direct main"
++    description:
++      name: material_symbols_icons
++      sha256: c62b15f2b3de98d72cbff0148812f5ef5159f05e61fc9f9a089ec2bb234df082
++      url: "https://pub.dev"
++    source: hosted
++    version: "4.2906.0"
+   meta:
+     dependency: transitive
+     description:
+diff --git a/pubspec.yaml b/pubspec.yaml
+index f0962cc..eee5352 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -30,6 +30,7 @@ dependencies:
+   url_launcher: ^6.2.1
+   windows_single_instance: ^1.1.0
+   win32: ^5.15.0
++  material_symbols_icons: ^4.2906.0
+ 
+ dev_dependencies:
+   flutter_test:
+-- 
+2.51.0.windows.1
+

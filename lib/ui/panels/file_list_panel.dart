@@ -4,14 +4,9 @@ import 'package:provider/provider.dart';
 import '../../core/directory_provider.dart';
 import '../../core/file_model.dart';
 import 'dart:io';
-import 'dart:ffi' as ffi;
-import 'package:ffi/ffi.dart';
-import 'package:win32/win32.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-// Constants for ShellExecuteEx
-const int SEE_MASK_INVOKEIDLIST = 0x0000000C;
+import '../../utils/platform_utils.dart';
 
 class FileListPanel extends StatefulWidget {
   const FileListPanel({super.key});
@@ -676,18 +671,18 @@ class _FileListPanelState extends State<FileListPanel> {
                                                         context: context,
                                                         builder: (context) =>
                                                             AlertDialog(
-                                                          title: const Text(
-                                                              '項目の削除'),
-                                                          content: const Text(
-                                                              '選択したファイルをゴミ箱に移動しますか？'),
+                                                          title: Text(l10n
+                                                              .labelDialogTrashTitle),
+                                                          content: Text(l10n
+                                                              .labelDialogTrashMessage),
                                                           actions: [
                                                             TextButton(
                                                               onPressed: () =>
                                                                   Navigator.pop(
                                                                       context,
                                                                       false),
-                                                              child: const Text(
-                                                                  'キャンセル'),
+                                                              child: Text(l10n
+                                                                  .labelDialogCancel),
                                                             ),
                                                             TextButton(
                                                               onPressed: () =>
@@ -699,8 +694,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                       foregroundColor:
                                                                           Colors
                                                                               .red),
-                                                              child: const Text(
-                                                                  '削除'),
+                                                              child: Text(l10n
+                                                                  .labelDialogDelete),
                                                             ),
                                                           ],
                                                         ),
@@ -1080,99 +1075,6 @@ class _FileListPanelState extends State<FileListPanel> {
   }
 
   void _showPropertiesDialog(BuildContext context, FileModel fileModel) {
-    final path = fileModel.entity.path;
-
-    if (Platform.isWindows) {
-      using((arena) {
-        final pPath = path.toNativeUtf16(allocator: arena);
-        final pVerb = 'properties'.toNativeUtf16(allocator: arena);
-
-        final sei = arena<SHELLEXECUTEINFO>();
-        sei.ref
-          ..cbSize = ffi.sizeOf<SHELLEXECUTEINFO>()
-          ..fMask = SEE_MASK_INVOKEIDLIST
-          ..hwnd = NULL
-          ..lpVerb = pVerb
-          ..lpFile = pPath
-          ..lpParameters = ffi.nullptr
-          ..lpDirectory = ffi.nullptr
-          ..nShow = SW_SHOW
-          ..hInstApp = NULL;
-
-        final result = ShellExecuteEx(sei);
-
-        if (result == FALSE) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Windowsプロパティ画面を開けませんでした')),
-            );
-          }
-        }
-      });
-    } else if (Platform.isMacOS) {
-      // Use AppleScript to open the Get Info window in Finder
-      Process.run('osascript', [
-        '-e',
-        'tell application "Finder" to open information window of (POSIX file "$path" as alias)'
-      ]).then((result) {
-        if (result.exitCode != 0 && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Macプロパティ画面を開けませんでした: ${result.stderr}')),
-          );
-        }
-      });
-    } else {
-      // Fallback: Custom Flutter Dialog for Linux, Android, Web, etc.
-      _showCustomPropertiesDialog(context, fileModel);
-    }
-  }
-
-  void _showCustomPropertiesDialog(BuildContext context, FileModel fileModel) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('プロパティ: ${fileModel.originalName}'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildPropertyRow(
-                    '種類', fileModel.entity is Directory ? 'ファイル フォルダ' : 'ファイル'),
-                _buildPropertyRow('場所', fileModel.entity.parent.path),
-                _buildPropertyRow('サイズ', fileModel.size),
-                const Divider(),
-                _buildPropertyRow('更新日時', fileModel.dateModified),
-                const Divider(),
-                _buildPropertyRow('属性', fileModel.attributes),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildPropertyRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-              width: 80,
-              child: Text(label,
-                  style: const TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(child: SelectableText(value)),
-        ],
-      ),
-    );
+    PlatformUtils.showPropertiesDialog(context, fileModel);
   }
 }

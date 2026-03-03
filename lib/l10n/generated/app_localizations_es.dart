@@ -21,22 +21,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelEtcTab => 'Atributos';
 
   @override
-  String get labelCategoryAdd => 'テキストの追加';
+  String get labelCategoryAdd => 'Añadir Texto';
 
   @override
-  String get labelCategoryRemove => 'テキストの削除';
+  String get labelCategoryRemove => 'Eliminar Texto';
 
   @override
-  String get labelCategoryReplace => '置換と変換';
+  String get labelCategoryReplace => 'Reemplazar y Convertir';
 
   @override
-  String get labelCategoryNumbering => '連番 (ナンバリング)';
+  String get labelCategoryNumbering => 'Numeración';
 
   @override
-  String get labelCategoryExtension => '拡張子';
+  String get labelCategoryExtension => 'Extensión';
 
   @override
-  String get labelCategoryAdvanced => '高度な操作';
+  String get labelCategoryAdvanced => 'Avanzado';
 
   @override
   String get labelStringInput => 'Texto';
@@ -386,6 +386,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelStartDigit => 'Inicio/Dígitos';
 
   @override
+  String get labelStart => 'Inicio';
+
+  @override
+  String get labelDigit => 'Dígitos';
+
+  @override
   String get labelSettingsTitle => 'Configuración';
 
   @override
@@ -528,7 +534,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Vista previa no disponible: Codificación binaria o desconocida';
 
   @override
-  String get labelGoRenamery => '¡¡¡Ir a ReNamery!!!';
+  String get labelGoRenamery => 'Ejecutar Renombrado';
 
   @override
   String get labelTermFolder => 'Carpeta';
@@ -666,4 +672,29 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get labelAboutVisitWebsite => 'Visitar Sitio Web';
+
+  @override
+  String get labelHistoryTooltip => 'Mostrar historial';
+
+  @override
+  String get labelSettingsFolders => 'Mostrar carpetas';
+
+  @override
+  String get labelSettingsShowSystemFiles => 'Mostrar archivos del sistema';
+
+  @override
+  String get labelSettingsSystemFiles => 'Archivos del sistema';
+
+  @override
+  String get labelSettingsDisableRecursive => 'Deshabilitar subcarpetas';
+
+  @override
+  String get labelSettingsRecursive => 'Subcarpetas';
+
+  @override
+  String get labelDialogTrashTitle => 'Eliminar elementos';
+
+  @override
+  String get labelDialogTrashMessage =>
+      '¿Mover los archivos seleccionados a la papelera de reciclaje?';
 }

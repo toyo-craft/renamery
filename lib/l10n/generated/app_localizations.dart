@@ -853,6 +853,18 @@ abstract class AppLocalizations {
   /// **'開始/桁'**
   String get labelStartDigit;
 
+  /// No description provided for @labelStart.
+  ///
+  /// In ja, this message translates to:
+  /// **'開始'**
+  String get labelStart;
+
+  /// No description provided for @labelDigit.
+  ///
+  /// In ja, this message translates to:
+  /// **'桁'**
+  String get labelDigit;
+
   /// No description provided for @labelSettingsTitle.
   ///
   /// In ja, this message translates to:
@@ -1356,6 +1368,54 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'ウェブサイトを表示'**
   String get labelAboutVisitWebsite;
+
+  /// No description provided for @labelHistoryTooltip.
+  ///
+  /// In ja, this message translates to:
+  /// **'履歴を表示'**
+  String get labelHistoryTooltip;
+
+  /// No description provided for @labelSettingsFolders.
+  ///
+  /// In ja, this message translates to:
+  /// **'フォルダ表示'**
+  String get labelSettingsFolders;
+
+  /// No description provided for @labelSettingsShowSystemFiles.
+  ///
+  /// In ja, this message translates to:
+  /// **'システムファイルを表示'**
+  String get labelSettingsShowSystemFiles;
+
+  /// No description provided for @labelSettingsSystemFiles.
+  ///
+  /// In ja, this message translates to:
+  /// **'システムファイル'**
+  String get labelSettingsSystemFiles;
+
+  /// No description provided for @labelSettingsDisableRecursive.
+  ///
+  /// In ja, this message translates to:
+  /// **'下位フォルダ検索を無効'**
+  String get labelSettingsDisableRecursive;
+
+  /// No description provided for @labelSettingsRecursive.
+  ///
+  /// In ja, this message translates to:
+  /// **'下位フォルダ'**
+  String get labelSettingsRecursive;
+
+  /// No description provided for @labelDialogTrashTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'項目の削除'**
+  String get labelDialogTrashTitle;
+
+  /// No description provided for @labelDialogTrashMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'選択したファイルをゴミ箱に移動しますか？'**
+  String get labelDialogTrashMessage;
 }
 
 class _AppLocalizationsDelegate

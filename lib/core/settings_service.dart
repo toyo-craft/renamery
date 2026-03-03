@@ -86,6 +86,14 @@ class SettingsService {
 
   String? getString(String key) => _settings[key] as String?;
 
+  List<String> getStringList(String key) {
+    final val = _settings[key];
+    if (val is List) {
+      return val.map((e) => e.toString()).toList();
+    }
+    return [];
+  }
+
   List<T>? getList<T>(String key) {
     final val = _settings[key];
     if (val is List) {
