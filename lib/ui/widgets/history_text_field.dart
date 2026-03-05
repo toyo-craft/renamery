@@ -49,75 +49,77 @@ class _HistoryTextFieldState extends State<HistoryTextField> {
         // MenuAnchor is the official Material Design 3 menu component.
         Expanded(
           child: LayoutBuilder(builder: (context, constraints) {
-            return MenuAnchor(
-              controller: _menuController,
-              style: MenuStyle(
-                minimumSize:
-                    WidgetStateProperty.all(Size(constraints.maxWidth, 0)),
-              ),
-              menuChildren: widget.history.map((String value) {
-                // Force menu item (and thus the menu) to have the exact width of the TextField
-                return SizedBox(
-                  width: constraints.maxWidth,
-                  child: MenuItemButton(
-                    onPressed: () {
-                      widget.controller.text = value;
-                      widget.onChanged(value);
-                    },
-                    child: Text(value),
-                  ),
-                );
-              }).toList(),
-              builder: (BuildContext context, MenuController controller,
-                  Widget? child) {
-                // We use a Stack to place the dropdown icon visually inside the TextField.
-                // This completely avoids the Flutter Desktop TextField.suffixIcon tap interception bug,
-                // while preserving the perfect MD3 "Exposed Dropdown Menu" visual design.
-                return Stack(
-                  alignment: Alignment.centerRight,
-                  children: [
-                    TextField(
-                      focusNode: widget.focusNode,
-                      controller: widget.controller,
-                      style: theme.textTheme.bodyMedium,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        hintText: widget.hintText,
-                        border: const OutlineInputBorder(),
-                        contentPadding: EdgeInsets.only(
-                          top: widget.isCompact ? 8 : 12,
-                          bottom: widget.isCompact ? 8 : 12,
-                          left: 8,
-                          right: 36, // Padding so text doesn't overlap the icon
+            // We use a Stack to place the MenuAnchor and the TextField as siblings.
+            // This is crucial: if TextField is inside MenuAnchor's builder, MenuAnchor
+            // intercepts arrow keys (Focus/Shortcuts issue in Flutter Desktop).
+            return Stack(
+              alignment: Alignment.centerRight,
+              children: [
+                Positioned.fill(
+                  child: MenuAnchor(
+                    controller: _menuController,
+                    style: MenuStyle(
+                      minimumSize: WidgetStateProperty.all(
+                          Size(constraints.maxWidth, 0)),
+                    ),
+                    menuChildren: widget.history.map((String value) {
+                      return SizedBox(
+                        width: constraints.maxWidth,
+                        child: MenuItemButton(
+                          onPressed: () {
+                            widget.controller.text = value;
+                            widget.onChanged(value);
+                          },
+                          child: Text(value),
                         ),
-                      ),
-                      onChanged: (val) => widget.onChanged(val),
-                      onTap: widget.onTap,
-                      onSubmitted: (val) {
-                        if (widget.onSubmitted != null) {
-                          widget.onSubmitted!(val, widget.history);
-                        }
-                      },
+                      );
+                    }).toList(),
+                    builder: (BuildContext context, MenuController controller,
+                        Widget? child) {
+                      return const SizedBox();
+                    },
+                  ),
+                ),
+                TextField(
+                  focusNode: widget.focusNode,
+                  controller: widget.controller,
+                  style: theme.textTheme.bodyMedium,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: widget.hintText,
+                    border: const OutlineInputBorder(),
+                    contentPadding: EdgeInsets.only(
+                      top: widget.isCompact ? 8 : 12,
+                      bottom: widget.isCompact ? 8 : 12,
+                      left: 8,
+                      right: 36, // Padding so text doesn't overlap the icon
                     ),
-                    Positioned(
-                      right: 4,
-                      child: IconButton(
-                        icon: const Icon(Symbols.arrow_drop_down),
-                        tooltip: l10n.labelHistoryTooltip,
-                        onPressed: widget.history.isNotEmpty
-                            ? () {
-                                if (controller.isOpen) {
-                                  controller.close();
-                                } else {
-                                  controller.open();
-                                }
-                              }
-                            : null,
-                      ),
-                    ),
-                  ],
-                );
-              },
+                  ),
+                  onChanged: (val) => widget.onChanged(val),
+                  onTap: widget.onTap,
+                  onSubmitted: (val) {
+                    if (widget.onSubmitted != null) {
+                      widget.onSubmitted!(val, widget.history);
+                    }
+                  },
+                ),
+                Positioned(
+                  right: 4,
+                  child: IconButton(
+                    icon: const Icon(Symbols.arrow_drop_down),
+                    tooltip: l10n.labelHistoryTooltip,
+                    onPressed: widget.history.isNotEmpty
+                        ? () {
+                            if (_menuController.isOpen) {
+                              _menuController.close();
+                            } else {
+                              _menuController.open();
+                            }
+                          }
+                        : null,
+                  ),
+                ),
+              ],
             );
           }),
         ),
