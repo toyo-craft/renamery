@@ -6,6 +6,7 @@ import '../../core/rename_engine.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:renamery/ui/dialogs/about_dialog.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -234,17 +235,93 @@ class SettingsScreen extends StatelessWidget {
               provider.setEnableBetaFeatures(val);
             },
           ),
-          const Divider(),
-          ListTile(
-            title: Text(l10n.labelSettingsAboutTitle),
-            leading: const Icon(Symbols.info),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => const AboutAppDialog(),
-              );
-            },
+          const SizedBox(height: 24),
+          // フッター: ブランディングカード（タップで詳細）
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Card(
+              elevation: 0,
+              color: Theme.of(context)
+                  .colorScheme
+                  .surfaceContainerHighest
+                  .withOpacity(0.4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const AboutAppDialog(),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
+                  child: Row(
+                    children: [
+                      // アプリアイコン
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/icon/app_icon.png',
+                          width: 36,
+                          height: 36,
+                          filterQuality: FilterQuality.high,
+                          errorBuilder: (context, error, stackTrace) => Icon(
+                            Symbols.edit_note,
+                            size: 36,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // アプリ名 + バージョン + 著作権
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ReNamery',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            FutureBuilder<PackageInfo>(
+                              future: PackageInfo.fromPlatform(),
+                              builder: (context, snapshot) {
+                                final version = snapshot.data?.version ?? '...';
+                                return Text(
+                                  'v$version · ${l10n.labelAboutCopyright}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Symbols.chevron_right,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
+          const SizedBox(height: 8),
         ],
       ),
     );

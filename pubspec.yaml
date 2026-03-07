@@ -31,6 +31,7 @@ dependencies:
   windows_single_instance: ^1.1.0
   win32: ^5.15.0
   material_symbols_icons: ^4.2906.0
+  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +45,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/
+    - CHANGELOG.md
 
 flutter_launcher_icons:
   # android: "launcher_icon"

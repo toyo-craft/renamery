@@ -1,0 +1,18 @@
+﻿feat: enhance About dialog with changelog and branding card in settings
+
+変更内容リスト：
+1. アバウトダイアログの機能強化 (lib/ui/dialogs/about_dialog.dart)
+   - package_info_plus 導入による動的なバージョン表示。
+   - CHANGELOG.md 解析機能の追加。最新3件の更新履歴をダイアログ内に表示。
+   - レイアウトを整理し、公式サイトへのリンクやクレジット表示を改善。
+2. 設定画面のUIブラッシュアップ (lib/ui/settings_screen.dart)
+   - 最下部にブランディングカードを追加。アイコン、バージョン、コピーライトを統合表示。
+   - カードをタップすることでアバウトダイアログが開くよう導線を整理。
+3. 依存関係の更新 (pubspec.yaml, pubspec.lock)
+   - package_info_plus の追加と CHANGELOG.md のアセット登録。
+4. macOSビルド設定の更新 (macos/Flutter/GeneratedPluginRegistrant.swift)
+   - 新規プラグインの登録を反映。
+5. 操作履歴の更新 (docs/prompt_history.md)
+   - これまでのプロンプト履歴を記録。
+6. 新規ファイルの追跡 (CHANGELOG.md, gemini.md, scripts/, .agents/)
+   - 更新履歴や設定ファイル、スクリプト群をリポジトリに追加。
