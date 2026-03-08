@@ -36,7 +36,8 @@ if ($PubspecContent -match 'version:\s*(\d+)\.(\d+)\.(\d+)') {
     $minor = [int]$Matches[2]
     $patch = [int]$Matches[3]
     $oldVersion = "$major.$minor.$patch"
-} else {
+}
+else {
     Write-Error "pubspec.yaml から version を読み取れませんでした"
     exit 1
 }
@@ -66,9 +67,15 @@ $DateStr = Get-Date -Format "yyyy-MM-dd"
 if (Test-Path $ChangelogPath) {
     $ChangelogContent = Get-Content $ChangelogPath -Raw -Encoding UTF8
     $NewEntry = "## [$newVersion] - $DateStr`n`n- `n`n"
-    $ChangelogContent = $NewEntry + $ChangelogContent
+    if ($ChangelogContent -match "(?i)^#\s+Changelog\s*`r?`n`r?`n?") {
+        $ChangelogContent = $ChangelogContent -replace "(?i)^#\s+Changelog\s*`r?`n`r?`n?", "`$0$NewEntry"
+    }
+    else {
+        $ChangelogContent = $NewEntry + $ChangelogContent
+    }
     Set-Content -Path $ChangelogPath -Value $ChangelogContent -NoNewline -Encoding UTF8
-} else {
+}
+else {
     $NewEntry = "# Changelog`n`n## [$newVersion] - $DateStr`n`n- `n"
     Set-Content -Path $ChangelogPath -Value $NewEntry -NoNewline -Encoding UTF8
 }
