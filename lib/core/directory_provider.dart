@@ -796,8 +796,43 @@ class DirectoryProvider extends ChangeNotifier {
       datePosition: _datePosition,
       validationType: _validationType,
     );
+
+    // バリデーションエラーの集約と重複チェック [6.1][6.2][6.3]
+    _hasValidationError = false;
+    final nameCounts = <String, int>{};
+
+    for (var f in _currentFiles) {
+      // 既存の基本エラー（重複以外）があればフラグを立てる
+      if (f.validationErrorMessage != null &&
+          f.validationErrorMessage != 'ファイル名が重複しています') {
+        _hasValidationError = true;
+      }
+
+      // 重複チェックのために新ファイル名（非選択のものは元の名前と同値）をカウント
+      final lowerName = f.newName.toLowerCase();
+      nameCounts[lowerName] = (nameCounts[lowerName] ?? 0) + 1;
+    }
+
+    // 重複エラーの判定とメッセージ付与
+    for (var f in targets) {
+      if (f.validationErrorMessage == null ||
+          f.validationErrorMessage == 'ファイル名が重複しています') {
+        final lowerName = f.newName.toLowerCase();
+        if ((nameCounts[lowerName] ?? 0) > 1) {
+          f.setValidationError('ファイル名が重複しています');
+          _hasValidationError = true;
+        } else {
+          f.setValidationError(null);
+        }
+      }
+    }
+
     notifyListeners();
   }
+
+  // Validation State
+  bool _hasValidationError = false;
+  bool get hasValidationError => _hasValidationError;
 
   // Sort State
   int _sortColumnIndex = 0;
@@ -890,16 +925,21 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   // Sort Methods
+  // Sort Methods
   void sortFiles(int columnIndex, bool ascending) {
     _sortColumnIndex = columnIndex;
     _sortAscending = ascending;
 
     _currentFiles.sort((a, b) {
+      // フォルダを常に優先して上部に配置する
+      final isDirA = a.entity is Directory;
+      final isDirB = b.entity is Directory;
+      if (isDirA && !isDirB) return -1;
+      if (!isDirA && isDirB) return 1;
+
       int cmp = 0;
       switch (columnIndex) {
         case 0: // Original Name
-          if ((a.entity is Directory) && (b.entity is! Directory)) return -1;
-          if ((a.entity is! Directory) && (b.entity is Directory)) return 1;
           cmp = a.originalName.toLowerCase().compareTo(
                 b.originalName.toLowerCase(),
               );
@@ -908,9 +948,6 @@ class DirectoryProvider extends ChangeNotifier {
           cmp = a.newName.toLowerCase().compareTo(b.newName.toLowerCase());
           break;
         case 2: // Size
-          // Directories don't have size in this simple model, treat as 0 or last
-          if ((a.entity is Directory) && (b.entity is! Directory)) return -1;
-          if ((a.entity is! Directory) && (b.entity is Directory)) return 1;
           if (a.entity is File && b.entity is File) {
             int sizeA = 0;
             int sizeB = 0;
@@ -1056,14 +1093,30 @@ class DirectoryProvider extends ChangeNotifier {
   // --- List Manipulation ---
 
   bool get canExecute {
-    // Current Logic enforces selection for execution (in ToolbarPanel)
-    // So we check if ANY selected file has a change.
-    // If we later support "Execute All if None Selected", we would check that here too.
-
     final selected = _currentFiles.where((f) => f.isSelected);
     if (selected.isEmpty) return false;
 
-    return selected.any((f) => f.originalName != f.newName);
+    // 「エラーがない」かつ「名前が変更されている」ファイルが1つでもあれば実行可能
+    return selected.any(
+        (f) => f.validationErrorMessage == null && f.originalName != f.newName);
+  }
+
+  // 選択中のファイル内にエラーを持つものが存在するか
+  bool get hasInvalidFilenamesSelected {
+    return _currentFiles
+        .any((f) => f.isSelected && f.validationErrorMessage != null);
+  }
+
+  int get validFileCount {
+    return _currentFiles
+        .where((f) => f.isSelected && f.validationErrorMessage == null)
+        .length;
+  }
+
+  int get invalidFileCount {
+    return _currentFiles
+        .where((f) => f.isSelected && f.validationErrorMessage != null)
+        .length;
   }
 
   bool get canMoveUp {
@@ -1204,6 +1257,12 @@ class DirectoryProvider extends ChangeNotifier {
     List<UndoAction> transaction = [];
 
     for (var file in targets) {
+      // バリデーションエラーがあるファイル（およびそもそも名前変更がないファイル）はスキップする
+      if (file.validationErrorMessage != null ||
+          file.originalName == file.newName) {
+        continue;
+      }
+
       // Logic branching
       if (_renameMode == RenameMode.changeTimestamp) {
         try {
@@ -1215,6 +1274,7 @@ class DirectoryProvider extends ChangeNotifier {
           await f.setLastModified(dt);
           // Metadata update doesn't change name, but effectively "done"
           // Maybe refresh file info?
+          renamaedFiles.add(file); // タイムスタンプ変更も成功とみなす
         } catch (e) {
           file.markError(e.toString());
         }
@@ -1230,13 +1290,12 @@ class DirectoryProvider extends ChangeNotifier {
           args.add(fullPath);
 
           await Process.run('attrib', args);
+          renamaedFiles.add(file); // 属性変更も成功とみなす
         } catch (e) {
           file.markError(e.toString());
         }
       } else {
         // Normal Rename
-        if (file.originalName == file.newName) continue;
-
         try {
           final oldPath = p.join(file.parentPath, file.originalName);
           final newPath = p.join(file.parentPath, file.newName);
@@ -1383,10 +1442,12 @@ class DirectoryProvider extends ChangeNotifier {
         }
         break;
       case RenameMode.extension:
-      case RenameMode.extensionAdd:
         if (_extensionChangeText.isNotEmpty) {
           addHistory(HistoryType.extension, _extensionChangeText);
-        } else if (_extensionAddText.isNotEmpty) {
+        }
+        break;
+      case RenameMode.extensionAdd:
+        if (_extensionAddText.isNotEmpty) {
           addHistory(HistoryType.extension, _extensionAddText);
         }
         break;
@@ -1663,8 +1724,7 @@ Add-Type -AssemblyName Microsoft.VisualBasic
   }
 
   // Validation State Getter
-  bool get hasInvalidFilenames =>
-      _currentFiles.any((f) => f.hasValidationError);
+  bool get hasInvalidFilenames => _hasValidationError;
 
   // Helper to list Windows drives (Physical Drives)
   static Future<List<Directory>> getLogicalDrives() async {

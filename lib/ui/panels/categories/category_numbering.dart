@@ -15,11 +15,11 @@ class CategoryNumbering extends StatefulWidget {
 
 class _CategoryNumberingState extends State<CategoryNumbering> {
   late TextEditingController
-      _findController; // Used as the 'string' part in Numbering
+      _appendController; // Used as the 'string' part in Numbering
   late TextEditingController _startController;
   late TextEditingController _digitController;
 
-  late FocusNode _findFocus;
+  late FocusNode _appendFocus;
   late FocusNode _startFocus;
   late FocusNode _digitFocus;
 
@@ -27,24 +27,24 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
   void initState() {
     super.initState();
     final provider = context.read<DirectoryProvider>();
-    _findController = TextEditingController(
+    _appendController = TextEditingController(
         text: provider
-            .findText); // string input acts as string part for numbering
+            .appendText); // string input acts as string part for numbering
     _startController =
         TextEditingController(text: provider.startNumber.toString());
     _digitController = TextEditingController(text: provider.digits.toString());
 
-    _findFocus = FocusNode();
+    _appendFocus = FocusNode();
     _startFocus = FocusNode();
     _digitFocus = FocusNode();
   }
 
   @override
   void dispose() {
-    _findController.dispose();
+    _appendController.dispose();
     _startController.dispose();
     _digitController.dispose();
-    _findFocus.dispose();
+    _appendFocus.dispose();
     _startFocus.dispose();
     _digitFocus.dispose();
     super.dispose();
@@ -57,8 +57,9 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
     final isCompact = provider.isCompactMode;
     final double spacing = isCompact ? 4.0 : 8.0;
 
-    if (provider.findText != _findController.text && !_findFocus.hasFocus) {
-      _findController.text = provider.findText ?? '';
+    if (provider.appendText != _appendController.text &&
+        !_appendFocus.hasFocus) {
+      _appendController.text = provider.appendText ?? '';
     }
     if (provider.startNumber.toString() != _startController.text &&
         !_startFocus.hasFocus) {
@@ -104,7 +105,25 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
                         onChanged: (v) =>
                             provider.updateRenameSettings(startNumber: v),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: Icon(
+                          provider.saveSequenceNumber
+                              ? Icons.push_pin
+                              : Icons.push_pin_outlined,
+                          color: provider.saveSequenceNumber
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        iconSize: 20,
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        tooltip: l10n.labelNumSaveSequenceTooltip,
+                        onPressed: () => provider.updateRenameSettings(
+                            saveSequenceNumber: !provider.saveSequenceNumber,
+                            immediate: true),
+                      ),
+                      const Spacer(),
                       Text(l10n.labelDigit),
                       const SizedBox(width: 8),
                       // Digits
@@ -118,35 +137,6 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
                             provider.updateRenameSettings(digits: v),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Save Sequence Number Toolkit (Optional feature some apps have)
-                  InkWell(
-                    onTap: () => provider.updateRenameSettings(
-                        saveSequenceNumber: !provider.saveSequenceNumber,
-                        immediate: true),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: Checkbox(
-                            value: provider.saveSequenceNumber,
-                            onChanged: (val) => provider.updateRenameSettings(
-                                saveSequenceNumber: val, immediate: true),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            l10n.labelNumSaveSequenceTooltip,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        )
-                      ],
-                    ),
                   ),
 
                   const SizedBox(height: 16),
@@ -188,15 +178,15 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
 
                   const SizedBox(height: 16),
                   HistoryTextField(
-                    controller: _findController,
-                    focusNode: _findFocus,
-                    history: provider.findHistory,
+                    controller: _appendController,
+                    focusNode: _appendFocus,
+                    history: provider.appendHistory,
                     hintText: l10n.labelStringInput,
                     isCompact: isCompact,
                     onChanged: (val) =>
-                        provider.updateRenameSettings(findText: val),
+                        provider.updateRenameSettings(appendText: val),
                     onSubmitted: (val, _) =>
-                        provider.addHistory(HistoryType.find, val),
+                        provider.addHistory(HistoryType.add, val),
                   ),
                 ],
               ),

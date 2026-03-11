@@ -245,7 +245,17 @@ class RenameEngine {
             if (useRegex) {
               try {
                 final regex = RegExp(findText);
-                newBaseName = originalBaseName.replaceAll(regex, replacement);
+                newBaseName = originalBaseName.replaceAllMapped(regex, (match) {
+                  return replacement.replaceAllMapped(RegExp(r'(?:\$|\\)(\d+)'),
+                      (m) {
+                    int groupIdx = int.parse(m.group(1)!);
+                    if (groupIdx <= match.groupCount) {
+                      return match.group(groupIdx) ?? '';
+                    }
+                    return m.group(
+                        0)!; // Group doesn't exist, keep original literal
+                  });
+                });
               } catch (e) {
                 // Ignore invalid regex
               }
@@ -330,16 +340,25 @@ class RenameEngine {
 
       // --- Sub Tab Features ---
       switch (mode) {
+        case RenameMode.extension:
+          if (replaceText != null) {
+            String newExt = replaceText;
+            if (newExt.isNotEmpty && !newExt.startsWith('.')) {
+              newExt = '.$newExt';
+            }
+            extension = newExt;
+          }
+          break;
         case RenameMode.extensionRemove:
           extension = '';
           break;
         case RenameMode.extensionAdd:
           if (replaceText != null && replaceText.isNotEmpty) {
-            if (replaceText.startsWith('.')) {
-              extension += replaceText;
-            } else {
-              extension += '.$replaceText';
+            String addText = replaceText;
+            if (!addText.startsWith('.')) {
+              addText = '.$addText';
             }
+            extension += addText;
           }
           break;
         case RenameMode.extensionUpper:
@@ -444,7 +463,7 @@ class RenameEngine {
         file.setValidationError(errorMsg);
       } else if (controlChars.hasMatch(file.newName)) {
         file.setValidationError('制御文字が含まれています');
-      } else if (file.newName.trim().isEmpty) {
+      } else if (file.newName.trim().isEmpty || file.newName == '.') {
         file.setValidationError('ファイル名が空です');
       } else {
         file.setValidationError(null);

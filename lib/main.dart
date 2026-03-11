@@ -46,7 +46,7 @@ void main(List<String> args) async {
       title: 'ReNamery',
     );
 
-    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
       await windowManager.focus();
       if (x != null && y != null) {
@@ -121,6 +121,7 @@ class ReNameryApp extends StatelessWidget {
           themeMode: provider.themeMode,
           locale: provider.currentLocale,
           theme: ThemeData(
+            fontFamilyFallback: const ['Meiryo', 'Yu Gothic', 'MS PGothic'],
             colorScheme: lightScheme,
             visualDensity: provider.isCompactMode
                 ? VisualDensity.compact
@@ -147,6 +148,7 @@ class ReNameryApp extends StatelessWidget {
             ),
           ),
           darkTheme: ThemeData(
+            fontFamilyFallback: const ['Meiryo', 'Yu Gothic', 'MS PGothic'],
             colorScheme: targetDarkScheme,
             visualDensity: provider.isCompactMode
                 ? VisualDensity.compact

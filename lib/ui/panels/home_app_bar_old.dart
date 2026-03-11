@@ -192,12 +192,51 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       return;
     }
 
+    final int invalidCount = provider.invalidFileCount;
+    final int validCount = provider.validFileCount;
+
+    if (invalidCount > 0) {
+      final shouldProceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('エラーを含むファイルのスキップ確認'),
+          content: Text(
+            '選択されたファイルの中に、ファイル名が不正（禁止文字・重複など）なものが $invalidCount 件あります。\n\n'
+            'これらを除外し、正常な $validCount 件のファイルのみリネームを実行しますか？',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('キャンセル'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('スキップして続行'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldProceed != true) {
+        return;
+      }
+    }
+
     final executedCount = await provider.executeRename();
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.labelMsgExecutedCount(executedCount))),
-      );
+      if (executedCount > 0) {
+        final msg = invalidCount > 0
+            ? '$executedCount 件成功、$invalidCount 件はエラーのためスキップされました'
+            : l10n.labelMsgExecutedCount(executedCount);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('実行できるファイルがありませんでした')),
+        );
+      }
     }
   }
 

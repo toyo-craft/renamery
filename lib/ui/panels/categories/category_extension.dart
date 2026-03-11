@@ -22,7 +22,9 @@ class _CategoryExtensionState extends State<CategoryExtension> {
     super.initState();
     final provider = context.read<DirectoryProvider>();
     _replaceController = TextEditingController(
-        text: provider.replaceText); // Used for Extension replace
+        text: provider.renameMode == RenameMode.extensionAdd
+            ? provider.extensionAddText
+            : provider.extensionChangeText);
     _replaceFocus = FocusNode();
   }
 
@@ -40,9 +42,16 @@ class _CategoryExtensionState extends State<CategoryExtension> {
     final isCompact = provider.isCompactMode;
     final double spacing = isCompact ? 4.0 : 8.0;
 
-    if (provider.replaceText != _replaceController.text &&
-        !_replaceFocus.hasFocus) {
-      _replaceController.text = provider.replaceText ?? '';
+    if (provider.renameMode == RenameMode.extensionAdd) {
+      if (provider.extensionAddText != _replaceController.text &&
+          !_replaceFocus.hasFocus) {
+        _replaceController.text = provider.extensionAddText;
+      }
+    } else {
+      if (provider.extensionChangeText != _replaceController.text &&
+          !_replaceFocus.hasFocus) {
+        _replaceController.text = provider.extensionChangeText;
+      }
     }
 
     return Padding(
@@ -72,7 +81,7 @@ class _CategoryExtensionState extends State<CategoryExtension> {
                 hintText: "New Extension (e.g. txt, .png)",
                 isCompact: true,
                 onChanged: (val) =>
-                    provider.updateRenameSettings(replaceText: val),
+                    provider.updateRenameSettings(extensionChangeText: val),
                 onSubmitted: (val, _) =>
                     provider.addHistory(HistoryType.extension, val),
               ),
@@ -102,7 +111,7 @@ class _CategoryExtensionState extends State<CategoryExtension> {
                 hintText: "Extension to Add",
                 isCompact: true,
                 onChanged: (val) =>
-                    provider.updateRenameSettings(replaceText: val),
+                    provider.updateRenameSettings(extensionAddText: val),
                 onSubmitted: (val, _) =>
                     provider.addHistory(HistoryType.extension, val),
               ),

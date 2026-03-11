@@ -121,13 +121,12 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               IconButton(
                 icon: const Icon(Symbols.play_arrow),
                 iconSize: iconSize,
-                tooltip: provider.hasInvalidFilenames
-                    ? l10n.labelErrorInvalidFilename
+                tooltip: provider.hasInvalidFilenamesSelected
+                    ? '一部のファイルにエラーがあります (クリックで詳細)'
                     : l10n.labelExecute,
-                onPressed:
-                    (provider.canExecute && !provider.hasInvalidFilenames)
-                        ? () => _confirmAndExecute(context, provider, l10n)
-                        : null,
+                onPressed: provider.canExecute
+                    ? () => _confirmAndExecute(context, provider, l10n)
+                    : null,
               ),
 
               // 4. Undo
@@ -730,12 +729,53 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       return;
     }
 
+    final int invalidCount = provider.invalidFileCount;
+    final int validCount = provider.validFileCount;
+
+    if (invalidCount > 0) {
+      // パターン2: エラーがある場合は確認ダイアログを表示
+      final shouldProceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('エラーを含むファイルのスキップ確認'),
+          content: Text(
+            '選択されたファイルの中に、ファイル名が不正（禁止文字・重複など）なものが $invalidCount 件あります。\n\n'
+            'これらを除外し、正常な $validCount 件のファイルのみリネームを実行しますか？',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('キャンセル'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('スキップして続行'),
+            ),
+          ],
+        ),
+      );
+
+      // ダイアログでキャンセル、あるいはダイアログ外タップで閉じた場合は中断
+      if (shouldProceed != true) {
+        return;
+      }
+    }
+
     final executedCount = await provider.executeRename();
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.labelMsgExecutedCount(executedCount))),
-      );
+      if (executedCount > 0) {
+        final msg = invalidCount > 0
+            ? '$executedCount 件成功、$invalidCount 件はエラーのためスキップされました'
+            : l10n.labelMsgExecutedCount(executedCount);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('実行できるファイルがありませんでした')),
+        );
+      }
     }
   }
 

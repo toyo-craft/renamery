@@ -187,7 +187,7 @@ class _FileListPanelState extends State<FileListPanel> {
           TextSpan(
             text: deleted,
             style: TextStyle(
-              color: Colors.red.withOpacity(0.7),
+              color: Colors.red.withValues(alpha: 0.7),
               decoration: TextDecoration.lineThrough,
             ),
           ),
@@ -246,6 +246,26 @@ class _FileListPanelState extends State<FileListPanel> {
               canRequestFocus: true,
               onKeyEvent: (node, event) {
                 if (event is KeyDownEvent) {
+                  // Handle F2: Inline Rename
+                  if (event.logicalKey == LogicalKeyboardKey.f2) {
+                    final selectedFile = provider.currentFiles
+                        .where((f) => f.isSelected)
+                        .firstOrNull;
+                    if (selectedFile != null) {
+                      setState(() {
+                        _editingFilePath = selectedFile.entity.path;
+                        _renameController.text = selectedFile.originalName;
+                      });
+                      provider.setInlineRenaming(true);
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          _renameFocusNode.requestFocus();
+                        }
+                      });
+                      return KeyEventResult.handled;
+                    }
+                  }
+
                   // Handle ESC: Cancel inline renaming
                   if (event.logicalKey == LogicalKeyboardKey.escape) {
                     if (_editingFilePath != null) {
@@ -667,6 +687,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                                         ],
                                                       );
 
+                                                      if (!mounted) return;
+
                                                       switch (result) {
                                                         case 'up_folder':
                                                           await provider.goUp();
@@ -715,11 +737,19 @@ class _FileListPanelState extends State<FileListPanel> {
                                                               .refresh();
                                                           break;
                                                         case 'properties':
+                                                          if (!context
+                                                              .mounted) {
+                                                            return;
+                                                          }
                                                           _showPropertiesDialog(
                                                               context,
                                                               fileModel);
                                                           break;
                                                         case 'delete':
+                                                          if (!context
+                                                              .mounted) {
+                                                            return;
+                                                          }
                                                           final confirm =
                                                               await showDialog<
                                                                   bool>(
@@ -767,6 +797,17 @@ class _FileListPanelState extends State<FileListPanel> {
                                                           .toggleSelection(
                                                         fileModel,
                                                       ),
+                                                      onDoubleTap: () {
+                                                        if (isDir) {
+                                                          provider.setDirectory(
+                                                              fileModel.entity
+                                                                  as Directory);
+                                                        } else {
+                                                          launchUrl(Uri.file(
+                                                              fileModel.entity
+                                                                  .path));
+                                                        }
+                                                      },
                                                       child: Container(
                                                         margin: const EdgeInsets
                                                             .symmetric(
@@ -918,53 +959,48 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                         },
                                                                       ),
                                                                     )
-                                                                  : GestureDetector(
-                                                                      behavior:
-                                                                          HitTestBehavior
-                                                                              .opaque,
-                                                                      onDoubleTap:
-                                                                          () {
-                                                                        setState(
-                                                                            () {
-                                                                          _editingFilePath = fileModel
-                                                                              .entity
-                                                                              .path;
-                                                                          _renameController.text =
-                                                                              fileModel.originalName;
-                                                                        });
-                                                                        provider
-                                                                            .setInlineRenaming(true);
-                                                                        WidgetsBinding
-                                                                            .instance
-                                                                            .addPostFrameCallback((_) {
-                                                                          if (mounted) {
-                                                                            _renameFocusNode.requestFocus();
-                                                                          }
-                                                                        });
-                                                                      },
-                                                                      child:
-                                                                          Row(
-                                                                        children: [
-                                                                          GestureDetector(
-                                                                            onTap: isDir
-                                                                                ? () {
-                                                                                    provider.setDirectory(fileModel.entity as Directory);
-                                                                                  }
-                                                                                : () {
-                                                                                    launchUrl(Uri.file(fileModel.entity.path));
-                                                                                  },
-                                                                            onDoubleTap:
-                                                                                () {},
-                                                                            child:
-                                                                                Icon(
-                                                                              isDir ? Icons.folder : Icons.insert_drive_file,
-                                                                              color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary,
-                                                                              size: 18,
-                                                                            ),
+                                                                  : Row(
+                                                                      children: [
+                                                                        GestureDetector(
+                                                                          onDoubleTap:
+                                                                              () async {
+                                                                            if (isDir) {
+                                                                              await provider.setDirectory(fileModel.entity as Directory);
+                                                                            } else {
+                                                                              await launchUrl(Uri.file(fileModel.entity.path));
+                                                                            }
+                                                                          },
+                                                                          child:
+                                                                              Icon(
+                                                                            isDir
+                                                                                ? Icons.folder
+                                                                                : Icons.insert_drive_file,
+                                                                            color: isDir
+                                                                                ? Theme.of(context).colorScheme.tertiary
+                                                                                : Theme.of(context).colorScheme.secondary,
+                                                                            size:
+                                                                                18,
                                                                           ),
-                                                                          const SizedBox(
-                                                                              width: 8),
-                                                                          Expanded(
+                                                                        ),
+                                                                        const SizedBox(
+                                                                            width:
+                                                                                8),
+                                                                        Expanded(
+                                                                          child:
+                                                                              GestureDetector(
+                                                                            onDoubleTap:
+                                                                                () {
+                                                                              setState(() {
+                                                                                _editingFilePath = fileModel.entity.path;
+                                                                                _renameController.text = fileModel.originalName;
+                                                                              });
+                                                                              provider.setInlineRenaming(true);
+                                                                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                                                                if (mounted) {
+                                                                                  _renameFocusNode.requestFocus();
+                                                                                }
+                                                                              });
+                                                                            },
                                                                             child:
                                                                                 Text(
                                                                               fileModel.originalName,
@@ -972,13 +1008,13 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                               style: TextStyle(
                                                                                 fontSize: 12,
                                                                                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                                                                decoration: isSelected ? TextDecoration.underline : null, // M3 doesn't underline usually, but helpful
+                                                                                decoration: isSelected ? TextDecoration.underline : null,
                                                                                 decorationColor: Theme.of(context).colorScheme.primary,
                                                                               ),
                                                                             ),
                                                                           ),
-                                                                        ],
-                                                                      ),
+                                                                        ),
+                                                                      ],
                                                                     ),
                                                             ),
                                                             SizedBox(

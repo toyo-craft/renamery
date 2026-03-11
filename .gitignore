@@ -68,3 +68,4 @@ run_debug.bat
 *_log2.txt
 chrome_log*.txt
 final_crash_log.txt
+analyze_result*.txt
