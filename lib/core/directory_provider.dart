@@ -48,6 +48,10 @@ class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
   bool _isCutMode = false;
   bool _canPaste = false;
 
+  bool get canUndo => _undoManager.canUndo;
+  bool get canRedo => _undoManager.canRedo;
+  int get undoCount => _undoManager.undoCount;
+  int get redoCount => _undoManager.redoCount;
   bool get isInlineRenaming => _isInlineRenaming;
   bool get enableBetaFeatures => _enableBetaFeatures;
   int get treeVersion => _treeVersion;
@@ -405,8 +409,6 @@ class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
   List<FileModel> get currentFiles => _currentFiles;
   int get allFilesCount => _allFiles.length; // For Status Bar
   bool get isLoading => _isLoading;
-  bool get canUndo => _undoManager.canUndo;
-  int get undoCount => _undoManager.undoCount;
 
   // Getters for Rename UI
   RenameMode get renameMode => _renameMode;
@@ -1336,6 +1338,8 @@ class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
     _isLoading = true;
     notifyListeners();
 
+    List<UndoAction> transaction = [];
+
     try {
       final clipboard = SystemClipboard.instance;
       if (clipboard == null) return;
@@ -1348,15 +1352,13 @@ class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
         if (value != null) {
           uris.add(value);
         }
-        
-        // Note: super_clipboard 0.8.x handles multiple files via PlatformSpecific format 
-        // or multiple items in clipboard. For now we handle at least one.
 
         for (var uri in uris) {
           final srcPath = uri.toFilePath();
-          final srcEntity = FileSystemEntity.typeSync(srcPath) == FileSystemEntityType.directory
-              ? Directory(srcPath)
-              : File(srcPath);
+          final srcEntity =
+              FileSystemEntity.typeSync(srcPath) == FileSystemEntityType.directory
+                  ? Directory(srcPath)
+                  : File(srcPath);
 
           if (!await srcEntity.exists()) continue;
 
@@ -1368,13 +1370,33 @@ class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
 
           if (_isCutMode) {
             await srcEntity.rename(destPath);
+            transaction.add(UndoAction(
+              type: UndoType.move,
+              originalPath: srcPath,
+              newPath: destPath,
+            ));
           } else {
             if (srcEntity is File) {
               await srcEntity.copy(destPath);
+              transaction.add(UndoAction(
+                type: UndoType.copy,
+                originalPath: srcPath,
+                newPath: destPath,
+              ));
             } else if (srcEntity is Directory) {
               await _copyDirectory(srcEntity, Directory(destPath));
+              transaction.add(UndoAction(
+                type: UndoType.copy,
+                originalPath: srcPath,
+                newPath: destPath,
+              ));
             }
           }
+        }
+
+        // Record Undo
+        if (transaction.isNotEmpty) {
+          _undoManager.addTransaction(transaction);
         }
 
         // If it was a cut operation from WITHIN the app, clear state
@@ -1402,9 +1424,16 @@ class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
       destPath = _getUniquePath(destPath);
 
       await Directory(destPath).create();
-      await refresh();
 
-      // 新規作成されたフォルダを選択状態にする、あるいは直接リネームモードに入らせるなどのUI制御が可能
+      // Record Undo
+      _undoManager.addTransaction([
+        UndoAction(
+          type: UndoType.create,
+          newPath: destPath,
+        )
+      ]);
+
+      await refresh();
     } catch (e) {
       if (kDebugMode) print('Create Folder error: $e');
     }
@@ -1434,7 +1463,8 @@ class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
     await destination.create(recursive: true);
     await for (var entity in source.list(recursive: false)) {
       if (entity is Directory) {
-        final newDirectory = Directory(p.join(destination.path, p.basename(entity.path)));
+        final newDirectory =
+            Directory(p.join(destination.path, p.basename(entity.path)));
         await _copyDirectory(entity, newDirectory);
       } else if (entity is File) {
         await entity.copy(p.join(destination.path, p.basename(entity.path)));
@@ -1505,7 +1535,11 @@ class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
           if (await fsEntity.exists()) {
             await fsEntity.rename(newPath);
             file.markRenamed();
-            transaction.add(UndoAction(oldPath, newPath));
+            transaction.add(UndoAction(
+              type: UndoType.rename,
+              originalPath: oldPath,
+              newPath: newPath,
+            ));
             renamaedFiles.add(file);
           }
         } catch (e) {
@@ -1549,6 +1583,16 @@ class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
           isDir ? Directory(oldPath) : File(oldPath);
       if (await fsEntity.exists()) {
         await fsEntity.rename(newPath);
+
+        // Record Undo for inline rename
+        _undoManager.addTransaction([
+          UndoAction(
+            type: UndoType.rename,
+            originalPath: oldPath,
+            newPath: newPath,
+          )
+        ]);
+
         // We re-list directory to ensure state sync,
         // or effectively we could just update the model if we trust it.
         // For safety, let's re-list.
@@ -1574,7 +1618,20 @@ class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
     final result = await _undoManager.undoLastTransaction();
 
     if (_currentDirectory != null) {
-      await setDirectory(_currentDirectory!);
+      await setDirectory(_currentDirectory!, addToHistory: false);
+    }
+    return result;
+  }
+
+  Future<Map<String, dynamic>> redo() async {
+    if (!_undoManager.canRedo) return {'count': 0, 'errors': []};
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await _undoManager.redoLastTransaction();
+
+    if (_currentDirectory != null) {
+      await setDirectory(_currentDirectory!, addToHistory: false);
     }
     return result;
   }

@@ -64,6 +64,7 @@
   "labelEtcCautionTitle": "取り消し操作不能",
   "labelEtcCautionMessage": "このカテゴリ（タイムスタンプ・属性）の変更は、アンドゥ機能で元に戻すことができません。慎重に操作してください。",
   "labelUndo": "戻す",
+  "labelRedo": "やり直し",
   "labelExecute": "実行",
   "labelErrorInvalidFilename": "エラー：ファイル名に禁止文字が含まれています",
   "labelCopyName": "コピー (現在名)",
@@ -251,6 +252,17 @@
     }
   },
   "labelMsgUndoSuccess": "復元しました",
+  "labelRedoTitle": "処理のやり直し",
+  "labelRedoConfirm": "直前で取り消した {count} 件の変更をやり直しますか？",
+  "@labelRedoConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelMsgRedoSuccess": "やり直しました",
+  "labelRedoBtn": "やり直し",
   "labelUndoRecoverBtn": "復元",
   "labelMsgNoUndoRecord": "直前の変更記録がありません",
   "labelMsgUndoRecordCopied": "直前の変更記録をクリップボードにコピーしました",

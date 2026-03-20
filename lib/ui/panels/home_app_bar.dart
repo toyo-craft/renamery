@@ -129,8 +129,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     : null,
               ),
 
-              // 4. Undo
-              if (!isNarrow)
+              // 4. Undo / Redo
+              if (!isNarrow) ...[
                 TextButton.icon(
                   icon: const Icon(Symbols.undo),
                   label: Text(provider.canUndo
@@ -142,8 +142,20 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   onPressed: provider.canUndo
                       ? () => UndoHelper.handleUndo(context, provider)
                       : null,
-                )
-              else
+                ),
+                TextButton.icon(
+                  icon: const Icon(Symbols.redo),
+                  label: Text(provider.canRedo
+                      ? '${l10n.labelRedo} (${provider.redoCount})'
+                      : l10n.labelRedo),
+                  style: TextButton.styleFrom(
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: provider.canRedo
+                      ? () => UndoHelper.handleRedo(context, provider)
+                      : null,
+                ),
+              ] else ...[
                 IconButton(
                   icon: const Icon(Symbols.undo),
                   iconSize: iconSize,
@@ -154,6 +166,17 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ? () => UndoHelper.handleUndo(context, provider)
                       : null,
                 ),
+                IconButton(
+                  icon: const Icon(Symbols.redo),
+                  iconSize: iconSize,
+                  tooltip: provider.canRedo
+                      ? '${l10n.labelRedo} (${provider.redoCount})'
+                      : l10n.labelRedo,
+                  onPressed: provider.canRedo
+                      ? () => UndoHelper.handleRedo(context, provider)
+                      : null,
+                ),
+              ],
 
               if (!isNarrow) ...[
                 // Wide Layout: Show all icons
