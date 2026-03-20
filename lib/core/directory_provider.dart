@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
+import 'package:super_clipboard/super_clipboard.dart';
 import 'file_model.dart';
 import 'rename_engine.dart';
 import 'undo_manager.dart';
@@ -33,7 +34,7 @@ enum MenuLabelType {
   spanish, // Spanish
 }
 
-class DirectoryProvider extends ChangeNotifier {
+class DirectoryProvider extends ChangeNotifier with WidgetsBindingObserver {
   Directory? _currentDirectory;
   List<FileModel> _currentFiles = [];
   bool _isLoading = false;
@@ -42,9 +43,16 @@ class DirectoryProvider extends ChangeNotifier {
   int _treeVersion = 0;
   final UndoManager _undoManager = UndoManager();
 
+  // Clipboard State
+  List<FileModel> _clipboardFiles = [];
+  bool _isCutMode = false;
+  bool _canPaste = false;
+
   bool get isInlineRenaming => _isInlineRenaming;
   bool get enableBetaFeatures => _enableBetaFeatures;
   int get treeVersion => _treeVersion;
+  bool get canPaste => _canPaste;
+  bool get isCutMode => _isCutMode;
 
   void setInlineRenaming(bool isRenaming) {
     if (_isInlineRenaming != isRenaming) {
@@ -216,6 +224,36 @@ class DirectoryProvider extends ChangeNotifier {
       if (_currentDirectory != null) {
         _applyFilters();
       }
+      notifyListeners();
+    }
+
+    // ライフサイクル監視の開始
+    WidgetsBinding.instance.addObserver(this);
+    // 初期状態のクリップボードチェック
+    await checkClipboard();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // アプリが前面に戻った時にクリップボードを再チェック
+      checkClipboard();
+    }
+  }
+
+  Future<void> checkClipboard() async {
+    final clipboard = SystemClipboard.instance;
+    if (clipboard == null) return;
+    final reader = await clipboard.read();
+    final hasFiles = reader.canProvide(Formats.fileUri);
+    if (_canPaste != hasFiles) {
+      _canPaste = hasFiles;
       notifyListeners();
     }
   }
@@ -1241,6 +1279,165 @@ class DirectoryProvider extends ChangeNotifier {
       final parent = _currentDirectory!.parent;
       if (parent.path != _currentDirectory!.path) {
         await setDirectory(parent);
+      }
+    }
+  }
+
+  // --- File Operations (Clipboard & New Folder) ---
+
+  Future<void> copySelection() async {
+    final targets = _currentFiles.where((f) => f.isSelected).toList();
+    if (targets.isEmpty) return;
+
+    _clipboardFiles = targets;
+    _isCutMode = false;
+
+    // Write to system clipboard
+    final clipboard = SystemClipboard.instance;
+    if (clipboard != null) {
+      final item = DataWriterItem();
+      final List<Uri> uris = targets.map((f) => f.entity.uri).toList();
+      // super_clipboard 0.8.x: Use Formats.fileUri and Formats.fileUri.add(uris) for multiple
+      item.add(Formats.fileUri(uris.first)); 
+      // For multiple URIs, we can add them to the same item if the format supports it 
+      // or check how 0.8.2 handles multiple files. 
+      // In 0.8.2, Formats.fileUri is what we use.
+      await clipboard.write([item]);
+    }
+
+    _canPaste = true;
+    notifyListeners();
+  }
+
+  Future<void> cutSelection() async {
+    final targets = _currentFiles.where((f) => f.isSelected).toList();
+    if (targets.isEmpty) return;
+
+    _clipboardFiles = targets;
+    _isCutMode = true;
+
+    // Write to system clipboard
+    final clipboard = SystemClipboard.instance;
+    if (clipboard != null) {
+      final item = DataWriterItem();
+      final List<Uri> uris = targets.map((f) => f.entity.uri).toList();
+      item.add(Formats.fileUri(uris.first));
+      await clipboard.write([item]);
+    }
+
+    _canPaste = true;
+    notifyListeners();
+  }
+
+  Future<void> pasteFromClipboard() async {
+    if (_currentDirectory == null) return;
+    final destDir = _currentDirectory!.path;
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final clipboard = SystemClipboard.instance;
+      if (clipboard == null) return;
+      final reader = await clipboard.read();
+
+      if (reader.canProvide(Formats.fileUri)) {
+        final List<Uri> uris = [];
+        // Get URI(s) from clipboard
+        final value = await reader.readValue(Formats.fileUri);
+        if (value != null) {
+          uris.add(value);
+        }
+        
+        // Note: super_clipboard 0.8.x handles multiple files via PlatformSpecific format 
+        // or multiple items in clipboard. For now we handle at least one.
+
+        for (var uri in uris) {
+          final srcPath = uri.toFilePath();
+          final srcEntity = FileSystemEntity.typeSync(srcPath) == FileSystemEntityType.directory
+              ? Directory(srcPath)
+              : File(srcPath);
+
+          if (!await srcEntity.exists()) continue;
+
+          final name = p.basename(srcPath);
+          String destPath = p.join(destDir, name);
+
+          // Conflict Handling: If dest exists, add suffix
+          destPath = _getUniquePath(destPath);
+
+          if (_isCutMode) {
+            await srcEntity.rename(destPath);
+          } else {
+            if (srcEntity is File) {
+              await srcEntity.copy(destPath);
+            } else if (srcEntity is Directory) {
+              await _copyDirectory(srcEntity, Directory(destPath));
+            }
+          }
+        }
+
+        // If it was a cut operation from WITHIN the app, clear state
+        if (_isCutMode) {
+          _isCutMode = false;
+          _clipboardFiles = [];
+        }
+
+        await refresh();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Paste error: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> createNewFolder() async {
+    if (_currentDirectory == null) return;
+
+    try {
+      String folderName = 'New Folder';
+      String destPath = p.join(_currentDirectory!.path, folderName);
+      destPath = _getUniquePath(destPath);
+
+      await Directory(destPath).create();
+      await refresh();
+
+      // 新規作成されたフォルダを選択状態にする、あるいは直接リネームモードに入らせるなどのUI制御が可能
+    } catch (e) {
+      if (kDebugMode) print('Create Folder error: $e');
+    }
+  }
+
+  // Helpers
+  String _getUniquePath(String path) {
+    if (!File(path).existsSync() && !Directory(path).existsSync()) {
+      return path;
+    }
+
+    final dir = p.dirname(path);
+    final name = p.basenameWithoutExtension(path);
+    final ext = p.extension(path);
+    int counter = 2;
+
+    while (true) {
+      final newPath = p.join(dir, '$name ($counter)$ext');
+      if (!File(newPath).existsSync() && !Directory(newPath).existsSync()) {
+        return newPath;
+      }
+      counter++;
+    }
+  }
+
+  Future<void> _copyDirectory(Directory source, Directory destination) async {
+    await destination.create(recursive: true);
+    await for (var entity in source.list(recursive: false)) {
+      if (entity is Directory) {
+        final newDirectory = Directory(p.join(destination.path, p.basename(entity.path)));
+        await _copyDirectory(entity, newDirectory);
+      } else if (entity is File) {
+        await entity.copy(p.join(destination.path, p.basename(entity.path)));
       }
     }
   }
