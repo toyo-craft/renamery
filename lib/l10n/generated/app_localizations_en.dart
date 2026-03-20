@@ -335,6 +335,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelCtxRefresh => 'Refresh (F5)';
 
   @override
+  String get labelCtxCopy => 'Copy (C)';
+
+  @override
+  String get labelCtxCut => 'Cut (X)';
+
+  @override
+  String get labelCtxPaste => 'Paste (V)';
+
+  @override
+  String get labelCtxNewFolder => 'New Folder (N)';
+
+  @override
   String get labelCtxProperties => 'Properties (R)';
 
   @override
