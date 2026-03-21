@@ -250,6 +250,18 @@
     }
   },
   "labelMsgUndoSuccess": "Restored successfully",
+  "labelRedo": "Redo",
+  "labelRedoTitle": "Redo Operation",
+  "labelRedoConfirm": "Are you sure you want to redo the last {count} undone changes?",
+  "@labelRedoConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelMsgRedoSuccess": "Redone successfully",
+  "labelRedoBtn": "Redo",
   "labelUndoRecoverBtn": "Restore",
   "labelMsgNoUndoRecord": "No previous changes found",
   "labelMsgUndoRecordCopied": "Undo log copied to clipboard",

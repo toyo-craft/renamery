@@ -151,8 +151,27 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         // Ctrl + Z : Undo
         if (isCtrl && logicalKey == LogicalKeyboardKey.keyZ) {
           final provider = context.read<DirectoryProvider>();
-          if (provider.canUndo) {
-            UndoHelper.handleUndo(context, provider);
+          final isShift = HardwareKeyboard.instance.isShiftPressed;
+          if (isShift) {
+            // Ctrl + Shift + Z : Redo
+            if (provider.canRedo) {
+              UndoHelper.handleRedo(context, provider);
+              return KeyEventResult.handled;
+            }
+          } else {
+            // Ctrl + Z : Undo
+            if (provider.canUndo) {
+              UndoHelper.handleUndo(context, provider);
+              return KeyEventResult.handled;
+            }
+          }
+        }
+
+        // Ctrl + Y : Redo
+        if (isCtrl && logicalKey == LogicalKeyboardKey.keyY) {
+          final provider = context.read<DirectoryProvider>();
+          if (provider.canRedo) {
+            UndoHelper.handleRedo(context, provider);
             return KeyEventResult.handled;
           }
         }
