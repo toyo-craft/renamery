@@ -808,17 +808,19 @@ class DirectoryProvider extends ChangeNotifier {
         _hasValidationError = true;
       }
 
-      // 重複チェックのために新ファイル名（非選択のものは元の名前と同値）をカウント
-      final lowerName = f.newName.toLowerCase();
-      nameCounts[lowerName] = (nameCounts[lowerName] ?? 0) + 1;
+      // 重複チェックのために親フォルダパスを含めた新ファイル名をカウント
+      // ID 008: 同一フォルダ内での重複のみを検知するように修正
+      // canonicalize を使用してパスの区切り文字や大文字小文字の違いを吸収する
+      final fullPathKey = p.canonicalize(p.join(f.parentPath, f.newName));
+      nameCounts[fullPathKey] = (nameCounts[fullPathKey] ?? 0) + 1;
     }
 
     // 重複エラーの判定とメッセージ付与
     for (var f in targets) {
       if (f.validationErrorMessage == null ||
           f.validationErrorMessage == 'ファイル名が重複しています') {
-        final lowerName = f.newName.toLowerCase();
-        if ((nameCounts[lowerName] ?? 0) > 1) {
+        final fullPathKey = p.canonicalize(p.join(f.parentPath, f.newName));
+        if ((nameCounts[fullPathKey] ?? 0) > 1) {
           f.setValidationError('ファイル名が重複しています');
           _hasValidationError = true;
         } else {
@@ -1432,6 +1434,9 @@ class DirectoryProvider extends ChangeNotifier {
         }
         break;
       case RenameMode.append:
+      case RenameMode.prepend:
+      case RenameMode.insert:
+      case RenameMode.numbering:
         if (_appendText != null) addHistory(HistoryType.add, _appendText!);
         break;
       case RenameMode.deleteFrontTo:
@@ -1449,6 +1454,11 @@ class DirectoryProvider extends ChangeNotifier {
       case RenameMode.extensionAdd:
         if (_extensionAddText.isNotEmpty) {
           addHistory(HistoryType.extension, _extensionAddText);
+        }
+        break;
+      case RenameMode.appendDate:
+        if (_dateFormat.isNotEmpty) {
+          addHistory(HistoryType.find, _dateFormat); // findHistory をフォーマット履歴として代用（または別途定義）
         }
         break;
       default:
