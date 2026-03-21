@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +25,11 @@ class _FileListPanelState extends State<FileListPanel> {
   late TextEditingController _renameController;
   final FocusNode _renameFocusNode = FocusNode();
   final FocusNode _fileListFocusNode = FocusNode();
+
+  // Step 1: Selection drag state
+  Offset? _dragStart;
+  Offset? _dragUpdate;
+  Timer? _scrollTimer;
 
   double _colWidthOriginal = 200.0;
   double _colWidthNew = 200.0;
@@ -214,6 +221,25 @@ class _FileListPanelState extends State<FileListPanel> {
     }
   }
 
+  void _updateSelectionOnScroll(Offset localPosition, List<FileModel> files, DirectoryProvider provider) {
+    if (_dragStart == null) return;
+    
+    final currentAbsY = localPosition.dy + _verticalController.offset;
+    final minY = (_dragStart!.dy < currentAbsY ? _dragStart!.dy : currentAbsY);
+    final maxY = (_dragStart!.dy > currentAbsY ? _dragStart!.dy : currentAbsY);
+    
+    final filesHeight = files.length * 34.0;
+    if (minY >= filesHeight || maxY <= 0) {
+      provider.selectRange(-1, -1, exclusive: !HardwareKeyboard.instance.isControlPressed);
+      return;
+    }
+
+    final startIndex = (minY / 34.0).floor().clamp(0, files.length - 1);
+    final endIndex = (maxY / 34.0).floor().clamp(0, files.length - 1);
+    
+    provider.selectRange(startIndex, endIndex, exclusive: !HardwareKeyboard.instance.isControlPressed);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -271,19 +297,14 @@ class _FileListPanelState extends State<FileListPanel> {
                         const SizedBox(width: 8),
                         IconButton(icon: Icon(Icons.arrow_forward, color: Theme.of(context).colorScheme.primary), tooltip: l10n.labelMenuGo, onPressed: () => provider.setDirectory(Directory(_pathController.text))),
                         const SizedBox(width: 8),
-                        // Select All / Deselect All Toggle Button
                         SizedBox(
                           height: 32,
                           child: ElevatedButton(
                             onPressed: () {
-                              final allSelected = files.isNotEmpty &&
-                                  files.every((f) => f.isSelected);
+                              final allSelected = files.isNotEmpty && files.every((f) => f.isSelected);
                               provider.selectAll(!allSelected);
                             },
-                            child: Text(files.isNotEmpty &&
-                                    files.every((f) => f.isSelected)
-                                ? l10n.labelDeselectAll
-                                : l10n.labelSelectAll),
+                            child: Text(files.isNotEmpty && files.every((f) => f.isSelected) ? l10n.labelDeselectAll : l10n.labelSelectAll),
                           ),
                         ),
                       ],
@@ -312,11 +333,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                 scrollDirection: Axis.horizontal,
                                 child: ConstrainedBox(
                                   constraints: BoxConstraints(minWidth: totalWidth, minHeight: constraints.maxHeight - 56),
-                                  // 重複の原因となっていた親の GestureDetector を削除
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      // Header Row (空の検知器で背景メニューへの透過を阻止)
                                       GestureDetector(
                                         onSecondaryTapDown: (_) {},
                                         child: Container(
@@ -351,127 +370,193 @@ class _FileListPanelState extends State<FileListPanel> {
                                           ),
                                         ),
                                       ),
-                                      // List & Empty Area Footer
                                       Expanded(
                                         child: SizedBox(
                                           width: totalWidth,
-                                          child: ScrollConfiguration(
-                                            behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                                            child: ListView(
-                                              controller: _verticalController,
-                                              padding: EdgeInsets.zero,
-                                              children: [
-                                                // 1. Files Area (Reorderable)
-                                                if (files.isNotEmpty)
-                                                  SizedBox(
-                                                    height: files.length * 34.0, // Fixed height per row
-                                                    child: ReorderableListView.builder(
-                                                      primary: false, // Use parent scroll
-                                                      shrinkWrap: true,
-                                                      padding: EdgeInsets.zero,
-                                                      buildDefaultDragHandles: false,
-                                                      itemCount: files.length,
-                                                      onReorder: (oldIdx, newIdx) => provider.reorderFiles(oldIdx, newIdx),
-                                                      itemBuilder: (context, index) {
-                                                        final file = files[index];
-                                                        final isDir = file.entity is Directory;
-                                                        final isSelected = file.isSelected;
-                                                        final isEditing = _editingFilePath == file.entity.path;
-                                                        return GestureDetector(
-                                                          key: ValueKey(file.entity.path),
-                                                          behavior: HitTestBehavior.opaque,
-                                                          onSecondaryTapDown: (details) => _showRowContextMenu(context, details, file, provider, l10n),
-                                                          child: InkWell(
-                                                            onTap: () => provider.toggleSelection(file),
-                                                            child: Container(
-                                                              height: 32,
-                                                              margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
-                                                              decoration: BoxDecoration(
-                                                                color: isSelected ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5) : (index % 2 == 0 ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.surfaceContainerLow),
-                                                                borderRadius: BorderRadius.circular(8),
-                                                                border: isSelected ? Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)) : null,
-                                                              ),
-                                                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-                                                              child: Row(
-                                                                children: [
-                                                                  SizedBox(width: _widthDragHandle, child: ReorderableDragStartListener(index: index, child: Icon(Icons.drag_indicator, size: 16, color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant))),
-                                                                  SizedBox(width: _widthCheckbox, child: Checkbox(value: isSelected, onChanged: (val) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
-                                                                  SizedBox(width: _widthSpace),
-                                                                  SizedBox(
-                                                                    width: _colWidthOriginal,
-                                                                    child: isEditing
-                                                                        ? TextField(
-                                                                            controller: _renameController,
-                                                                            focusNode: _renameFocusNode,
-                                                                            autofocus: true,
-                                                                            style: const TextStyle(fontSize: 12),
-                                                                            decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()),
-                                                                            onSubmitted: (val) {
-                                                                              provider.renameOneFile(file, val);
-                                                                              setState(() { _editingFilePath = null; });
-                                                                              provider.setInlineRenaming(false);
-                                                                            },
-                                                                          )
-                                                                        : Row(
-                                                                            children: [
-                                                                              GestureDetector(
-                                                                                onDoubleTap: () { if (isDir) { provider.setDirectory(file.entity as Directory); } else { PlatformUtils.openFile(file.entity.path); } },
-                                                                                child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: 18),
-                                                                              ),
-                                                                              const SizedBox(width: 8),
-                                                                              Expanded(
-                                                                                child: GestureDetector(
-                                                                                  onDoubleTap: () {
-                                                                                    setState(() { _editingFilePath = file.entity.path; _renameController.text = file.originalName; });
-                                                                                    provider.setInlineRenaming(true);
-                                                                                    WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
-                                                                                  },
-                                                                                  child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal)),
-                                                                                ),
-                                                                              ),
-                                                                            ],
-                                                                          ),
-                                                                  ),
-                                                                  SizedBox(width: _widthSpace + 16),
-                                                                  SizedBox(width: _colWidthNew, child: Row(children: [Expanded(child: RichText(text: _buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.error_outline, color: Colors.red, size: 16)))] )),
-                                                                  SizedBox(width: _widthSpace + 16),
-                                                                  _buildCell(file.size, _colWidthSize),
-                                                                  SizedBox(width: _widthSpace + 16),
-                                                                  _buildCell(file.displayRelativePath, _colWidthPath, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                                                                  SizedBox(width: _widthSpace + 16),
-                                                                  _buildCell(file.fileType, _colWidthType),
-                                                                  SizedBox(width: _widthSpace + 16),
-                                                                  _buildCell(file.dateModified, _colWidthDate),
-                                                                  SizedBox(width: _widthSpace + 16),
-                                                                  _buildCell(file.attributes, _colWidthAttr, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                                  ),
+                                          child: Listener(
+                                            onPointerDown: (event) {
+                                              if (event.buttons == kPrimaryMouseButton) {
+                                                setState(() {
+                                                  // リスト全体における絶対座標を保存
+                                                  _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
+                                                  _dragUpdate = _dragStart;
+                                                });
+                                                debugPrint('Drag Start (Abs): $_dragStart');
+                                              }
+                                            },
+                                            onPointerMove: (event) {
+                                              if (_dragStart != null) {
+                                                setState(() {
+                                                  _dragUpdate = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
+                                                });
                                                 
-                                                // 2. Background Menu Trigger (Footer Area)
-                                                // リストの下の広大な余白を背景メニュー専用の検知器にする
-                                                GestureDetector(
-                                                  behavior: HitTestBehavior.opaque,
-                                                  onTap: () => _fileListFocusNode.requestFocus(),
-                                                  onSecondaryTapDown: (details) => _showBackgroundContextMenu(context, details, provider, l10n),
-                                                  child: Container(
-                                                    width: totalWidth,
-                                                    // 画面の高さ分だけ確保（最低でも大きな値）することで、余白を確実に埋める
-                                                    height: constraints.maxHeight,
-                                                    alignment: Alignment.topCenter,
-                                                    child: files.isEmpty
-                                                        ? Padding(
-                                                            padding: const EdgeInsets.only(top: 100),
-                                                            child: Text(l10n.labelNoFiles),
-                                                          )
-                                                        : null,
+                                                // ドラッグ距離（画面上）の判定
+                                                final currentLocalPos = event.localPosition;
+                                                final startLocalPos = Offset(_dragStart!.dx, _dragStart!.dy - _verticalController.offset);
+                                                if ((currentLocalPos - startLocalPos).distance < 5.0) return;
+
+                                                // 自動スクロール判定
+                                                const scrollThreshold = 30.0;
+                                                const scrollSpeed = 15.0;
+                                                final containerHeight = constraints.maxHeight - 56;
+                                                
+                                                if (event.localPosition.dy < scrollThreshold) {
+                                                  _scrollTimer ??= Timer.periodic(const Duration(milliseconds: 50), (timer) {
+                                                    final newOffset = (_verticalController.offset - scrollSpeed).clamp(0.0, _verticalController.position.maxScrollExtent);
+                                                    _verticalController.jumpTo(newOffset);
+                                                    // スクロール中も選択範囲を更新
+                                                    _updateSelectionOnScroll(event.localPosition, files, provider);
+                                                  });
+                                                } else if (event.localPosition.dy > containerHeight - scrollThreshold) {
+                                                  _scrollTimer ??= Timer.periodic(const Duration(milliseconds: 50), (timer) {
+                                                    final newOffset = (_verticalController.offset + scrollSpeed).clamp(0.0, _verticalController.position.maxScrollExtent);
+                                                    _verticalController.jumpTo(newOffset);
+                                                    // スクロール中も選択範囲を更新
+                                                    _updateSelectionOnScroll(event.localPosition, files, provider);
+                                                  });
+                                                } else {
+                                                  _scrollTimer?.cancel();
+                                                  _scrollTimer = null;
+                                                }
+
+                                                _updateSelectionOnScroll(event.localPosition, files, provider);
+                                              }
+                                            },
+                                            onPointerUp: (event) {
+                                              if (_dragStart != null) {
+                                                _scrollTimer?.cancel();
+                                                _scrollTimer = null;
+                                                setState(() {
+                                                  _dragStart = null;
+                                                  _dragUpdate = null;
+                                                });
+                                                debugPrint('Drag End');
+                                              }
+                                            },
+                                            child: Stack(
+                                              children: [
+                                                ScrollConfiguration(
+                                                  behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                                                  child: ListView(
+                                                    controller: _verticalController,
+                                                    padding: EdgeInsets.zero,
+                                                    children: [
+                                                      if (files.isNotEmpty)
+                                                        SizedBox(
+                                                          height: files.length * 34.0,
+                                                          child: ReorderableListView.builder(
+                                                            primary: false,
+                                                            shrinkWrap: true,
+                                                            padding: EdgeInsets.zero,
+                                                            buildDefaultDragHandles: false,
+                                                            itemCount: files.length,
+                                                            onReorder: (oldIdx, newIdx) => provider.reorderFiles(oldIdx, newIdx),
+                                                            itemBuilder: (context, index) {
+                                                              final file = files[index];
+                                                              final isDir = file.entity is Directory;
+                                                              final isSelected = file.isSelected;
+                                                              final isEditing = _editingFilePath == file.entity.path;
+                                                              return GestureDetector(
+                                                                key: ValueKey(file.entity.path),
+                                                                behavior: HitTestBehavior.opaque,
+                                                                onSecondaryTapDown: (details) => _showRowContextMenu(context, details, file, provider, l10n),
+                                                                child: InkWell(
+                                                                  onTap: () => provider.toggleSelection(file),
+                                                                  child: Container(
+                                                                    height: 32,
+                                                                    margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
+                                                                    decoration: BoxDecoration(
+                                                                      color: isSelected ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5) : (index % 2 == 0 ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.surfaceContainerLow),
+                                                                      borderRadius: BorderRadius.circular(8),
+                                                                      border: isSelected ? Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)) : null,
+                                                                    ),
+                                                                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                                                                    child: Row(
+                                                                      children: [
+                                                                        SizedBox(width: _widthDragHandle, child: ReorderableDragStartListener(index: index, child: Icon(Icons.drag_indicator, size: 16, color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant))),
+                                                                        SizedBox(width: _widthCheckbox, child: Checkbox(value: isSelected, onChanged: (val) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
+                                                                        SizedBox(width: _widthSpace),
+                                                                        SizedBox(
+                                                                          width: _colWidthOriginal,
+                                                                          child: isEditing
+                                                                              ? TextField(
+                                                                                  controller: _renameController,
+                                                                                  focusNode: _renameFocusNode,
+                                                                                  autofocus: true,
+                                                                                  style: const TextStyle(fontSize: 12),
+                                                                                  decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()),
+                                                                                  onSubmitted: (val) {
+                                                                                    provider.renameOneFile(file, val);
+                                                                                    setState(() { _editingFilePath = null; });
+                                                                                    provider.setInlineRenaming(false);
+                                                                                  },
+                                                                                )
+                                                                              : Row(
+                                                                                  children: [
+                                                                                    GestureDetector(
+                                                                                      onDoubleTap: () { if (isDir) { provider.setDirectory(file.entity as Directory); } else { PlatformUtils.openFile(file.entity.path); } },
+                                                                                      child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: 18),
+                                                                                    ),
+                                                                                    const SizedBox(width: 8),
+                                                                                    Expanded(
+                                                                                      child: GestureDetector(
+                                                                                        onDoubleTap: () {
+                                                                                          setState(() { _editingFilePath = file.entity.path; _renameController.text = file.originalName; });
+                                                                                          provider.setInlineRenaming(true);
+                                                                                          WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
+                                                                                        },
+                                                                                        child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal)),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ],
+                                                                                ),
+                                                                        ),
+                                                                        SizedBox(width: _widthSpace + 16),
+                                                                        SizedBox(width: _colWidthNew, child: Row(children: [Expanded(child: RichText(text: _buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.error_outline, color: Colors.red, size: 16)))] )),
+                                                                        SizedBox(width: _widthSpace + 16),
+                                                                        _buildCell(file.size, _colWidthSize),
+                                                                        SizedBox(width: _widthSpace + 16),
+                                                                        _buildCell(file.displayRelativePath, _colWidthPath, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                                        SizedBox(width: _widthSpace + 16),
+                                                                        _buildCell(file.fileType, _colWidthType),
+                                                                        SizedBox(width: _widthSpace + 16),
+                                                                        _buildCell(file.dateModified, _colWidthDate),
+                                                                        SizedBox(width: _widthSpace + 16),
+                                                                        _buildCell(file.attributes, _colWidthAttr, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            },
+                                                          ),
+                                                        ),
+                                                      GestureDetector(
+                                                        behavior: HitTestBehavior.opaque,
+                                                        onTap: () => _fileListFocusNode.requestFocus(),
+                                                        onSecondaryTapDown: (details) => _showBackgroundContextMenu(context, details, provider, l10n),
+                                                        child: Container(
+                                                          width: totalWidth,
+                                                          height: constraints.maxHeight,
+                                                          alignment: Alignment.topCenter,
+                                                          child: files.isEmpty ? Padding(padding: const EdgeInsets.only(top: 100), child: Text(l10n.labelNoFiles)) : null,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
+                                                if (_dragStart != null && _dragUpdate != null)
+                                                  Positioned.fill(
+                                                    child: IgnorePointer(
+                                                      child: CustomPaint(
+                                                        painter: SelectionPainter(
+                                                          start: Offset(_dragStart!.dx, _dragStart!.dy - _verticalController.offset),
+                                                          update: Offset(_dragUpdate!.dx, _dragUpdate!.dy - _verticalController.offset),
+                                                          color: Theme.of(context).colorScheme.primary,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
                                               ],
                                             ),
                                           ),
@@ -494,5 +579,33 @@ class _FileListPanelState extends State<FileListPanel> {
         );
       },
     );
+  }
+}
+
+class SelectionPainter extends CustomPainter {
+  final Offset start;
+  final Offset update;
+  final Color color;
+
+  SelectionPainter({required this.start, required this.update, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromPoints(start, update);
+    final paint = Paint()
+      ..color = color.withOpacity(0.2)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(rect, paint);
+
+    final borderPaint = Paint()
+      ..color = color
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+    canvas.drawRect(rect, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(SelectionPainter oldDelegate) {
+    return oldDelegate.start != start || oldDelegate.update != update;
   }
 }

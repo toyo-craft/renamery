@@ -509,6 +509,20 @@ class DirectoryProvider extends ChangeNotifier {
 
   void selectAll(bool select) { for (var f in _currentFiles) f.isSelected = select; _updatePreviews(); notifyListeners(); }
 
+  void selectRange(int start, int end, {bool exclusive = true}) {
+    final minIdx = start < end ? start : end;
+    final maxIdx = start > end ? start : end;
+    for (int i = 0; i < _currentFiles.length; i++) {
+      if (i >= minIdx && i <= maxIdx) {
+        _currentFiles[i].isSelected = true;
+      } else if (exclusive) {
+        _currentFiles[i].isSelected = false;
+      }
+    }
+    _updatePreviews();
+    notifyListeners();
+  }
+
   void sortFiles(int columnIndex, bool ascending) {
     _sortColumnIndex = columnIndex; _sortAscending = ascending;
     _currentFiles.sort((a, b) {
