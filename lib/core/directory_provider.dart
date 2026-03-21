@@ -604,9 +604,26 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   void reorderFiles(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) newIndex -= 1;
-    final item = _currentFiles.removeAt(oldIndex); _currentFiles.insert(newIndex, item);
-    _updatePreviews(); notifyListeners();
+    final draggedFile = _currentFiles[oldIndex];
+
+    if (draggedFile.isSelected) {
+      final selectedFiles = _currentFiles.where((f) => f.isSelected).toList();
+      final leaderOffset = selectedFiles.indexOf(draggedFile);
+      
+      _currentFiles.removeWhere((f) => f.isSelected);
+
+      int insertBase = (oldIndex < newIndex) ? newIndex - 1 : newIndex;
+      int finalStartIdx = (insertBase - leaderOffset).clamp(0, _currentFiles.length);
+
+      _currentFiles.insertAll(finalStartIdx, selectedFiles);
+    } else {
+      if (oldIndex < newIndex) newIndex -= 1;
+      final item = _currentFiles.removeAt(oldIndex);
+      _currentFiles.insert(newIndex.clamp(0, _currentFiles.length), item);
+    }
+    
+    _updatePreviews();
+    notifyListeners();
   }
 
   void moveSelectedToTop() {

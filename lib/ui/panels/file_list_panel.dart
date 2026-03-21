@@ -377,6 +377,11 @@ class _FileListPanelState extends State<FileListPanel> {
                                           child: Listener(
                                             onPointerDown: (event) {
                                               if (event.buttons == kPrimaryMouseButton) {
+                                                // ドラッグハンドルやチェックボックスの領域（左端 72px）でのクリックは無視
+                                                if (event.localPosition.dx < (_widthDragHandle + _widthCheckbox + _widthSpace)) {
+                                                  return;
+                                                }
+
                                                 setState(() {
                                                   // リスト全体における絶対座標を保存
                                                   _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
@@ -456,10 +461,99 @@ class _FileListPanelState extends State<FileListPanel> {
                                                             buildDefaultDragHandles: false,
                                                             itemCount: files.length,
                                                             onReorder: (oldIdx, newIdx) => provider.reorderFiles(oldIdx, newIdx),
+                                                            proxyDecorator: (child, index, animation) {
+                                                              return AnimatedBuilder(
+                                                                animation: animation,
+                                                                builder: (context, child) {
+                                                                  final provider = context.read<DirectoryProvider>();
+                                                                  final selectedCount = provider.currentFiles.where((f) => f.isSelected).length;
+                                                                  final isMultiMove = provider.currentFiles[index].isSelected && selectedCount > 1;
+
+                                                                  return Material(
+                                                                    elevation: 12.0,
+                                                                    color: Colors.transparent,
+                                                                    shadowColor: Colors.black.withValues(alpha: 0.4),
+                                                                    child: Stack(
+                                                                      clipBehavior: Clip.none,
+                                                                      children: [
+                                                                        if (isMultiMove) ...[
+                                                                          // 背後レイヤー 2 (最深部: さらに右下にズラし、幅も最も狭い)
+                                                                          Positioned(
+                                                                            top: 8, left: 8, right: 8, bottom: -8,
+                                                                            child: Container(
+                                                                              height: 32, margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
+                                                                              decoration: BoxDecoration(
+                                                                                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                                                                                borderRadius: BorderRadius.circular(8),
+                                                                                border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          // 背後レイヤー 1 (中間)
+                                                                          Positioned(
+                                                                            top: 4, left: 4, right: 4, bottom: -4,
+                                                                            child: Container(
+                                                                              height: 32, margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
+                                                                              decoration: BoxDecoration(
+                                                                                color: Theme.of(context).colorScheme.surfaceContainerHigh.withValues(alpha: 0.7),
+                                                                                borderRadius: BorderRadius.circular(8),
+                                                                                border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.4)),
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                        // メインの行 (最前面)
+                                                                        Stack(
+                                                                          children: [
+                                                                            Positioned.fill(
+                                                                              child: Container(
+                                                                                margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
+                                                                                decoration: BoxDecoration(
+                                                                                  color: Theme.of(context).colorScheme.surface,
+                                                                                  borderRadius: BorderRadius.circular(8),
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                            child!,
+                                                                          ],
+                                                                        ),
+                                                                        if (isMultiMove)
+
+                                                                          Positioned(
+                                                                            right: -12,
+                                                                            top: -12,
+                                                                            child: Container(
+                                                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                                              decoration: BoxDecoration(
+                                                                                color: Theme.of(context).colorScheme.primary,
+                                                                                borderRadius: BorderRadius.circular(20),
+                                                                                boxShadow: [
+                                                                                  BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 3)),
+                                                                                ],
+                                                                              ),
+                                                                              child: Row(
+                                                                                mainAxisSize: MainAxisSize.min,
+                                                                                children: [
+                                                                                  const Icon(Icons.copy_all, color: Colors.white, size: 14),
+                                                                                  const SizedBox(width: 4),
+                                                                                  Text(
+                                                                                    '$selectedCount',
+                                                                                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                                                                  ),
+                                                                                ],
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                      ],
+                                                                    ),
+                                                                  );
+                                                                },
+                                                                child: child,
+                                                              );
+                                                            },
                                                             itemBuilder: (context, index) {
                                                               final file = files[index];
                                                               final isDir = file.entity is Directory;
-                                                              final isSelected = file.isSelected;
                                                               final isEditing = _editingFilePath == file.entity.path;
                                                               return GestureDetector(
                                                                 key: ValueKey(file.entity.path),
@@ -471,15 +565,15 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                     height: 32,
                                                                     margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
                                                                     decoration: BoxDecoration(
-                                                                      color: isSelected ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5) : (index % 2 == 0 ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.surfaceContainerLow),
+                                                                      color: file.isSelected ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5) : (index % 2 == 0 ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.surfaceContainerLow),
                                                                       borderRadius: BorderRadius.circular(8),
-                                                                      border: isSelected ? Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)) : null,
+                                                                      border: file.isSelected ? Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)) : null,
                                                                     ),
                                                                     padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
                                                                     child: Row(
                                                                       children: [
-                                                                        SizedBox(width: _widthDragHandle, child: ReorderableDragStartListener(index: index, child: Icon(Icons.drag_indicator, size: 16, color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant))),
-                                                                        SizedBox(width: _widthCheckbox, child: Checkbox(value: isSelected, onChanged: (val) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
+                                                                        SizedBox(width: _widthDragHandle, child: ReorderableDragStartListener(index: index, child: Icon(Icons.drag_indicator, size: 16, color: file.isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant))),
+                                                                        SizedBox(width: _widthCheckbox, child: Checkbox(value: file.isSelected, onChanged: (val) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
                                                                         SizedBox(width: _widthSpace),
                                                                         SizedBox(
                                                                           width: _colWidthOriginal,
@@ -510,7 +604,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                                           provider.setInlineRenaming(true);
                                                                                           WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
                                                                                         },
-                                                                                        child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal)),
+                                                                                        child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, fontWeight: file.isSelected ? FontWeight.w600 : FontWeight.normal)),
                                                                                       ),
                                                                                     ),
                                                                                   ],
@@ -534,6 +628,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                 ),
                                                               );
                                                             },
+
                                                           ),
                                                         ),
                                                       GestureDetector(
