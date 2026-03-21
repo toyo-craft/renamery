@@ -30,6 +30,7 @@ class _FileListPanelState extends State<FileListPanel> {
   Offset? _dragStart;
   Offset? _dragUpdate;
   Timer? _scrollTimer;
+  List<bool>? _initialSelectionStates;
 
   double _colWidthOriginal = 200.0;
   double _colWidthNew = 200.0;
@@ -230,14 +231,14 @@ class _FileListPanelState extends State<FileListPanel> {
     
     final filesHeight = files.length * 34.0;
     if (minY >= filesHeight || maxY <= 0) {
-      provider.selectRange(-1, -1, exclusive: !HardwareKeyboard.instance.isControlPressed);
+      provider.selectRange(-1, -1, exclusive: !HardwareKeyboard.instance.isControlPressed, baseStates: _initialSelectionStates);
       return;
     }
 
     final startIndex = (minY / 34.0).floor().clamp(0, files.length - 1);
     final endIndex = (maxY / 34.0).floor().clamp(0, files.length - 1);
     
-    provider.selectRange(startIndex, endIndex, exclusive: !HardwareKeyboard.instance.isControlPressed);
+    provider.selectRange(startIndex, endIndex, exclusive: !HardwareKeyboard.instance.isControlPressed, baseStates: _initialSelectionStates);
   }
 
   @override
@@ -380,6 +381,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                                   // リスト全体における絶対座標を保存
                                                   _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
                                                   _dragUpdate = _dragStart;
+                                                  
+                                                  // ドラッグ開始時の選択状態を保存 (スナップショット)
+                                                  _initialSelectionStates = provider.currentFiles.map((f) => f.isSelected).toList();
                                                 });
                                                 debugPrint('Drag Start (Abs): $_dragStart');
                                               }
@@ -429,6 +433,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                 setState(() {
                                                   _dragStart = null;
                                                   _dragUpdate = null;
+                                                  _initialSelectionStates = null;
                                                 });
                                                 debugPrint('Drag End');
                                               }

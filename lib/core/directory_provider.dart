@@ -509,14 +509,25 @@ class DirectoryProvider extends ChangeNotifier {
 
   void selectAll(bool select) { for (var f in _currentFiles) f.isSelected = select; _updatePreviews(); notifyListeners(); }
 
-  void selectRange(int start, int end, {bool exclusive = true}) {
+  void selectRange(int start, int end, {bool exclusive = true, List<bool>? baseStates}) {
     final minIdx = start < end ? start : end;
     final maxIdx = start > end ? start : end;
     for (int i = 0; i < _currentFiles.length; i++) {
-      if (i >= minIdx && i <= maxIdx) {
-        _currentFiles[i].isSelected = true;
-      } else if (exclusive) {
-        _currentFiles[i].isSelected = false;
+      final isInside = i >= minIdx && i <= maxIdx;
+      if (baseStates != null && i < baseStates.length) {
+        // ベース状態がある場合（Ctrlドラッグ等）: 範囲内なら反転、範囲外ならベースを維持
+        if (isInside) {
+          _currentFiles[i].isSelected = !baseStates[i];
+        } else {
+          _currentFiles[i].isSelected = baseStates[i];
+        }
+      } else {
+        // 通常のドラッグ: 範囲内なら選択、範囲外かつ exclusive なら解除
+        if (isInside) {
+          _currentFiles[i].isSelected = true;
+        } else if (exclusive) {
+          _currentFiles[i].isSelected = false;
+        }
       }
     }
     _updatePreviews();
