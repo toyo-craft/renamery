@@ -335,6 +335,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelCtxRefresh => '最新の情報に更新 (F5)';
 
   @override
+  String get labelCtxCopy => 'コピー (C)';
+
+  @override
+  String get labelCtxCut => '切り取り (X)';
+
+  @override
+  String get labelCtxPaste => '貼り付け (V)';
+
+  @override
+  String get labelCtxNewFolder => '新規フォルダー (N)';
+
+  @override
   String get labelCtxProperties => 'プロパティ(R)';
 
   @override

@@ -751,6 +751,30 @@ abstract class AppLocalizations {
   /// **'最新の情報に更新 (F5)'**
   String get labelCtxRefresh;
 
+  /// No description provided for @labelCtxCopy.
+  ///
+  /// In ja, this message translates to:
+  /// **'コピー (C)'**
+  String get labelCtxCopy;
+
+  /// No description provided for @labelCtxCut.
+  ///
+  /// In ja, this message translates to:
+  /// **'切り取り (X)'**
+  String get labelCtxCut;
+
+  /// No description provided for @labelCtxPaste.
+  ///
+  /// In ja, this message translates to:
+  /// **'貼り付け (V)'**
+  String get labelCtxPaste;
+
+  /// No description provided for @labelCtxNewFolder.
+  ///
+  /// In ja, this message translates to:
+  /// **'新規フォルダー (N)'**
+  String get labelCtxNewFolder;
+
   /// No description provided for @labelCtxProperties.
   ///
   /// In ja, this message translates to:

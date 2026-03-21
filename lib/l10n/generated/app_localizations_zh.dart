@@ -333,6 +333,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelCtxRefresh => '刷新 (F5)';
 
   @override
+  String get labelCtxCopy => '复制 (C)';
+
+  @override
+  String get labelCtxCut => '剪切 (X)';
+
+  @override
+  String get labelCtxPaste => '粘贴 (V)';
+
+  @override
+  String get labelCtxNewFolder => '新建文件夹 (N)';
+
+  @override
   String get labelCtxProperties => '属性 (R)';
 
   @override

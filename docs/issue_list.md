@@ -19,6 +19,9 @@
 ショートカット Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+Z, Del, Back
 お気に入り機能→クイックアクセス
 クイックアクセス→順序変更
+
+ドラッグ＆ドロップ
+
 ---
 
 ## 実行計画 (Execution Plan)
