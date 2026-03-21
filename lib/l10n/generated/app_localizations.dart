@@ -655,6 +655,12 @@ abstract class AppLocalizations {
   /// **'すべて選択'**
   String get labelSelectAll;
 
+  /// No description provided for @labelDeselectAll.
+  ///
+  /// In ja, this message translates to:
+  /// **'選択解除'**
+  String get labelDeselectAll;
+
   /// No description provided for @labelSettingsFilterTitle.
   ///
   /// In ja, this message translates to:
@@ -1416,6 +1422,30 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'選択したファイルをゴミ箱に移動しますか？'**
   String get labelDialogTrashMessage;
+
+  /// No description provided for @labelCtxPasteItems.
+  ///
+  /// In ja, this message translates to:
+  /// **'項目を貼り付け'**
+  String get labelCtxPasteItems;
+
+  /// No description provided for @labelCtxCopyItems.
+  ///
+  /// In ja, this message translates to:
+  /// **'コピー'**
+  String get labelCtxCopyItems;
+
+  /// No description provided for @labelCtxCutItems.
+  ///
+  /// In ja, this message translates to:
+  /// **'切り取り'**
+  String get labelCtxCutItems;
+
+  /// No description provided for @labelCtxCreateFolder.
+  ///
+  /// In ja, this message translates to:
+  /// **'新しいフォルダーの作成'**
+  String get labelCtxCreateFolder;
 }
 
 class _AppLocalizationsDelegate

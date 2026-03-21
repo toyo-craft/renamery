@@ -285,6 +285,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelSelectAll => '全选';
 
   @override
+  String get labelDeselectAll => '選択解除';
+
+  @override
   String get labelSettingsFilterTitle => '过滤设置';
 
   @override
@@ -688,4 +691,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get labelDialogTrashMessage => '将选定文件移至回收站？';
+
+  @override
+  String get labelCtxPasteItems => '項目を貼り付け';
+
+  @override
+  String get labelCtxCopyItems => 'コピー';
+
+  @override
+  String get labelCtxCutItems => '切り取り';
+
+  @override
+  String get labelCtxCreateFolder => '新しいフォルダーの作成';
 }

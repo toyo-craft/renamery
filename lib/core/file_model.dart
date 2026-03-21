@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:path/path.dart' as p;
 
 enum FileStatus { original, renamed, error, pending }
 
@@ -12,9 +13,9 @@ class FileModel {
   String? _errorMessage;
 
   FileModel({required this.entity})
-      : originalName = entity.uri.pathSegments.lastWhere((s) => s.isNotEmpty),
-        parentPath = entity.parent.path,
-        _newName = entity.uri.pathSegments.lastWhere((s) => s.isNotEmpty),
+      : originalName = p.basename(entity.path),
+        parentPath = p.dirname(entity.path),
+        _newName = p.basename(entity.path),
         _status = FileStatus.original;
 
   bool isSelected = false;

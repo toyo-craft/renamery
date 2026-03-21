@@ -286,6 +286,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelSelectAll => 'Seleccionar Todo';
 
   @override
+  String get labelDeselectAll => '選択解除';
+
+  @override
   String get labelSettingsFilterTitle => 'Ajustes de Filtro';
 
   @override
@@ -697,4 +700,16 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get labelDialogTrashMessage =>
       '¿Mover los archivos seleccionados a la papelera de reciclaje?';
+
+  @override
+  String get labelCtxPasteItems => '項目を貼り付け';
+
+  @override
+  String get labelCtxCopyItems => 'コピー';
+
+  @override
+  String get labelCtxCutItems => '切り取り';
+
+  @override
+  String get labelCtxCreateFolder => '新しいフォルダーの作成';
 }

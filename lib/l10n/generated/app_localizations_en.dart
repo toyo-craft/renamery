@@ -286,6 +286,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelSelectAll => 'Select All';
 
   @override
+  String get labelDeselectAll => 'Deselect All';
+
+  @override
   String get labelSettingsFilterTitle => 'Filter Settings';
 
   @override
@@ -695,4 +698,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get labelDialogTrashMessage =>
       'Move the selected files to the recycle bin?';
+
+  @override
+  String get labelCtxPasteItems => 'Paste items';
+
+  @override
+  String get labelCtxCopyItems => 'Copy';
+
+  @override
+  String get labelCtxCutItems => 'Cut';
+
+  @override
+  String get labelCtxCreateFolder => 'Create new folder';
 }

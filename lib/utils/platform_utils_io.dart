@@ -46,17 +46,31 @@ void showPropertiesDialogImpl(BuildContext context, FileModel fileModel) {
       }
     }
   } else if (Platform.isMacOS) {
-    Process.run('osascript', [
-      '-e',
-      'tell application "Finder" to open information window of (POSIX file "$path" as alias)'
-    ]).then((result) {
-      if (result.exitCode != 0 && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Macプロパティ画面を開けませんでした: ${result.stderr}')),
-        );
-      }
-    });
+    // ...
+  }
+}
+
+void openFileImpl(String path) {
+  if (Platform.isWindows) {
+    // Windows ではバックスラッシュを使用する方が確実
+    final normalizedPath = path.replaceAll('/', '\\');
+    final pPath = normalizedPath.toNativeUtf16();
+    
+    // lpOperation に nullptr を渡すと、デフォルトの動作（通常は 'open'）が実行される
+    // これにより、関連付けられたアプリがより確実に起動する
+    final result = ShellExecute(0, ffi.nullptr, pPath, ffi.nullptr, ffi.nullptr, SW_SHOWNORMAL);
+    
+    if (result <= 32) {
+      // 失敗した場合は念のため 'open' を明示して再試行
+      final pVerb = 'open'.toNativeUtf16();
+      ShellExecute(0, pVerb, pPath, ffi.nullptr, ffi.nullptr, SW_SHOWNORMAL);
+      pkg_ffi.calloc.free(pVerb);
+    }
+    
+    pkg_ffi.calloc.free(pPath);
+  } else if (Platform.isMacOS) {
+    Process.run('open', [path]);
   } else {
-    showCustomPropertiesDialog(context, fileModel);
+    Process.run('xdg-open', [path]);
   }
 }

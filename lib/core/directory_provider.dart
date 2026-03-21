@@ -2,36 +2,16 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
+import 'package:super_clipboard/super_clipboard.dart';
 import 'file_model.dart';
 import 'rename_engine.dart';
 import 'undo_manager.dart';
 import 'settings_service.dart';
 
-enum HistoryType {
-  find,
-  replace,
-  add,
-  extension,
-  remove,
-  deleteTo,
-}
-
-enum AppThemeType {
-  system,
-  light,
-  dark,
-  darkGray, // New Custom Theme
-}
-
-enum MenuLabelType {
-  standard, // 日本語
-  namery, // Namery互換
-  english, // English
-  chinese, // 中国語
-  spanish, // Spanish
-}
+enum HistoryType { find, replace, add, extension, remove, deleteTo }
+enum AppThemeType { system, light, dark, darkGray }
+enum MenuLabelType { standard, namery, english, chinese, spanish }
 
 class DirectoryProvider extends ChangeNotifier {
   Directory? _currentDirectory;
@@ -41,6 +21,11 @@ class DirectoryProvider extends ChangeNotifier {
   bool _enableBetaFeatures = false;
   int _treeVersion = 0;
   final UndoManager _undoManager = UndoManager();
+
+  bool _canPaste = false;
+  bool get canPaste => _canPaste;
+  bool _isCutMode = false;
+  bool get isCutMode => _isCutMode;
 
   bool get isInlineRenaming => _isInlineRenaming;
   bool get enableBetaFeatures => _enableBetaFeatures;
@@ -55,132 +40,73 @@ class DirectoryProvider extends ChangeNotifier {
 
   Future<void> init() async {
     final s = SettingsService();
-
-    // 1. Restore Filter Settings (SYNC)
     _filterText = s.getString('filterText') ?? '';
     _hideSystemFiles = s.getBool('hideSystemFiles') ?? false;
     _recursiveSearch = s.getBool('recursiveSearch') ?? false;
     _showPreview = s.getBool('showPreview') ?? true;
     _showFolders = s.getBool('showFolders') ?? true;
     _saveSequenceNumber = s.getBool('saveSequenceNumber') ?? false;
-    _isCompactMode = s.getBool('isCompactMode') ?? true; // Default to Compact
-    _isFilterSpecific = _filterText.isNotEmpty; // Init specific if text exists
+    _isCompactMode = s.getBool('isCompactMode') ?? true;
+    _isFilterSpecific = _filterText.isNotEmpty;
     _enableBetaFeatures = s.getBool('enableBetaFeatures') ?? false;
 
-    // Theme (SYNC)
     final appThemeStr = s.getString('appTheme') ?? 'light';
-    _appTheme = AppThemeType.values.firstWhere((e) => e.name == appThemeStr,
-        orElse: () => AppThemeType.light);
+    _appTheme = AppThemeType.values.firstWhere((e) => e.name == appThemeStr, orElse: () => AppThemeType.light);
     final seedColorVal = s.getInt('seedColor');
-    if (seedColorVal != null) {
-      _seedColor = Color(seedColorVal);
-    }
+    if (seedColorVal != null) { _seedColor = Color(seedColorVal); }
 
-    // Menu Label (SYNC)
-    final menuLabelStr = s.getString('menuLabelType') ??
-        'namery'; // Default to Namery for existing users? Or Standard? User asked to change from current. Current is Namery. So Default Namery or Standard?
-    // "各種メニューを現行のものからより一般的でわかりやすい名称にしてください" -> Implies Standard should be NEW default?
-    // Let's set Standard as default for new, but keep Namery if explicitly set?
-    // Actually, explicit request "Make it more general... but allow changing to Namery". Defaults to Standard seems appropriate for "Make it...".
-    _menuLabelType = MenuLabelType.values.firstWhere(
-        (e) => e.name == menuLabelStr,
-        orElse: () => MenuLabelType.standard);
+    final menuLabelStr = s.getString('menuLabelType') ?? 'namery';
+    _menuLabelType = MenuLabelType.values.firstWhere((e) => e.name == menuLabelStr, orElse: () => MenuLabelType.standard);
 
-    // Navigation History (Restored from settings)
-    final savedNavHistory = s.getList<String>('navHistory');
-    if (savedNavHistory != null) {
-      _navHistory = savedNavHistory;
-    } else {
-      _navHistory.clear();
-    }
+    _navHistory = s.getList<String>('navHistory') ?? [];
     _navIndex = s.getInt('navIndex') ?? -1;
+    if (_navIndex >= _navHistory.length) { _navIndex = _navHistory.isNotEmpty ? _navHistory.length - 1 : -1; }
 
-    // Safety check for index bounds
-    if (_navIndex >= _navHistory.length) {
-      _navIndex = _navHistory.isNotEmpty ? _navHistory.length - 1 : -1;
-    }
-
-    // 2. Restore Rename Settings (SYNC)
     final rModeIndex = s.getInt('renameMode');
-    if (rModeIndex != null && rModeIndex < RenameMode.values.length) {
-      _renameMode = RenameMode.values[rModeIndex];
-    }
+    if (rModeIndex != null && rModeIndex < RenameMode.values.length) { _renameMode = RenameMode.values[rModeIndex]; }
     final nModeIndex = s.getInt('numberingMode');
-    if (nModeIndex != null && nModeIndex < NumberingMode.values.length) {
-      _numberingMode = NumberingMode.values[nModeIndex];
-    }
+    if (nModeIndex != null && nModeIndex < NumberingMode.values.length) { _numberingMode = NumberingMode.values[nModeIndex]; }
 
-    _findText = '';
-    _replaceText = '';
-    _appendText = '';
-    _deleteToText = '';
+    _findText = ''; _replaceText = ''; _appendText = ''; _deleteToText = '';
     _startNumber = s.getInt('startNumber') ?? 1;
     _digits = s.getInt('digits') ?? 3;
     _extensionToLowerCase = s.getBool('extensionToLowerCase') ?? true;
     _useRegex = s.getBool('useRegex') ?? false;
 
-    // Sub Tab / New States
-    _listRenameText = s.getString('listRenameText') ??
-        '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
+    _listRenameText = s.getString('listRenameText') ?? '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
     _extensionChangeText = s.getString('extensionChangeText') ?? '';
     _extensionAddText = s.getString('extensionAddText') ?? '';
 
     final lMainIndex = s.getInt('lastMainMode');
-    if (lMainIndex != null && lMainIndex < RenameMode.values.length) {
-      _lastMainMode = RenameMode.values[lMainIndex];
-    }
+    if (lMainIndex != null && lMainIndex < RenameMode.values.length) { _lastMainMode = RenameMode.values[lMainIndex]; }
     final lSubIndex = s.getInt('lastSubMode');
-    if (lSubIndex != null && lSubIndex < RenameMode.values.length) {
-      _lastSubMode = RenameMode.values[lSubIndex];
-    }
+    if (lSubIndex != null && lSubIndex < RenameMode.values.length) { _lastSubMode = RenameMode.values[lSubIndex]; }
     final lEtcIndex = s.getInt('lastEtcMode');
-    if (lEtcIndex != null && lEtcIndex < RenameMode.values.length) {
-      _lastEtcMode = RenameMode.values[lEtcIndex];
-    } else {
-      _lastEtcMode = RenameMode.changeTimestamp; // Default
-    }
+    if (lEtcIndex != null && lEtcIndex < RenameMode.values.length) { _lastEtcMode = RenameMode.values[lEtcIndex]; } else { _lastEtcMode = RenameMode.changeTimestamp; }
     final lExtraIndex = s.getInt('lastExtraMode');
-    if (lExtraIndex != null && lExtraIndex < RenameMode.values.length) {
-      _lastExtraMode = RenameMode.values[lExtraIndex];
-    } else {
-      _lastExtraMode = RenameMode.appendDate; // Default
-    }
+    if (lExtraIndex != null && lExtraIndex < RenameMode.values.length) { _lastExtraMode = RenameMode.values[lExtraIndex]; } else { _lastExtraMode = RenameMode.appendDate; }
 
-    // Extra Tab
     _dateFormat = s.getString('dateFormat') ?? 'yyyymmdd_';
     final dPosIndex = s.getInt('datePosition');
-    if (dPosIndex != null && dPosIndex < DatePosition.values.length) {
-      _datePosition = DatePosition.values[dPosIndex];
-    }
+    if (dPosIndex != null && dPosIndex < DatePosition.values.length) { _datePosition = DatePosition.values[dPosIndex]; }
 
-    // Validation
     final vTypeIndex = s.getInt('validationType');
-    if (vTypeIndex != null && vTypeIndex < ValidationType.values.length) {
-      _validationType = ValidationType.values[vTypeIndex];
-    }
+    if (vTypeIndex != null && vTypeIndex < ValidationType.values.length) { _validationType = ValidationType.values[vTypeIndex]; }
 
-    // Initial Directory Settings
     final initModeIndex = s.getInt('initialDirectoryMode');
-    if (initModeIndex != null &&
-        initModeIndex < InitialDirectoryMode.values.length) {
-      _initialDirectoryMode = InitialDirectoryMode.values[initModeIndex];
-    }
+    if (initModeIndex != null && initModeIndex < InitialDirectoryMode.values.length) { _initialDirectoryMode = InitialDirectoryMode.values[initModeIndex]; }
     _fixedInitialDirectory = s.getString('fixedInitialDirectory') ?? '';
 
-    // Etc Tab
     _etcTimestamp = s.getString('etcTimestamp') ?? '';
-    // If empty, set default to now? Or keep empty? User Manual: "Ex 2002/03/30 17:30".
     if (_etcTimestamp.isEmpty) {
       final now = DateTime.now();
-      _etcTimestamp =
-          '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+      _etcTimestamp = '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     }
     _etcAttribReadOnly = s.getBool('etcAttribReadOnly') ?? false;
     _etcAttribHidden = s.getBool('etcAttribHidden') ?? false;
     _etcAttribArchive = s.getBool('etcAttribArchive') ?? false;
     _etcAttribSystem = s.getBool('etcAttribSystem') ?? false;
 
-    // 3. Restore History (SYNC)
     _appendHistory = s.getStringList('appendHistory');
     _deleteFromHistory = s.getStringList('deleteFromHistory');
     _deleteToHistory = s.getStringList('deleteToHistory');
@@ -188,43 +114,30 @@ class DirectoryProvider extends ChangeNotifier {
     _replaceHistory = s.getStringList('replaceHistory');
     _extensionHistory = s.getStringList('extensionHistory');
 
-    // 4. Restore Sort (SYNC)
     _sortColumnIndex = s.getInt('sortColumnIndex') ?? 0;
     _sortAscending = s.getBool('sortAscending') ?? true;
 
-    // Notify listeners so UI updates with restored settings immediately
+    await checkClipboard();
     notifyListeners();
 
-    // 5. Restore Directory (ASYNC - might take time)
     Directory? targetDir;
-
-    if (_initialDirectoryMode == InitialDirectoryMode.fixed &&
-        _fixedInitialDirectory.isNotEmpty) {
+    if (_initialDirectoryMode == InitialDirectoryMode.fixed && _fixedInitialDirectory.isNotEmpty) {
       targetDir = Directory(_fixedInitialDirectory);
     } else {
-      // Last Used
       final lastDir = s.getString('lastDirectory');
-      if (lastDir != null) {
-        targetDir = Directory(lastDir);
-      }
+      if (lastDir != null) { targetDir = Directory(lastDir); }
     }
 
     if (targetDir != null && await targetDir.exists()) {
       await setDirectory(targetDir);
-    } else {
-      // Fallback or empty state
-      if (_currentDirectory != null) {
-        _applyFilters();
-      }
-      notifyListeners();
+    } else if (_currentDirectory != null) {
+      _applyFilters();
     }
   }
 
   void _saveState() {
     final s = SettingsService();
-    if (_currentDirectory != null) {
-      s.set('lastDirectory', _currentDirectory!.path);
-    }
+    if (_currentDirectory != null) { s.set('lastDirectory', _currentDirectory!.path); }
     s.set('filterText', _filterText);
     s.set('hideSystemFiles', _hideSystemFiles);
     s.set('recursiveSearch', _recursiveSearch);
@@ -236,34 +149,27 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('appTheme', _appTheme.name);
     s.set('menuLabelType', _menuLabelType.name);
     s.set('seedColor', _seedColor.toARGB32());
-
     s.set('navHistory', _navHistory);
     s.set('navIndex', _navIndex);
-
     s.set('renameMode', _renameMode.index);
     s.set('numberingMode', _numberingMode.index);
     if (_findText != null) s.set('findText', _findText);
     if (_replaceText != null) s.set('replaceText', _replaceText);
     if (_appendText != null) s.set('appendText', _appendText);
     if (_deleteToText != null) s.set('deleteToText', _deleteToText);
-
     s.set('startNumber', _startNumber);
     s.set('insertIndex', _insertIndex);
     s.set('digits', _digits);
     s.set('extensionToLowerCase', _extensionToLowerCase);
     s.set('useRegex', _useRegex);
-
     s.set('appendHistory', _appendHistory);
     s.set('deleteFromHistory', _deleteFromHistory);
     s.set('deleteToHistory', _deleteToHistory);
     s.set('findHistory', _findHistory);
     s.set('replaceHistory', _replaceHistory);
     s.set('extensionHistory', _extensionHistory);
-
     s.set('sortColumnIndex', _sortColumnIndex);
     s.set('sortAscending', _sortAscending);
-
-    // New Fields
     s.set('listRenameText', _listRenameText);
     s.set('extensionChangeText', _extensionChangeText);
     s.set('extensionAddText', _extensionAddText);
@@ -271,22 +177,12 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('lastSubMode', _lastSubMode.index);
     s.set('lastEtcMode', _lastEtcMode.index);
     s.set('lastExtraMode', _lastExtraMode.index);
-    s.set('lastEtcMode', _lastEtcMode.index);
-    s.set('lastExtraMode', _lastExtraMode.index);
     s.set('lastStringMode', _lastStringMode.index);
-
-    // Extra Tab
     s.set('dateFormat', _dateFormat);
     s.set('datePosition', _datePosition.index);
-
-    // Validation
     s.set('validationType', _validationType.index);
-
-    // Initial Directory
     s.set('initialDirectoryMode', _initialDirectoryMode.index);
     s.set('fixedInitialDirectory', _fixedInitialDirectory);
-
-    // Etc Tab
     s.set('etcTimestamp', _etcTimestamp);
     s.set('etcAttribReadOnly', _etcAttribReadOnly);
     s.set('etcAttribHidden', _etcAttribHidden);
@@ -294,83 +190,35 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('etcAttribSystem', _etcAttribSystem);
   }
 
-  // Rename State
-  RenameMode _renameMode = RenameMode.numbering; // Default: Numbering (Main)
+  RenameMode _renameMode = RenameMode.numbering;
   NumberingMode _numberingMode = NumberingMode.stringNumber;
   ValidationType _validationType = ValidationType.auto;
-
-  // Initial Directory State
   InitialDirectoryMode _initialDirectoryMode = InitialDirectoryMode.lastUsed;
   String _fixedInitialDirectory = '';
-
-  // Reset Signal for Sidebar
-  int _resetCount = 0;
-  int get resetCount => _resetCount;
-
-  String? _findText;
-  String? _replaceText;
-  String? _appendText;
-  String? _deleteToText; // 専用の入力欄
-  int _startNumber = 1;
-  int _insertIndex = 1;
-  int _digits = 3;
-  bool _extensionToLowerCase = true;
-  bool _useRegex = false;
-
-  // Navigation Source
-  String? _navigationSource;
-  String? get navigationSource => _navigationSource;
-
-  // Navigation Context Root (for differentiating QA trees)
-  String? _navigationContextRoot;
-  String? get navigationContextRoot => _navigationContextRoot;
-
-  // History State
-  List<String> _appendHistory = [];
-  List<String> _deleteFromHistory = [];
-  List<String> _deleteToHistory = [];
-  List<String> _findHistory = [];
-  List<String> _replaceHistory = [];
-  List<String> _extensionHistory = [];
-
-  // Filter State
-  String _filterText = '';
-  bool _isFilterSpecific = false;
-  bool _hideSystemFiles = false;
-  bool _recursiveSearch = false;
-  bool _showPreview = true;
-  bool _showFolders = true;
-  bool _saveSequenceNumber = false;
-  bool _isCompactMode = false; // Default: OFF (Standard)
-
-  // Theme State
-  AppThemeType _appTheme = AppThemeType.light; // Default: Light
-  MenuLabelType _menuLabelType = MenuLabelType.standard; // Default: Standard
+  int _resetCount = 0; int get resetCount => _resetCount;
+  String? _findText; String? _replaceText; String? _appendText; String? _deleteToText;
+  int _startNumber = 1; int _insertIndex = 1; int _digits = 3;
+  bool _extensionToLowerCase = true; bool _useRegex = false;
+  String? _navigationSource; String? get navigationSource => _navigationSource;
+  String? _navigationContextRoot; String? get navigationContextRoot => _navigationContextRoot;
+  List<String> _appendHistory = []; List<String> _deleteFromHistory = []; List<String> _deleteToHistory = [];
+  List<String> _findHistory = []; List<String> _replaceHistory = []; List<String> _extensionHistory = [];
+  String _filterText = ''; bool _isFilterSpecific = false; bool _hideSystemFiles = false;
+  bool _recursiveSearch = false; bool _showPreview = true; bool _showFolders = true;
+  bool _saveSequenceNumber = false; bool _isCompactMode = false;
+  AppThemeType _appTheme = AppThemeType.light; MenuLabelType _menuLabelType = MenuLabelType.standard;
   Color _seedColor = Colors.green;
-
-  // Extra Tab State
-  String _dateFormat = 'yyyyMMdd_'; // Default: yyyyMMdd_
-  DatePosition _datePosition = DatePosition.front;
-
-  // Etc Tab State
-  String _etcTimestamp = ''; // "yyyy/MM/dd HH:mm"
-  bool _etcAttribReadOnly = false;
-  bool _etcAttribHidden = false;
-  bool _etcAttribArchive = false;
-  bool _etcAttribSystem = false;
-
-  // Cache for in-memory filtering
+  String _dateFormat = 'yyyyMMdd_'; DatePosition _datePosition = DatePosition.front;
+  String _etcTimestamp = ''; bool _etcAttribReadOnly = false; bool _etcAttribHidden = false;
+  bool _etcAttribArchive = false; bool _etcAttribSystem = false;
   List<FileModel> _allFiles = [];
 
-  // Getters
   Directory? get currentDirectory => _currentDirectory;
   List<FileModel> get currentFiles => _currentFiles;
-  int get allFilesCount => _allFiles.length; // For Status Bar
+  int get allFilesCount => _allFiles.length;
   bool get isLoading => _isLoading;
   bool get canUndo => _undoManager.canUndo;
   int get undoCount => _undoManager.undoCount;
-
-  // Getters for Rename UI
   RenameMode get renameMode => _renameMode;
   NumberingMode get numberingMode => _numberingMode;
   ValidationType get validationType => _validationType;
@@ -378,447 +226,256 @@ class DirectoryProvider extends ChangeNotifier {
   String get fixedInitialDirectory => _fixedInitialDirectory;
 
   void updateInitialDirectorySettings(InitialDirectoryMode mode, String path) {
-    _initialDirectoryMode = mode;
-    _fixedInitialDirectory = path;
-    _saveState();
-    notifyListeners();
+    _initialDirectoryMode = mode; _fixedInitialDirectory = path; _saveState(); notifyListeners();
   }
 
-  String? get findText => _findText;
-  String? get replaceText => _replaceText;
-  String? get appendText => _appendText;
-  String? get deleteToText => _deleteToText;
-  int get startNumber => _startNumber;
-  int get insertIndex => _insertIndex;
-  int get digits => _digits;
-  bool get extensionToLowerCase => _extensionToLowerCase;
-  bool get useRegex => _useRegex;
-  List<String> get appendHistory => _appendHistory;
-  List<String> get deleteFromHistory => _deleteFromHistory;
-  List<String> get deleteToHistory => _deleteToHistory;
-  List<String> get findHistory => _findHistory;
-  List<String> get replaceHistory => _replaceHistory;
-  List<String> get extensionHistory => _extensionHistory;
+  String? get findText => _findText; String? get replaceText => _replaceText;
+  String? get appendText => _appendText; String? get deleteToText => _deleteToText;
+  int get startNumber => _startNumber; int get insertIndex => _insertIndex; int get digits => _digits;
+  bool get extensionToLowerCase => _extensionToLowerCase; bool get useRegex => _useRegex;
+  List<String> get appendHistory => _appendHistory; List<String> get deleteFromHistory => _deleteFromHistory;
+  List<String> get deleteToHistory => _deleteToHistory; List<String> get findHistory => _findHistory;
+  List<String> get replaceHistory => _replaceHistory; List<String> get extensionHistory => _extensionHistory;
 
-  // Mode Memory
-  RenameMode _lastMainMode = RenameMode.numbering; // Default: Numbering
-  RenameMode _lastSubMode = RenameMode.extension; // Default: Change Extension
-  RenameMode _lastEtcMode = RenameMode.changeTimestamp;
-  RenameMode _lastExtraMode = RenameMode.appendDate;
-  RenameMode _lastStringMode = RenameMode.append; // Default Suffix
+  RenameMode _lastMainMode = RenameMode.numbering; RenameMode _lastSubMode = RenameMode.extension;
+  RenameMode _lastEtcMode = RenameMode.changeTimestamp; RenameMode _lastExtraMode = RenameMode.appendDate;
+  RenameMode _lastStringMode = RenameMode.append;
 
-  RenameMode get lastMainMode => _lastMainMode;
-  RenameMode get lastSubMode => _lastSubMode;
-  RenameMode get lastEtcMode => _lastEtcMode;
-  RenameMode get lastExtraMode => _lastExtraMode;
+  RenameMode get lastMainMode => _lastMainMode; RenameMode get lastSubMode => _lastSubMode;
+  RenameMode get lastEtcMode => _lastEtcMode; RenameMode get lastExtraMode => _lastExtraMode;
   RenameMode get lastStringMode => _lastStringMode;
-
-  String get dateFormat => _dateFormat;
-  DatePosition get datePosition => _datePosition;
-
+  String get dateFormat => _dateFormat; DatePosition get datePosition => _datePosition;
   String get etcTimestamp => _etcTimestamp;
-  bool get etcAttribReadOnly => _etcAttribReadOnly;
-  bool get etcAttribHidden => _etcAttribHidden;
-  bool get etcAttribArchive => _etcAttribArchive;
-  bool get etcAttribSystem => _etcAttribSystem;
+  bool get etcAttribReadOnly => _etcAttribReadOnly; bool get etcAttribHidden => _etcAttribHidden;
+  bool get etcAttribArchive => _etcAttribArchive; bool get etcAttribSystem => _etcAttribSystem;
 
-  bool isMainMode(RenameMode mode) {
-    return !isSubMode(mode) && !isExtraMode(mode) && !isEtcMode(mode);
-  }
+  bool isMainMode(RenameMode mode) => !isSubMode(mode) && !isExtraMode(mode) && !isEtcMode(mode);
+  bool isSubMode(RenameMode mode) => [RenameMode.extensionRemove, RenameMode.extensionAdd, RenameMode.extensionUpper, RenameMode.extensionLower, RenameMode.formatProperCase, RenameMode.listRename].contains(mode);
+  bool isExtraMode(RenameMode mode) => [RenameMode.appendDate, RenameMode.convHalfToFull, RenameMode.convFullToHalf, RenameMode.convFullKataToHira, RenameMode.convHiraToFullKata, RenameMode.convFullAlphaToHalfAlpha, RenameMode.convNumToHalf].contains(mode);
+  bool isEtcMode(RenameMode mode) => [RenameMode.changeTimestamp, RenameMode.changeAttributes].contains(mode);
 
-  bool isSubMode(RenameMode mode) {
-    return [
-      RenameMode.extensionRemove,
-      RenameMode.extensionAdd,
-      RenameMode.extensionUpper,
-      RenameMode.extensionLower,
-      RenameMode.formatProperCase,
-      RenameMode.listRename,
-    ].contains(mode);
-  }
+  String _listRenameText = '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
+  String _extensionChangeText = ''; String _extensionAddText = ''; Timer? _previewTimer;
+  String get listRenameText => _listRenameText; String get extensionChangeText => _extensionChangeText; String get extensionAddText => _extensionAddText;
 
-  bool isExtraMode(RenameMode mode) {
-    return [
-      RenameMode.appendDate,
-      RenameMode.convHalfToFull,
-      RenameMode.convFullToHalf,
-      RenameMode.convFullKataToHira,
-      RenameMode.convHiraToFullKata,
-      RenameMode.convFullAlphaToHalfAlpha,
-      RenameMode.convNumToHalf,
-    ].contains(mode);
-  }
+  String get filterText => _filterText; bool get hideSystemFiles => _hideSystemFiles;
+  bool get recursiveSearch => _recursiveSearch; bool get showPreview => _showPreview;
+  bool get showFolders => _showFolders; bool get saveSequenceNumber => _saveSequenceNumber;
+  bool get isCompactMode => _isCompactMode; bool get isFilterSpecific => _isFilterSpecific;
+  AppThemeType get appTheme => _appTheme; MenuLabelType get menuLabelType => _menuLabelType;
 
-  bool isEtcMode(RenameMode mode) {
-    return [
-      RenameMode.changeTimestamp,
-      RenameMode.changeAttributes,
-    ].contains(mode);
-  }
-
-  // Sub Tab State
-  String _listRenameText =
-      '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
-  String _extensionChangeText = '';
-  String _extensionAddText = '';
-  Timer? _previewTimer;
-
-  String get listRenameText => _listRenameText;
-  String get extensionChangeText => _extensionChangeText;
-  String get extensionAddText => _extensionAddText;
-
-  // Getters for Filter UI
-  String get filterText => _filterText;
-  bool get hideSystemFiles => _hideSystemFiles;
-  bool get recursiveSearch => _recursiveSearch;
-  bool get showPreview => _showPreview;
-  bool get showFolders => _showFolders;
-  bool get saveSequenceNumber => _saveSequenceNumber;
-  bool get isCompactMode => _isCompactMode;
-  bool get isFilterSpecific => _isFilterSpecific;
-
-  AppThemeType get appTheme => _appTheme;
-  MenuLabelType get menuLabelType => _menuLabelType;
-
-  // Dynamic Label Getters
-
-  // Helper for MaterialApp to consume (Mapping)
   ThemeMode get themeMode {
     switch (_appTheme) {
-      case AppThemeType.light:
-        return ThemeMode.light;
-      case AppThemeType.dark:
-      case AppThemeType.darkGray:
-        return ThemeMode.dark;
-      case AppThemeType.system:
-        return ThemeMode.system;
+      case AppThemeType.light: return ThemeMode.light;
+      case AppThemeType.dark: case AppThemeType.darkGray: return ThemeMode.dark;
+      case AppThemeType.system: return ThemeMode.system;
     }
   }
-
   Color get seedColor => _seedColor;
 
-  // Filter Logic
-  void updateFilterSettings({
-    String? filter,
-    bool? hideSystem,
-    bool? recursive,
-    bool? preview,
-    bool? showFolders,
-    bool? isSpecific,
-  }) {
-    bool needRescan = false;
-    bool needRefilter = false;
+  Future<void> checkClipboard() async {
+    final clipboard = SystemClipboard.instance;
+    if (clipboard == null) { _canPaste = false; notifyListeners(); return; }
+    final reader = await clipboard.read();
+    _canPaste = reader.canProvide(Formats.fileUri);
+    notifyListeners();
+  }
 
-    if (isSpecific != null) {
-      if (_isFilterSpecific != isSpecific) {
-        _isFilterSpecific = isSpecific;
-        if (!isSpecific) {
-          _filterText = ''; // Clear text if switching to All Files?
-          // Or keep it? If we keep it, we need _applyFilters to check _isFilterSpecific.
-          // Let's clear it for simplicity and standard behavior (All Files usually means resetting filter).
+  Future<void> copySelection() async {
+    final targets = _currentFiles.where((f) => f.isSelected).toList();
+    if (targets.isEmpty) return;
+    _isCutMode = false;
+    final cb = SystemClipboard.instance;
+    if (cb != null) {
+      final items = targets.map((f) {
+        final item = DataWriterItem();
+        item.add(Formats.fileUri(f.entity.uri));
+        return item;
+      }).toList();
+      await cb.write(items);
+    }
+    await checkClipboard();
+  }
+
+  Future<void> cutSelection() async {
+    final targets = _currentFiles.where((f) => f.isSelected).toList();
+    if (targets.isEmpty) return;
+    _isCutMode = true;
+    final cb = SystemClipboard.instance;
+    if (cb != null) {
+      final items = targets.map((f) {
+        final item = DataWriterItem();
+        item.add(Formats.fileUri(f.entity.uri));
+        return item;
+      }).toList();
+      await cb.write(items);
+    }
+    await checkClipboard();
+  }
+
+  Future<void> pasteFromClipboard() async {
+    if (_currentDirectory == null) return;
+    final clipboard = SystemClipboard.instance; if (clipboard == null) return;
+    final reader = await clipboard.read();
+    if (reader.canProvide(Formats.fileUri)) {
+      _isLoading = true; notifyListeners();
+      List<UndoAction> transaction = [];
+      for (final item in reader.items) {
+        if (item.canProvide(Formats.fileUri)) {
+          final uri = await item.readValue(Formats.fileUri); if (uri == null) continue;
+          try {
+            final srcP = uri.toFilePath(); final name = p.basename(srcP);
+            final destP = _getUniquePath(p.join(_currentDirectory!.path, name));
+            final ent = FileSystemEntity.typeSync(srcP) == FileSystemEntityType.file ? File(srcP) : Directory(srcP);
+            
+            if (_isCutMode) {
+              await ent.rename(destP);
+              transaction.add(UndoAction(srcP, destP, type: UndoType.rename));
+            } else {
+              if (ent is File) await ent.copy(destP); else await _copyDirectory(ent as Directory, Directory(destP));
+              transaction.add(UndoAction(srcP, destP, type: UndoType.copy));
+            }
+          } catch (e) { if (kDebugMode) print('Paste error: $e'); }
         }
-        needRefilter = true;
       }
-    }
-
-    if (filter != null) {
-      _filterText = filter;
-      if (filter.isNotEmpty) {
-        _isFilterSpecific = true; // Auto-enable specific mode on input
+      if (transaction.isNotEmpty) _undoManager.addTransaction(transaction);
+      if (_isCutMode) {
+        _isCutMode = false;
+        // Optionally clear clipboard or leave it (system default is often clear after move)
       }
-      needRefilter = true;
+      await refresh();
     }
-    if (hideSystem != null) {
-      _hideSystemFiles = hideSystem;
-      needRefilter = true;
-    }
-    if (recursive != null) {
-      if (_recursiveSearch != recursive) {
-        _recursiveSearch = recursive;
-        needRescan = true; // Recursion change requires disk re-scan
-      }
-    }
-    if (preview != null) {
-      _showPreview = preview;
-      notifyListeners();
-    }
-    if (showFolders != null) {
-      _showFolders = showFolders;
-      needRefilter = true;
-    }
+  }
 
-    if (needRescan) {
-      if (_currentDirectory != null) {
-        setDirectory(_currentDirectory!);
-      }
-    } else if (needRefilter) {
-      _applyFilters();
+  String _getUniquePath(String path) {
+    if (!File(path).existsSync() && !Directory(path).existsSync()) return path;
+    final dir = p.dirname(path); final name = p.basenameWithoutExtension(path); final ext = p.extension(path);
+    int counter = 2;
+    while (true) {
+      final newPath = p.join(dir, '$name ($counter)$ext');
+      if (!File(newPath).existsSync() && !Directory(newPath).existsSync()) return newPath;
+      counter++;
     }
+  }
+
+  Future<void> _copyDirectory(Directory source, Directory destination) async {
+    await destination.create(recursive: true);
+    await for (var entity in source.list(recursive: false)) {
+      final newP = p.join(destination.path, p.basename(entity.path));
+      if (entity is Directory) await _copyDirectory(entity, Directory(newP)); else if (entity is File) await entity.copy(newP);
+    }
+  }
+
+  Future<void> createNewFolder() async {
+    if (_currentDirectory == null) return;
+    String folderName = '新しいフォルダー'; int index = 1;
+    while (await Directory(p.join(_currentDirectory!.path, folderName)).exists()) {
+      index++; folderName = '新しいフォルダー ($index)';
+    }
+    try {
+      final destP = p.join(_currentDirectory!.path, folderName);
+      await Directory(destP).create();
+      _undoManager.addTransaction([UndoAction('', destP, type: UndoType.create)]);
+      await refresh();
+    } catch (e) { if (kDebugMode) print('Create Folder error: $e'); }
+  }
+
+  void updateFilterSettings({String? filter, bool? hideSystem, bool? recursive, bool? preview, bool? showFolders, bool? isSpecific}) {
+    bool needRescan = false; bool needRefilter = false;
+    if (isSpecific != null) { if (_isFilterSpecific != isSpecific) { _isFilterSpecific = isSpecific; if (!isSpecific) _filterText = ''; needRefilter = true; } }
+    if (filter != null) { _filterText = filter; if (filter.isNotEmpty) _isFilterSpecific = true; needRefilter = true; }
+    if (hideSystem != null) { _hideSystemFiles = hideSystem; needRefilter = true; }
+    if (recursive != null) { if (_recursiveSearch != recursive) { _recursiveSearch = recursive; needRescan = true; } }
+    if (preview != null) { _showPreview = preview; notifyListeners(); }
+    if (showFolders != null) { _showFolders = showFolders; needRefilter = true; }
+    if (needRescan) { if (_currentDirectory != null) setDirectory(_currentDirectory!); } else if (needRefilter) _applyFilters();
     _saveState();
   }
 
-  void setCompactMode(bool isCompact) {
-    _isCompactMode = isCompact;
-    _saveState();
-    notifyListeners();
-  }
-
-  void setEnableBetaFeatures(bool enable) {
-    _enableBetaFeatures = enable;
-    _saveState();
-    notifyListeners();
-  }
-
-  void setAppTheme(AppThemeType theme) {
-    _appTheme = theme;
-    _saveState();
-    notifyListeners();
-  }
-
-  void setMenuLabelType(MenuLabelType type) {
-    _menuLabelType = type;
-    _saveState();
-    notifyListeners();
-  }
-
-  void setSeedColor(Color color) {
-    _seedColor = color;
-    _saveState();
-    notifyListeners();
-  }
+  void setCompactMode(bool isCompact) { _isCompactMode = isCompact; _saveState(); notifyListeners(); }
+  void setEnableBetaFeatures(bool enable) { _enableBetaFeatures = enable; _saveState(); notifyListeners(); }
+  void setAppTheme(AppThemeType theme) { _appTheme = theme; _saveState(); notifyListeners(); }
+  void setMenuLabelType(MenuLabelType type) { _menuLabelType = type; _saveState(); notifyListeners(); }
+  void setSeedColor(Color color) { _seedColor = color; _saveState(); notifyListeners(); }
 
   void _applyFilters() {
     _currentFiles = _allFiles.where((file) {
-      // 1. System/Hidden Files
-      if (_hideSystemFiles) {
-        final name = p.basename(file.originalName);
-        if (name.startsWith('.')) return false;
-      }
-
-      // 1.5 Show/Hide Folders
-      // If NOT showFolders, and entity IS Directory -> hide
-      if (!_showFolders && file.entity is Directory) {
-        return false;
-      }
-
-      // 2. Filter Text
-      if (_filterText.isNotEmpty) {
-        // Contains check (case insensitive)
-        if (!file.originalName
-            .toLowerCase()
-            .contains(_filterText.toLowerCase())) {
-          return false;
-        }
-      }
+      if (_hideSystemFiles && p.basename(file.originalName).startsWith('.')) return false;
+      if (!_showFolders && file.entity is Directory) return false;
+      if (_filterText.isNotEmpty && !file.originalName.toLowerCase().contains(_filterText.toLowerCase())) return false;
       return true;
     }).toList();
-
-    // Re-sort and Re-preview
     sortFiles(_sortColumnIndex, _sortAscending);
-    // _updatePreviews() is called inside sortFiles at the end
-    // But sortFiles notifies listeners. Doing it again might be redundant but safe.
-    // Actually sortFiles calls _updatePreviews().
   }
 
-  // Helper to distinguish modes (Same logic as SettingsPanel, arguably should be static or shared)
-
   void updateRenameSettings({
-    RenameMode? mode,
-    NumberingMode? numberingMode,
-    String? find,
-    String? replace,
-    String? append,
-    String? deleteTo,
-    int? start,
-    int? digit,
-    String? findText,
-    String? replaceText,
-    String? appendText,
-    String? deleteToText,
-    int? startNumber,
-    int? insertIndex,
-    int? digits,
-    bool? extensionToLowerCase,
-    bool? useRegex,
-    bool? saveSequenceNumber,
-    String? listText,
-    String? extensionChangeText,
-    String? extensionAddText,
-    String? dateFormat,
-    DatePosition? datePosition,
-    ValidationType? validationType,
-    String? etcTimestamp,
-    bool? etcAttribReadOnly,
-    bool? etcAttribHidden,
-    bool? etcAttribArchive,
-    bool? etcAttribSystem,
-    bool immediate = false, // false = debounce, true = immediate
+    RenameMode? mode, NumberingMode? numberingMode, String? find, String? replace, String? append, String? deleteTo,
+    int? start, int? digit, String? findText, String? replaceText, String? appendText, String? deleteToText,
+    int? startNumber, int? insertIndex, int? digits, bool? extensionToLowerCase, bool? useRegex, bool? saveSequenceNumber,
+    String? listText, String? extensionChangeText, String? extensionAddText, String? dateFormat, DatePosition? datePosition,
+    ValidationType? validationType, String? etcTimestamp, bool? etcAttribReadOnly, bool? etcAttribHidden,
+    bool? etcAttribArchive, bool? etcAttribSystem, bool immediate = false,
   }) {
-    if (mode != null) _renameMode = mode;
-    if (numberingMode != null) _numberingMode = numberingMode;
-
-    if (find != null) _findText = find;
-    if (findText != null) _findText = findText;
-
-    if (replace != null) _replaceText = replace;
-    if (replaceText != null) _replaceText = replaceText;
-
-    if (append != null) _appendText = append;
-    if (appendText != null) _appendText = appendText;
-
-    if (deleteTo != null) _deleteToText = deleteTo;
-    if (deleteToText != null) _deleteToText = deleteToText;
-
-    if (start != null) _startNumber = start;
-    if (startNumber != null) _startNumber = startNumber;
-
+    if (mode != null) _renameMode = mode; if (numberingMode != null) _numberingMode = numberingMode;
+    if (find != null) _findText = find; if (findText != null) _findText = findText;
+    if (replace != null) _replaceText = replace; if (replaceText != null) _replaceText = replaceText;
+    if (append != null) _appendText = append; if (appendText != null) _appendText = appendText;
+    if (deleteTo != null) _deleteToText = deleteTo; if (deleteToText != null) _deleteToText = deleteToText;
+    if (start != null) _startNumber = start; if (startNumber != null) _startNumber = startNumber;
     if (insertIndex != null) _insertIndex = insertIndex;
-
-    if (digit != null) _digits = digit;
-    if (digits != null) _digits = digits;
-
-    if (extensionToLowerCase != null) {
-      _extensionToLowerCase = extensionToLowerCase;
-    }
+    if (digit != null) _digits = digit; if (digits != null) _digits = digits;
+    if (extensionToLowerCase != null) _extensionToLowerCase = extensionToLowerCase;
     if (useRegex != null) _useRegex = useRegex;
-
-    // Extra Tab
-    if (dateFormat != null) _dateFormat = dateFormat;
-    if (datePosition != null) _datePosition = datePosition;
-
-    // Validation
+    if (dateFormat != null) _dateFormat = dateFormat; if (datePosition != null) _datePosition = datePosition;
     if (validationType != null) _validationType = validationType;
-
-    // Etc Tab
     if (etcTimestamp != null) _etcTimestamp = etcTimestamp;
     if (etcAttribReadOnly != null) _etcAttribReadOnly = etcAttribReadOnly;
     if (etcAttribHidden != null) _etcAttribHidden = etcAttribHidden;
     if (etcAttribArchive != null) _etcAttribArchive = etcAttribArchive;
     if (etcAttribSystem != null) _etcAttribSystem = etcAttribSystem;
-
-    // Sub Tab
     if (listText != null) _listRenameText = listText;
     if (extensionChangeText != null) _extensionChangeText = extensionChangeText;
     if (extensionAddText != null) _extensionAddText = extensionAddText;
+    if (saveSequenceNumber != null) _saveSequenceNumber = saveSequenceNumber;
 
-    if (saveSequenceNumber != null) {
-      _saveSequenceNumber = saveSequenceNumber;
-    }
-
-    // Track Last Active Modes per Tab
     if (mode != null) {
-      if (isSubMode(mode)) {
-        _lastSubMode = mode;
-      } else if (isMainMode(mode)) {
-        _lastMainMode = mode;
-      } else if (isExtraMode(mode)) {
-        _lastExtraMode = mode;
-      } else if (isEtcMode(mode)) {
-        _lastEtcMode = mode;
-      }
-
-      // Update Last String Mode
-      if (mode == RenameMode.append ||
-          mode == RenameMode.prepend ||
-          mode == RenameMode.insert ||
-          mode == RenameMode.numbering) {
-        _lastStringMode = mode;
-      }
+      if (isSubMode(mode)) _lastSubMode = mode; else if (isMainMode(mode)) _lastMainMode = mode;
+      else if (isExtraMode(mode)) _lastExtraMode = mode; else if (isEtcMode(mode)) _lastEtcMode = mode;
+      if (mode == RenameMode.append || mode == RenameMode.prepend || mode == RenameMode.insert || mode == RenameMode.numbering) _lastStringMode = mode;
     }
 
-    // Debounce preview update
     _previewTimer?.cancel();
-    if (immediate) {
-      _updatePreviews();
-    } else {
-      _previewTimer = Timer(const Duration(milliseconds: 200), () {
-        _updatePreviews();
-      });
-    }
-    _saveState();
-    notifyListeners();
+    if (immediate) _updatePreviews(); else _previewTimer = Timer(const Duration(milliseconds: 200), () => _updatePreviews());
+    _saveState(); notifyListeners();
   }
 
   void _updatePreviews() {
     if (_currentFiles.isEmpty) return;
-
     final hasSelection = _currentFiles.any((f) => f.isSelected);
-    List<FileModel> targets = [];
+    List<FileModel> targets = hasSelection ? _currentFiles.where((f) => f.isSelected).toList() : [];
+    for (var f in _currentFiles) { f.setNewName(f.originalName); f.setValidationError(null); }
+    if (targets.isEmpty) return;
 
-    // User Requirement: If no selection, NO files are targets.
-    // So distinct from previous behavior (all).
-    if (hasSelection) {
-      targets = _currentFiles.where((f) => f.isSelected).toList();
-    }
+    String? curFind = (_renameMode == RenameMode.deleteFrontTo || _renameMode == RenameMode.deleteBackTo) ? _deleteToText : _findText;
+    String? curReplace = (_renameMode == RenameMode.extension) ? _extensionChangeText : (_renameMode == RenameMode.extensionAdd ? _extensionAddText : _replaceText);
+    String? baseDir = _currentDirectory != null ? p.basename(_currentDirectory!.path) : null;
 
-    // Reset ALL files to original name first (cleans up unselected or previous states)
-    for (var f in _currentFiles) {
-      f.setNewName(f.originalName);
-      f.setValidationError(null);
-    }
+    RenameEngine.generatePreviews(targets, _renameMode, findText: curFind, replaceText: curReplace, appendText: _appendText, startNumber: _startNumber, insertIndex: _insertIndex, digits: _digits, extensionToLowerCase: _extensionToLowerCase, useRegex: _useRegex, numberingMode: _numberingMode, baseDirName: baseDir, listText: _listRenameText, dateFormat: _dateFormat, datePosition: _datePosition, validationType: _validationType);
 
-    if (targets.isEmpty) return; // Nothing to rename
-
-    // Use deleteToText as findText for deleteFrontTo/BackTo modes
-    String? currentFindText = _findText;
-    if (_renameMode == RenameMode.deleteFrontTo ||
-        _renameMode == RenameMode.deleteBackTo) {
-      currentFindText = _deleteToText;
-    }
-
-    String? currentReplaceText = _replaceText;
-    if (_renameMode == RenameMode.extension) {
-      currentReplaceText = _extensionChangeText;
-    } else if (_renameMode == RenameMode.extensionAdd) {
-      currentReplaceText = _extensionAddText;
-    }
-
-    String? baseDirName;
-    if (_currentDirectory != null) {
-      baseDirName = p.basename(_currentDirectory!.path);
-    }
-
-    RenameEngine.generatePreviews(
-      targets,
-      _renameMode,
-      findText: currentFindText,
-      replaceText: currentReplaceText,
-      appendText: _appendText,
-      startNumber: _startNumber,
-      insertIndex: _insertIndex,
-      digits: _digits,
-      extensionToLowerCase: _extensionToLowerCase,
-      useRegex: _useRegex,
-      numberingMode: _numberingMode,
-      baseDirName: baseDirName,
-      listText: _listRenameText,
-      dateFormat: _dateFormat,
-      datePosition: _datePosition,
-      validationType: _validationType,
-    );
-
-    // バリデーションエラーの集約と重複チェック [6.1][6.2][6.3]
     _hasValidationError = false;
     final nameCounts = <String, int>{};
-
     for (var f in _currentFiles) {
-      // 既存の基本エラー（重複以外）があればフラグを立てる
       if (f.validationErrorMessage != null &&
-          f.validationErrorMessage != 'ファイル名が重複しています') {
-        _hasValidationError = true;
-      }
-
-      // 重複チェックのために新ファイル名（非選択のものは元の名前と同値）をカウント
-      final lowerName = f.newName.toLowerCase();
-      nameCounts[lowerName] = (nameCounts[lowerName] ?? 0) + 1;
+          f.validationErrorMessage != 'ファイル名が重複しています') _hasValidationError = true;
+      // ID 008: 異なるフォルダの同名ファイルを許容するため、キーに親パスを含める
+      final fullPathKey = p.canonicalize(p.join(f.parentPath, f.newName));
+      nameCounts[fullPathKey] = (nameCounts[fullPathKey] ?? 0) + 1;
     }
-
-    // 重複エラーの判定とメッセージ付与
     for (var f in targets) {
       if (f.validationErrorMessage == null ||
           f.validationErrorMessage == 'ファイル名が重複しています') {
-        final lowerName = f.newName.toLowerCase();
-        if ((nameCounts[lowerName] ?? 0) > 1) {
+        final fullPathKey = p.canonicalize(p.join(f.parentPath, f.newName));
+        if ((nameCounts[fullPathKey] ?? 0) > 1) {
           f.setValidationError('ファイル名が重複しています');
           _hasValidationError = true;
         } else {
@@ -826,979 +483,300 @@ class DirectoryProvider extends ChangeNotifier {
         }
       }
     }
-
     notifyListeners();
   }
 
-  // Validation State
-  bool _hasValidationError = false;
-  bool get hasValidationError => _hasValidationError;
+  bool _hasValidationError = false; bool get hasValidationError => _hasValidationError;
+  int _sortColumnIndex = 0; bool _sortAscending = true;
+  int get sortColumnIndex => _sortColumnIndex; bool get sortAscending => _sortAscending;
 
-  // Sort State
-  int _sortColumnIndex = 0;
-  bool _sortAscending = true;
-
-  int get sortColumnIndex => _sortColumnIndex;
-  bool get sortAscending => _sortAscending;
-
-  // Selection Methods
-  void toggleSelection(FileModel file) {
-    file.isSelected = !file.isSelected;
-    _updatePreviews(); // Re-calc previews based on new selection
-    notifyListeners();
-  }
+  void toggleSelection(FileModel file) { file.isSelected = !file.isSelected; _updatePreviews(); notifyListeners(); }
 
   void resetSettings() {
-    // 1. Theme
-    _appTheme = AppThemeType.light;
-    _menuLabelType = MenuLabelType.standard;
-    _seedColor = Colors.green;
-    _isCompactMode = false;
-
-    // 2. Initial Directory
-    _initialDirectoryMode = InitialDirectoryMode.lastUsed;
-    _fixedInitialDirectory = '';
-
-    // 3. Rename Settings
-    _renameMode = RenameMode.numbering;
-    _numberingMode = NumberingMode.stringNumber;
-    _startNumber = 1;
-    _insertIndex = 1;
-    _digits = 3;
-    _findText = '';
-    _replaceText = '';
-    _appendText = '';
-    _deleteToText = '';
-    _extensionToLowerCase = true;
-    _useRegex = false;
-    _saveSequenceNumber = false;
-
-    // Mode Memory defaults
-    _lastMainMode = RenameMode.numbering;
-    _lastSubMode = RenameMode.extension;
-    _lastExtraMode = RenameMode.appendDate;
-    _lastEtcMode = RenameMode.changeTimestamp;
-    _lastStringMode = RenameMode.append;
-
-    // Sub Tab
-    _listRenameText =
-        '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4';
-    _extensionChangeText = '';
-    _extensionAddText = '';
-
-    // Extra Tab
-    _dateFormat = 'yyyyMMdd_';
-    _datePosition = DatePosition.front;
-
-    // Etc Tab
-    _etcTimestamp =
-        ''; // Will default to now on next read if needed, or clear it
+    _appTheme = AppThemeType.light; _menuLabelType = MenuLabelType.standard; _seedColor = Colors.green; _isCompactMode = false;
+    _initialDirectoryMode = InitialDirectoryMode.lastUsed; _fixedInitialDirectory = '';
+    _renameMode = RenameMode.numbering; _numberingMode = NumberingMode.stringNumber; _startNumber = 1; _insertIndex = 1; _digits = 3;
+    _findText = ''; _replaceText = ''; _appendText = ''; _deleteToText = ''; _extensionToLowerCase = true; _useRegex = false; _saveSequenceNumber = false;
+    _lastMainMode = RenameMode.numbering; _lastSubMode = RenameMode.extension; _lastExtraMode = RenameMode.appendDate; _lastEtcMode = RenameMode.changeTimestamp; _lastStringMode = RenameMode.append;
+    _listRenameText = '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4'; _extensionChangeText = ''; _extensionAddText = '';
+    _dateFormat = 'yyyyMMdd_'; _datePosition = DatePosition.front;
     final now = DateTime.now();
-    _etcTimestamp =
-        '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    _etcAttribReadOnly = false;
-    _etcAttribHidden = false;
-    _etcAttribArchive = false;
-    _etcAttribSystem = false;
-
-    // 4. View Settings (Left Pane)
-    _showFolders = true;
-    _hideSystemFiles = true;
-    _recursiveSearch = false;
-    _showPreview = true;
-    _validationType = ValidationType.auto;
-
-    // 5. Reset Signal (Collapse Tree)
-    _resetCount++;
-
-    _applyFilters(); // Re-apply view settings
-    _saveState();
-    notifyListeners();
+    _etcTimestamp = '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    _etcAttribReadOnly = false; _etcAttribHidden = false; _etcAttribArchive = false; _etcAttribSystem = false;
+    _showFolders = true; _hideSystemFiles = true; _recursiveSearch = false; _showPreview = true; _validationType = ValidationType.auto;
+    _resetCount++; _applyFilters(); _saveState(); notifyListeners();
   }
 
-  void selectAll(bool select) {
-    for (var f in _currentFiles) {
-      f.isSelected = select;
-    }
-    _updatePreviews();
-    notifyListeners();
-  }
+  void selectAll(bool select) { for (var f in _currentFiles) f.isSelected = select; _updatePreviews(); notifyListeners(); }
 
-  // Sort Methods
-  // Sort Methods
   void sortFiles(int columnIndex, bool ascending) {
-    _sortColumnIndex = columnIndex;
-    _sortAscending = ascending;
-
+    _sortColumnIndex = columnIndex; _sortAscending = ascending;
     _currentFiles.sort((a, b) {
-      // フォルダを常に優先して上部に配置する
-      final isDirA = a.entity is Directory;
-      final isDirB = b.entity is Directory;
-      if (isDirA && !isDirB) return -1;
-      if (!isDirA && isDirB) return 1;
-
+      final isDirA = a.entity is Directory; final isDirB = b.entity is Directory;
+      if (isDirA && !isDirB) return -1; if (!isDirA && isDirB) return 1;
       int cmp = 0;
       switch (columnIndex) {
-        case 0: // Original Name
-          cmp = a.originalName.toLowerCase().compareTo(
-                b.originalName.toLowerCase(),
-              );
-          break;
-        case 1: // New Name
-          cmp = a.newName.toLowerCase().compareTo(b.newName.toLowerCase());
-          break;
-        case 2: // Size
-          if (a.entity is File && b.entity is File) {
-            int sizeA = 0;
-            int sizeB = 0;
-            try {
-              sizeA = (a.entity as File).lengthSync();
-            } catch (_) {}
-            try {
-              sizeB = (b.entity as File).lengthSync();
-            } catch (_) {}
-            cmp = sizeA.compareTo(sizeB);
-          }
-          break;
-        case 3: // Relative Path
-          cmp = a.relativePath.compareTo(b.relativePath);
-          break;
-        case 4: // Type
-          cmp = a.fileType.compareTo(b.fileType);
-          break;
-        case 5: // Date Modified
-          try {
-            cmp = a.entity
-                .statSync()
-                .modified
-                .compareTo(b.entity.statSync().modified);
-          } catch (e) {
-            cmp = 0;
-          }
-          break;
-        case 6: // Attributes
-          cmp = a.attributes.compareTo(b.attributes);
-          break;
-        default:
-          cmp = 0;
+        case 0: cmp = a.originalName.toLowerCase().compareTo(b.originalName.toLowerCase()); break;
+        case 1: cmp = a.newName.toLowerCase().compareTo(b.newName.toLowerCase()); break;
+        case 2: if (a.entity is File && b.entity is File) {
+          int sA = 0; int sB = 0; try { sA = (a.entity as File).lengthSync(); } catch (_) {} try { sB = (b.entity as File).lengthSync(); } catch (_) {} cmp = sA.compareTo(sB);
+        } break;
+        case 3: cmp = a.relativePath.compareTo(b.relativePath); break;
+        case 4: cmp = a.fileType.compareTo(b.fileType); break;
+        case 5: try { cmp = a.entity.statSync().modified.compareTo(b.entity.statSync().modified); } catch (e) { cmp = 0; } break;
+        case 6: cmp = a.attributes.compareTo(b.attributes); break;
       }
       return ascending ? cmp : -cmp;
     });
-
-    _updatePreviews();
-    _saveState();
-    notifyListeners();
+    _updatePreviews(); _saveState(); notifyListeners();
   }
 
-  // --- Navigation History ---
-  List<String> _navHistory = [];
-  int _navIndex = -1;
-
-  bool get canGoBack => _navIndex > 0;
-  bool get canGoForward => _navIndex < _navHistory.length - 1;
-
-  Future<void> goBack() async {
-    if (canGoBack) {
-      _navIndex--;
-      final path = _navHistory[_navIndex];
-      await _navigateInternal(Directory(path));
-    }
-  }
-
-  Future<void> goForward() async {
-    if (canGoForward) {
-      _navIndex++;
-      final path = _navHistory[_navIndex];
-      await _navigateInternal(Directory(path));
-    }
-  }
-
-  // History access for UI
-  // Back history: Items BEFORE _navIndex, reversed (closest first)
-  List<String> get backHistory {
-    if (_navIndex <= 0) return [];
-    // Return unique history for dropdown (Set preserves insertion order, Reversed first)
-    return _navHistory.sublist(0, _navIndex).reversed.toSet().toList();
-  }
-
-  // Forward history: Items AFTER _navIndex
-  List<String> get forwardHistory {
-    if (_navIndex >= _navHistory.length - 1) return [];
-    return _navHistory.sublist(_navIndex + 1).toSet().toList();
-  }
-
+  List<String> _navHistory = []; int _navIndex = -1;
+  bool get canGoBack => _navIndex > 0; bool get canGoForward => _navIndex < _navHistory.length - 1;
+  Future<void> goBack() async { if (canGoBack) { _navIndex--; await _navigateInternal(Directory(_navHistory[_navIndex])); } }
+  Future<void> goForward() async { if (canGoForward) { _navIndex++; await _navigateInternal(Directory(_navHistory[_navIndex])); } }
+  List<String> get backHistory => _navIndex <= 0 ? [] : _navHistory.sublist(0, _navIndex).reversed.toSet().toList();
+  List<String> get forwardHistory => _navIndex >= _navHistory.length - 1 ? [] : _navHistory.sublist(_navIndex + 1).toSet().toList();
   Future<void> jumpToHistory(String path) async {
-    // Find the index of this path.
-    // Note: Duplicates might exist. We should probably target simple linear scan
-    // that prefers "closest" or "most logical" target?
-    // Or, since the UI will likely pick from one of the lists above,
-    // we can infer the target index based on which list it came from?
-    // Actually, passing the absolute index would be safer if we exposed it.
-    // But string is easier for now if unique enough.
-    // Let's modify logic to accept an index if possible, or just scan.
-    // Simple scan: find LAST occurrence <= index (for back) or FIRST >= index?
-    // Actually, let's just find the first match in the whole history that isn't current?
-    // Ideally we should pass the index from the UI.
-
-    final index = _navHistory.indexOf(path);
-    if (index != -1 && index != _navIndex) {
-      _navIndex = index;
-      await _navigateInternal(Directory(path));
-    }
+    final index = _navHistory.indexOf(path); if (index != -1 && index != _navIndex) { _navIndex = index; await _navigateInternal(Directory(path)); }
   }
-
-  // Better Jump Method: Jump by offset (relative) logic or absolute index?
-  // Let's rely on the UI calling jumpToHistory(path).
-  // Wait, if I have A -> B -> A -> C.
-  // Current C. Back history: A, B, A.
-  // If I click the first A (the one before B), I expect to go to index 0.
-  // If I click the second A (the recent one), I expect index 2.
-  // `indexOf` will always return 0.
-  // So I MUST use index.
-  // Let's refactor: exposing `List<Map<String, dynamic>>` or similar?
-  // Or just helper for "Jump back N steps".
-
-  Future<void> jumpBack(int steps) async {
-    final newIndex = _navIndex - steps;
-    if (newIndex >= 0) {
-      _navIndex = newIndex;
-      await _navigateInternal(Directory(_navHistory[_navIndex]));
-    }
-  }
-
-  Future<void> jumpForward(int steps) async {
-    final newIndex = _navIndex + steps;
-    if (newIndex < _navHistory.length) {
-      _navIndex = newIndex;
-      await _navigateInternal(Directory(_navHistory[_navIndex]));
-    }
-  }
-
-  Future<void> refresh() async {
-    if (_currentDirectory != null) {
-      // Force reload
-      await setDirectory(_currentDirectory!, addToHistory: false);
-    }
-  }
-
-  // Internal nav that doesn't add to history again (or handles it)
-  Future<void> _navigateInternal(Directory dir) async {
-    // Similar to setDirectory but doesn't modify history stack
-    // Actually setDirectory logic is heavy.
-    // Let's refactor setDirectory to accept an option?
-    // Or just call setDirectory with addToHistory: false
-    await setDirectory(dir, addToHistory: false);
-  }
-
-  // --- List Manipulation ---
+  Future<void> jumpBack(int steps) async { final ni = _navIndex - steps; if (ni >= 0) { _navIndex = ni; await _navigateInternal(Directory(_navHistory[_navIndex])); } }
+  Future<void> jumpForward(int steps) async { final ni = _navIndex + steps; if (ni < _navHistory.length) { _navIndex = ni; await _navigateInternal(Directory(_navHistory[_navIndex])); } }
+  Future<void> refresh() async { if (_currentDirectory != null) await setDirectory(_currentDirectory!, addToHistory: false); }
+  Future<void> _navigateInternal(Directory dir) async => await setDirectory(dir, addToHistory: false);
 
   bool get canExecute {
-    final selected = _currentFiles.where((f) => f.isSelected);
-    if (selected.isEmpty) return false;
-
-    // 「エラーがない」かつ「名前が変更されている」ファイルが1つでもあれば実行可能
-    return selected.any(
-        (f) => f.validationErrorMessage == null && f.originalName != f.newName);
+    final s = _currentFiles.where((f) => f.isSelected);
+    return s.isNotEmpty && s.any((f) => f.validationErrorMessage == null && f.originalName != f.newName);
   }
-
-  // 選択中のファイル内にエラーを持つものが存在するか
-  bool get hasInvalidFilenamesSelected {
-    return _currentFiles
-        .any((f) => f.isSelected && f.validationErrorMessage != null);
-  }
-
-  int get validFileCount {
-    return _currentFiles
-        .where((f) => f.isSelected && f.validationErrorMessage == null)
-        .length;
-  }
-
-  int get invalidFileCount {
-    return _currentFiles
-        .where((f) => f.isSelected && f.validationErrorMessage != null)
-        .length;
-  }
+  bool get hasInvalidFilenamesSelected => _currentFiles.any((f) => f.isSelected && f.validationErrorMessage != null);
+  int get validFileCount => _currentFiles.where((f) => f.isSelected && f.validationErrorMessage == null).length;
+  int get invalidFileCount => _currentFiles.where((f) => f.isSelected && f.validationErrorMessage != null).length;
 
   bool get canMoveUp {
     if (_currentFiles.isEmpty) return false;
-    // Check if any selected item has a non-selected item above it
-    for (int i = 0; i < _currentFiles.length; i++) {
-      if (_currentFiles[i].isSelected) {
-        if (i > 0 && !_currentFiles[i - 1].isSelected) {
-          return true; // Found an item that can move up (swap with unselected above)
-        }
-      }
-    }
+    for (int i = 0; i < _currentFiles.length; i++) { if (_currentFiles[i].isSelected && i > 0 && !_currentFiles[i - 1].isSelected) return true; }
     return false;
   }
-
   bool get canMoveDown {
     if (_currentFiles.isEmpty) return false;
-    // Check if any selected item has a non-selected item below it
-    for (int i = 0; i < _currentFiles.length; i++) {
-      if (_currentFiles[i].isSelected) {
-        if (i < _currentFiles.length - 1 && !_currentFiles[i + 1].isSelected) {
-          return true; // Found an item that can move down (swap with unselected below)
-        }
-      }
-    }
+    for (int i = 0; i < _currentFiles.length; i++) { if (_currentFiles[i].isSelected && i < _currentFiles.length - 1 && !_currentFiles[i + 1].isSelected) return true; }
     return false;
   }
 
   void moveSelection(bool up) {
-    // Only move if we have a selection
-    var selectedIndices = _currentFiles
-        .asMap()
-        .entries
-        .where((e) => e.value.isSelected)
-        .map((e) => e.key)
-        .toList();
-
-    if (selectedIndices.isEmpty) return;
-
-    // Sort indices to handle movement correctly
-    selectedIndices.sort();
-    if (!up) {
-      selectedIndices = selectedIndices.reversed.toList();
-    }
-
-    bool changed = false;
-    final List<FileModel> newFiles = List.from(_currentFiles);
-
-    for (var index in selectedIndices) {
-      if (up) {
-        if (index > 0) {
-          final prevIndex = index - 1;
-          // Only swap if the previous item is NOT selected (to move the whole block)
-          if (!newFiles[prevIndex].isSelected) {
-            final temp = newFiles[prevIndex];
-            newFiles[prevIndex] = newFiles[index];
-            newFiles[index] = temp;
-            changed = true;
-          }
-        }
-      } else {
-        if (index < newFiles.length - 1) {
-          final nextIndex = index + 1;
-          // Only swap if the next item is NOT selected
-          if (!newFiles[nextIndex].isSelected) {
-            final temp = newFiles[nextIndex];
-            newFiles[nextIndex] = newFiles[index];
-            newFiles[index] = temp;
-            changed = true;
-          }
-        }
+    var si = _currentFiles.asMap().entries.where((e) => e.value.isSelected).map((e) => e.key).toList();
+    if (si.isEmpty) return; si.sort(); if (!up) si = si.reversed.toList();
+    bool changed = false; final List<FileModel> newFiles = List.from(_currentFiles);
+    for (var index in si) {
+      if (up && index > 0 && !newFiles[index - 1].isSelected) {
+        final t = newFiles[index - 1]; newFiles[index - 1] = newFiles[index]; newFiles[index] = t; changed = true;
+      } else if (!up && index < newFiles.length - 1 && !newFiles[index + 1].isSelected) {
+        final t = newFiles[index + 1]; newFiles[index + 1] = newFiles[index]; newFiles[index] = t; changed = true;
       }
     }
-
-    if (changed) {
-      _currentFiles = newFiles;
-      // If we move manually, we might be breaking the sort order.
-      // Should we set sort to 'Manual'?
-      // For now, let's just update the list.
-      _updatePreviews(); // Re-calculate previews (e.g. sequence numbers might change)
-      notifyListeners();
-    }
+    if (changed) { _currentFiles = newFiles; _updatePreviews(); notifyListeners(); }
   }
 
-  // Manual Sort (Renamed for consistency if needed, checking existing reorderFiles)
   void reorderFiles(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
-    final FileModel item = _currentFiles.removeAt(oldIndex);
-    _currentFiles.insert(newIndex, item);
-
-    // User Requirement: Update previews on reorder (numbering changes)
-    _updatePreviews();
-    notifyListeners();
+    if (oldIndex < newIndex) newIndex -= 1;
+    final item = _currentFiles.removeAt(oldIndex); _currentFiles.insert(newIndex, item);
+    _updatePreviews(); notifyListeners();
   }
 
   void moveSelectedToTop() {
-    final selected = _currentFiles.where((f) => f.isSelected).toList();
-    final unselected = _currentFiles.where((f) => !f.isSelected).toList();
-    if (selected.isNotEmpty) {
-      _currentFiles = [...selected, ...unselected];
-      _updatePreviews();
-      notifyListeners();
-    }
+    final s = _currentFiles.where((f) => f.isSelected).toList(); final u = _currentFiles.where((f) => !f.isSelected).toList();
+    if (s.isNotEmpty) { _currentFiles = [...s, ...u]; _updatePreviews(); notifyListeners(); }
   }
 
   void moveSelectedToBottom() {
-    final selected = _currentFiles.where((f) => f.isSelected).toList();
-    final unselected = _currentFiles.where((f) => !f.isSelected).toList();
-    if (selected.isNotEmpty) {
-      _currentFiles = [...unselected, ...selected];
-      _updatePreviews();
-      notifyListeners();
-    }
+    final s = _currentFiles.where((f) => f.isSelected).toList(); final u = _currentFiles.where((f) => !f.isSelected).toList();
+    if (s.isNotEmpty) { _currentFiles = [...u, ...s]; _updatePreviews(); notifyListeners(); }
   }
 
   Future<void> goUp() async {
-    if (_currentDirectory != null) {
-      final parent = _currentDirectory!.parent;
-      if (parent.path != _currentDirectory!.path) {
-        await setDirectory(parent);
-      }
-    }
+    if (_currentDirectory != null) { final p = _currentDirectory!.parent; if (p.path != _currentDirectory!.path) await setDirectory(p); }
   }
 
   Future<int> executeRename() async {
-    if (_currentFiles.isEmpty) return 0;
-
-    // Strict selection requirement
-    final targets = _currentFiles.where((f) => f.isSelected).toList();
-    if (targets.isEmpty) return 0;
-
-    _isLoading = true;
-    notifyListeners();
-
-    List<FileModel> renamaedFiles = [];
-    List<UndoAction> transaction = [];
-
-    for (var file in targets) {
-      // バリデーションエラーがあるファイル（およびそもそも名前変更がないファイル）はスキップする
-      if (file.validationErrorMessage != null ||
-          file.originalName == file.newName) {
-        continue;
-      }
-
-      // Logic branching
-      if (_renameMode == RenameMode.changeTimestamp) {
-        try {
-          final fullPath = p.join(file.parentPath, file.originalName);
-          final DateFormat format = DateFormat('yyyy/MM/dd HH:mm');
-          final DateTime dt = format.parse(_etcTimestamp);
-
-          final f = File(fullPath);
-          await f.setLastModified(dt);
-          // Metadata update doesn't change name, but effectively "done"
-          // Maybe refresh file info?
-          renamaedFiles.add(file); // タイムスタンプ変更も成功とみなす
-        } catch (e) {
-          file.markError(e.toString());
-        }
-      } else if (_renameMode == RenameMode.changeAttributes) {
-        try {
-          final fullPath = p.join(file.parentPath, file.originalName);
-
-          List<String> args = [];
-          args.add(_etcAttribReadOnly ? '+R' : '-R');
-          args.add(_etcAttribHidden ? '+H' : '-H');
-          args.add(_etcAttribSystem ? '+S' : '-S');
-          args.add(_etcAttribArchive ? '+A' : '-A');
-          args.add(fullPath);
-
-          await Process.run('attrib', args);
-          renamaedFiles.add(file); // 属性変更も成功とみなす
-        } catch (e) {
-          file.markError(e.toString());
-        }
-      } else {
-        // Normal Rename
-        try {
-          final oldPath = p.join(file.parentPath, file.originalName);
-          final newPath = p.join(file.parentPath, file.newName);
-
-          final isDir = file.entity is Directory;
-          final FileSystemEntity fsEntity =
-              isDir ? Directory(oldPath) : File(oldPath);
-          if (await fsEntity.exists()) {
-            await fsEntity.rename(newPath);
-            file.markRenamed();
-            transaction.add(UndoAction(oldPath, newPath));
-            renamaedFiles.add(file);
-          }
-        } catch (e) {
-          file.markError(e.toString());
-        }
-      }
+    final t = _currentFiles.where((f) => f.isSelected).toList(); if (t.isEmpty) return 0;
+    _isLoading = true; notifyListeners();
+    List<FileModel> renamed = []; List<UndoAction> transaction = [];
+    for (var file in t) {
+      if (file.validationErrorMessage != null || file.originalName == file.newName) continue;
+      try {
+        final oldP = file.entity.path; final newP = p.join(file.parentPath, file.newName);
+        await file.entity.rename(newP); file.markRenamed(); renamed.add(file);
+        transaction.add(UndoAction(oldP, newP, type: UndoType.rename));
+      } catch (e) { file.markError(e.toString()); }
     }
-
     if (transaction.isNotEmpty) {
-      _undoManager.addTransaction(transaction);
-      _saveInputHistory();
-      if (_currentDirectory != null) {
-        await setDirectory(_currentDirectory!);
-      }
-
-      // Auto-Increment Logic
-      if (_saveSequenceNumber) {
-        // e.g. Start 1, Processed 5 -> Next Start = 1 + 5 = 6
-        _startNumber += renamaedFiles.length;
-        _saveState();
-        notifyListeners(); // Will update UI controller via watcher
-      }
-    } else {
-      _isLoading = false;
-      notifyListeners();
-    }
-    return renamaedFiles.length;
+      _undoManager.addTransaction(transaction); _saveInputHistory();
+      if (_currentDirectory != null) await setDirectory(_currentDirectory!);
+      if (_saveSequenceNumber) { _startNumber += renamed.length; _saveState(); notifyListeners(); }
+    } else { _isLoading = false; notifyListeners(); }
+    return renamed.length;
   }
 
   Future<void> renameOneFile(FileModel file, String newName) async {
     if (file.originalName == newName || newName.isEmpty) return;
-    _isLoading = true;
-    notifyListeners();
-
+    _isLoading = true; notifyListeners();
     try {
-      final oldPath = p.join(file.parentPath, file.originalName);
-      final newPath = p.join(file.parentPath, newName);
-
-      final isDir = file.entity is Directory;
-      final FileSystemEntity fsEntity =
-          isDir ? Directory(oldPath) : File(oldPath);
-      if (await fsEntity.exists()) {
-        await fsEntity.rename(newPath);
-        // We re-list directory to ensure state sync,
-        // or effectively we could just update the model if we trust it.
-        // For safety, let's re-list.
-        if (_currentDirectory != null) {
-          await setDirectory(_currentDirectory!);
-        }
-      }
-    } catch (e) {
-      // Handle error (maybe show toast/snackbar in UI, but here we just log or ignore)
-      if (kDebugMode) {
-        print('Rename One Error: $e');
-      }
-      _isLoading = false;
-      notifyListeners();
-    }
+      final oldP = file.entity.path; final newP = p.join(file.parentPath, newName);
+      await file.entity.rename(newP);
+      _undoManager.addTransaction([UndoAction(oldP, newP, type: UndoType.rename)]);
+      if (_currentDirectory != null) await setDirectory(_currentDirectory!);
+    } catch (e) { _isLoading = false; notifyListeners(); }
   }
 
   Future<Map<String, dynamic>> undo() async {
     if (!_undoManager.canUndo) return {'count': 0, 'errors': []};
-    _isLoading = true;
-    notifyListeners();
-
-    final result = await _undoManager.undoLastTransaction();
-
-    if (_currentDirectory != null) {
-      await setDirectory(_currentDirectory!);
-    }
-    return result;
+    _isLoading = true; notifyListeners();
+    final r = await _undoManager.undoLastTransaction();
+    if (_currentDirectory != null) await setDirectory(_currentDirectory!);
+    return r;
   }
 
-  // Undo Metadata
-  List<UndoAction> getLastUndoTransaction() {
-    return _undoManager.peekLastTransaction();
-  }
+  List<UndoAction> getLastUndoTransaction() => _undoManager.peekLastTransaction();
 
   void addHistory(HistoryType type, String value) {
     if (value.isEmpty) return;
-
     List<String> target;
     switch (type) {
-      case HistoryType.find:
-        target = _findHistory;
-        break;
-      case HistoryType.replace:
-        target = _replaceHistory;
-        break;
-      case HistoryType.add:
-        target = _appendHistory; // mapped to appendText
-        break;
-      case HistoryType.extension:
-        target = _extensionHistory;
-        break;
-      case HistoryType.remove:
-        target = _deleteFromHistory; // mapped to removeText/deleteFrom
-        break;
-      case HistoryType.deleteTo:
-        target = _deleteToHistory; // mapped to deleteToText
-        break;
+      case HistoryType.find: target = _findHistory; break;
+      case HistoryType.replace: target = _replaceHistory; break;
+      case HistoryType.add: target = _appendHistory; break;
+      case HistoryType.extension: target = _extensionHistory; break;
+      case HistoryType.remove: target = _deleteFromHistory; break;
+      case HistoryType.deleteTo: target = _deleteToHistory; break;
+      default: return;
     }
-
-    // Move to top (prevent duplicates)
-    target.remove(value);
-    target.insert(0, value);
-
-    // Limit History Size (Max 20)
-    if (target.length > 20) {
-      target.removeRange(20, target.length);
-    }
-
-    _saveState();
-    notifyListeners();
+    target.remove(value); target.insert(0, value); if (target.length > 20) target.removeRange(20, target.length);
+    _saveState(); notifyListeners();
   }
 
   void _saveInputHistory() {
     switch (_renameMode) {
-      case RenameMode.replace:
-        if (_findText != null) addHistory(HistoryType.find, _findText!);
-        if (_replaceText != null) {
-          addHistory(HistoryType.replace, _replaceText!);
-        }
-        break;
-      case RenameMode.append:
-        if (_appendText != null) addHistory(HistoryType.add, _appendText!);
-        break;
-      case RenameMode.deleteFrontTo:
-      case RenameMode.deleteBackTo:
-      case RenameMode.deleteFrom:
-        if (_deleteToText != null) {
-          addHistory(HistoryType.remove, _deleteToText!);
-        }
-        break;
-      case RenameMode.extension:
-        if (_extensionChangeText.isNotEmpty) {
-          addHistory(HistoryType.extension, _extensionChangeText);
-        }
-        break;
-      case RenameMode.extensionAdd:
-        if (_extensionAddText.isNotEmpty) {
-          addHistory(HistoryType.extension, _extensionAddText);
-        }
-        break;
-      default:
-        break;
+      case RenameMode.replace: if (_findText != null) addHistory(HistoryType.find, _findText!); if (_replaceText != null) addHistory(HistoryType.replace, _replaceText!); break;
+      case RenameMode.append: if (_appendText != null) addHistory(HistoryType.add, _appendText!); break;
+      case RenameMode.deleteFrontTo: case RenameMode.deleteBackTo: case RenameMode.deleteFrom: if (_deleteToText != null) addHistory(HistoryType.remove, _deleteToText!); break;
+      case RenameMode.extension: if (_extensionChangeText.isNotEmpty) addHistory(HistoryType.extension, _extensionChangeText); break;
+      case RenameMode.extensionAdd: if (_extensionAddText.isNotEmpty) addHistory(HistoryType.extension, _extensionAddText); break;
+      default: break;
     }
   }
 
-  Future<void> setDirectory(Directory directory,
-      {bool addToHistory = true, String? source, String? contextRoot}) async {
-    _navigationSource = source;
-    _navigationContextRoot = contextRoot;
-    // History Logic
-    if (addToHistory &&
-        (_currentDirectory == null ||
-            _currentDirectory!.path != directory.path)) {
-      // If we are in the middle of history, truncate forward history
-      if (_navIndex < _navHistory.length - 1) {
-        _navHistory = _navHistory.sublist(0, _navIndex + 1);
-      }
-
-      // Remove duplicate if exists (User Request)
-      _navHistory.remove(directory.path);
-
-      _navHistory.add(directory.path);
-
-      // Limit History Size
-      const int maxHistory = 20;
-      if (_navHistory.length > maxHistory) {
-        _navHistory.removeAt(0);
-      }
-
+  Future<void> setDirectory(Directory directory, {bool addToHistory = true, String? source, String? contextRoot}) async {
+    _navigationSource = source; _navigationContextRoot = contextRoot;
+    if (addToHistory && (_currentDirectory == null || _currentDirectory!.path != directory.path)) {
+      if (_navIndex < _navHistory.length - 1) _navHistory = _navHistory.sublist(0, _navIndex + 1);
+      _navHistory.remove(directory.path); _navHistory.add(directory.path); if (_navHistory.length > 20) _navHistory.removeAt(0);
       _navIndex = _navHistory.length - 1;
     }
-
-    _currentDirectory = directory;
-    _isLoading = true;
-    _saveState();
-    notifyListeners();
-
+    _currentDirectory = directory; _isLoading = true; _saveState(); await checkClipboard(); notifyListeners();
     try {
-      List<FileSystemEntity> entities = [];
-      if (_recursiveSearch) {
-        // Recursive Listing
-        entities = await directory.list(recursive: true).toList();
-      } else {
-        entities = await directory.list(recursive: false).toList();
-      }
-
+      final entities = await directory.list(recursive: _recursiveSearch).toList();
       _allFiles = entities.map((e) => FileModel(entity: e)).toList();
-
-      // Calculate Relative Path for Recursive Mode
       if (_recursiveSearch) {
-        final rootPath = directory.path;
         for (var f in _allFiles) {
           try {
-            // User Definition: Relative Folder = Immediate Parent Folder Name
-            // e.g. Root: node_modules, File: node_modules/undici/docs/file
-            // Relative: docs
-
-            // 1. Display Path: Full Relative Path (e.g. "undici\docs")
-            String displayRelPath = p.relative(f.parentPath, from: rootPath);
-            if (displayRelPath == '.') displayRelPath = '';
-            f.setDisplayRelativePath(displayRelPath);
-
-            // 2. Rename Logic Path: Immediate Parent Name (e.g. "docs")
-            // Check if file is directly in root?
-            if (p.equals(f.parentPath, rootPath)) {
-              // If directly in root, Parent Name is Base Dir Name?
-              // Or empty relative?
-              // Logic: Base = Root Name. Relative = Parent Name.
-              // If file is at root, its parent IS the root.
-              // So Relative = Root Name.
-              // Let's use basename of parentPath.
-              f.setRelativePath(p.basename(f.parentPath));
-            } else {
-              f.setRelativePath(p.basename(f.parentPath));
-            }
-          } catch (e) {
-            f.setRelativePath('');
-            f.setDisplayRelativePath('');
-          }
+            String drp = p.relative(f.parentPath, from: directory.path); if (drp == '.') drp = '';
+            f.setDisplayRelativePath(drp); f.setRelativePath(p.basename(f.parentPath));
+          } catch (_) { f.setRelativePath(''); f.setDisplayRelativePath(''); }
         }
-      } else {
-        // Logic for Non-recursive
-        for (var f in _allFiles) {
-          f.setRelativePath('');
-          f.setDisplayRelativePath('');
-        }
-      }
-
+      } else { for (var f in _allFiles) { f.setRelativePath(''); f.setDisplayRelativePath(''); } }
       _applyFilters();
-
-      // Fetch Attributes in bulk (Windows Only)
-      if (!kIsWeb && Platform.isWindows) {
-        await _loadAttributes(_currentDirectory!);
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error listing directory: $e');
-      }
-      _allFiles = [];
-      _currentFiles = [];
-      notifyListeners();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+      if (!kIsWeb && Platform.isWindows) await _loadAttributes(_currentDirectory!);
+    } catch (e) { _allFiles = []; _currentFiles = []; notifyListeners(); }
+    finally { _isLoading = false; notifyListeners(); }
   }
 
   Future<void> _loadAttributes(Directory dir) async {
     try {
-      // Run attrib * /D (to include directories)
-      // Note: attributes might be localized? No, A S H R are standard.
-      // Output format: A   H  R    C:\Path\To\File.txt
-      final result =
-          await Process.run('attrib', ['*', '/D'], workingDirectory: dir.path);
-      if (result.exitCode == 0) {
-        final lines = (result.stdout as String).split('\n');
-        final Map<String, String> attrMap = {};
-
-        // Parse
-        // Using fixed width parsing for performance and reliability with 'attrib' output format.
-        // Format: 'A   H        C:\Path' (First 20 chars are attributes)
-        // Let's assume absolute if working dir is set, but output might vary.
-        // Attrib output usually matches input. attrib * -> relative paths if in dir.
-        // Wait, Process.run workingDirectory set.
-        // Output will be: "A      file.txt" (Relative) or "A      C:\path\file.txt"?
-        // Let's check my test output: "A                    R:\renamery\.gitignore"
-        // It returned ABSOLUTE path.
-
+      final res = await Process.run('attrib', ['*', '/D'], workingDirectory: dir.path, stdoutEncoding: systemEncoding);
+      if (res.exitCode == 0) {
+        final lines = (res.stdout as String).split('\n'); final Map<String, String> attrMap = {};
         for (var line in lines) {
-          line = line.trim();
-          if (line.isEmpty) continue;
-          // Split by first large gap? Or use regex.
-          // Attribs are fixed width (approx 20 chars).
-          if (line.length > 21) {
-            final attrPart = line.substring(0, 20).toUpperCase();
-            final pathPart = line.substring(20).trim();
-            // Path might be absolute.
-            // Normalize path for matching.
-            String normalizedPath = pathPart;
-            // If absolute, key should be absolute.
-            // If relative, key should be join(dir.path, relative).
-            // Since our FileModels have absolute paths.
-            // Let's try to match.
-            // If path start with drive letter, it's absolute.
-            // FileModel entity.path is absolute.
-
-            attrMap[normalizedPath.toLowerCase()] = attrPart;
-            // Also try absolute if raw path is relative
-            if (!pathPart.contains(':')) {
-              attrMap['${dir.path}\\$pathPart'
-                  .toLowerCase()
-                  .replaceAll('/', '\\')] = attrPart;
-            }
+          line = line.trim(); if (line.length > 21) {
+            final ap = line.substring(0, 20).toUpperCase(); final pp = line.substring(20).trim();
+            final fp = p.isAbsolute(pp) ? p.canonicalize(pp) : p.canonicalize(p.join(dir.path, pp)); attrMap[fp] = ap;
           }
         }
-
-        // Apply to FileModels
         for (var f in _currentFiles) {
-          final key = f.entity.path.toLowerCase().replaceAll('/', '\\');
-          if (attrMap.containsKey(key)) {
-            final attrs = attrMap[key]!;
-            f.setAttributes(
-              readOnly: attrs.contains('R'),
-              hidden: attrs.contains('H'),
-              system: attrs.contains('S'),
-              archive: attrs.contains('A'),
-            );
+          final np = p.canonicalize(f.entity.path);
+          if (attrMap.containsKey(np)) {
+            final a = attrMap[np]!; f.setAttributes(readOnly: a.contains('R'), hidden: a.contains('H'), system: a.contains('S'), archive: a.contains('A'));
           }
         }
       }
-    } catch (e) {
-      // Ignore attribute errors
-      print('Attrib Error: $e');
-    }
+    } catch (e) { if (kDebugMode) print('Attrib Error: $e'); }
   }
 
-  // Quick Access Directories
   static Future<List<Directory>> getQuickAccessDirectories() async {
-    List<Directory> quickAccess = [];
-
-    if (kIsWeb) {
-      return quickAccess; // Web has no local filesystem access
-    }
-
-    String? home;
-    if (!kIsWeb && Platform.isWindows) {
-      home = Platform.environment['USERPROFILE'];
-    } else if (!kIsWeb) {
-      home = Platform.environment['HOME'];
-    }
-
+    List<Directory> qa = []; if (kIsWeb) return qa;
+    String? home = Platform.isWindows ? Platform.environment['USERPROFILE'] : Platform.environment['HOME'];
     if (home != null) {
-      final homeDir = Directory(home);
-      if (await homeDir.exists()) {
-        quickAccess.add(homeDir); // Home
-
-        // Common folders
-        final folders = [
-          'Desktop',
-          'Downloads',
-          'Documents',
-          'Pictures',
-          'Music',
-          'Videos',
-        ];
-        for (var folder in folders) {
-          final dir = Directory(p.join(home, folder));
-          if (await dir.exists()) {
-            quickAccess.add(dir);
-          }
+      final hd = Directory(home); if (await hd.exists()) {
+        qa.add(hd);
+        for (var f in ['Desktop', 'Downloads', 'Documents', 'Pictures', 'Music', 'Videos']) {
+          final d = Directory(p.join(home, f)); if (await d.exists()) qa.add(d);
         }
-
-        // OneDrive Check
-        final oneDrive = Directory(p.join(home, 'OneDrive'));
-        if (await oneDrive.exists()) {
-          quickAccess.add(oneDrive);
-        }
+        final od = Directory(p.join(home, 'OneDrive')); if (await od.exists()) qa.add(od);
       }
     }
-    return quickAccess;
+    return qa;
   }
 
   Future<int> deleteSelectedFiles() async {
-    final targets = _currentFiles.where((f) => f.isSelected).toList();
-    if (targets.isEmpty) return 0;
-
-    int count = 0;
-    _isLoading = true;
-    notifyListeners();
-
-    for (var f in targets) {
+    final t = _currentFiles.where((f) => f.isSelected).toList(); if (t.isEmpty) return 0;
+    int count = 0; _isLoading = true; notifyListeners();
+    for (var f in t) {
       try {
         if (!kIsWeb && Platform.isWindows) {
-          // Use PowerShell to move to Recycle Bin
-          final isDir = f.entity is Directory;
-          final pathStr = f.entity.path
-              .replaceAll("'", "''"); // Escape single quotes for PowerShell
-
-          final script = '''
-Add-Type -AssemblyName Microsoft.VisualBasic
-[Microsoft.VisualBasic.FileIO.FileSystem]::Delete${isDir ? 'Directory' : 'File'}('$pathStr', 'OnlyErrorDialogs', 'SendToRecycleBin')
-''';
-          final result = await Process.run('powershell', ['-Command', script]);
-          if (result.exitCode == 0) {
-            count++;
-          } else {
-            if (kDebugMode) {
-              print('Recycle Bin error for ${f.entity.path}: ${result.stderr}');
-            }
-          }
-        } else {
-          // Fallback for non-Windows (direct delete as recycle bin is OS-specific)
-          await f.entity.delete(recursive: true);
-          count++;
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print('Delete error: $e');
-        }
-      }
+          final isDir = f.entity is Directory; final ps = f.entity.path.replaceAll("'", "''");
+          final script = "Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::Delete${isDir ? 'Directory' : 'File'}('$ps', 'OnlyErrorDialogs', 'SendToRecycleBin')";
+          final res = await Process.run('powershell', ['-Command', script]);
+          if (res.exitCode == 0) count++;
+        } else { await f.entity.delete(recursive: true); count++; }
+      } catch (e) { if (kDebugMode) print('Delete error: $e'); }
     }
-
-    if (count > 0 && _currentDirectory != null) {
-      _treeVersion++;
-      setDirectory(_currentDirectory!);
-    } else {
-      _isLoading = false;
-      notifyListeners();
-    }
+    if (count > 0 && _currentDirectory != null) { _treeVersion++; await setDirectory(_currentDirectory!); } else { _isLoading = false; notifyListeners(); }
     return count;
   }
 
-  // Validation State Getter
   bool get hasInvalidFilenames => _hasValidationError;
-
-  // Helper to list Windows drives (Physical Drives)
   static Future<List<Directory>> getLogicalDrives() async {
-    List<Directory> drives = [];
-
-    if (kIsWeb) {
-      // Return empty, or mock root for Web? Web doesn't have drives.
-      return drives;
-    }
-
-    if (!kIsWeb && Platform.isWindows) {
-      for (var code = 'A'.codeUnitAt(0); code <= 'Z'.codeUnitAt(0); code++) {
-        final driveLetter = String.fromCharCode(code);
-        final dir = Directory('$driveLetter:\\\\');
-        if (await dir.exists()) {
-          drives.add(dir);
-        }
+    List<Directory> ds = []; if (kIsWeb) return ds;
+    if (Platform.isWindows) {
+      for (var c = 'A'.codeUnitAt(0); c <= 'Z'.codeUnitAt(0); c++) {
+        final d = Directory('${String.fromCharCode(c)}:\\\\'); if (await d.exists()) ds.add(d);
       }
-    } else {
-      drives.add(Directory('/'));
-    }
-    return drives;
+    } else ds.add(Directory('/'));
+    return ds;
   }
 
-  // Terminology Getter
   String get termFolder {
     switch (_validationType) {
-      case ValidationType.windows:
-      case ValidationType.mac:
-      case ValidationType.ios:
-        return 'フォルダ';
-      case ValidationType.linux:
-      case ValidationType.android:
-        return 'ディレクトリ';
-      case ValidationType.auto:
-        if (!kIsWeb &&
-            (Platform.isWindows || Platform.isMacOS || Platform.isIOS)) {
-          return 'フォルダ';
-        } else {
-          return 'ディレクトリ';
-        }
+      case ValidationType.windows: case ValidationType.mac: case ValidationType.ios: return 'フォルダ';
+      case ValidationType.linux: case ValidationType.android: return 'ディレクトリ';
+      default: return (Platform.isWindows || Platform.isMacOS || Platform.isIOS) ? 'フォルダ' : 'ディレクトリ';
     }
   }
 
   void clearInputHistory() {
-    _findHistory.clear();
-    _replaceHistory.clear();
-    _appendHistory.clear();
-    _extensionHistory.clear();
-    _deleteFromHistory.clear();
-    _deleteToHistory.clear();
-    _saveState();
-    notifyListeners();
+    _findHistory.clear(); _replaceHistory.clear(); _appendHistory.clear(); _extensionHistory.clear(); _deleteFromHistory.clear(); _deleteToHistory.clear();
+    _saveState(); notifyListeners();
   }
-
-  // --- Localization Integration ---
 
   Locale get currentLocale {
     switch (_menuLabelType) {
-      case MenuLabelType.standard:
-        return const Locale('ja');
-      case MenuLabelType.namery:
-        return const Locale('ja', 'NM');
-      case MenuLabelType.english:
-        return const Locale('en');
-      case MenuLabelType.chinese:
-        return const Locale('zh');
-      case MenuLabelType.spanish:
-        return const Locale('es');
+      case MenuLabelType.standard: return const Locale('ja');
+      case MenuLabelType.namery: return const Locale('ja', 'NM');
+      case MenuLabelType.english: return const Locale('en');
+      case MenuLabelType.chinese: return const Locale('zh');
+      case MenuLabelType.spanish: return const Locale('es');
     }
   }
 }
 
-enum InitialDirectoryMode {
-  lastUsed,
-  fixed,
-}
+enum InitialDirectoryMode { lastUsed, fixed }

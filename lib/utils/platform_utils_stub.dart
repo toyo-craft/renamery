@@ -55,3 +55,7 @@ Widget _buildPropertyRow(String label, String value) {
 void showPropertiesDialogImpl(BuildContext context, FileModel fileModel) {
   showCustomPropertiesDialog(context, fileModel);
 }
+
+void openFileImpl(String path) {
+  // Fallback
+}

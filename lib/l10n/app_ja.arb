@@ -92,8 +92,8 @@
   "labelReplaceTo": "に置換",
   "labelFullPath": "現在の場所 > ",
   "labelSelectAll": "すべて選択",
-  "labelSettingsFilterTitle": "表示設定 (フィルタ)",
-  "labelFilterAll": "全てのファイル",
+  "labelDeselectAll": "選択解除",
+  "labelSettingsFilterTitle": "表示設定 (フィルタ)",  "labelFilterAll": "全てのファイル",
   "labelFilterSpecific": "指定",
   "labelFilterHideSystem": "システムファイルを非表示",
   "labelFilterRecursive": "下位フォルダ検索",
@@ -282,5 +282,9 @@
   "labelSettingsDisableRecursive": "下位フォルダ検索を無効",
   "labelSettingsRecursive": "下位フォルダ",
   "labelDialogTrashTitle": "項目の削除",
-  "labelDialogTrashMessage": "選択したファイルをゴミ箱に移動しますか？"
+  "labelDialogTrashMessage": "選択したファイルをゴミ箱に移動しますか？",
+  "labelCtxPasteItems": "項目を貼り付け",
+  "labelCtxCopyItems": "コピー",
+  "labelCtxCutItems": "切り取り",
+  "labelCtxCreateFolder": "新しいフォルダーの作成"
 }

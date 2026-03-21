@@ -103,8 +103,8 @@
   "labelReplaceTo": "With",
   "labelFullPath": "Location > ",
   "labelSelectAll": "Select All",
-  "labelSettingsFilterTitle": "Filter Settings",
-  "labelFilterAll": "All Files",
+  "labelDeselectAll": "Deselect All",
+  "labelSettingsFilterTitle": "Filter Settings",  "labelFilterAll": "All Files",
   "labelFilterSpecific": "Specific",
   "labelFilterHideSystem": "Hide System Files",
   "labelFilterRecursive": "Recursive Search",
@@ -281,5 +281,9 @@
   "labelSettingsDisableRecursive": "Disable Subfolders",
   "labelSettingsRecursive": "Subfolders",
   "labelDialogTrashTitle": "Delete Items",
-  "labelDialogTrashMessage": "Move the selected files to the recycle bin?"
+  "labelDialogTrashMessage": "Move the selected files to the recycle bin?",
+  "labelCtxPasteItems": "Paste items",
+  "labelCtxCopyItems": "Copy",
+  "labelCtxCutItems": "Cut",
+  "labelCtxCreateFolder": "Create new folder"
 }

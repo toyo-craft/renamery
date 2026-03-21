@@ -10,4 +10,8 @@ abstract class PlatformUtils {
   static void showPropertiesDialog(BuildContext context, FileModel fileModel) {
     showPropertiesDialogImpl(context, fileModel);
   }
+
+  static void openFile(String path) {
+    openFileImpl(path);
+  }
 }

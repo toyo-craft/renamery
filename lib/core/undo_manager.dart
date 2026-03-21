@@ -1,14 +1,20 @@
 import 'dart:io';
-
 import 'package:path/path.dart' as p;
 
+enum UndoType {
+  rename,
+  copy,
+  create,
+  delete,
+}
+
 class UndoAction {
+  final UndoType type;
   final String originalPath;
   final String newPath;
 
-  UndoAction(this.originalPath, this.newPath);
+  UndoAction(this.originalPath, this.newPath, {this.type = UndoType.rename});
 
-  // Compatibility Aliases for HomeScreen (if it uses oldPath/newPath)
   String get oldPath => originalPath;
 }
 
@@ -36,17 +42,35 @@ class UndoManager {
     int successCount = 0;
     List<String> errors = [];
 
-    // Reverse order for safety
     for (var action in lastTransaction.reversed) {
       try {
-        if (await File(action.newPath).exists()) {
-          await File(action.newPath).rename(action.originalPath);
-          successCount++;
-        } else if (await Directory(action.newPath).exists()) {
-          await Directory(action.newPath).rename(action.originalPath);
-          successCount++;
-        } else {
-          errors.add('${p.basename(action.newPath)}: File/Directory not found');
+        switch (action.type) {
+          case UndoType.rename:
+            if (await File(action.newPath).exists()) {
+              await File(action.newPath).rename(action.originalPath);
+              successCount++;
+            } else if (await Directory(action.newPath).exists()) {
+              await Directory(action.newPath).rename(action.originalPath);
+              successCount++;
+            } else {
+              errors.add('${p.basename(action.newPath)}: Not found');
+            }
+            break;
+          case UndoType.copy:
+          case UndoType.create:
+            // Undo copy or create by deleting the new item
+            if (await File(action.newPath).exists()) {
+              await File(action.newPath).delete();
+              successCount++;
+            } else if (await Directory(action.newPath).exists()) {
+              await Directory(action.newPath).delete(recursive: true);
+              successCount++;
+            }
+            break;
+          case UndoType.delete:
+            // Restoration of deleted files is not implemented yet
+            errors.add('Undo delete not supported');
+            break;
         }
       } catch (e) {
         errors.add('${p.basename(action.newPath)}: $e');
