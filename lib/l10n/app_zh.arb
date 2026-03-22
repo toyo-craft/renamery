@@ -301,5 +301,36 @@
         "type": "int"
       }
     }
+  },
+  "labelPreviewSelectedCount": "已选择 {count} 个文件",
+  "@labelPreviewSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelPreviewImageLoadFailed": "加载图片失败",
+  "labelPreviewUnavailable": "无法预览",
+  "labelPreviewOmitted": "... (已省略：共 {size} KB)",
+  "@labelPreviewOmitted": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "labelPreviewBinaryError": "无法预览：二进制或未知编码",
+  "labelMsgCopyRelativePathsSuccess": "已复制 {count} 条相对路径",
+  "@labelMsgCopyRelativePathsSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelMsgCopyFullPathsSuccess": "已复制 {count} 条完整路径",
+  "@labelMsgCopyFullPathsSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
   }
 }

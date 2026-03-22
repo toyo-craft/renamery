@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import '../../core/directory_provider.dart';
 import '../../core/file_model.dart';
+import '../../core/rename_engine.dart';
 import '../../utils/platform_utils.dart';
 
 class FileListPanel extends StatefulWidget {
@@ -64,7 +65,6 @@ class _FileListPanelState extends State<FileListPanel> {
   bool _handleGlobalKey(KeyEvent event) {
     if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
       final provider = context.read<DirectoryProvider>();
-      debugPrint('Global ESC Detected. DragIdx: $_draggingIndex, Renaming: ${_editingFilePath != null}, Selected: ${provider.currentFiles.any((f) => f.isSelected)}');
 
       // 1. ドラッグ移動のキャンセル
       if (_draggingIndex != null) {
@@ -164,11 +164,43 @@ class _FileListPanelState extends State<FileListPanel> {
     );
   }
 
-  TextSpan _buildDiffTextSpan(BuildContext context, String oldText, String newText, bool hasError, {TextStyle? style}) {
+  TextSpan _buildDiffTextSpan(BuildContext context, String oldText, String newText, bool hasError, {TextStyle? style, RenameMode? mode, int? startNumber, int? digits}) {
     final baseTextStyle = (style ?? const TextStyle()).copyWith(fontSize: 12, color: hasError ? Theme.of(context).colorScheme.error : style?.color ?? Theme.of(context).colorScheme.onSurface);
     if (oldText == newText || hasError) {
       return TextSpan(text: newText, style: baseTextStyle);
     }
+
+    // 特定の削除モードにおける確定的ハイライト処理
+    if (mode == RenameMode.deleteStart || mode == RenameMode.deleteEnd || mode == RenameMode.deleteFrom) {
+      int delStart = 0;
+      int delCount = digits ?? 0;
+      
+      if (mode == RenameMode.deleteStart) {
+        delStart = 0;
+      } else if (mode == RenameMode.deleteEnd) {
+        delStart = oldText.length - delCount;
+      } else if (mode == RenameMode.deleteFrom) {
+        delStart = (startNumber ?? 1) - 1;
+      }
+
+      delStart = delStart.clamp(0, oldText.length);
+      int delEnd = (delStart + delCount).clamp(0, oldText.length);
+      
+      final prefix = oldText.substring(0, delStart);
+      final deleted = oldText.substring(delStart, delEnd);
+      final suffix = oldText.substring(delEnd);
+
+      return TextSpan(
+        style: baseTextStyle,
+        children: [
+          if (prefix.isNotEmpty) TextSpan(text: prefix, style: TextStyle(color: style?.color ?? Theme.of(context).colorScheme.onSurface)),
+          if (deleted.isNotEmpty) TextSpan(text: deleted, style: TextStyle(color: Colors.red.withValues(alpha: 0.7), decoration: TextDecoration.lineThrough)),
+          if (suffix.isNotEmpty) TextSpan(text: suffix, style: TextStyle(color: style?.color ?? Theme.of(context).colorScheme.onSurface)),
+        ],
+      );
+    }
+
+    // その他のモードは従来の差分アルゴリズムを使用
     int prefixLen = 0;
     while (prefixLen < oldText.length && prefixLen < newText.length && oldText[prefixLen] == newText[prefixLen]) prefixLen++;
     int suffixLen = 0;
@@ -720,7 +752,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                                   ),
                                                                           ),
                                                                           SizedBox(width: _widthSpace + 16),
-                                                                          SizedBox(width: _colWidthNew, child: Row(children: [Expanded(child: RichText(text: _buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.error_outline, color: Colors.red, size: 16)))] )),
+                                                                          SizedBox(width: _colWidthNew, child: Row(children: [Expanded(child: RichText(text: _buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.error_outline, color: Colors.red, size: 16)))] )),
                                                                           SizedBox(width: _widthSpace + 16),
                                                                           _buildCell(file.size, _colWidthSize, style: baseStyle),
                                                                           SizedBox(width: _widthSpace + 16),

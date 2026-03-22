@@ -518,18 +518,18 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get labelPreviewImageLoadFailed => '图像加载失败';
+  String get labelPreviewImageLoadFailed => '加载图片失败';
 
   @override
-  String get labelPreviewUnavailable => '预览不可用';
+  String get labelPreviewUnavailable => '无法预览';
 
   @override
   String labelPreviewOmitted(String size) {
-    return '... (略去: 总共 $size KB)';
+    return '... (已省略：共 $size KB)';
   }
 
   @override
-  String get labelPreviewBinaryError => '预览不可用: 二进制或未知编码';
+  String get labelPreviewBinaryError => '无法预览：二进制或未知编码';
 
   @override
   String get labelGoRenamery => '执行重命名';
@@ -638,13 +638,23 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String labelMsgCopyFilesSuccess(int count) {
+    return '已复制 $count 个文件';
+  }
+
+  @override
+  String labelMsgCutFilesSuccess(int count) {
+    return '已剪切 $count 个文件';
+  }
+
+  @override
   String labelMsgCopyRelativePathsSuccess(int count) {
-    return '复制了 $count 个相对路径';
+    return '已复制 $count 条相对路径';
   }
 
   @override
   String labelMsgCopyFullPathsSuccess(int count) {
-    return '复制了 $count 个完整路径';
+    return '已复制 $count 条完整路径';
   }
 
   @override
@@ -693,14 +703,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelDialogTrashMessage => '将选定文件移至回收站？';
 
   @override
-  String get labelCtxPasteItems => '項目を貼り付け';
+  String get labelCtxPasteItems => '粘贴项目';
 
   @override
-  String get labelCtxCopyItems => 'コピー';
+  String get labelCtxCopyItems => '复制';
 
   @override
-  String get labelCtxCutItems => '切り取り';
+  String get labelCtxCutItems => '剪切';
 
   @override
-  String get labelCtxCreateFolder => '新しいフォルダーの作成';
+  String get labelCtxCreateFolder => '新建文件夹';
 }

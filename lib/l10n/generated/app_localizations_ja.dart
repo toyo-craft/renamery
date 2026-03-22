@@ -640,6 +640,16 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String labelMsgCopyFilesSuccess(int count) {
+    return '$count 件のファイルをコピーしました';
+  }
+
+  @override
+  String labelMsgCutFilesSuccess(int count) {
+    return '$count 件のファイルを切り取りました';
+  }
+
+  @override
   String labelMsgCopyRelativePathsSuccess(int count) {
     return '$count 件のファイルパス(相対)をコピーしました';
   }

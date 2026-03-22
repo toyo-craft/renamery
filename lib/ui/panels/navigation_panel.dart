@@ -6,6 +6,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:path/path.dart' as p;
 import '../../core/directory_provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import '../widgets/preview_window.dart';
 
 class NavigationPanel extends StatefulWidget {
   const NavigationPanel({super.key});
@@ -143,7 +144,12 @@ class _NavigationPanelState extends State<NavigationPanel> {
             children: [
               SizedBox(
                 height: 150,
-                child: _buildPreviewContent(provider, l10n),
+                child: PreviewWindow(
+                  file: provider.currentFiles.where((f) => f.isSelected).length == 1
+                      ? provider.currentFiles.firstWhere((f) => f.isSelected)
+                      : null,
+                  selectedCount: provider.currentFiles.where((f) => f.isSelected).length,
+                ),
               ),
             ],
           ),
@@ -180,84 +186,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
     if (!path.contains(p.separator)) return Symbols.home; // Fallback
     return null; // Default folder
   }
-
-  Widget _buildPreviewContent(
-      DirectoryProvider provider, AppLocalizations l10n) {
-    final selected = provider.currentFiles.where((f) => f.isSelected).toList();
-
-    if (selected.isEmpty) {
-      return Center(
-          child: Text(l10n.labelPreviewNoSelection,
-              style: const TextStyle(color: Colors.grey)));
-    }
-
-    if (selected.length > 1) {
-      return Center(
-          child: Text(l10n.labelPreviewSelectedCount(selected.length),
-              style: const TextStyle(color: Colors.grey)));
-    }
-
-    final file = selected.first;
-    final path = file.entity.path;
-    final ext = path.split('.').last.toLowerCase();
-    final hasExt = path.contains('.');
-
-    if (hasExt &&
-        ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'ico'].contains(ext)) {
-      return Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: Image.file(
-          File(path),
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) =>
-              Center(child: Text(l10n.labelPreviewImageLoadFailed)),
-        ),
-      );
-    }
-
-    // Text Preview
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: FutureBuilder<String>(
-        future: _readTextPreview(File(path), l10n),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-                child: CircularProgressIndicator(strokeWidth: 2));
-          }
-          final text = snapshot.data ?? l10n.labelPreviewUnavailable;
-          return SingleChildScrollView(
-            child: SelectableText(
-              text,
-              style: const TextStyle(fontSize: 11, fontFamily: 'Consolas'),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Future<String> _readTextPreview(File file, AppLocalizations l10n) async {
-    try {
-      final len = await file.length();
-      const int limit = 50 * 1024; // 50KB
-
-      if (len > limit) {
-        final stream = file.openRead(0, limit);
-        final chunks = await stream.toList();
-        final bytes = chunks.expand((element) => element).toList();
-        String content = utf8.decode(bytes, allowMalformed: true);
-        final sizeStr = (len / 1024).toStringAsFixed(1);
-        return '$content\n\n${l10n.labelPreviewOmitted(sizeStr)}';
-      }
-      return await file.readAsString();
-    } catch (e) {
-      return l10n.labelPreviewBinaryError;
-    }
-  }
 }
-
-// A simple dialog to input a file type filter or clear it
 class _FilterTextDialog extends StatefulWidget {
   final String initialValue;
   final bool isSpecific;

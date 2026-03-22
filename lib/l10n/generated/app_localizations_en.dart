@@ -643,6 +643,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String labelMsgCopyFilesSuccess(int count) {
+    return 'Copied $count files';
+  }
+
+  @override
+  String labelMsgCutFilesSuccess(int count) {
+    return 'Cut $count files';
+  }
+
+  @override
   String labelMsgCopyRelativePathsSuccess(int count) {
     return 'Copied $count relative paths';
   }

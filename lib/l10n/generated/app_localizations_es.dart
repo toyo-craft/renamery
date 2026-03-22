@@ -522,19 +522,19 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get labelPreviewImageLoadFailed => 'Fallo al cargar imagen';
+  String get labelPreviewImageLoadFailed => 'Error al cargar la imagen';
 
   @override
   String get labelPreviewUnavailable => 'Vista previa no disponible';
 
   @override
   String labelPreviewOmitted(String size) {
-    return '... (omitido: total $size KB)';
+    return '... (Omitido: total $size KB)';
   }
 
   @override
   String get labelPreviewBinaryError =>
-      'Vista previa no disponible: Codificación binaria o desconocida';
+      'Vista previa no disponible: binario o codificación desconocida';
 
   @override
   String get labelGoRenamery => 'Ejecutar Renombrado';
@@ -645,6 +645,16 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String labelMsgCopyFilesSuccess(int count) {
+    return 'Copiados $count archivos';
+  }
+
+  @override
+  String labelMsgCutFilesSuccess(int count) {
+    return 'Cortados $count archivos';
+  }
+
+  @override
   String labelMsgCopyRelativePathsSuccess(int count) {
     return 'Copiadas $count rutas relativas';
   }
@@ -702,14 +712,14 @@ class AppLocalizationsEs extends AppLocalizations {
       '¿Mover los archivos seleccionados a la papelera de reciclaje?';
 
   @override
-  String get labelCtxPasteItems => '項目を貼り付け';
+  String get labelCtxPasteItems => 'Pegar elementos';
 
   @override
-  String get labelCtxCopyItems => 'コピー';
+  String get labelCtxCopyItems => 'Copiar';
 
   @override
-  String get labelCtxCutItems => '切り取り';
+  String get labelCtxCutItems => 'Cortar';
 
   @override
-  String get labelCtxCreateFolder => '新しいフォルダーの作成';
+  String get labelCtxCreateFolder => 'Crear nueva carpeta';
 }

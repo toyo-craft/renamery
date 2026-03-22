@@ -301,5 +301,36 @@
         "type": "int"
       }
     }
+  },
+  "labelPreviewSelectedCount": "{count} archivos seleccionados",
+  "@labelPreviewSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelPreviewImageLoadFailed": "Error al cargar la imagen",
+  "labelPreviewUnavailable": "Vista previa no disponible",
+  "labelPreviewOmitted": "... (Omitido: total {size} KB)",
+  "@labelPreviewOmitted": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "labelPreviewBinaryError": "Vista previa no disponible: binario o codificación desconocida",
+  "labelMsgCopyRelativePathsSuccess": "Copiadas {count} rutas relativas",
+  "@labelMsgCopyRelativePathsSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "labelMsgCopyFullPathsSuccess": "Copiadas {count} rutas completas",
+  "@labelMsgCopyFullPathsSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
   }
 }

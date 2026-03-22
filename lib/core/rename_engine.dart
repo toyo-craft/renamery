@@ -191,18 +191,22 @@ class RenameEngine {
           break;
         case RenameMode.deleteStart:
           int count = digits;
-          if (count > 0 && count <= newBaseName.length) {
-            newBaseName = newBaseName.substring(count);
-          } else if (count > newBaseName.length) {
-            newBaseName = '';
+          if (count > 0) {
+            if (count >= newBaseName.length) {
+              newBaseName = '';
+            } else {
+              newBaseName = newBaseName.substring(count);
+            }
           }
           break;
         case RenameMode.deleteEnd:
           int count = digits;
-          if (count > 0 && count <= newBaseName.length) {
-            newBaseName = newBaseName.substring(0, newBaseName.length - count);
-          } else if (count > newBaseName.length) {
-            newBaseName = '';
+          if (count > 0) {
+            if (count >= newBaseName.length) {
+              newBaseName = '';
+            } else {
+              newBaseName = newBaseName.substring(0, newBaseName.length - count);
+            }
           }
           break;
         case RenameMode.deleteFrom:

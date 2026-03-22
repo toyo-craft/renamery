@@ -1321,6 +1321,18 @@ abstract class AppLocalizations {
   /// **'{count} 件のファイル名をコピーしました'**
   String labelMsgCopyNamesSuccess(int count);
 
+  /// No description provided for @labelMsgCopyFilesSuccess.
+  ///
+  /// In ja, this message translates to:
+  /// **'{count} 件のファイルをコピーしました'**
+  String labelMsgCopyFilesSuccess(int count);
+
+  /// No description provided for @labelMsgCutFilesSuccess.
+  ///
+  /// In ja, this message translates to:
+  /// **'{count} 件のファイルを切り取りました'**
+  String labelMsgCutFilesSuccess(int count);
+
   /// No description provided for @labelMsgCopyRelativePathsSuccess.
   ///
   /// In ja, this message translates to:
