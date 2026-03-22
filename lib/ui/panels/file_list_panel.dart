@@ -31,6 +31,8 @@ class _FileListPanelState extends State<FileListPanel> {
   Offset? _dragUpdate;
   Timer? _scrollTimer;
   List<bool>? _initialSelectionStates;
+  int? _draggingIndex;
+  Key _reorderableListKey = UniqueKey();
 
   double _colWidthOriginal = 200.0;
   double _colWidthNew = 200.0;
@@ -54,10 +56,54 @@ class _FileListPanelState extends State<FileListPanel> {
         context.read<DirectoryProvider>().setInlineRenaming(false);
       }
     });
+
+    // グローバルキーハンドラを追加
+    HardwareKeyboard.instance.addHandler(_handleGlobalKey);
+  }
+
+  bool _handleGlobalKey(KeyEvent event) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+      final provider = context.read<DirectoryProvider>();
+      debugPrint('Global ESC Detected. DragIdx: $_draggingIndex, Renaming: ${_editingFilePath != null}, Selected: ${provider.currentFiles.any((f) => f.isSelected)}');
+
+      // 1. ドラッグ移動のキャンセル
+      if (_draggingIndex != null) {
+        setState(() {
+          _draggingIndex = null;
+          _reorderableListKey = UniqueKey();
+        });
+        return true;
+      }
+
+      // 2. インラインリネームのキャンセル
+      if (_editingFilePath != null) {
+        setState(() { _editingFilePath = null; });
+        provider.setInlineRenaming(false);
+        return true;
+      }
+
+      // 3. ラバーバンド選択（矩形表示）のキャンセル
+      if (_dragStart != null) {
+        setState(() {
+          _dragStart = null;
+          _dragUpdate = null;
+          _initialSelectionStates = null;
+        });
+        return true;
+      }
+
+      // 4. 全選択解除
+      if (provider.currentFiles.any((f) => f.isSelected)) {
+        provider.selectAll(false);
+        return true;
+      }
+    }
+    return false;
   }
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleGlobalKey);
     _horizontalController.dispose();
     _verticalController.dispose();
     _pathController.dispose();
@@ -259,6 +305,7 @@ class _FileListPanelState extends State<FileListPanel> {
               canRequestFocus: true,
               onKeyEvent: (node, event) {
                 if (event is KeyDownEvent) {
+                  debugPrint('Key Event: ${event.logicalKey}');
                   if (event.logicalKey == LogicalKeyboardKey.f2) {
                     final selectedFile = provider.currentFiles.where((f) => f.isSelected).firstOrNull;
                     if (selectedFile != null) {
@@ -269,7 +316,33 @@ class _FileListPanelState extends State<FileListPanel> {
                     }
                   }
                   if (event.logicalKey == LogicalKeyboardKey.escape) {
-                    if (_editingFilePath != null) { setState(() { _editingFilePath = null; }); provider.setInlineRenaming(false); return KeyEventResult.handled; }
+                    debugPrint('ESC Pressed. Dragging: ${_draggingIndex != null}');
+                    if (_draggingIndex != null) {
+                      setState(() {
+                        _draggingIndex = null;
+                        _reorderableListKey = UniqueKey();
+                      });
+                      return KeyEventResult.handled;
+                    }
+                    if (_editingFilePath != null) {
+                      setState(() { _editingFilePath = null; });
+                      provider.setInlineRenaming(false);
+                      return KeyEventResult.handled;
+                    }
+                    if (_dragStart != null) {
+                      setState(() {
+                        _dragStart = null;
+                        _dragUpdate = null;
+                        _initialSelectionStates = null;
+                      });
+                      return KeyEventResult.handled;
+                    }
+                    
+                    // 何もアクティブでない場合、全選択解除を実行
+                    if (provider.currentFiles.any((f) => f.isSelected)) {
+                      provider.selectAll(false);
+                      return KeyEventResult.handled;
+                    }
                   }
                   if (event.logicalKey == LogicalKeyboardKey.f5) { provider.refresh(); return KeyEventResult.handled; }
                 }
@@ -394,6 +467,16 @@ class _FileListPanelState extends State<FileListPanel> {
                                               }
                                             },
                                             onPointerMove: (event) {
+                                              // ドラッグ中に ESC キーが押されたかチェック
+                                              if (_draggingIndex != null && HardwareKeyboard.instance.isLogicalKeyPressed(LogicalKeyboardKey.escape)) {
+                                                setState(() {
+                                                  _draggingIndex = null;
+                                                  _reorderableListKey = UniqueKey();
+                                                });
+                                                debugPrint('ESC detected during move. Drag cancelled.');
+                                                return;
+                                              }
+
                                               if (_dragStart != null) {
                                                 setState(() {
                                                   _dragUpdate = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
@@ -455,12 +538,15 @@ class _FileListPanelState extends State<FileListPanel> {
                                                         SizedBox(
                                                           height: files.length * 34.0,
                                                           child: ReorderableListView.builder(
+                                                            key: _reorderableListKey,
                                                             primary: false,
                                                             shrinkWrap: true,
                                                             padding: EdgeInsets.zero,
                                                             buildDefaultDragHandles: false,
                                                             itemCount: files.length,
                                                             onReorder: (oldIdx, newIdx) => provider.reorderFiles(oldIdx, newIdx),
+                                                            onReorderStart: (index) => setState(() => _draggingIndex = index),
+                                                            onReorderEnd: (_) => setState(() => _draggingIndex = null),
                                                             proxyDecorator: (child, index, animation) {
                                                               return AnimatedBuilder(
                                                                 animation: animation,
@@ -555,74 +641,81 @@ class _FileListPanelState extends State<FileListPanel> {
                                                               final file = files[index];
                                                               final isDir = file.entity is Directory;
                                                               final isEditing = _editingFilePath == file.entity.path;
+                                                              
+                                                              // 現在移動中の他の選択項目をゴースト化（半透明）
+                                                              final isGhost = _draggingIndex != null && file.isSelected && index != _draggingIndex;
+
                                                               return GestureDetector(
                                                                 key: ValueKey(file.entity.path),
                                                                 behavior: HitTestBehavior.opaque,
                                                                 onSecondaryTapDown: (details) => _showRowContextMenu(context, details, file, provider, l10n),
-                                                                child: InkWell(
-                                                                  onTap: () => provider.toggleSelection(file),
-                                                                  child: Container(
-                                                                    height: 32,
-                                                                    margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
-                                                                    decoration: BoxDecoration(
-                                                                      color: file.isSelected ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5) : (index % 2 == 0 ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.surfaceContainerLow),
-                                                                      borderRadius: BorderRadius.circular(8),
-                                                                      border: file.isSelected ? Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)) : null,
-                                                                    ),
-                                                                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-                                                                    child: Row(
-                                                                      children: [
-                                                                        SizedBox(width: _widthDragHandle, child: ReorderableDragStartListener(index: index, child: Icon(Icons.drag_indicator, size: 16, color: file.isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant))),
-                                                                        SizedBox(width: _widthCheckbox, child: Checkbox(value: file.isSelected, onChanged: (val) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
-                                                                        SizedBox(width: _widthSpace),
-                                                                        SizedBox(
-                                                                          width: _colWidthOriginal,
-                                                                          child: isEditing
-                                                                              ? TextField(
-                                                                                  controller: _renameController,
-                                                                                  focusNode: _renameFocusNode,
-                                                                                  autofocus: true,
-                                                                                  style: const TextStyle(fontSize: 12),
-                                                                                  decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()),
-                                                                                  onSubmitted: (val) {
-                                                                                    provider.renameOneFile(file, val);
-                                                                                    setState(() { _editingFilePath = null; });
-                                                                                    provider.setInlineRenaming(false);
-                                                                                  },
-                                                                                )
-                                                                              : Row(
-                                                                                  children: [
-                                                                                    GestureDetector(
-                                                                                      onDoubleTap: () { if (isDir) { provider.setDirectory(file.entity as Directory); } else { PlatformUtils.openFile(file.entity.path); } },
-                                                                                      child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: 18),
-                                                                                    ),
-                                                                                    const SizedBox(width: 8),
-                                                                                    Expanded(
-                                                                                      child: GestureDetector(
-                                                                                        onDoubleTap: () {
-                                                                                          setState(() { _editingFilePath = file.entity.path; _renameController.text = file.originalName; });
-                                                                                          provider.setInlineRenaming(true);
-                                                                                          WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
-                                                                                        },
-                                                                                        child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, fontWeight: file.isSelected ? FontWeight.w600 : FontWeight.normal)),
+                                                                child: Opacity(
+                                                                  opacity: isGhost ? 0.4 : 1.0,
+                                                                  child: InkWell(
+                                                                    onTap: () => provider.toggleSelection(file),
+                                                                    child: Container(
+                                                                      height: 32,
+                                                                      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
+                                                                      decoration: BoxDecoration(
+                                                                        color: file.isSelected ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5) : (index % 2 == 0 ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.surfaceContainerLow),
+                                                                        borderRadius: BorderRadius.circular(8),
+                                                                        border: file.isSelected ? Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)) : null,
+                                                                      ),
+                                                                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                                                                      child: Row(
+                                                                        children: [
+                                                                          SizedBox(width: _widthDragHandle, child: ReorderableDragStartListener(index: index, child: Icon(Icons.drag_indicator, size: 16, color: file.isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant))),
+                                                                          SizedBox(width: _widthCheckbox, child: Checkbox(value: file.isSelected, onChanged: (val) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
+                                                                          SizedBox(width: _widthSpace),
+                                                                          SizedBox(
+                                                                            width: _colWidthOriginal,
+                                                                            child: isEditing
+                                                                                ? TextField(
+                                                                                    controller: _renameController,
+                                                                                    focusNode: _renameFocusNode,
+                                                                                    autofocus: true,
+                                                                                    style: const TextStyle(fontSize: 12),
+                                                                                    decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()),
+                                                                                    onSubmitted: (val) {
+                                                                                      provider.renameOneFile(file, val);
+                                                                                      setState(() { _editingFilePath = null; });
+                                                                                      provider.setInlineRenaming(false);
+                                                                                    },
+                                                                                  )
+                                                                                : Row(
+                                                                                    children: [
+                                                                                      GestureDetector(
+                                                                                        onDoubleTap: () { if (isDir) { provider.setDirectory(file.entity as Directory); } else { PlatformUtils.openFile(file.entity.path); } },
+                                                                                        child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: 18),
                                                                                       ),
-                                                                                    ),
-                                                                                  ],
-                                                                                ),
-                                                                        ),
-                                                                        SizedBox(width: _widthSpace + 16),
-                                                                        SizedBox(width: _colWidthNew, child: Row(children: [Expanded(child: RichText(text: _buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.error_outline, color: Colors.red, size: 16)))] )),
-                                                                        SizedBox(width: _widthSpace + 16),
-                                                                        _buildCell(file.size, _colWidthSize),
-                                                                        SizedBox(width: _widthSpace + 16),
-                                                                        _buildCell(file.displayRelativePath, _colWidthPath, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                                                                        SizedBox(width: _widthSpace + 16),
-                                                                        _buildCell(file.fileType, _colWidthType),
-                                                                        SizedBox(width: _widthSpace + 16),
-                                                                        _buildCell(file.dateModified, _colWidthDate),
-                                                                        SizedBox(width: _widthSpace + 16),
-                                                                        _buildCell(file.attributes, _colWidthAttr, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                                                                      ],
+                                                                                      const SizedBox(width: 8),
+                                                                                      Expanded(
+                                                                                        child: GestureDetector(
+                                                                                          onDoubleTap: () {
+                                                                                            setState(() { _editingFilePath = file.entity.path; _renameController.text = file.originalName; });
+                                                                                            provider.setInlineRenaming(true);
+                                                                                            WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
+                                                                                          },
+                                                                                          child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, fontWeight: file.isSelected ? FontWeight.w600 : FontWeight.normal)),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ],
+                                                                                  ),
+                                                                          ),
+                                                                          SizedBox(width: _widthSpace + 16),
+                                                                          SizedBox(width: _colWidthNew, child: Row(children: [Expanded(child: RichText(text: _buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.error_outline, color: Colors.red, size: 16)))] )),
+                                                                          SizedBox(width: _widthSpace + 16),
+                                                                          _buildCell(file.size, _colWidthSize),
+                                                                          SizedBox(width: _widthSpace + 16),
+                                                                          _buildCell(file.displayRelativePath, _colWidthPath, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                                          SizedBox(width: _widthSpace + 16),
+                                                                          _buildCell(file.fileType, _colWidthType),
+                                                                          SizedBox(width: _widthSpace + 16),
+                                                                          _buildCell(file.dateModified, _colWidthDate),
+                                                                          SizedBox(width: _widthSpace + 16),
+                                                                          _buildCell(file.attributes, _colWidthAttr, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                                        ],
+                                                                      ),
                                                                     ),
                                                                   ),
                                                                 ),
