@@ -546,6 +546,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelTermFile => 'Archivo';
 
   @override
+  String get labelTypeImage => 'Imagen';
+
+  @override
+  String get labelTypePDF => 'PDF';
+
+  @override
+  String get labelTypeVideo => 'Vídeo';
+
+  @override
+  String get labelTypeAudio => 'Audio';
+
+  @override
+  String get labelTypeDocument => 'Doc';
+
+  @override
+  String get labelTypeExecutable => 'App';
+
+  @override
+  String get labelTypeArchive => 'Archivo';
+
+  @override
+  String get labelTypeOther => 'Otro';
+
+  @override
   String get labelSettingsOSMac => 'Mac (compatible con Finder)';
 
   @override

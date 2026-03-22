@@ -543,6 +543,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelTermFile => 'ファイル';
 
   @override
+  String get labelTypeImage => '画像';
+
+  @override
+  String get labelTypePDF => 'PDF';
+
+  @override
+  String get labelTypeVideo => '動画';
+
+  @override
+  String get labelTypeAudio => '音楽';
+
+  @override
+  String get labelTypeDocument => '文書';
+
+  @override
+  String get labelTypeExecutable => 'アプリ';
+
+  @override
+  String get labelTypeArchive => '圧縮';
+
+  @override
+  String get labelTypeOther => 'その他';
+
+  @override
   String get labelSettingsOSMac => 'Mac (Finder互換)';
 
   @override

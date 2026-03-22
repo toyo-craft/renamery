@@ -148,7 +148,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   file: provider.currentFiles.where((f) => f.isSelected).length == 1
                       ? provider.currentFiles.firstWhere((f) => f.isSelected)
                       : null,
-                  selectedCount: provider.currentFiles.where((f) => f.isSelected).length,
+                  selectedFiles: provider.currentFiles.where((f) => f.isSelected).toList(),
                 ),
               ),
             ],

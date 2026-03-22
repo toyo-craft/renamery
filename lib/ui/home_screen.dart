@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:path/path.dart' as p;
 
 import '../../core/directory_provider.dart';
+import '../../core/file_model.dart';
 import '../../core/settings_service.dart';
 import 'panels/navigation_panel.dart';
 import 'panels/file_list_panel.dart';
@@ -119,6 +121,52 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         _threePaneController.areas.map((a) => a.flex ?? 0.0).toList());
     s.set('splitWeights_2pane',
         _twoPaneController.areas.map((a) => a.flex ?? 0.0).toList());
+  }
+
+  String _getSelectionDetails(List<FileModel> selected, AppLocalizations l10n) {
+    if (selected.isEmpty) return '';
+    
+    int images = 0;
+    int pdfs = 0;
+    int videos = 0;
+    int audios = 0;
+    int docs = 0;
+    int archives = 0;
+    int exes = 0;
+    int others = 0;
+
+    for (final f in selected) {
+      final ext = p.extension(f.entity.path).toLowerCase();
+      if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.ico', '.svg'].contains(ext)) {
+        images++;
+      } else if (ext == '.pdf') {
+        pdfs++;
+      } else if (['.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv'].contains(ext)) {
+        videos++;
+      } else if (['.mp3', '.wav', '.m4a', '.flac', '.ogg'].contains(ext)) {
+        audios++;
+      } else if (['.docx', '.xlsx', '.pptx', '.txt', '.md', '.csv', '.html'].contains(ext)) {
+        docs++;
+      } else if (['.zip', '.7z', '.rar', '.tar', '.gz'].contains(ext)) {
+        archives++;
+      } else if (['.exe', '.msi', '.bat', '.sh'].contains(ext)) {
+        exes++;
+      } else {
+        others++;
+      }
+    }
+
+    final parts = <String>[];
+    if (images > 0) parts.add('${l10n.labelTypeImage} $images');
+    if (pdfs > 0) parts.add('${l10n.labelTypePDF} $pdfs');
+    if (videos > 0) parts.add('${l10n.labelTypeVideo} $videos');
+    if (audios > 0) parts.add('${l10n.labelTypeAudio} $audios');
+    if (docs > 0) parts.add('${l10n.labelTypeDocument} $docs');
+    if (archives > 0) parts.add('${l10n.labelTypeArchive} $archives');
+    if (exes > 0) parts.add('${l10n.labelTypeExecutable} $exes');
+    if (others > 0) parts.add('${l10n.labelTypeOther} $others');
+
+    return ' (${parts.join(", ")})';
   }
 
   @override
@@ -289,6 +337,11 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                       l10n.labelStatusDisplayCount(current, total, selected);
                 } else {
                   countText = l10n.labelStatusTotalCount(total, selected);
+                }
+                
+                // Add selection details (Image, PDF, etc.)
+                if (selected > 0) {
+                  countText += _getSelectionDetails(provider.currentFiles.where((f) => f.isSelected).toList(), l10n);
                 }
 
                 String statusText = provider.isLoading

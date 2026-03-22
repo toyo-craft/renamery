@@ -541,6 +541,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelTermFile => '文件';
 
   @override
+  String get labelTypeImage => '图像';
+
+  @override
+  String get labelTypePDF => 'PDF';
+
+  @override
+  String get labelTypeVideo => '视频';
+
+  @override
+  String get labelTypeAudio => '音频';
+
+  @override
+  String get labelTypeDocument => '文档';
+
+  @override
+  String get labelTypeExecutable => '应用';
+
+  @override
+  String get labelTypeArchive => '压缩';
+
+  @override
+  String get labelTypeOther => '其它';
+
+  @override
   String get labelSettingsOSMac => 'Mac (兼容 Finder)';
 
   @override

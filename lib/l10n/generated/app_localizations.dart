@@ -1159,6 +1159,54 @@ abstract class AppLocalizations {
   /// **'ファイル'**
   String get labelTermFile;
 
+  /// No description provided for @labelTypeImage.
+  ///
+  /// In ja, this message translates to:
+  /// **'画像'**
+  String get labelTypeImage;
+
+  /// No description provided for @labelTypePDF.
+  ///
+  /// In ja, this message translates to:
+  /// **'PDF'**
+  String get labelTypePDF;
+
+  /// No description provided for @labelTypeVideo.
+  ///
+  /// In ja, this message translates to:
+  /// **'動画'**
+  String get labelTypeVideo;
+
+  /// No description provided for @labelTypeAudio.
+  ///
+  /// In ja, this message translates to:
+  /// **'音楽'**
+  String get labelTypeAudio;
+
+  /// No description provided for @labelTypeDocument.
+  ///
+  /// In ja, this message translates to:
+  /// **'文書'**
+  String get labelTypeDocument;
+
+  /// No description provided for @labelTypeExecutable.
+  ///
+  /// In ja, this message translates to:
+  /// **'アプリ'**
+  String get labelTypeExecutable;
+
+  /// No description provided for @labelTypeArchive.
+  ///
+  /// In ja, this message translates to:
+  /// **'圧縮'**
+  String get labelTypeArchive;
+
+  /// No description provided for @labelTypeOther.
+  ///
+  /// In ja, this message translates to:
+  /// **'その他'**
+  String get labelTypeOther;
+
   /// No description provided for @labelSettingsOSMac.
   ///
   /// In ja, this message translates to:
