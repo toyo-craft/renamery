@@ -178,7 +178,35 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         // Ctrl + C : Copy
         if (isCtrl && logicalKey == LogicalKeyboardKey.keyC) {
           final provider = context.read<DirectoryProvider>();
-          CopyHelper.handleCopy(context, provider);
+          final count = provider.currentFiles.where((f) => f.isSelected).length;
+          if (count > 0) {
+            provider.copySelection();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.labelMsgCopyFilesSuccess(count))),
+            );
+          }
+          return KeyEventResult.handled;
+        }
+
+        // Ctrl + X : Cut
+        if (isCtrl && logicalKey == LogicalKeyboardKey.keyX) {
+          final provider = context.read<DirectoryProvider>();
+          final count = provider.currentFiles.where((f) => f.isSelected).length;
+          if (count > 0) {
+            provider.cutSelection();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.labelMsgCutFilesSuccess(count))),
+            );
+          }
+          return KeyEventResult.handled;
+        }
+
+        // Ctrl + V : Paste
+        if (isCtrl && logicalKey == LogicalKeyboardKey.keyV) {
+          final provider = context.read<DirectoryProvider>();
+          if (provider.canPaste) {
+            provider.pasteFromClipboard();
+          }
           return KeyEventResult.handled;
         }
 

@@ -97,6 +97,12 @@ class _FileListPanelState extends State<FileListPanel> {
         provider.selectAll(false);
         return true;
       }
+
+      // 5. 切り取り状態の解除
+      if (provider.isCutMode) {
+        provider.clearCutState();
+        return true;
+      }
     }
     return false;
   }
@@ -147,20 +153,21 @@ class _FileListPanelState extends State<FileListPanel> {
     );
   }
 
-  Widget _buildCell(String text, double width, {Color? color}) {
+  Widget _buildCell(String text, double width, {Color? color, TextStyle? style}) {
     return SizedBox(
       width: width,
       child: Text(
         text,
-        style: TextStyle(color: color ?? Theme.of(context).colorScheme.onSurface, fontSize: 12),
+        style: (style ?? const TextStyle()).copyWith(color: color ?? style?.color ?? Theme.of(context).colorScheme.onSurface, fontSize: 12),
         overflow: TextOverflow.ellipsis,
       ),
     );
   }
 
-  TextSpan _buildDiffTextSpan(BuildContext context, String oldText, String newText, bool hasError) {
+  TextSpan _buildDiffTextSpan(BuildContext context, String oldText, String newText, bool hasError, {TextStyle? style}) {
+    final baseTextStyle = (style ?? const TextStyle()).copyWith(fontSize: 12, color: hasError ? Theme.of(context).colorScheme.error : style?.color ?? Theme.of(context).colorScheme.onSurface);
     if (oldText == newText || hasError) {
-      return TextSpan(text: newText, style: TextStyle(fontSize: 12, color: hasError ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onSurface));
+      return TextSpan(text: newText, style: baseTextStyle);
     }
     int prefixLen = 0;
     while (prefixLen < oldText.length && prefixLen < newText.length && oldText[prefixLen] == newText[prefixLen]) prefixLen++;
@@ -171,12 +178,12 @@ class _FileListPanelState extends State<FileListPanel> {
     final added = newText.substring(prefixLen, newText.length - suffixLen);
     final suffix = oldText.substring(oldText.length - suffixLen);
     return TextSpan(
-      style: const TextStyle(fontSize: 12),
+      style: baseTextStyle,
       children: [
-        if (prefix.isNotEmpty) TextSpan(text: prefix, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        if (prefix.isNotEmpty) TextSpan(text: prefix, style: TextStyle(color: style?.color ?? Theme.of(context).colorScheme.onSurface)),
         if (deleted.isNotEmpty) TextSpan(text: deleted, style: TextStyle(color: Colors.red.withValues(alpha: 0.7), decoration: TextDecoration.lineThrough)),
         if (added.isNotEmpty) TextSpan(text: added, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-        if (suffix.isNotEmpty) TextSpan(text: suffix, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        if (suffix.isNotEmpty) TextSpan(text: suffix, style: TextStyle(color: style?.color ?? Theme.of(context).colorScheme.onSurface)),
       ],
     );
   }
@@ -644,13 +651,23 @@ class _FileListPanelState extends State<FileListPanel> {
                                                               
                                                               // 現在移動中の他の選択項目をゴースト化（半透明）
                                                               final isGhost = _draggingIndex != null && file.isSelected && index != _draggingIndex;
+                                                              
+                                                              // 不透明度の決定: ドラッグゴースト(0.3) > 切り取り状態(0.5) > 通常(1.0)
+                                                              final currentOpacity = isGhost ? 0.3 : (file.isCut ? 0.5 : 1.0);
+                                                              // 切り取り中のテキストスタイル
+                                                              final baseStyle = TextStyle(
+                                                                fontSize: 12, 
+                                                                fontWeight: file.isSelected ? FontWeight.w600 : FontWeight.normal,
+                                                                fontStyle: file.isCut ? FontStyle.italic : FontStyle.normal,
+                                                                color: file.isCut ? Theme.of(context).colorScheme.onSurfaceVariant : null,
+                                                              );
 
                                                               return GestureDetector(
                                                                 key: ValueKey(file.entity.path),
                                                                 behavior: HitTestBehavior.opaque,
                                                                 onSecondaryTapDown: (details) => _showRowContextMenu(context, details, file, provider, l10n),
                                                                 child: Opacity(
-                                                                  opacity: isGhost ? 0.4 : 1.0,
+                                                                  opacity: currentOpacity,
                                                                   child: InkWell(
                                                                     onTap: () => provider.toggleSelection(file),
                                                                     child: Container(
@@ -696,24 +713,24 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                                             provider.setInlineRenaming(true);
                                                                                             WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
                                                                                           },
-                                                                                          child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, fontWeight: file.isSelected ? FontWeight.w600 : FontWeight.normal)),
+                                                                                          child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle),
                                                                                         ),
                                                                                       ),
                                                                                     ],
                                                                                   ),
                                                                           ),
                                                                           SizedBox(width: _widthSpace + 16),
-                                                                          SizedBox(width: _colWidthNew, child: Row(children: [Expanded(child: RichText(text: _buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.error_outline, color: Colors.red, size: 16)))] )),
+                                                                          SizedBox(width: _colWidthNew, child: Row(children: [Expanded(child: RichText(text: _buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.error_outline, color: Colors.red, size: 16)))] )),
                                                                           SizedBox(width: _widthSpace + 16),
-                                                                          _buildCell(file.size, _colWidthSize),
+                                                                          _buildCell(file.size, _colWidthSize, style: baseStyle),
                                                                           SizedBox(width: _widthSpace + 16),
-                                                                          _buildCell(file.displayRelativePath, _colWidthPath, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                                          _buildCell(file.displayRelativePath, _colWidthPath, color: Theme.of(context).colorScheme.onSurfaceVariant, style: baseStyle),
                                                                           SizedBox(width: _widthSpace + 16),
-                                                                          _buildCell(file.fileType, _colWidthType),
+                                                                          _buildCell(file.fileType, _colWidthType, style: baseStyle),
                                                                           SizedBox(width: _widthSpace + 16),
-                                                                          _buildCell(file.dateModified, _colWidthDate),
+                                                                          _buildCell(file.dateModified, _colWidthDate, style: baseStyle),
                                                                           SizedBox(width: _widthSpace + 16),
-                                                                          _buildCell(file.attributes, _colWidthAttr, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                                          _buildCell(file.attributes, _colWidthAttr, color: Theme.of(context).colorScheme.onSurfaceVariant, style: baseStyle),
                                                                         ],
                                                                       ),
                                                                     ),

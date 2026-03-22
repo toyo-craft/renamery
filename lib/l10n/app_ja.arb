@@ -253,9 +253,28 @@
   "labelMsgCopyNamesSuccess": "{count} 件のファイル名をコピーしました",
   "@labelMsgCopyNamesSuccess": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
+  "labelMsgCopyFilesSuccess": "{count} 件のファイルをコピーしました",
+  "@labelMsgCopyFilesSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelMsgCutFilesSuccess": "{count} 件のファイルを切り取りました",
+  "@labelMsgCutFilesSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
   "labelMsgCopyRelativePathsSuccess": "{count} 件のファイルパス(相対)をコピーしました",
   "@labelMsgCopyRelativePathsSuccess": {
     "placeholders": {

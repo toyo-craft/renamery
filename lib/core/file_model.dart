@@ -19,6 +19,7 @@ class FileModel {
         _status = FileStatus.original;
 
   bool isSelected = false;
+  bool isCut = false;
 
   String get newName => _newName;
   FileStatus get status => _status;

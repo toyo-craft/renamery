@@ -25,6 +25,7 @@ class DirectoryProvider extends ChangeNotifier {
   bool _canPaste = false;
   bool get canPaste => _canPaste;
   bool _isCutMode = false;
+  final Set<String> _cutFilePaths = {};
   bool get isCutMode => _isCutMode;
 
   bool get isInlineRenaming => _isInlineRenaming;
@@ -285,6 +286,10 @@ class DirectoryProvider extends ChangeNotifier {
     final targets = _currentFiles.where((f) => f.isSelected).toList();
     if (targets.isEmpty) return;
     _isCutMode = false;
+    _cutFilePaths.clear();
+    // 現在のリストのフラグを即座にリセット
+    for (var f in _allFiles) { f.isCut = false; }
+    
     final cb = SystemClipboard.instance;
     if (cb != null) {
       final items = targets.map((f) {
@@ -295,12 +300,23 @@ class DirectoryProvider extends ChangeNotifier {
       await cb.write(items);
     }
     await checkClipboard();
+    notifyListeners();
   }
 
   Future<void> cutSelection() async {
     final targets = _currentFiles.where((f) => f.isSelected).toList();
     if (targets.isEmpty) return;
     _isCutMode = true;
+    _cutFilePaths.clear();
+    _cutFilePaths.addAll(targets.map((f) => f.entity.path));
+    
+    // 現在のリストのフラグを即座に更新
+    for (var f in _allFiles) {
+      f.isCut = _cutFilePaths.contains(f.entity.path);
+    }
+
+    debugPrint('--- Cut Selection ---');
+    debugPrint('Paths stored: ${_cutFilePaths.length}');
     final cb = SystemClipboard.instance;
     if (cb != null) {
       final items = targets.map((f) {
@@ -311,6 +327,14 @@ class DirectoryProvider extends ChangeNotifier {
       await cb.write(items);
     }
     await checkClipboard();
+    notifyListeners();
+  }
+
+  void clearCutState() {
+    _isCutMode = false;
+    _cutFilePaths.clear();
+    for (var f in _allFiles) { f.isCut = false; }
+    notifyListeners();
   }
 
   Future<void> pasteFromClipboard() async {
@@ -341,7 +365,7 @@ class DirectoryProvider extends ChangeNotifier {
       if (transaction.isNotEmpty) _undoManager.addTransaction(transaction);
       if (_isCutMode) {
         _isCutMode = false;
-        // Optionally clear clipboard or leave it (system default is often clear after move)
+        _cutFilePaths.clear();
       }
       await refresh();
     }
@@ -718,7 +742,12 @@ class DirectoryProvider extends ChangeNotifier {
     _currentDirectory = directory; _isLoading = true; _saveState(); await checkClipboard(); notifyListeners();
     try {
       final entities = await directory.list(recursive: _recursiveSearch).toList();
-      _allFiles = entities.map((e) => FileModel(entity: e)).toList();
+      _allFiles = entities.map((e) {
+        final f = FileModel(entity: e);
+        if (_cutFilePaths.contains(e.path)) f.isCut = true; // 切り取り状態を復元
+        return f;
+      }).toList();
+      debugPrint('Files loaded: ${_allFiles.length}. Cut items: ${_allFiles.where((f) => f.isCut).length}');
       if (_recursiveSearch) {
         for (var f in _allFiles) {
           try {

@@ -281,5 +281,25 @@
   "labelSettingsDisableRecursive": "Deshabilitar subcarpetas",
   "labelSettingsRecursive": "Subcarpetas",
   "labelDialogTrashTitle": "Eliminar elementos",
-  "labelDialogTrashMessage": "¿Mover los archivos seleccionados a la papelera de reciclaje?"
+  "labelDialogTrashMessage": "¿Mover los archivos seleccionados a la papelera de reciclaje?",
+  "labelCtxPasteItems": "Pegar elementos",
+  "labelCtxCopyItems": "Copiar",
+  "labelCtxCutItems": "Cortar",
+  "labelCtxCreateFolder": "Crear nueva carpeta",
+  "labelMsgCopyFilesSuccess": "Copiados {count} archivos",
+  "@labelMsgCopyFilesSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelMsgCutFilesSuccess": "Cortados {count} archivos",
+  "@labelMsgCutFilesSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -264,9 +264,28 @@
   "labelMsgCopyFullPathsSuccess": "Copied {count} full paths",
   "@labelMsgCopyFullPathsSuccess": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
+  "labelMsgCopyFilesSuccess": "Copied {count} files",
+  "@labelMsgCopyFilesSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelMsgCutFilesSuccess": "Cut {count} files",
+  "@labelMsgCutFilesSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
   "labelSettingsAboutTitle": "About",
   "labelAboutVersion": "Version",
   "labelAboutOriginal": "Original Idea",

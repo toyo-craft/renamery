@@ -281,5 +281,25 @@
   "labelSettingsDisableRecursive": "禁用子文件夹",
   "labelSettingsRecursive": "子文件夹",
   "labelDialogTrashTitle": "删除项目",
-  "labelDialogTrashMessage": "将选定文件移至回收站？"
+  "labelDialogTrashMessage": "将选定文件移至回收站？",
+  "labelCtxPasteItems": "粘贴项目",
+  "labelCtxCopyItems": "复制",
+  "labelCtxCutItems": "剪切",
+  "labelCtxCreateFolder": "新建文件夹",
+  "labelMsgCopyFilesSuccess": "已复制 {count} 个文件",
+  "@labelMsgCopyFilesSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelMsgCutFilesSuccess": "已剪切 {count} 个文件",
+  "@labelMsgCutFilesSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
