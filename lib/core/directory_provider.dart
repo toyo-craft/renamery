@@ -412,7 +412,11 @@ class DirectoryProvider extends ChangeNotifier {
     if (recursive != null) { if (_recursiveSearch != recursive) { _recursiveSearch = recursive; needRescan = true; } }
     if (preview != null) { _showPreview = preview; notifyListeners(); }
     if (showFolders != null) { _showFolders = showFolders; needRefilter = true; }
-    if (needRescan) { if (_currentDirectory != null) setDirectory(_currentDirectory!); } else if (needRefilter) _applyFilters();
+    if (needRescan) { 
+      if (_currentDirectory != null) setDirectory(_currentDirectory!); 
+    } else if (needRefilter) {
+      _applyFilters();
+    }
     _saveState();
   }
 

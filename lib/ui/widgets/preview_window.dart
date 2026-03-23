@@ -195,7 +195,30 @@ class _ThumbnailTile extends StatelessWidget {
         border: Border.all(color: Theme.of(context).dividerColor, width: 0.5),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Center(child: content),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Center(child: content),
+          // ファイル名オーバーレイ
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+              color: Colors.black.withValues(alpha: 0.5),
+              child: Center(
+                child: Text(
+                  file.originalName,
+                  style: const TextStyle(color: Colors.white, fontSize: 7, height: 1.1),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
