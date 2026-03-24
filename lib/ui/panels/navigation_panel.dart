@@ -363,10 +363,19 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    // 案2の実装: 初期化時に現在の選択バージョンを「処理済み」として記憶する
+    // これにより、一括折りたたみ後の再描画で勝手に展開されるのを防ぐ
+    final provider = context.read<DirectoryProvider>();
+    _lastHandledSelectionVersion = provider.selectionVersion;
+    _lastHandledSelectionPath = provider.currentDirectory?.path;
+  }
+
   // State to track the last selection path we handled for auto-expansion.
-  // This prevents re-expanding a node if the user manually collapses it while the selection is still inside.
   String? _lastHandledSelectionPath;
-  int _lastHandledSelectionVersion = -1; // 追加：最後に処理した選択バージョン
+  int _lastHandledSelectionVersion = -1;
   int _lastTreeVersion = -1;
   int _lastResetTick = -1;
 

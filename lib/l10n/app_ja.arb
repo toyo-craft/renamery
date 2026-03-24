@@ -313,5 +313,8 @@
   "labelCtxPasteItems": "項目を貼り付け",
   "labelCtxCopyItems": "コピー",
   "labelCtxCutItems": "切り取り",
-  "labelCtxCreateFolder": "新しいフォルダーの作成"
+  "labelCtxCreateFolder": "新しいフォルダーの作成",
+  "labelFilterOptions": "フィルターオプション",
+  "labelDialogClose": "閉じる",
+  "labelSearchHint": "ファイル名で検索..."
 }

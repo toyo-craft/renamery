@@ -740,6 +740,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get labelCtxCreateFolder => '新しいフォルダーの作成';
+
+  @override
+  String get labelFilterOptions => 'フィルターオプション';
+
+  @override
+  String get labelDialogClose => '閉じる';
+
+  @override
+  String get labelSearchHint => 'ファイル名で検索...';
 }
 
 /// The translations for Japanese (`ja_NM`).
@@ -747,52 +756,52 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   AppLocalizationsJaNm() : super('ja_NM');
 
   @override
-  String get labelMainTab => 'Main';
+  String get labelMainTab => '基本';
 
   @override
-  String get labelSubTab => 'Sub';
+  String get labelSubTab => '拡張';
 
   @override
-  String get labelExtraTab => 'Extra';
+  String get labelExtraTab => '高度';
 
   @override
-  String get labelEtcTab => 'etc...';
+  String get labelEtcTab => '属性';
 
   @override
-  String get labelCategoryAdd => 'テキストの追加';
+  String get labelCategoryAdd => '追加';
 
   @override
-  String get labelCategoryRemove => 'テキストの削除';
+  String get labelCategoryRemove => '削除';
 
   @override
-  String get labelCategoryReplace => '置換と変換';
+  String get labelCategoryReplace => '置換/変換';
 
   @override
-  String get labelCategoryNumbering => '連番 (ナンバリング)';
+  String get labelCategoryNumbering => '連番';
 
   @override
   String get labelCategoryExtension => '拡張子';
 
   @override
-  String get labelCategoryAdvanced => '高度な操作';
+  String get labelCategoryAdvanced => '高度';
 
   @override
   String get labelStringInput => '文字列';
 
   @override
-  String get labelColName => '名前';
+  String get labelColName => '現在の名前';
 
   @override
-  String get labelColNewName => '変更後ファイル名';
+  String get labelColNewName => '新しい名前';
 
   @override
   String get labelColSize => 'サイズ';
 
   @override
-  String get labelColPath => '相対パス';
+  String get labelColPath => 'パス';
 
   @override
-  String get labelColType => 'ファイルの種類';
+  String get labelColType => '種別';
 
   @override
   String get labelColDate => '更新日時';
@@ -801,25 +810,25 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelColAttr => '属性';
 
   @override
-  String get labelOpPrefix => 'Prefix(前方追加)';
+  String get labelOpPrefix => '先頭に追加';
 
   @override
-  String get labelOpSuffix => 'Suffix(後方追加)';
+  String get labelOpSuffix => '末尾に追加';
 
   @override
-  String get labelOpInsert => '文字列挿入';
+  String get labelOpInsert => '位置指定挿入';
 
   @override
-  String get labelOpDeleteStart => '先頭から桁数分削除';
+  String get labelOpDeleteStart => '先頭から削除';
 
   @override
-  String get labelOpDeleteEnd => '後ろから桁数分削除';
+  String get labelOpDeleteEnd => '末尾から削除';
 
   @override
-  String get labelOpDeleteFrom => '開始数字から桁数削除';
+  String get labelOpDeleteFrom => '位置指定削除';
 
   @override
-  String get labelOpCapitalize => '先頭文字を大文字化';
+  String get labelOpCapitalize => '先頭大文字';
 
   @override
   String get labelOpUpper => '大文字化';
@@ -828,52 +837,52 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelOpLower => '小文字化';
 
   @override
-  String get labelOpExtChange => '拡張子を変更';
+  String get labelOpExtChange => '拡張子変更';
 
   @override
-  String get labelOpExtAdd => '拡張子を追加';
+  String get labelOpExtAdd => '拡張子追加';
 
   @override
-  String get labelOpExtRemove => '拡張子を削除';
+  String get labelOpExtRemove => '拡張子削除';
 
   @override
-  String get labelOpExtUpper => '拡張子を大文字化';
+  String get labelOpExtUpper => '拡張子大文字';
 
   @override
-  String get labelOpExtLower => '拡張子を小文字化';
+  String get labelOpExtLower => '拡張子小文字';
 
   @override
-  String get labelSubExtChangeTitle => 'Extension';
+  String get labelSubExtChangeTitle => '拡張子の変更';
 
   @override
-  String get labelSubFormatTitle => '英単語を区切って整形';
+  String get labelSubFormatTitle => '整形';
 
   @override
-  String get labelSubFormatProperCase => '単語の先頭を大文字化 (Space/Hyphen/Underscore)';
+  String get labelSubFormatProperCase => '単語先頭大文字 (Space/Hyphen/_)';
 
   @override
-  String get labelSubListTitle => '文字列リネーム';
+  String get labelSubListTitle => 'リストリネーム';
 
   @override
-  String get labelSubListModeText => 'テキスト入力 (Original[TAB]New)';
+  String get labelSubListModeText => 'リスト入力 (元[TAB]新)';
 
   @override
-  String get labelSubListSample1 => 'サンプル: 連番ファイル';
+  String get labelSubListSample1 => '例: 連番ファイル';
 
   @override
-  String get labelSubListSample2 => 'サンプル: 拡張子一括置換';
+  String get labelSubListSample2 => '例: 拡張子置換';
 
   @override
-  String get labelSubListSample3 => 'Sample: Char Replace';
+  String get labelSubListSample3 => '例: 文字置換';
 
   @override
-  String get labelSubListHint => 'old.txt\tnew.txt';
+  String get labelSubListHint => 'old.txt\tnew.txt\na.png\tb.png';
 
   @override
-  String get labelExtraAppendDate => 'ファイルの日付を付加';
+  String get labelExtraAppendDate => '日付を付加';
 
   @override
-  String get labelExtraDateFormatHint => '日付フォーマット (例: yyyymmdd_)';
+  String get labelExtraDateFormatHint => '書式 (yyyymmdd_)';
 
   @override
   String get labelExtraPosition => '位置';
@@ -885,56 +894,55 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelExtraBack => '後方';
 
   @override
-  String get labelExtraConvHalfToFull => '半角を全角にする';
+  String get labelExtraConvHalfToFull => '半角→全角';
 
   @override
-  String get labelExtraConvFullToHalf => '全角を半角にする';
+  String get labelExtraConvFullToHalf => '全角→半角';
 
   @override
-  String get labelExtraConvKataToHira => '全角カナをひらがなにする';
+  String get labelExtraConvKataToHira => 'カナ→かな';
 
   @override
-  String get labelExtraConvHiraToKata => 'ひらがなを全角カナにする';
+  String get labelExtraConvHiraToKata => 'かな→カナ';
 
   @override
-  String get labelExtraConvFullAlphaToHalf => '全角英字を半角にする';
+  String get labelExtraConvFullAlphaToHalf => '全角英字→半角';
 
   @override
-  String get labelExtraConvNumToHalf => '数字を半角にする';
+  String get labelExtraConvNumToHalf => '数字→半角';
 
   @override
-  String get labelEtcAttribReadOnly => 'ReadOnly';
+  String get labelEtcAttribReadOnly => '読専';
 
   @override
-  String get labelEtcAttribHidden => 'Hidden';
+  String get labelEtcAttribHidden => '隠し';
 
   @override
-  String get labelEtcAttribArchive => 'Archive';
+  String get labelEtcAttribArchive => 'アーカイブ';
 
   @override
-  String get labelEtcAttribSystem => 'System';
+  String get labelEtcAttribSystem => 'システム';
 
   @override
-  String get labelEtcTimestampChange => 'タイムスタンプを変更する';
+  String get labelEtcTimestampChange => '日時の変更';
 
   @override
-  String get labelEtcPickTime => '時刻を選択してください';
+  String get labelEtcPickTime => '時刻を選択';
 
   @override
-  String get labelEtcPickDateTooltip => '日付と時刻を選択';
+  String get labelEtcPickDateTooltip => '日時を選択';
 
   @override
-  String get labelEtcTimestampNote => '(Ex 2002/03/30 17:30 のように指定します。)';
+  String get labelEtcTimestampNote => '(2002/03/30 17:30 形式)';
 
   @override
-  String get labelEtcAttributeChange => '属性を変更する';
+  String get labelEtcAttributeChange => '属性の変更';
 
   @override
-  String get labelEtcCautionTitle => '取り消し操作不能';
+  String get labelEtcCautionTitle => '警告';
 
   @override
-  String get labelEtcCautionMessage =>
-      'このカテゴリ（タイムスタンプ・属性）の変更は、アンドゥ機能で元に戻すことができません。慎重に操作してください。';
+  String get labelEtcCautionMessage => '属性・日時の変更は元に戻せません。';
 
   @override
   String get labelUndo => '戻す';
@@ -943,43 +951,43 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelExecute => '実行';
 
   @override
-  String get labelErrorInvalidFilename => 'エラー：ファイル名に禁止文字が含まれています';
+  String get labelErrorInvalidFilename => 'エラー: 禁止文字が含まれています';
 
   @override
-  String get labelCopyName => 'コピー (現在名)';
+  String get labelCopyName => '名前コピー';
 
   @override
-  String get labelCopyPath => 'コピー (パス)';
+  String get labelCopyPath => 'パスコピー';
 
   @override
-  String get labelCopyFullPath => 'コピー (フルパス)';
+  String get labelCopyFullPath => 'フルパスコピー';
 
   @override
   String get labelCopyOptions => 'コピーオプション';
 
   @override
-  String get labelCopyUndo => '変更記録をコピー';
+  String get labelCopyUndo => '履歴コピー';
 
   @override
-  String get labelCopyListClipboard => 'クリップボードへ現在のリストをコピー';
+  String get labelCopyListClipboard => '全リストコピー';
 
   @override
-  String get labelMoveUp => '上に移動';
+  String get labelMoveUp => '上へ';
 
   @override
-  String get labelMoveDown => '下に移動';
+  String get labelMoveDown => '下へ';
 
   @override
-  String get labelRefresh => '全て更新';
+  String get labelRefresh => '更新';
 
   @override
-  String get labelMenuMore => 'その他の操作';
+  String get labelMenuMore => 'メニュー';
 
   @override
-  String get labelMenuSettings => 'アプリ設定';
+  String get labelMenuSettings => '設定';
 
   @override
-  String get labelMenuFolder => 'メニュー (フォルダ)';
+  String get labelMenuFolder => 'フォルダ';
 
   @override
   String get labelNumStringNumber => '文字列 + 連番';
@@ -1018,64 +1026,70 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelReplaceTo => 'に置換';
 
   @override
-  String get labelFullPath => 'フルパス > ';
+  String get labelFullPath => '場所 > ';
 
   @override
   String get labelSelectAll => '全選択';
 
   @override
-  String get labelSettingsFilterTitle => '表示設定 (フィルタ)';
+  String get labelDeselectAll => '解除';
 
   @override
-  String get labelFilterAll => '全てのファイル';
+  String get labelSettingsFilterTitle => 'フィルタ';
 
   @override
-  String get labelFilterSpecific => '指定';
+  String get labelFilterAll => '全ファイル';
 
   @override
-  String get labelFilterHideSystem => 'システムファイルを非表示';
+  String get labelFilterSpecific => '指定...';
 
   @override
-  String get labelFilterRecursive => '下位フォルダ検索';
+  String get labelFilterHideSystem => 'システムを隠す';
 
   @override
-  String get labelCtxUpOneFolder => '一つ上のフォルダへ';
+  String get labelFilterRecursive => '下位フォルダ';
 
   @override
-  String get labelCtxRenameGeneral => '名前の変更 (一般)';
+  String get labelBetaListRenameHint => '※ Beta機能';
 
   @override
-  String get labelCtxBatchRename => '一括変更 (Namery)';
+  String get labelCtxUpOneFolder => '上へ';
+
+  @override
+  String get labelCtxRenameGeneral => '名前の変更';
+
+  @override
+  String get labelCtxBatchRename => '一括変更 (NM)';
 
   @override
   String get labelCtxOpenWithAssoc => '関連付けで開く';
 
   @override
-  String get labelCtxMoveToTop => '選択項目を先頭に移動';
+  String get labelCtxMoveToTop => '先頭へ移動';
 
   @override
-  String get labelCtxMoveToBottom => '選択項目を最後尾に移動';
+  String get labelCtxMoveToBottom => '最後尾へ移動';
 
   @override
-  String get labelCtxDeleteItems => '選択項目を削除 (Del)';
+  String get labelCtxDeleteItems => '削除 (Del)';
 
   @override
   String get labelCtxMoveCaret => 'キャレット移動';
 
   @override
-  String get labelCtxCaretSettings => 'キャレットの設定';
+  String get labelCtxCaretSettings => 'キャレット設定';
 
   @override
-  String get labelCtxRefresh => '最新の情報に更新 (F5)';
+  String get labelCtxRefresh => '更新 (F5)';
 
   @override
-  String get labelCtxProperties => 'プロパティ(R)';
+  String get labelCtxProperties => 'プロパティ';
 
   @override
-  String get labelFilterPreview => 'プレビュー表示';
+  String get labelFilterPreview => 'プレビュー';
 
   @override
-  String get labelExtensionLower => '拡張子は小文字化';
+  String get labelExtensionLower => '拡張子小文字';
 
   @override
   String get labelNavBack => '戻る';
@@ -1084,28 +1098,31 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelNavForward => '進む';
 
   @override
-  String get labelHistoryBack => '履歴 (戻る)';
+  String get labelNavUp => '上へ';
 
   @override
-  String get labelHistoryForward => '履歴 (進む)';
+  String get labelHistoryBack => '履歴戻る';
+
+  @override
+  String get labelHistoryForward => '履歴進む';
 
   @override
   String get labelNavQuickAccess => 'クイックアクセス';
 
   @override
-  String get labelDeleteFront => '前から';
+  String get labelDeleteFront => '前方削除';
 
   @override
-  String get labelDeleteBack => '後から';
+  String get labelDeleteBack => '後方削除';
 
   @override
   String get labelDeleteUntil => 'まで削除';
 
   @override
-  String get labelFindHint => '検索 (Find)';
+  String get labelFindHint => '検索文字列';
 
   @override
-  String get labelReplaceHint => '置換 (Replace)';
+  String get labelReplaceHint => '置換文字列';
 
   @override
   String get labelRegex => '正規表現';
@@ -1126,13 +1143,13 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelSettingsTitle => '設定';
 
   @override
-  String get labelSettingsSectionDisplay => '表示設定';
+  String get labelSettingsSectionDisplay => '表示';
 
   @override
   String get labelSettingsSectionAppearance => '外観';
 
   @override
-  String get labelSettingsSectionOS => '動作モード (OS設定)';
+  String get labelSettingsSectionOS => 'OSモード';
 
   @override
   String get labelSettingsSectionInitialDir => '初期フォルダ';
@@ -1141,13 +1158,13 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelSettingsSectionReset => 'リセット';
 
   @override
-  String get labelSettingsTouchModeTitle => 'タッチモード (ゆったり表示)';
+  String get labelSettingsTouchModeTitle => 'タッチモード';
 
   @override
-  String get labelSettingsTouchModeSubtitle => 'リストやボタンの間隔を広げます';
+  String get labelSettingsTouchModeSubtitle => '間隔を広げます';
 
   @override
-  String get labelSettingsMenuLabelTitle => 'メニュー表記 (言語)';
+  String get labelSettingsMenuLabelTitle => '表記 (言語)';
 
   @override
   String get labelSettingsLangJP => '日本語';
@@ -1156,16 +1173,16 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelSettingsLangNamery => 'Namery';
 
   @override
-  String get labelSettingsLangEN => '英語';
+  String get labelSettingsLangEN => 'English';
 
   @override
-  String get labelSettingsLangCN => '中国';
+  String get labelSettingsLangCN => '中国語';
 
   @override
-  String get labelSettingsLangES => 'スペイン';
+  String get labelSettingsLangES => 'スペイン語';
 
   @override
-  String get labelSettingsThemeTitle => '見た目';
+  String get labelSettingsThemeTitle => 'テーマ';
 
   @override
   String get labelSettingsThemeSystem => 'システム';
@@ -1180,13 +1197,13 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelSettingsThemeGray => 'グレー';
 
   @override
-  String get labelSettingsColorTitle => 'テーマカラー';
+  String get labelSettingsColorTitle => 'カラー';
 
   @override
-  String get labelSettingsOSTitle => 'OSモード';
+  String get labelSettingsOSTitle => 'OS';
 
   @override
-  String get labelSettingsOSSubtitle => 'ファイル名の文字制限などをOSに合わせます';
+  String get labelSettingsOSSubtitle => '文字制限等の設定';
 
   @override
   String get labelSettingsOSAuto => '自動';
@@ -1195,28 +1212,28 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelSettingsInitDirTitle => '起動時の場所';
 
   @override
-  String get labelSettingsInitDirLast => '前回終了時の場所';
+  String get labelSettingsInitDirLast => '前回終了時';
 
   @override
-  String get labelSettingsInitDirFixed => '指定した場所';
+  String get labelSettingsInitDirFixed => '指定場所';
 
   @override
-  String get labelSettingsClearHistory => '入力履歴を削除';
+  String get labelSettingsClearHistory => '履歴削除';
 
   @override
-  String get labelSettingsClearHistorySub => '文字列補完などの入力履歴を削除します';
+  String get labelSettingsClearHistorySub => '入力履歴を消去';
 
   @override
-  String get labelSettingsResetAll => '全設定をリセット';
+  String get labelSettingsResetAll => '全リセット';
 
   @override
-  String get labelSettingsResetAllSub => '初期状態に戻します';
+  String get labelSettingsResetAllSub => '初期化します';
 
   @override
-  String get labelSettingsBetaTitle => 'Beta版機能を有効にする';
+  String get labelSettingsBetaTitle => 'Beta機能';
 
   @override
-  String get labelSettingsBetaSubtitle => 'テスト中の新機能を表示します（例：リストリネーム）';
+  String get labelSettingsBetaSubtitle => '実験的機能を有効化';
 
   @override
   String get labelDialogCancel => 'キャンセル';
@@ -1228,80 +1245,104 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelDialogReset => 'リセット';
 
   @override
-  String get labelMsgHistoryCleared => '履歴を削除しました';
+  String get labelMsgHistoryCleared => '履歴を消去しました';
 
   @override
-  String get labelMsgSettingsReset => '設定をリセットしました';
+  String get labelMsgSettingsReset => 'リセットしました';
 
   @override
-  String get labelFilterHideFolders => 'フォルダーを隠す';
+  String get labelFilterHideFolders => 'フォルダを隠す';
 
   @override
-  String get labelFilterShowFolders => 'フォルダーを表示';
+  String get labelFilterShowFolders => 'フォルダを表示';
 
   @override
-  String get labelPreviewNoSelection => '選択されていません';
+  String get labelPreviewNoSelection => '未選択';
 
   @override
   String labelPreviewSelectedCount(int count) {
-    return '$count 個のファイルが選択されています';
+    return '$count 個選択中';
   }
 
   @override
-  String get labelPreviewImageLoadFailed => '画像の読み込みに失敗しました';
+  String get labelPreviewImageLoadFailed => '読込失敗';
 
   @override
-  String get labelPreviewUnavailable => 'プレビューを利用できません';
+  String get labelPreviewUnavailable => 'プレビュー不可';
 
   @override
   String labelPreviewOmitted(String size) {
-    return '... (省略されました: 全 $size KB)';
+    return '... ($size KB)';
   }
 
   @override
-  String get labelPreviewBinaryError => 'プレビューを利用できません: バイナリまたは不明なエンコーディング';
+  String get labelPreviewBinaryError => 'プレビュー不可(Binary)';
 
   @override
-  String get labelGoRenamery => 'リネームを実行';
+  String get labelGoRenamery => '実行';
 
   @override
-  String get labelTermFolder => 'フォルダー';
+  String get labelTermFolder => 'フォルダ';
 
   @override
   String get labelTermFile => 'ファイル';
 
   @override
-  String get labelSettingsOSMac => 'Mac (Finder互換)';
+  String get labelTypeImage => '画像';
+
+  @override
+  String get labelTypePDF => 'PDF';
+
+  @override
+  String get labelTypeVideo => '動画';
+
+  @override
+  String get labelTypeAudio => '音楽';
+
+  @override
+  String get labelTypeDocument => '文書';
+
+  @override
+  String get labelTypeExecutable => 'アプリ';
+
+  @override
+  String get labelTypeArchive => '圧縮';
+
+  @override
+  String get labelTypeOther => '他';
+
+  @override
+  String get labelSettingsOSMac => 'Mac';
 
   @override
   String get labelSettingsOSLinux => 'Linux';
 
   @override
-  String get labelSettingsOSiOS => 'iOS (iPhone/iPad)';
+  String get labelSettingsOSiOS => 'iOS';
 
   @override
   String get labelSettingsOSAndroid => 'Android';
 
   @override
   String labelMsgExecutedCount(int count) {
-    return '$count 個のファイルをリネームしました';
+    return '$count 個実行しました';
   }
 
   @override
-  String get labelMsgNoSelection => 'ファイルが選択されていません';
+  String get labelMsgNoSelection => '未選択です';
 
   @override
-  String get labelCopyListPath => 'リストをクリップボードにコピー (Path)';
+  String get labelCopyListPath => 'リストコピー';
 
   @override
   String get labelMenuGo => '移動';
 
   @override
-  String get labelNoFiles => 'ファイルがありません';
+  String get labelNoFiles => 'ファイルなし';
 
   @override
   String labelSelectFolderPrompt(Object term) {
-    return '$termを選択してください';
+    return '$termを選択';
   }
 
   @override
@@ -1311,115 +1352,145 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelNavPC => 'PC';
 
   @override
-  String get labelNumSaveSequenceTooltip => '変更後の連番数字を保存（次回リネーム時に連番を継続）';
+  String get labelNumSaveSequenceTooltip => '連番を保存';
 
   @override
   String labelStatusDisplayCount(int current, int total, int selected) {
-    return '現在の表示: $current / 全 $total ファイル : 選択 $selected ファイル';
+    return '表示: $current / 全 $total (選択 $selected)';
   }
 
   @override
   String labelStatusTotalCount(int total, int selected) {
-    return '全 $total ファイル : 選択 $selected ファイル';
+    return '全 $total (選択 $selected)';
   }
 
   @override
   String get labelStatusProcessing => '処理中...';
 
   @override
-  String get labelStatusReady => '準備完了';
+  String get labelStatusReady => '待機中';
 
   @override
-  String get labelDeleteConfirmTitle => '削除の確認';
+  String get labelDeleteConfirmTitle => '削除';
 
   @override
   String labelDeleteConfirmMessage(int count) {
-    return '$count 個のファイルを完全に削除しますか？\nこの操作は元に戻せません。';
+    return '$count 個削除しますか？';
   }
 
   @override
   String labelMsgDeletedCount(int count) {
-    return '$count 個のファイルを削除しました';
+    return '$count 個削除しました';
   }
 
   @override
-  String get labelUndoTitle => '処理の復元';
+  String get labelUndoTitle => '戻す';
 
   @override
   String labelUndoConfirm(int count) {
-    return '直前に行った $count 件の変更を元に戻しますか？';
+    return '$count 件戻しますか？';
   }
 
   @override
-  String get labelMsgUndoSuccess => '復元しました';
+  String get labelMsgUndoSuccess => '戻しました';
 
   @override
-  String get labelUndoRecoverBtn => '復元';
+  String get labelUndoRecoverBtn => '戻す';
 
   @override
-  String get labelMsgNoUndoRecord => '直前の変更記録がありません';
+  String get labelMsgNoUndoRecord => '記録なし';
 
   @override
-  String get labelMsgUndoRecordCopied => '直前の変更記録をクリップボードにコピーしました';
+  String get labelMsgUndoRecordCopied => '記録をコピーしました';
 
   @override
   String labelMsgCopyNamesSuccess(int count) {
-    return '$count 件のファイル名をコピーしました';
+    return '$count 個コピー';
+  }
+
+  @override
+  String labelMsgCopyFilesSuccess(int count) {
+    return '$count 個コピー';
+  }
+
+  @override
+  String labelMsgCutFilesSuccess(int count) {
+    return '$count 個切取';
   }
 
   @override
   String labelMsgCopyRelativePathsSuccess(int count) {
-    return '$count 件のファイルパス(相対)をコピーしました';
+    return '$count 個コピー';
   }
 
   @override
   String labelMsgCopyFullPathsSuccess(int count) {
-    return '$count 件のフルパスをコピーしました';
+    return '$count 個コピー';
   }
 
   @override
-  String get labelSettingsAboutTitle => 'アプリについて';
+  String get labelSettingsAboutTitle => '情報';
 
   @override
-  String get labelAboutVersion => 'バージョン';
+  String get labelAboutVersion => 'Ver';
 
   @override
-  String get labelAboutOriginal => '原案・オリジナル';
+  String get labelAboutOriginal => 'オリジナル';
 
   @override
-  String get labelAboutDev => '企画・開発';
+  String get labelAboutDev => '開発';
 
   @override
   String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
 
   @override
-  String get labelAboutRespect =>
-      '当アプリは、Jun Arai 様の \'Namery\' をリスペクトして作成されました。';
+  String get labelAboutRespect => 'Original respect: Namery';
 
   @override
-  String get labelAboutVisitWebsite => 'ウェブサイトを表示';
+  String get labelAboutVisitWebsite => 'サイト表示';
 
   @override
-  String get labelHistoryTooltip => '履歴を表示';
+  String get labelHistoryTooltip => '履歴';
 
   @override
-  String get labelSettingsFolders => 'フォルダ表示';
+  String get labelSettingsFolders => 'フォルダ';
 
   @override
-  String get labelSettingsShowSystemFiles => 'システムファイルを表示';
+  String get labelSettingsShowSystemFiles => 'システム表示';
 
   @override
-  String get labelSettingsSystemFiles => 'システムファイル';
+  String get labelSettingsSystemFiles => 'システム';
 
   @override
-  String get labelSettingsDisableRecursive => '下位フォルダ検索を無効';
+  String get labelSettingsDisableRecursive => '再帰無効';
 
   @override
   String get labelSettingsRecursive => '下位フォルダ';
 
   @override
-  String get labelDialogTrashTitle => '項目の削除';
+  String get labelDialogTrashTitle => '削除';
 
   @override
-  String get labelDialogTrashMessage => '選択したファイルをゴミ箱に移動しますか？';
+  String get labelDialogTrashMessage => 'ゴミ箱に移動しますか？';
+
+  @override
+  String get labelCtxPasteItems => '貼付';
+
+  @override
+  String get labelCtxCopyItems => 'コピー';
+
+  @override
+  String get labelCtxCutItems => '切取';
+
+  @override
+  String get labelCtxCreateFolder => '新規作成';
+
+  @override
+  String get labelFilterOptions => '指定...';
+
+  @override
+  String get labelDialogClose => '閉じる';
+
+  @override
+  String get labelSearchHint => '検索...';
 }

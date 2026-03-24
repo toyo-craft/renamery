@@ -65,13 +65,6 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;
-    case WM_GETMINMAXINFO: {
-      MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lparam);
-      // Set minimum window size. X=800 to prevent freeze, Y=400 as per user feedback (Y was fine)
-      info->ptMinTrackSize.x = 800;
-      info->ptMinTrackSize.y = 400;
-      return 0;
-    }
   }
 
   return Win32Window::MessageHandler(hwnd, message, wparam, lparam);

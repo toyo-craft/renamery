@@ -746,4 +746,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get labelCtxCreateFolder => 'Crear nueva carpeta';
+
+  @override
+  String get labelFilterOptions => 'フィルターオプション';
+
+  @override
+  String get labelDialogClose => '閉じる';
+
+  @override
+  String get labelSearchHint => 'ファイル名で検索...';
 }

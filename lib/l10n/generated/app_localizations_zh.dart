@@ -737,4 +737,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get labelCtxCreateFolder => '新建文件夹';
+
+  @override
+  String get labelFilterOptions => 'フィルターオプション';
+
+  @override
+  String get labelDialogClose => '閉じる';
+
+  @override
+  String get labelSearchHint => 'ファイル名で検索...';
 }

@@ -1,7 +1,7 @@
 ﻿name: renamery
 description: Flutterを使用したNameryファイルリネームツールの復活版。
 publish_to: 'none'
-version: 0.7.0
+version: 0.8.0
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -16,7 +16,7 @@ dependencies:
   # ファイルとパスのユーティリティ
   path: ^1.9.0
   
-  # オプション: 後でファイルピッカーが必要になった場合（独自のUIを使用する可能性がありますが）
+  # オプション: 後でファイルピッカーが必要になった場合
   file_selector: ^1.0.3
   multi_split_view: ^3.6.1
   path_provider: ^2.1.5
@@ -52,8 +52,6 @@ flutter:
     - CHANGELOG.md
 
 flutter_launcher_icons:
-  # android: "launcher_icon"
-  # ios: true
   image_path: "assets/icon/app_icon.png"
   windows:
     generate: true
@@ -65,6 +63,6 @@ msix_config:
   publisher_display_name: Toyo Craft Lab
   identity_name: ToyoCraftLab.ReNamery
   publisher: "CN=ToyoCraftLab"
-  msix_version: 0.7.0.0
+  msix_version: 0.8.0.0
   logo_path: assets/icon/app_icon.png
   store: true

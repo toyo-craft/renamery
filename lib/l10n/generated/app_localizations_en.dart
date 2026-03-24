@@ -9,13 +9,13 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get labelMainTab => 'Main';
+  String get labelMainTab => 'Basic';
 
   @override
-  String get labelSubTab => 'Sub';
+  String get labelSubTab => 'Extended';
 
   @override
-  String get labelExtraTab => 'Extra';
+  String get labelExtraTab => 'Advanced';
 
   @override
   String get labelEtcTab => 'Attributes';
@@ -27,7 +27,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelCategoryRemove => 'Remove Text';
 
   @override
-  String get labelCategoryReplace => 'Replace & Convert';
+  String get labelCategoryReplace => 'Replace/Convert';
 
   @override
   String get labelCategoryNumbering => 'Numbering';
@@ -60,82 +60,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelColDate => 'Date Modified';
 
   @override
-  String get labelColAttr => 'Attributes';
+  String get labelColAttr => 'Attr';
 
   @override
-  String get labelOpPrefix => 'Add Prefix';
+  String get labelOpPrefix => 'Add to Front';
 
   @override
-  String get labelOpSuffix => 'Add Suffix';
+  String get labelOpSuffix => 'Add to Back';
 
   @override
-  String get labelOpInsert => 'Insert at';
+  String get labelOpInsert => 'Insert at Pos';
 
   @override
-  String get labelOpDeleteStart => 'Delete from Start';
+  String get labelOpDeleteStart => 'Delete from Front';
 
   @override
-  String get labelOpDeleteEnd => 'Delete from End';
+  String get labelOpDeleteEnd => 'Delete from Back';
 
   @override
   String get labelOpDeleteFrom => 'Delete from Pos';
 
   @override
-  String get labelOpCapitalize => 'Capitalize';
+  String get labelOpCapitalize => 'Capitalize Front';
 
   @override
-  String get labelOpUpper => 'To Upper Case';
+  String get labelOpUpper => 'All Uppercase';
 
   @override
-  String get labelOpLower => 'To Lower Case';
+  String get labelOpLower => 'All Lowercase';
 
   @override
   String get labelOpExtChange => 'Change Ext';
 
   @override
-  String get labelOpExtAdd => 'Add Extension';
+  String get labelOpExtAdd => 'Add Ext';
 
   @override
   String get labelOpExtRemove => 'Remove Ext';
 
   @override
-  String get labelOpExtUpper => 'Ext to Upper';
+  String get labelOpExtUpper => 'Ext Uppercase';
 
   @override
-  String get labelOpExtLower => 'Ext to Lower';
+  String get labelOpExtLower => 'Ext Lowercase';
 
   @override
-  String get labelSubExtChangeTitle => 'Extension';
+  String get labelSubExtChangeTitle => 'Extension Change';
 
   @override
-  String get labelSubFormatTitle => 'Format';
+  String get labelSubFormatTitle => 'Word Formatting';
 
   @override
-  String get labelSubFormatProperCase => 'Capitalize Words';
+  String get labelSubFormatProperCase =>
+      'Proper Case (Space/Hyphen/Underscore)';
 
   @override
   String get labelSubListTitle => 'List Rename';
 
   @override
-  String get labelSubListModeText => 'Text Input';
+  String get labelSubListModeText => 'Text Input (Original[TAB]New)';
 
   @override
-  String get labelSubListSample1 => 'Sample: Sequential';
+  String get labelSubListSample1 => 'Sample: Numbered Files';
 
   @override
-  String get labelSubListSample2 => 'Sample: Ext Replace';
+  String get labelSubListSample2 => 'Sample: Bulk Ext Change';
 
   @override
-  String get labelSubListSample3 => 'サンプル: 特定文字の置換';
+  String get labelSubListSample3 => 'Sample: Specific Replacement';
 
   @override
-  String get labelSubListHint => 'old.txt\tnew.txt';
+  String get labelSubListHint =>
+      'old_name.txt\tnew_name.txt\nfile01.png\timage01.png';
 
   @override
-  String get labelExtraAppendDate => 'Append Date';
+  String get labelExtraAppendDate => 'Append File Date';
 
   @override
-  String get labelExtraDateFormatHint => 'Date Format';
+  String get labelExtraDateFormatHint => 'Date Format (Ex: yyyymmdd_)';
 
   @override
   String get labelExtraPosition => 'Position';
@@ -147,10 +149,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelExtraBack => 'Back';
 
   @override
-  String get labelExtraConvHalfToFull => 'Half to Full';
+  String get labelExtraConvHalfToFull => 'Half to Full-width';
 
   @override
-  String get labelExtraConvFullToHalf => 'Full to Half';
+  String get labelExtraConvFullToHalf => 'Full to Half-width';
 
   @override
   String get labelExtraConvKataToHira => 'Katakana to Hiragana';
@@ -162,7 +164,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelExtraConvFullAlphaToHalf => 'Full Alpha to Half';
 
   @override
-  String get labelExtraConvNumToHalf => 'Num to Half';
+  String get labelExtraConvNumToHalf => 'Numbers to Half';
 
   @override
   String get labelEtcAttribReadOnly => 'Read Only';
@@ -183,29 +185,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelEtcPickTime => 'Pick Time';
 
   @override
-  String get labelEtcPickDateTooltip => 'Pick Date & Time';
+  String get labelEtcPickDateTooltip => 'Pick Date and Time';
 
   @override
-  String get labelEtcTimestampNote => '(Ex 2002/03/30 17:30)';
+  String get labelEtcTimestampNote => '(Ex: 2002/03/30 17:30)';
 
   @override
   String get labelEtcAttributeChange => 'Change Attributes';
 
   @override
-  String get labelEtcCautionTitle => 'No Undo';
+  String get labelEtcCautionTitle => 'Cannot be Undone';
 
   @override
   String get labelEtcCautionMessage =>
-      'Timestamp/Attribute changes cannot be undone.';
+      'Changes in this category (Timestamp/Attributes) cannot be undone using the Undo function. Please operate with caution.';
 
   @override
   String get labelUndo => 'Undo';
 
   @override
-  String get labelExecute => 'Execute';
+  String get labelExecute => 'Go';
 
   @override
-  String get labelErrorInvalidFilename => 'Error: Invalid Filename';
+  String get labelErrorInvalidFilename =>
+      'Error: Forbidden characters in filename';
 
   @override
   String get labelCopyName => 'Copy Name';
@@ -220,10 +223,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelCopyOptions => 'Copy Options';
 
   @override
-  String get labelCopyUndo => 'Copy Undo Log';
+  String get labelCopyUndo => 'Copy Change Log';
 
   @override
-  String get labelCopyListClipboard => 'Copy List to Clipboard';
+  String get labelCopyListClipboard => 'Copy Current List to Clipboard';
 
   @override
   String get labelMoveUp => 'Move Up';
@@ -235,61 +238,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelRefresh => 'Refresh All';
 
   @override
-  String get labelMenuMore => 'More Actions';
+  String get labelMenuMore => 'More Operations';
 
   @override
   String get labelMenuSettings => 'Settings';
 
   @override
-  String get labelMenuFolder => 'Menu';
+  String get labelMenuFolder => 'Folder Menu';
 
   @override
-  String get labelNumStringNumber => 'Str + Num';
+  String get labelNumStringNumber => 'String + Number';
 
   @override
-  String get labelNumOriginalNumber => 'Original + Num';
+  String get labelNumOriginalNumber => 'Original + Number';
 
   @override
-  String get labelNumNumberString => 'Num + Str';
+  String get labelNumNumberString => 'Number + String';
 
   @override
-  String get labelNumNumberOriginal => 'Num + Original';
+  String get labelNumNumberOriginal => 'Number + Original';
 
   @override
-  String get labelNumBaseStringNumber => 'Base + Str + Num';
+  String get labelNumBaseStringNumber => 'Base + String + Number';
 
   @override
-  String get labelNumBaseStringOriginal => 'Base + Str + Original';
+  String get labelNumBaseStringOriginal => 'Base + String + Original';
 
   @override
-  String get labelNumRelativeStringNumber => 'Relative + Str + Num';
+  String get labelNumRelativeStringNumber => 'Relative + String + Number';
 
   @override
-  String get labelNumRelativeStringOriginal => 'Relative + Str + Original';
+  String get labelNumRelativeStringOriginal => 'Relative + String + Original';
 
   @override
-  String get labelNumNumberStringBase => 'Num + Str + Base';
+  String get labelNumNumberStringBase => 'Number + String + Base';
 
   @override
-  String get labelNumNumberStringRelative => 'Num + Str + Relative';
+  String get labelNumNumberStringRelative => 'Number + String + Relative';
 
   @override
-  String get labelReplaceFrom => 'Replace';
+  String get labelReplaceFrom => 'Find';
 
   @override
-  String get labelReplaceTo => 'With';
+  String get labelReplaceTo => 'Replace With';
 
   @override
-  String get labelFullPath => 'Location > ';
+  String get labelFullPath => 'Current > ';
 
   @override
   String get labelSelectAll => 'Select All';
 
   @override
-  String get labelDeselectAll => 'Deselect All';
+  String get labelDeselectAll => 'Deselect';
 
   @override
-  String get labelSettingsFilterTitle => 'Filter Settings';
+  String get labelSettingsFilterTitle => 'View Filter';
 
   @override
   String get labelFilterAll => 'All Files';
@@ -304,47 +307,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelFilterRecursive => 'Recursive Search';
 
   @override
-  String get labelBetaListRenameHint =>
-      '* Shown because Beta features are enabled';
+  String get labelBetaListRenameHint => 'Visible because Beta is enabled';
 
   @override
-  String get labelCtxUpOneFolder => 'Up one folder';
+  String get labelCtxUpOneFolder => 'Go Up';
 
   @override
-  String get labelCtxRenameGeneral => 'Rename (General)';
+  String get labelCtxRenameGeneral => 'Rename (Standard)';
 
   @override
   String get labelCtxBatchRename => 'Batch Rename (Namery)';
 
   @override
-  String get labelCtxOpenWithAssoc => 'Open with association';
+  String get labelCtxOpenWithAssoc => 'Open with Assoc';
 
   @override
-  String get labelCtxMoveToTop => 'Move selected to top';
+  String get labelCtxMoveToTop => 'Move to Top';
 
   @override
-  String get labelCtxMoveToBottom => 'Move selected to bottom';
+  String get labelCtxMoveToBottom => 'Move to Bottom';
 
   @override
-  String get labelCtxDeleteItems => 'Delete selected (Del)';
+  String get labelCtxDeleteItems => 'Delete Items (Del)';
 
   @override
-  String get labelCtxMoveCaret => 'Move caret';
+  String get labelCtxMoveCaret => 'Move Caret';
 
   @override
-  String get labelCtxCaretSettings => 'Caret settings';
+  String get labelCtxCaretSettings => 'Caret Settings';
 
   @override
   String get labelCtxRefresh => 'Refresh (F5)';
 
   @override
-  String get labelCtxProperties => 'Properties (R)';
+  String get labelCtxProperties => 'Properties(R)';
 
   @override
   String get labelFilterPreview => 'Show Preview';
 
   @override
-  String get labelExtensionLower => 'Lowercase Extension';
+  String get labelExtensionLower => 'Ext to Lowercase';
 
   @override
   String get labelNavBack => 'Back';
@@ -353,22 +355,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelNavForward => 'Forward';
 
   @override
-  String get labelNavUp => 'Up one folder';
+  String get labelNavUp => 'Go Up';
 
   @override
-  String get labelHistoryBack => 'History (Back)';
+  String get labelHistoryBack => 'Back (History)';
 
   @override
-  String get labelHistoryForward => 'History (Forward)';
+  String get labelHistoryForward => 'Forward (History)';
 
   @override
   String get labelNavQuickAccess => 'Quick Access';
 
   @override
-  String get labelDeleteFront => 'From Front';
+  String get labelDeleteFront => 'from Front';
 
   @override
-  String get labelDeleteBack => 'From Back';
+  String get labelDeleteBack => 'from Back';
 
   @override
   String get labelDeleteUntil => 'Delete Until';
@@ -386,13 +388,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelString => 'String';
 
   @override
-  String get labelStartDigit => 'Start/Digits';
+  String get labelStartDigit => 'Start/Digit';
 
   @override
   String get labelStart => 'Start';
 
   @override
-  String get labelDigit => 'Digits';
+  String get labelDigit => 'Digit';
 
   @override
   String get labelSettingsTitle => 'Settings';
@@ -404,7 +406,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelSettingsSectionAppearance => 'Appearance';
 
   @override
-  String get labelSettingsSectionOS => 'Operating Mode';
+  String get labelSettingsSectionOS => 'Operation Mode (OS)';
 
   @override
   String get labelSettingsSectionInitialDir => 'Initial Folder';
@@ -416,10 +418,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelSettingsTouchModeTitle => 'Touch Mode';
 
   @override
-  String get labelSettingsTouchModeSubtitle => 'Improves touch usage';
+  String get labelSettingsTouchModeSubtitle =>
+      'Increase spacing for lists and buttons';
 
   @override
-  String get labelSettingsMenuLabelTitle => 'Language';
+  String get labelSettingsMenuLabelTitle => 'Language / Labels';
 
   @override
   String get labelSettingsLangJP => 'Japanese';
@@ -458,7 +461,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelSettingsOSTitle => 'OS Mode';
 
   @override
-  String get labelSettingsOSSubtitle => 'Adapts validation to OS';
+  String get labelSettingsOSSubtitle => 'Adjust filename limits to match OS';
 
   @override
   String get labelSettingsOSAuto => 'Auto';
@@ -467,29 +470,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelSettingsInitDirTitle => 'Startup Location';
 
   @override
-  String get labelSettingsInitDirLast => 'Last Used';
+  String get labelSettingsInitDirLast => 'Last Used Location';
 
   @override
-  String get labelSettingsInitDirFixed => 'Fixed Path';
+  String get labelSettingsInitDirFixed => 'Fixed Location';
 
   @override
-  String get labelSettingsClearHistory => 'Clear History';
+  String get labelSettingsClearHistory => 'Clear Input History';
 
   @override
-  String get labelSettingsClearHistorySub => 'Clears input history';
+  String get labelSettingsClearHistorySub =>
+      'Clear history for string completions';
 
   @override
   String get labelSettingsResetAll => 'Reset All Settings';
 
   @override
-  String get labelSettingsResetAllSub => 'Restores default settings';
+  String get labelSettingsResetAllSub => 'Revert to default state';
 
   @override
   String get labelSettingsBetaTitle => 'Enable Beta Features';
 
   @override
   String get labelSettingsBetaSubtitle =>
-      'Shows experimental features (e.g., List Rename)';
+      'Show experimental features (e.g., List Rename)';
 
   @override
   String get labelDialogCancel => 'Cancel';
@@ -513,7 +517,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelFilterShowFolders => 'Show Folders';
 
   @override
-  String get labelPreviewNoSelection => 'No selection';
+  String get labelPreviewNoSelection => 'No file selected';
 
   @override
   String labelPreviewSelectedCount(int count) {
@@ -521,14 +525,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get labelPreviewImageLoadFailed => 'Image load failed';
+  String get labelPreviewImageLoadFailed => 'Failed to load image';
 
   @override
   String get labelPreviewUnavailable => 'Preview unavailable';
 
   @override
   String labelPreviewOmitted(String size) {
-    return '... (omitted: total $size KB)';
+    return '... (Omitted: $size KB total)';
   }
 
   @override
@@ -536,7 +540,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Preview unavailable: Binary or unknown encoding';
 
   @override
-  String get labelGoRenamery => 'Execute Rename';
+  String get labelGoRenamery => 'Rename All';
 
   @override
   String get labelTermFolder => 'Folder';
@@ -557,7 +561,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelTypeAudio => 'Audio';
 
   @override
-  String get labelTypeDocument => 'Doc';
+  String get labelTypeDocument => 'Document';
 
   @override
   String get labelTypeExecutable => 'App';
@@ -589,7 +593,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelMsgNoSelection => 'No files selected';
 
   @override
-  String get labelCopyListPath => 'Copy list to clipboard (Path)';
+  String get labelCopyListPath => 'Copy List to Clipboard (Path)';
 
   @override
   String get labelMenuGo => 'Go';
@@ -610,16 +614,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelNumSaveSequenceTooltip =>
-      'Save sequence number (continue numbering next time)';
+      'Save the sequence number after change (continue next time)';
 
   @override
   String labelStatusDisplayCount(int current, int total, int selected) {
-    return 'Display: $current / Total: $total Files : Selected $selected Files';
+    return 'Display: $current / Total $total files : Selected $selected';
   }
 
   @override
   String labelStatusTotalCount(int total, int selected) {
-    return 'Total $total Files : Selected $selected Files';
+    return 'Total $total files : Selected $selected';
   }
 
   @override
@@ -633,7 +637,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String labelDeleteConfirmMessage(int count) {
-    return 'Are you sure you want to permanently delete $count files?\nThis action cannot be undone.';
+    return 'Delete $count files permanently?\nThis cannot be undone.';
   }
 
   @override
@@ -642,11 +646,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get labelUndoTitle => 'Undo Operation';
+  String get labelUndoTitle => 'Restore / Undo';
 
   @override
   String labelUndoConfirm(int count) {
-    return 'Are you sure you want to undo the last $count changes?';
+    return 'Revert $count changes from the last operation?';
   }
 
   @override
@@ -656,14 +660,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelUndoRecoverBtn => 'Restore';
 
   @override
-  String get labelMsgNoUndoRecord => 'No previous changes found';
+  String get labelMsgNoUndoRecord => 'No undo history available';
 
   @override
-  String get labelMsgUndoRecordCopied => 'Undo log copied to clipboard';
+  String get labelMsgUndoRecordCopied => 'Change log copied to clipboard';
 
   @override
   String labelMsgCopyNamesSuccess(int count) {
-    return 'Copied $count file names';
+    return 'Copied $count filenames';
   }
 
   @override
@@ -696,14 +700,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelAboutOriginal => 'Original Idea';
 
   @override
-  String get labelAboutDev => 'Developed by';
+  String get labelAboutDev => 'Planning/Dev';
 
   @override
   String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
 
   @override
   String get labelAboutRespect =>
-      'This app was created with respect for \'Namery\' by Jun Arai.';
+      'This app was created with respect for Mr. Jun Arai\'s \'Namery\'.';
 
   @override
   String get labelAboutVisitWebsite => 'Visit Website';
@@ -721,20 +725,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelSettingsSystemFiles => 'System Files';
 
   @override
-  String get labelSettingsDisableRecursive => 'Disable Subfolders';
+  String get labelSettingsDisableRecursive => 'Disable Recursive';
 
   @override
-  String get labelSettingsRecursive => 'Subfolders';
+  String get labelSettingsRecursive => 'Recursive Search';
 
   @override
   String get labelDialogTrashTitle => 'Delete Items';
 
   @override
-  String get labelDialogTrashMessage =>
-      'Move the selected files to the recycle bin?';
+  String get labelDialogTrashMessage => 'Move selected files to recycle bin?';
 
   @override
-  String get labelCtxPasteItems => 'Paste items';
+  String get labelCtxPasteItems => 'Paste Items';
 
   @override
   String get labelCtxCopyItems => 'Copy';
@@ -743,5 +746,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelCtxCutItems => 'Cut';
 
   @override
-  String get labelCtxCreateFolder => 'Create new folder';
+  String get labelCtxCreateFolder => 'Create New Folder';
+
+  @override
+  String get labelFilterOptions => 'Filter Options';
+
+  @override
+  String get labelDialogClose => 'Close';
+
+  @override
+  String get labelSearchHint => 'Search by filename...';
 }

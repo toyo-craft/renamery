@@ -1506,6 +1506,24 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'新しいフォルダーの作成'**
   String get labelCtxCreateFolder;
+
+  /// No description provided for @labelFilterOptions.
+  ///
+  /// In ja, this message translates to:
+  /// **'フィルターオプション'**
+  String get labelFilterOptions;
+
+  /// No description provided for @labelDialogClose.
+  ///
+  /// In ja, this message translates to:
+  /// **'閉じる'**
+  String get labelDialogClose;
+
+  /// No description provided for @labelSearchHint.
+  ///
+  /// In ja, this message translates to:
+  /// **'ファイル名で検索...'**
+  String get labelSearchHint;
 }
 
 class _AppLocalizationsDelegate
