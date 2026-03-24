@@ -1,0 +1,46 @@
+name: Multi-Platform Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-linux:
+    name: Build Linux (.deb & .tar.gz)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libblkid-dev liblzma-dev libgcrypt20-dev pkg-config
+      
+      - name: Flutter build linux
+        run: flutter build linux --release
+      
+      - name: Package .tar.gz
+        run: |
+          cd build/linux/x64/release/bundle
+          tar -czf ../../../../../ReNamery_Linux_Portable.tar.gz .
+      
+      - name: Build .deb
+        run: |
+          flutter pub get
+          dart run debian:create
+        continue-on-error: true # debianパッケージ未導入の場合の保険
+      
+      - name: Upload Linux Artifacts
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ReNamery_Linux_Portable.tar.gz
+            build/debian/*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Note: Windows and Android can be added here too for full automation

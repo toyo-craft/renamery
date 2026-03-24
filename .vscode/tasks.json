@@ -1,0 +1,19 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🚀 ReNamery: リリース実行 (Patch)",
+            "type": "shell",
+            "command": ".\\scripts\\release_all.ps1 -Level patch",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "🚀 ReNamery: リリース実行 (Minor)",
+            "type": "shell",
+            "command": ".\\scripts\\release_all.ps1 -Level minor",
+            "group": "build",
+            "problemMatcher": []
+        }
+    ]
+}
