@@ -13,11 +13,13 @@ import '../../core/settings_service.dart';
 import 'panels/navigation_panel.dart';
 import 'panels/file_list_panel.dart';
 import 'panels/settings_panel.dart';
-import 'panels/home_app_bar.dart'; // Import new AppBar
+import 'panels/home_app_bar.dart';
+import 'widgets/preview_window.dart';
 
 import 'helpers/undo_helper.dart';
 import 'helpers/copy_helper.dart';
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class HomeScreen extends StatefulWidget {
@@ -31,6 +33,35 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   late final MultiSplitViewController _threePaneController;
   late final MultiSplitViewController _twoPaneController;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  
+  // Floating Preview State
+  bool _showFloatingPreview = false;
+  Timer? _previewTimer;
+  int _lastSelectedCount = 0;
+  String _lastSelectedPath = '';
+
+  void _triggerFloatingPreview(int currentCount, String currentPath) {
+    if (currentCount == 0) {
+      if (_showFloatingPreview) {
+        setState(() => _showFloatingPreview = false);
+      }
+      return;
+    }
+    
+    if (currentCount != _lastSelectedCount || currentPath != _lastSelectedPath) {
+      _lastSelectedCount = currentCount;
+      _lastSelectedPath = currentPath;
+      
+      _previewTimer?.cancel();
+      setState(() => _showFloatingPreview = true);
+      
+      _previewTimer = Timer(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          setState(() => _showFloatingPreview = false);
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -40,7 +71,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
       windowManager.addListener(this);
     }
 
-    // Initialize 3-Pane Controller (Desktop)
     _threePaneController = MultiSplitViewController(
       areas: [
         Area(
@@ -54,7 +84,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
       ],
     );
 
-    // Initialize 2-Pane Controller (Tablet)
     _twoPaneController = MultiSplitViewController(
       areas: [
         Area(flex: 0.6, builder: (c, a) => const FileListPanel()),
@@ -71,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       windowManager.removeListener(this);
     }
+    _previewTimer?.cancel();
     super.dispose();
   }
 
@@ -174,12 +204,9 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     final l10n = AppLocalizations.of(context)!;
     final width = MediaQuery.of(context).size.width;
 
-    // 1. Desktop: Left + Center + Right (Width >= 1100)
-    // 2. Tablet: Center + Right (Width >= 700)
-    // 3. Mobile: Center (Width < 700)
-
     final bool showLeftPane = width >= 1100;
     final bool showRightPane = width >= 700;
+    final bool isNarrow = width < 700;
 
     return Focus(
       autofocus: true,
@@ -188,7 +215,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           return KeyEventResult.ignored;
         }
 
-        // 1. If Editing, do NOT execute App Shortcuts.
         if (_isEditing()) {
           return KeyEventResult.ignored;
         }
@@ -196,7 +222,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         final logicalKey = event.logicalKey;
         final isCtrl = HardwareKeyboard.instance.isControlPressed;
 
-        // Ctrl + Z : Undo
         if (isCtrl && logicalKey == LogicalKeyboardKey.keyZ) {
           final provider = context.read<DirectoryProvider>();
           if (provider.canUndo) {
@@ -205,7 +230,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           }
         }
 
-        // Ctrl + ArrowUp : Move Selection Up
         if (isCtrl && logicalKey == LogicalKeyboardKey.arrowUp) {
           final provider = context.read<DirectoryProvider>();
           if (provider.canMoveUp) {
@@ -214,7 +238,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           }
         }
 
-        // Ctrl + ArrowDown : Move Selection Down
         if (isCtrl && logicalKey == LogicalKeyboardKey.arrowDown) {
           final provider = context.read<DirectoryProvider>();
           if (provider.canMoveDown) {
@@ -223,7 +246,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           }
         }
 
-        // Ctrl + C : Copy
         if (isCtrl && logicalKey == LogicalKeyboardKey.keyC) {
           final provider = context.read<DirectoryProvider>();
           final count = provider.currentFiles.where((f) => f.isSelected).length;
@@ -236,7 +258,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           return KeyEventResult.handled;
         }
 
-        // Ctrl + X : Cut
         if (isCtrl && logicalKey == LogicalKeyboardKey.keyX) {
           final provider = context.read<DirectoryProvider>();
           final count = provider.currentFiles.where((f) => f.isSelected).length;
@@ -249,7 +270,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           return KeyEventResult.handled;
         }
 
-        // Ctrl + V : Paste
         if (isCtrl && logicalKey == LogicalKeyboardKey.keyV) {
           final provider = context.read<DirectoryProvider>();
           if (provider.canPaste) {
@@ -258,13 +278,11 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           return KeyEventResult.handled;
         }
 
-        // Ctrl + A : Select All
         if (isCtrl && logicalKey == LogicalKeyboardKey.keyA) {
           context.read<DirectoryProvider>().selectAll(true);
           return KeyEventResult.handled;
         }
 
-        // Delete : Delete Files
         if (logicalKey == LogicalKeyboardKey.delete) {
           _handleDelete(context, l10n);
           return KeyEventResult.handled;
@@ -272,149 +290,223 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
         return KeyEventResult.ignored;
       },
-      child: Scaffold(
-        key: _scaffoldKey,
-        appBar: HomeAppBar(
-          showDrawerMenu:
-              !showLeftPane, // Show Menu button if Left Pane is hidden
-        ),
-        // Left Drawer (if Left Pane hidden)
-        drawer: !showLeftPane
-            ? Drawer(
-                width: 300,
-                child: Consumer<DirectoryProvider>(
-                  builder: (context, provider, child) =>
-                      NavigationPanel(key: ValueKey(provider.resetCount)),
+      child: Stack(
+        children: [
+          Scaffold(
+            key: _scaffoldKey,
+            appBar: HomeAppBar(
+              showDrawerMenu: !showLeftPane,
+            ),
+            drawer: !showLeftPane
+                ? Drawer(
+                    width: 300,
+                    child: Consumer<DirectoryProvider>(
+                      builder: (context, provider, child) =>
+                          NavigationPanel(key: ValueKey(provider.resetCount)),
+                    ),
+                  )
+                : null,
+            endDrawer: !showRightPane
+                ? const Drawer(
+                    width: 350,
+                    child: SettingsPanel(),
+                  )
+                : null,
+            body: Column(
+              children: [
+                Consumer<DirectoryProvider>(
+                  builder: (context, provider, child) {
+                    return provider.isLoading
+                        ? const SizedBox(
+                            height: 2,
+                            child: LinearProgressIndicator(),
+                          )
+                        : const SizedBox(height: 2);
+                  },
                 ),
-              )
-            : null,
-        // Right Drawer (if Right Pane hidden)
-        endDrawer: !showRightPane
-            ? const Drawer(
-                width: 350,
-                child: SettingsPanel(),
-              )
-            : null,
-        body: Column(
-          children: [
-            Expanded(
-              child: MultiSplitViewTheme(
-                data: MultiSplitViewThemeData(
-                  dividerThickness: 10,
-                  dividerPainter: DividerPainters.grooved1(
-                    color: Colors.grey[400]!,
-                    highlightedColor: Colors.blue,
+                Expanded(
+                  child: MultiSplitViewTheme(
+                    data: MultiSplitViewThemeData(
+                      dividerThickness: 10,
+                      dividerPainter: DividerPainters.grooved1(
+                        color: Colors.grey[400]!,
+                        highlightedColor: Colors.blue,
+                      ),
+                    ),
+                    child: _buildBody(showLeftPane, showRightPane),
                   ),
                 ),
-                child: _buildBody(showLeftPane, showRightPane),
-              ),
+              ],
             ),
-          ],
-        ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
+            bottomNavigationBar: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
               ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: SafeArea(
-            child: Consumer<DirectoryProvider>(
-              builder: (context, provider, child) {
-                final total = provider.allFilesCount;
-                final current = provider.currentFiles.length;
-                final selected =
-                    provider.currentFiles.where((f) => f.isSelected).length;
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: SafeArea(
+                child: Consumer<DirectoryProvider>(
+                  builder: (context, provider, child) {
+                    final total = provider.allFilesCount;
+                    final current = provider.currentFiles.length;
+                    final selected =
+                        provider.currentFiles.where((f) => f.isSelected).length;
 
-                String countText = '';
-                if (current != total) {
-                  countText =
-                      l10n.labelStatusDisplayCount(current, total, selected);
-                } else {
-                  countText = l10n.labelStatusTotalCount(total, selected);
-                }
-                
-                // Add selection details (Image, PDF, etc.)
-                if (selected > 0) {
-                  countText += _getSelectionDetails(provider.currentFiles.where((f) => f.isSelected).toList(), l10n);
-                }
+                    String countText = '';
+                    if (current != total) {
+                      countText =
+                          l10n.labelStatusDisplayCount(current, total, selected);
+                    } else {
+                      countText = l10n.labelStatusTotalCount(total, selected);
+                    }
+                    
+                    if (selected > 0) {
+                      countText += _getSelectionDetails(provider.currentFiles.where((f) => f.isSelected).toList(), l10n);
+                    }
 
-                String statusText = provider.isLoading
-                    ? l10n.labelStatusProcessing
-                    : l10n.labelStatusReady;
+                    String statusText = provider.isLoading
+                        ? l10n.labelStatusProcessing
+                        : l10n.labelStatusReady;
 
-                final canExecute = provider.canExecute;
+                    final canExecute = provider.canExecute;
 
-                return Row(
-                  children: [
-                    // Status
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            countText,
-                            style: const TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.bold),
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                countText,
+                                style: const TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                statusText,
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            statusText,
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant),
+                        ),
+                        if (provider.isLoading) ...[
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            height: 36,
+                            child: FilledButton.tonalIcon(
+                              onPressed: () => provider.cancelScan(),
+                              icon: const Icon(Symbols.stop_circle, size: 18),
+                              label: const Text('スキャン中止'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                                foregroundColor: Theme.of(context).colorScheme.error,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                              ),
+                            ),
                           ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Action Button
-                    SizedBox(
-                      height: 48,
-                      width: 200,
-                      child: FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        const SizedBox(width: 16),
+                        SizedBox(
+                          height: 48,
+                          width: 200,
+                          child: FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onPrimary,
+                            ),
+                            onPressed: canExecute
+                                ? () => _confirmAndExecute(context, provider, l10n)
+                                : null,
+                            icon: const Icon(Symbols.play_arrow, size: 24),
+                            label: Text(
+                              l10n.labelGoRenamery,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
                           ),
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onPrimary,
                         ),
-                        onPressed: canExecute
-                            ? () => _confirmAndExecute(context, provider, l10n)
-                            : null,
-                        icon: const Icon(Symbols.play_arrow, size: 24),
-                        label: Text(
-                          l10n.labelGoRenamery,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+            floatingActionButton: !showRightPane
+                ? FloatingActionButton(
+                    onPressed: () {
+                      _scaffoldKey.currentState?.openEndDrawer();
+                    },
+                    child: const Icon(Icons.tune),
+                  )
+                : null,
+          ),
+          if (isNarrow)
+            Consumer<DirectoryProvider>(
+              builder: (context, provider, child) {
+                final selected = provider.currentFiles.where((f) => f.isSelected).toList();
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _triggerFloatingPreview(
+                    selected.length,
+                    selected.length == 1 ? selected.first.entity.path : ''
+                  );
+                });
+
+                return Positioned(
+                  left: 16,
+                  bottom: 16,
+                  child: AnimatedOpacity(
+                    opacity: _showFloatingPreview ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: IgnorePointer(
+                      ignoring: !_showFloatingPreview,
+                      child: GestureDetector(
+                        onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                              width: 2,
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: PreviewWindow(
+                            file: selected.isNotEmpty ? selected.last : null,
+                          ),
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 );
               },
             ),
-          ),
-        ),
-        floatingActionButton: !showRightPane
-            ? FloatingActionButton(
-                onPressed: () {
-                  _scaffoldKey.currentState?.openEndDrawer();
-                },
-                child: const Icon(Icons.tune),
-              )
-            : null,
+        ],
       ),
     );
   }
@@ -478,21 +570,18 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
   Widget _buildBody(bool showLeftPane, bool showRightPane) {
     if (showLeftPane && showRightPane) {
-      // 1. Desktop (3 Panes)
       return MultiSplitView(
         controller: _threePaneController,
         resizable: true,
         onDividerDragEnd: (index) => _saveSplitState(),
       );
     } else if (!showLeftPane && showRightPane) {
-      // 2. Tablet (2 Panes: Center + Right)
       return MultiSplitView(
         controller: _twoPaneController,
         resizable: true,
         onDividerDragEnd: (index) => _saveSplitState(),
       );
     } else {
-      // 3. Mobile (1 Pane: Center)
       return const FileListPanel();
     }
   }
@@ -534,7 +623,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   }
 
   bool _isEditing() {
-    // 0. Explicit App State Check (Most Reliable)
     try {
       if (context.read<DirectoryProvider>().isInlineRenaming) return true;
     } catch (_) {}
@@ -542,22 +630,17 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     final focusNode = FocusManager.instance.primaryFocus;
     if (focusNode == null || focusNode.context == null) return false;
 
-    // Robust check for various text input widgets
-    // 1. Check for EditableText (Base class for most inputs)
     if (focusNode.context!.findAncestorWidgetOfExactType<EditableText>() !=
         null) {
       return true;
     }
-    // 2. Check for TextField (Common wrapper)
     if (focusNode.context!.findAncestorWidgetOfExactType<TextField>() != null) {
       return true;
     }
-    // 3. Check for TextFormField (Form wrapper)
     if (focusNode.context!.findAncestorWidgetOfExactType<TextFormField>() !=
         null) {
       return true;
     }
-    // 4. Check for SearchBar (Material 3)
     if (focusNode.context!.findAncestorWidgetOfExactType<SearchBar>() != null) {
       return true;
     }

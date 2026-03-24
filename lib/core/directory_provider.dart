@@ -21,6 +21,7 @@ class DirectoryProvider extends ChangeNotifier {
   bool _enableBetaFeatures = false;
   int _treeVersion = 0;
   final UndoManager _undoManager = UndoManager();
+  StreamSubscription? _scanSubscription;
 
   bool _canPaste = false;
   bool get canPaste => _canPaste;
@@ -427,13 +428,15 @@ class DirectoryProvider extends ChangeNotifier {
   void setSeedColor(Color color) { _seedColor = color; _saveState(); notifyListeners(); }
 
   void _applyFilters() {
-    _currentFiles = _allFiles.where((file) {
-      if (_hideSystemFiles && p.basename(file.originalName).startsWith('.')) return false;
-      if (!_showFolders && file.entity is Directory) return false;
-      if (_filterText.isNotEmpty && !file.originalName.toLowerCase().contains(_filterText.toLowerCase())) return false;
-      return true;
-    }).toList();
+    _currentFiles = _allFiles.where((file) => _shouldShowFile(file)).toList();
     sortFiles(_sortColumnIndex, _sortAscending);
+  }
+
+  bool _shouldShowFile(FileModel file) {
+    if (_hideSystemFiles && p.basename(file.originalName).startsWith('.')) return false;
+    if (!_showFolders && file.entity is Directory) return false;
+    if (_filterText.isNotEmpty && !file.originalName.toLowerCase().contains(_filterText.toLowerCase())) return false;
+    return true;
   }
 
   void updateRenameSettings({
@@ -738,32 +741,89 @@ class DirectoryProvider extends ChangeNotifier {
 
   Future<void> setDirectory(Directory directory, {bool addToHistory = true, String? source, String? contextRoot}) async {
     _navigationSource = source; _navigationContextRoot = contextRoot;
+    _selectionVersion++; // 新しい選択バージョンを発行
+    
+    // 既存のスキャンをキャンセル
+    await _scanSubscription?.cancel();
+    _scanSubscription = null;
+
     if (addToHistory && (_currentDirectory == null || _currentDirectory!.path != directory.path)) {
       if (_navIndex < _navHistory.length - 1) _navHistory = _navHistory.sublist(0, _navIndex + 1);
       _navHistory.remove(directory.path); _navHistory.add(directory.path); if (_navHistory.length > 20) _navHistory.removeAt(0);
       _navIndex = _navHistory.length - 1;
     }
-    _currentDirectory = directory; _isLoading = true; _saveState(); await checkClipboard(); notifyListeners();
+    
+    _currentDirectory = directory; 
+    _isLoading = true; 
+    _allFiles = []; 
+    _currentFiles = [];
+    _saveState(); 
+    await checkClipboard(); 
+    notifyListeners();
+
     try {
-      final entities = await directory.list(recursive: _recursiveSearch).toList();
-      _allFiles = entities.map((e) {
-        final f = FileModel(entity: e);
-        if (_cutFilePaths.contains(e.path)) f.isCut = true; // 切り取り状態を復元
-        return f;
-      }).toList();
-      debugPrint('Files loaded: ${_allFiles.length}. Cut items: ${_allFiles.where((f) => f.isCut).length}');
-      if (_recursiveSearch) {
-        for (var f in _allFiles) {
-          try {
-            String drp = p.relative(f.parentPath, from: directory.path); if (drp == '.') drp = '';
-            f.setDisplayRelativePath(drp); f.setRelativePath(p.basename(f.parentPath));
-          } catch (_) { f.setRelativePath(''); f.setDisplayRelativePath(''); }
+      _scanSubscription = _startMinimalScan(directory.path, _recursiveSearch).listen(
+        (paths) {
+          for (var p in paths) {
+            final f = FileModel(entity: File(p)); // 最小限の生成
+            _allFiles.add(f);
+            _currentFiles.add(f);
+          }
+          notifyListeners();
+        },
+        onDone: () async {
+          _isLoading = false;
+          // まずは現在の手元にあるデータでUIを表示させる
+          notifyListeners();
+          
+          // 重い「最終フィルタの適用」と「Windows属性の取得」はバックグラウンド（マイクロタスク）へ回す
+          Future.microtask(() async {
+            _applyFilters();
+            if (!kIsWeb && Platform.isWindows) {
+              if (_currentDirectory != null) await _loadAttributes(_currentDirectory!);
+            }
+            _scanSubscription = null;
+            notifyListeners(); // 属性が読み込まれたら再度更新
+          });
+        },
+      );
+    } catch (e) {
+      _allFiles = []; _currentFiles = []; _isLoading = false; notifyListeners();
+    }
+  }
+
+  Stream<List<String>> _startMinimalScan(String path, bool recursive) async* {
+    final dir = Directory(path);
+    final List<String> batch = [];
+    try {
+      await for (final entity in dir.list(recursive: recursive, followLinks: false)) {
+        batch.add(entity.path);
+        if (batch.length >= 10) {
+          yield List.from(batch);
+          batch.clear();
+          await Future.delayed(const Duration(milliseconds: 10));
         }
-      } else { for (var f in _allFiles) { f.setRelativePath(''); f.setDisplayRelativePath(''); } }
-      _applyFilters();
-      if (!kIsWeb && Platform.isWindows) await _loadAttributes(_currentDirectory!);
-    } catch (e) { _allFiles = []; _currentFiles = []; notifyListeners(); }
-    finally { _isLoading = false; notifyListeners(); }
+      }
+    } catch (e) {
+      debugPrint('Scan Stream Error: $e');
+    }
+    if (batch.isNotEmpty) yield batch;
+  }
+
+  int _navTreeResetTick = 0;
+  int _selectionVersion = 0;
+  int get navTreeResetTick => _navTreeResetTick;
+  int get selectionVersion => _selectionVersion;
+  void resetNavTree() {
+    _navTreeResetTick++;
+    notifyListeners();
+  }
+
+  void cancelScan() {
+    _scanSubscription?.cancel();
+    _scanSubscription = null;
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> _loadAttributes(Directory dir) async {

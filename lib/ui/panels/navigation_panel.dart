@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:multi_split_view/multi_split_view.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:path/path.dart' as p;
 import '../../core/directory_provider.dart';
@@ -19,10 +20,20 @@ class _NavigationPanelState extends State<NavigationPanel> {
   List<Directory> _drives = [];
   List<Directory> _quickAccess = [];
   bool _loading = true;
+  int _quickAccessVersion = 0;
+  bool _isSuppressingAutoExpand = false; // 自動展開の抑制フラグ
+
+  late final MultiSplitViewController _splitterController;
 
   @override
   void initState() {
     super.initState();
+    _splitterController = MultiSplitViewController(
+      areas: [
+        Area(flex: 0.7, builder: (c, a) => _buildTreeSection()),
+        Area(flex: 0.3, builder: (c, a) => _buildPreviewSection()),
+      ],
+    );
     _loadData();
   }
 
@@ -44,131 +55,154 @@ class _NavigationPanelState extends State<NavigationPanel> {
   @override
   void dispose() {
     _horizontalController.dispose();
+    _splitterController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return MultiSplitViewTheme(
+      data: MultiSplitViewThemeData(
+        dividerThickness: 6,
+        dividerPainter: DividerPainters.grooved1(
+          color: Theme.of(context).dividerColor,
+          highlightedColor: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+      child: MultiSplitView(
+        axis: Axis.vertical,
+        controller: _splitterController,
+      ),
+    );
+  }
+
+  Widget _buildTreeSection() {
     final l10n = AppLocalizations.of(context)!;
-    final provider = context.watch<DirectoryProvider>();
-
+    final provider = context.watch<DirectoryProvider>(); // provider を監視
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Tree view
+        // Fixed Header for Quick Access
+        if (_quickAccess.isNotEmpty)
+          _buildSectionHeader(
+            l10n.labelNavQuickAccess,
+            onAction: () => provider.resetNavTree(), // Provider のメソッドを呼ぶ
+            actionIcon: Symbols.collapse_all,
+          ),
+        
         Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Scrollbar(
-                      controller: _horizontalController,
-                      thumbVisibility: true,
-                      trackVisibility: true,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Scrollbar(
+                controller: _horizontalController,
+                child: SingleChildScrollView(
+                  controller: _horizontalController,
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: IntrinsicWidth(
                       child: SingleChildScrollView(
-                        controller: _horizontalController,
-                        scrollDirection: Axis.horizontal,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minWidth: constraints.maxWidth,
-                          ),
-                          child: IntrinsicWidth(
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.vertical,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Quick Access Section
-                                  if (_quickAccess.isNotEmpty) ...[
-                                    _buildSectionHeader(
-                                        l10n.labelNavQuickAccess),
-                                    ..._quickAccess.map(
-                                      (dir) => _DirectoryTile(
-                                        directory: dir,
-                                        customIcon: _getIconForPath(dir.path),
-                                        isRoot: true,
-                                        isQuickAccess: true,
-                                        contextRoot:
-                                            dir.path, // I am the root context!
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                  ],
-
-                                  // PC Section
-                                  _buildSectionHeader(l10n.labelNavPC),
-                                  ..._drives.map(
-                                    (dir) => _DirectoryTile(
-                                      directory: dir,
-                                      customIcon: Icons.computer,
-                                      isRoot: true,
-                                      isQuickAccess: false,
-                                      // Tree nodes don't use contextRoot for now (or could use drive?)
-                                    ),
-                                  ),
-                                ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Quick Access Items
+                            if (_quickAccess.isNotEmpty)
+                              KeyedSubtree(
+                                // Provider のカウンタを Key に含めることで確実に再生成
+                                key: ValueKey('qa_${provider.navTreeResetTick}'),
+                                child: Column(
+                                  children: _quickAccess.map((dir) => _DirectoryTile(
+                                    directory: dir,
+                                    customIcon: _getIconForPath(dir.path),
+                                    isRoot: true,
+                                    isQuickAccess: true,
+                                    contextRoot: dir.path,
+                                    // 抑制フラグも Provider 側の状態で管理可能
+                                  )).toList(),
+                                ),
                               ),
-                            ),
-                          ),
+                            
+                            // PC Section
+                            _buildSectionHeader(l10n.labelNavPC),
+                            ..._drives.map((dir) => _DirectoryTile(
+                              directory: dir,
+                              customIcon: Icons.computer,
+                              isRoot: true,
+                              isQuickAccess: false,
+                            )),
+                          ],
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
-        ),
-
-        // Preview Panel (ExpansionTile)
-        Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: Theme.of(context).dividerColor,
-                width: 0.5,
-              ),
-            ),
-          ),
-          child: ExpansionTile(
-            key: const ValueKey('preview_expansion'),
-            initiallyExpanded: provider.showPreview,
-            onExpansionChanged: (expanded) {
-              context
-                  .read<DirectoryProvider>()
-                  .updateFilterSettings(preview: expanded);
+              );
             },
-            dense: true,
-            tilePadding: const EdgeInsets.symmetric(horizontal: 12.0),
-            title: Text(
-              l10n.labelFilterPreview,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-            children: [
-              SizedBox(
-                height: 150,
-                child: PreviewWindow(
-                  file: provider.currentFiles.where((f) => f.isSelected).length == 1
-                      ? provider.currentFiles.firstWhere((f) => f.isSelected)
-                      : null,
-                  selectedFiles: provider.currentFiles.where((f) => f.isSelected).toList(),
-                ),
-              ),
-            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildPreviewSection() {
+    final l10n = AppLocalizations.of(context)!;
+    final provider = context.watch<DirectoryProvider>();
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor, width: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: Text(
+              l10n.labelFilterPreview,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: PreviewWindow(
+              file: provider.currentFiles.where((f) => f.isSelected).length == 1
+                  ? provider.currentFiles.firstWhere((f) => f.isSelected)
+                  : null,
+              selectedFiles: provider.currentFiles.where((f) => f.isSelected).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, {VoidCallback? onAction, IconData? actionIcon}) {
     return Padding(
-      padding:
-          const EdgeInsets.fromLTRB(16, 12, 16, 4), // Increased top padding
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary, // Use primary color
-        ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          if (onAction != null && actionIcon != null)
+            IconButton(
+              icon: Icon(actionIcon, size: 16),
+              onPressed: onAction,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              visualDensity: VisualDensity.compact,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              tooltip: '全て折りたたむ',
+            ),
+        ],
       ),
     );
   }
@@ -249,9 +283,9 @@ class _DirectoryTile extends StatefulWidget {
   final Directory directory;
   final IconData? customIcon;
   final bool isRoot;
-  final bool isQuickAccess; // New flag
-  final String?
-      contextRoot; // The root path of the current navigation context (for QA)
+  final bool isQuickAccess;
+  final String? contextRoot;
+  final bool isSuppressingAutoExpand; // 追加
 
   const _DirectoryTile({
     required this.directory,
@@ -259,6 +293,7 @@ class _DirectoryTile extends StatefulWidget {
     this.isRoot = false,
     this.isQuickAccess = false,
     this.contextRoot,
+    this.isSuppressingAutoExpand = false, // 追加
   });
 
   @override
@@ -331,12 +366,21 @@ class _DirectoryTileState extends State<_DirectoryTile> {
   // State to track the last selection path we handled for auto-expansion.
   // This prevents re-expanding a node if the user manually collapses it while the selection is still inside.
   String? _lastHandledSelectionPath;
+  int _lastHandledSelectionVersion = -1; // 追加：最後に処理した選択バージョン
   int _lastTreeVersion = -1;
+  int _lastResetTick = -1;
 
   @override
   Widget build(BuildContext context) {
-    // Check if tree needs to be refreshed (e.g. after file/folder deletion)
+    // Check if tree needs to be refreshed
     final provider = context.watch<DirectoryProvider>();
+    
+    // 一括折りたたみ（リセット）の検知
+    if (_lastResetTick != -1 && provider.navTreeResetTick != _lastResetTick) {
+      _isExpanded = false;
+    }
+    _lastResetTick = provider.navTreeResetTick;
+
     if (_loaded &&
         provider.treeVersion != _lastTreeVersion &&
         _lastTreeVersion != -1) {
@@ -393,8 +437,8 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     }
 
     // Auto-expand Logic
-    // We only check for auto-expansion if the current selection hash has changed from what we last handled.
-    if (currentDir != null && currentDir.path != _lastHandledSelectionPath) {
+    // 新しい選択イベントが発生したときのみ自動展開を試みる
+    if (currentDir != null && provider.selectionVersion != _lastHandledSelectionVersion) {
       // Allow expansion check
       bool shouldAutoExpand = false;
       bool isDescendant = false;
@@ -414,81 +458,46 @@ class _DirectoryTileState extends State<_DirectoryTile> {
 
       // 1. If Source is QA
       if (source == 'quick_access') {
-        // If I am a Tree Node -> Suppress
-        if (!widget.isQuickAccess) {
-          // Suppress
-        }
-        // If I am a QA Node
-        else {
-          // If I am Root, match Context Root
-          if (widget.isRoot) {
-            if (myContextRoot == activeContextRoot) {
-              // I am the Active Root (or containing it?)
-              if (isDescendant) shouldAutoExpand = true;
-            } else {
-              // I am NOT the active root. Suppress.
-            }
-          } else {
-            // I am a Child. My Context Root should match active context root.
-            if (myContextRoot == activeContextRoot) {
-              if (isDescendant) shouldAutoExpand = true;
-            }
-          }
+        if (widget.isQuickAccess) {
+          if (myContextRoot == activeContextRoot && isDescendant) shouldAutoExpand = true;
         }
       }
       // 2. If Source is Tree
       else if (source == 'tree') {
-        // Only expand Tree Nodes
-        if (!widget.isQuickAccess && isDescendant) {
-          shouldAutoExpand = true;
-        }
+        if (!widget.isQuickAccess && isDescendant) shouldAutoExpand = true;
       }
       // 3. Unknown Source (External/Initial)
       else {
         if (isDescendant) shouldAutoExpand = true;
       }
 
-      // Also expand if Selected (Exact Match) AND valid context
-      // Note: Usually exact match doesn't need to expand *itself* (it has no children visible inside it in the tree view usually, unless we want to see subfolders)
-      // Standard tree behavior is usually to expand *parents* of selected.
-      // But if we want to show children of selected, we expand.
-      if (isSelected) {
-        shouldAutoExpand = true;
-      }
+      // Exact match expand
+      if (isSelected) shouldAutoExpand = true;
 
       if (shouldAutoExpand && !_isExpanded) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _toggleExpand();
-          }
+          if (mounted) _toggleExpand();
         });
       }
 
       if (isSelected) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            final verticalScrollable =
-                Scrollable.maybeOf(context, axis: Axis.vertical);
+            final verticalScrollable = Scrollable.maybeOf(context, axis: Axis.vertical);
             final renderObject = context.findRenderObject();
             if (verticalScrollable != null && renderObject != null) {
-              verticalScrollable.position.ensureVisible(
-                renderObject,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
+              verticalScrollable.position.ensureVisible(renderObject, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
             }
           }
         });
       }
 
-      // Update the last handled path so we don't force-expand again for this selection
-      // We do this inside a post frame callback usually to avoid side effects during build,
-      // but since it's just a local state tracker for this build logic, we can set it here
-      // (but generally setting state in build is bad).
-      // Actually, we should just update the member variable directly without setState since we are IN build.
+      // 処理済みのパスとバージョンを記憶
       _lastHandledSelectionPath = currentDir.path;
+      _lastHandledSelectionVersion = provider.selectionVersion;
     } else if (currentDir == null) {
       _lastHandledSelectionPath = null;
+      _lastHandledSelectionVersion = -1;
     }
 
     return Column(
