@@ -1,7 +1,7 @@
 ﻿name: renamery
 description: Flutterを使用したNameryファイルリネームツールの復活版。
 publish_to: 'none'
-version: 0.6.0
+version: 0.7.0
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -27,7 +27,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   google_fonts: ^6.2.1
-  url_launcher: ^6.2.1
+  url_launcher: ^6.3.1
   windows_single_instance: ^1.1.0
   win32: ^5.15.0
   material_symbols_icons: ^4.2906.0
@@ -36,7 +36,6 @@ dependencies:
   flutter_svg: ^2.2.4
   printing: ^5.14.3
   archive: ^4.0.9
-  url_launcher_windows: ^3.1.5
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +65,6 @@ msix_config:
   publisher_display_name: Toyo Craft Lab
   identity_name: ToyoCraftLab.ReNamery
   publisher: "CN=ToyoCraftLab"
-  msix_version: 0.6.0.0
+  msix_version: 0.7.0.0
   logo_path: assets/icon/app_icon.png
   store: true
