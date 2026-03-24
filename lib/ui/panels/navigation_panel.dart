@@ -475,8 +475,9 @@ class _DirectoryTileState extends State<_DirectoryTile> {
       else if (source == 'tree') {
         if (!widget.isQuickAccess && isDescendant) shouldAutoExpand = true;
       }
-      // 3. Unknown Source (External/Initial)
+      // 3. Unknown Source (External / Address Bar / Breadcrumb)
       else {
+        // 外部（アドレスバー等）からの入力時は無条件に展開を試みる
         if (isDescendant) shouldAutoExpand = true;
       }
 
@@ -485,8 +486,19 @@ class _DirectoryTileState extends State<_DirectoryTile> {
 
       if (shouldAutoExpand && !_isExpanded) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _toggleExpand();
+          if (mounted) {
+            _toggleExpand();
+            // 展開後にこのバージョンを「処理済み」として更新
+            setState(() {
+              _lastHandledSelectionVersion = provider.selectionVersion;
+              _lastHandledSelectionPath = currentDir.path;
+            });
+          }
         });
+      } else {
+        // 展開不要な場合も、このバージョンを「処理済み」とする
+        _lastHandledSelectionVersion = provider.selectionVersion;
+        _lastHandledSelectionPath = currentDir.path;
       }
 
       if (isSelected) {
@@ -500,10 +512,6 @@ class _DirectoryTileState extends State<_DirectoryTile> {
           }
         });
       }
-
-      // 処理済みのパスとバージョンを記憶
-      _lastHandledSelectionPath = currentDir.path;
-      _lastHandledSelectionVersion = provider.selectionVersion;
     } else if (currentDir == null) {
       _lastHandledSelectionPath = null;
       _lastHandledSelectionVersion = -1;

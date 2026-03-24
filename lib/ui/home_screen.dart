@@ -18,6 +18,7 @@ import 'widgets/preview_window.dart';
 
 import 'helpers/undo_helper.dart';
 import 'helpers/copy_helper.dart';
+import 'helpers/filter_dialog_helper.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -338,123 +339,13 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                 ),
               ],
             ),
-            bottomNavigationBar: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: SafeArea(
-                child: Consumer<DirectoryProvider>(
-                  builder: (context, provider, child) {
-                    final total = provider.allFilesCount;
-                    final current = provider.currentFiles.length;
-                    final selected =
-                        provider.currentFiles.where((f) => f.isSelected).length;
-
-                    String countText = '';
-                    if (current != total) {
-                      countText =
-                          l10n.labelStatusDisplayCount(current, total, selected);
-                    } else {
-                      countText = l10n.labelStatusTotalCount(total, selected);
-                    }
-                    
-                    if (selected > 0) {
-                      countText += _getSelectionDetails(provider.currentFiles.where((f) => f.isSelected).toList(), l10n);
-                    }
-
-                    String statusText = provider.isLoading
-                        ? l10n.labelStatusProcessing
-                        : l10n.labelStatusReady;
-
-                    final canExecute = provider.canExecute;
-
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                countText,
-                                style: const TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                statusText,
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (provider.isLoading) ...[
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            height: 36,
-                            child: FilledButton.tonalIcon(
-                              onPressed: () => provider.cancelScan(),
-                              icon: const Icon(Symbols.stop_circle, size: 18),
-                              label: const Text('スキャン中止'),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                                foregroundColor: Theme.of(context).colorScheme.error,
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                              ),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(width: 16),
-                        SizedBox(
-                          height: 48,
-                          width: 200,
-                          child: FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
-                              foregroundColor:
-                                  Theme.of(context).colorScheme.onPrimary,
-                            ),
-                            onPressed: canExecute
-                                ? () => _confirmAndExecute(context, provider, l10n)
-                                : null,
-                            icon: const Icon(Symbols.play_arrow, size: 24),
-                            label: Text(
-                              l10n.labelGoRenamery,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ),
-            floatingActionButton: !showRightPane
-                ? FloatingActionButton(
-                    onPressed: () {
-                      _scaffoldKey.currentState?.openEndDrawer();
-                    },
-                    child: const Icon(Icons.tune),
-                  )
-                : null,
+            bottomNavigationBar: isNarrow
+                ? _buildMobileBottomAppBar(context, l10n)
+                : _buildDesktopFooter(context, l10n),
+            floatingActionButton: _buildFAB(isNarrow, showRightPane, context, l10n),
+            floatingActionButtonLocation: isNarrow 
+                ? FloatingActionButtonLocation.centerDocked 
+                : FloatingActionButtonLocation.endFloat,
           ),
           if (isNarrow)
             Consumer<DirectoryProvider>(
@@ -469,7 +360,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
                 return Positioned(
                   left: 16,
-                  bottom: 16,
+                  bottom: 100, // BottomAppBarの上に来るように調整
                   child: AnimatedOpacity(
                     opacity: _showFloatingPreview ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 300),
@@ -507,6 +398,194 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
               },
             ),
         ],
+      ),
+    );
+  }
+
+  Widget? _buildFAB(bool isNarrow, bool showRightPane, BuildContext context, AppLocalizations l10n) {
+    if (isNarrow) {
+      final provider = context.watch<DirectoryProvider>();
+      return FloatingActionButton(
+        onPressed: provider.canExecute ? () => _confirmAndExecute(context, provider, l10n) : null,
+        backgroundColor: provider.canExecute 
+            ? Theme.of(context).colorScheme.primaryContainer 
+            : Theme.of(context).colorScheme.surfaceVariant,
+        foregroundColor: provider.canExecute 
+            ? Theme.of(context).colorScheme.onPrimaryContainer 
+            : Theme.of(context).colorScheme.onSurfaceVariant,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), 
+        elevation: 4,
+        child: const Icon(Symbols.play_arrow, size: 32, fill: 1), // サイズアップとFill
+      );
+    } else if (!showRightPane) {
+      return FloatingActionButton(
+        onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+        child: const Icon(Symbols.tune),
+      );
+    }
+    return null;
+  }
+
+  Widget _buildMobileBottomAppBar(BuildContext context, AppLocalizations l10n) {
+    return BottomAppBar(
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 6.0,
+      height: 70, // 高さを抑える
+      child: Consumer<DirectoryProvider>(
+        builder: (context, provider, child) {
+          final total = provider.allFilesCount;
+          final current = provider.currentFiles.length;
+          final selected = provider.currentFiles.where((f) => f.isSelected).length;
+
+          String countText = current != total
+              ? l10n.labelStatusDisplayCount(current, total, selected)
+              : l10n.labelStatusTotalCount(total, selected);
+          
+          if (selected > 0) {
+            countText += _getSelectionDetails(provider.currentFiles.where((f) => f.isSelected).toList(), l10n);
+          }
+
+          String statusText = provider.isLoading ? l10n.labelStatusProcessing : l10n.labelStatusReady;
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Left: Search & Filter Icon
+              IconButton(
+                icon: const Icon(Symbols.search),
+                onPressed: () => FilterDialogHelper.showFilterPopup(context),
+                tooltip: l10n.labelFilterOptions,
+              ),
+              
+              if (provider.isLoading)
+                IconButton(
+                  icon: const Icon(Symbols.stop_circle),
+                  onPressed: () => provider.cancelScan(),
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              
+              Expanded(
+                child: Align(
+                  alignment: Alignment.bottomCenter, // 最下部中央へ
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      "$countText | $statusText", // 二行を一列に集約
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 9, // フォントサイズを維持
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Right: Rename Settings Icon
+              IconButton(
+                icon: const Icon(Symbols.tune),
+                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                tooltip: l10n.labelMenuRenameSettings,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDesktopFooter(BuildContext context, AppLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: SafeArea(
+        child: Consumer<DirectoryProvider>(
+          builder: (context, provider, child) {
+            final total = provider.allFilesCount;
+            final current = provider.currentFiles.length;
+            final selected = provider.currentFiles.where((f) => f.isSelected).length;
+
+            String countText = current != total
+                ? l10n.labelStatusDisplayCount(current, total, selected)
+                : l10n.labelStatusTotalCount(total, selected);
+            
+            if (selected > 0) {
+              countText += _getSelectionDetails(provider.currentFiles.where((f) => f.isSelected).toList(), l10n);
+            }
+
+            String statusText = provider.isLoading ? l10n.labelStatusProcessing : l10n.labelStatusReady;
+            final canExecute = provider.canExecute;
+
+            return Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        countText,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (provider.isLoading) ...[
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 36,
+                    child: FilledButton.tonalIcon(
+                      onPressed: () => provider.cancelScan(),
+                      icon: const Icon(Symbols.stop_circle, size: 18),
+                      label: const Text('スキャン中止'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 16),
+                SizedBox(
+                  height: 48,
+                  width: 200,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    onPressed: canExecute ? () => _confirmAndExecute(context, provider, l10n) : null,
+                    icon: const Icon(Symbols.play_arrow, size: 24),
+                    label: Text(
+                      l10n.labelGoRenamery,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

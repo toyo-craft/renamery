@@ -309,6 +309,7 @@
   "labelCtxCutItems": "Cut",
   "labelCtxCreateFolder": "Create New Folder",
   "labelFilterOptions": "Filter Options",
+  "labelMenuRenameSettings": "Rename Settings",
   "labelDialogClose": "Close",
   "labelSearchHint": "Search by filename..."
 }

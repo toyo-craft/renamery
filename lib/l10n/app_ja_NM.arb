@@ -234,7 +234,8 @@
   "labelCtxCopyItems": "コピー",
   "labelCtxCutItems": "切取",
   "labelCtxCreateFolder": "新規作成",
-  "labelFilterOptions": "指定...",
+  "labelFilterOptions": "検索と表示設定",
+  "labelMenuRenameSettings": "リネーム設定",
   "labelDialogClose": "閉じる",
   "labelSearchHint": "検索..."
 }

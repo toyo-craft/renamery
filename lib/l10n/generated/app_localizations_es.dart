@@ -9,25 +9,25 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
-  String get labelMainTab => 'Principal';
+  String get labelMainTab => 'Básico';
 
   @override
-  String get labelSubTab => 'Secundario';
+  String get labelSubTab => 'Extendido';
 
   @override
-  String get labelExtraTab => 'Extra';
+  String get labelExtraTab => 'Avanzado';
 
   @override
   String get labelEtcTab => 'Atributos';
 
   @override
-  String get labelCategoryAdd => 'Añadir Texto';
+  String get labelCategoryAdd => 'Agregar texto';
 
   @override
-  String get labelCategoryRemove => 'Eliminar Texto';
+  String get labelCategoryRemove => 'Eliminar texto';
 
   @override
-  String get labelCategoryReplace => 'Reemplazar y Convertir';
+  String get labelCategoryReplace => 'Reemplazar/Convertir';
 
   @override
   String get labelCategoryNumbering => 'Numeración';
@@ -39,13 +39,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelCategoryAdvanced => 'Avanzado';
 
   @override
-  String get labelStringInput => 'Texto';
+  String get labelStringInput => 'Cadena';
 
   @override
   String get labelColName => 'Nombre';
 
   @override
-  String get labelColNewName => 'Nuevo Nombre';
+  String get labelColNewName => 'Nuevo nombre';
 
   @override
   String get labelColSize => 'Tamaño';
@@ -57,85 +57,87 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelColType => 'Tipo';
 
   @override
-  String get labelColDate => 'Fecha de Modificación';
+  String get labelColDate => 'Fecha de modificación';
 
   @override
-  String get labelColAttr => 'Atributos';
+  String get labelColAttr => 'Atrib';
 
   @override
-  String get labelOpPrefix => 'Añadir Prefijo';
+  String get labelOpPrefix => 'Agregar al principio';
 
   @override
-  String get labelOpSuffix => 'Añadir Sufijo';
+  String get labelOpSuffix => 'Agregar al final';
 
   @override
-  String get labelOpInsert => 'Insertar en';
+  String get labelOpInsert => 'Insertar en pos';
 
   @override
-  String get labelOpDeleteStart => 'Eliminar desde el Inicio';
+  String get labelOpDeleteStart => 'Eliminar desde principio';
 
   @override
-  String get labelOpDeleteEnd => 'Eliminar desde el Final';
+  String get labelOpDeleteEnd => 'Eliminar desde el final';
 
   @override
-  String get labelOpDeleteFrom => 'Eliminar desde Posición';
+  String get labelOpDeleteFrom => 'Eliminar desde pos';
 
   @override
-  String get labelOpCapitalize => 'Capitalizar';
+  String get labelOpCapitalize => 'Capitalizar frente';
 
   @override
-  String get labelOpUpper => 'A Mayúsculas';
+  String get labelOpUpper => 'Todo en mayúsculas';
 
   @override
-  String get labelOpLower => 'A Minúsculas';
+  String get labelOpLower => 'Todo en minúsculas';
 
   @override
-  String get labelOpExtChange => 'Cambiar Extensión';
+  String get labelOpExtChange => 'Cambiar ext';
 
   @override
-  String get labelOpExtAdd => 'Añadir Extensión';
+  String get labelOpExtAdd => 'Agregar ext';
 
   @override
-  String get labelOpExtRemove => 'Quitar Extensión';
+  String get labelOpExtRemove => 'Eliminar ext';
 
   @override
-  String get labelOpExtUpper => 'Extensión a Mayúsculas';
+  String get labelOpExtUpper => 'Ext en mayúsculas';
 
   @override
-  String get labelOpExtLower => 'Extensión a Minúsculas';
+  String get labelOpExtLower => 'Ext en minúsculas';
 
   @override
-  String get labelSubExtChangeTitle => 'Extensión';
+  String get labelSubExtChangeTitle => 'Cambio de extensión';
 
   @override
-  String get labelSubFormatTitle => 'Formato';
+  String get labelSubFormatTitle => 'Formato de palabra';
 
   @override
-  String get labelSubFormatProperCase => 'Capitalizar Palabras';
+  String get labelSubFormatProperCase =>
+      'Caso adecuado (Espacio/Guion/Subrayado)';
 
   @override
-  String get labelSubListTitle => 'Renombrar por Lista';
+  String get labelSubListTitle => 'Renombrar lista';
 
   @override
-  String get labelSubListModeText => 'Entrada de Texto';
+  String get labelSubListModeText => 'Entrada de texto (Original[TAB]Nuevo)';
 
   @override
-  String get labelSubListSample1 => 'Ejemplo: Secuencial';
+  String get labelSubListSample1 => 'Ejemplo: Archivos numerados';
 
   @override
-  String get labelSubListSample2 => 'Ejemplo: Reemplazo Ext';
+  String get labelSubListSample2 => 'Ejemplo: Cambio de ext masivo';
 
   @override
-  String get labelSubListSample3 => 'サンプル: 特定文字の置換';
+  String get labelSubListSample3 => 'Ejemplo: Reemplazo específico';
 
   @override
-  String get labelSubListHint => 'viejo.txt\tnuevo.txt';
+  String get labelSubListHint =>
+      'nombre_viejo.txt\tnombre_nuevo.txt\narchivo01.png\timagen01.png';
 
   @override
-  String get labelExtraAppendDate => 'Añadir Fecha';
+  String get labelExtraAppendDate => 'Añadir fecha de archivo';
 
   @override
-  String get labelExtraDateFormatHint => 'Formato de Fecha';
+  String get labelExtraDateFormatHint => 'Formato de fecha (Ej: yyyymmdd_)';
 
   @override
   String get labelExtraPosition => 'Posición';
@@ -147,10 +149,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelExtraBack => 'Atrás';
 
   @override
-  String get labelExtraConvHalfToFull => 'Mitad a Entero';
+  String get labelExtraConvHalfToFull => 'Media a ancho completo';
 
   @override
-  String get labelExtraConvFullToHalf => 'Entero a Mitad';
+  String get labelExtraConvFullToHalf => 'Ancho completo a medio';
 
   @override
   String get labelExtraConvKataToHira => 'Katakana a Hiragana';
@@ -159,13 +161,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelExtraConvHiraToKata => 'Hiragana a Katakana';
 
   @override
-  String get labelExtraConvFullAlphaToHalf => 'Alfa Entero a Mitad';
+  String get labelExtraConvFullAlphaToHalf => 'Alfa completo a medio';
 
   @override
-  String get labelExtraConvNumToHalf => 'Núm a Mitad';
+  String get labelExtraConvNumToHalf => 'Números a la mitad';
 
   @override
-  String get labelEtcAttribReadOnly => 'Solo Lectura';
+  String get labelEtcAttribReadOnly => 'Solo lectura';
 
   @override
   String get labelEtcAttribHidden => 'Oculto';
@@ -177,53 +179,54 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelEtcAttribSystem => 'Sistema';
 
   @override
-  String get labelEtcTimestampChange => 'Cambiar Marca de Tiempo';
+  String get labelEtcTimestampChange => 'Cambiar marca de tiempo';
 
   @override
-  String get labelEtcPickTime => 'Elegir Hora';
+  String get labelEtcPickTime => 'Elegir hora';
 
   @override
-  String get labelEtcPickDateTooltip => 'Elegir Fecha y Hora';
+  String get labelEtcPickDateTooltip => 'Elegir fecha y hora';
 
   @override
-  String get labelEtcTimestampNote => '(Ej. 2002/03/30 17:30)';
+  String get labelEtcTimestampNote => '(Ej: 2002/03/30 17:30)';
 
   @override
-  String get labelEtcAttributeChange => 'Cambiar Atributos';
+  String get labelEtcAttributeChange => 'Cambiar atributos';
 
   @override
-  String get labelEtcCautionTitle => 'Sin Deshacer';
+  String get labelEtcCautionTitle => 'No se puede deshacer';
 
   @override
   String get labelEtcCautionMessage =>
-      'Los cambios de marca de tiempo y atributos no se pueden deshacer.';
+      'Los cambios en esta categoría (marca de tiempo/atributos) no se pueden deshacer con la función Deshacer. Por favor, opere con precaución.';
 
   @override
   String get labelUndo => 'Deshacer';
 
   @override
-  String get labelExecute => 'Ejecutar';
+  String get labelExecute => 'Ir';
 
   @override
-  String get labelErrorInvalidFilename => 'Error: Nombre de Archivo Inválido';
+  String get labelErrorInvalidFilename =>
+      'Error: Caracteres prohibidos en el nombre de archivo';
 
   @override
-  String get labelCopyName => 'Copiar Nombre';
+  String get labelCopyName => 'Copiar nombre';
 
   @override
-  String get labelCopyPath => 'Copiar Ruta';
+  String get labelCopyPath => 'Copiar ruta';
 
   @override
-  String get labelCopyFullPath => 'Copiar Ruta Completa';
+  String get labelCopyFullPath => 'Copiar ruta completa';
 
   @override
-  String get labelCopyOptions => 'Opciones de Copia';
+  String get labelCopyOptions => 'Opciones de copia';
 
   @override
-  String get labelCopyUndo => 'Copiar Registro de Deshacer';
+  String get labelCopyUndo => 'Copiar registro de cambios';
 
   @override
-  String get labelCopyListClipboard => 'Copiar Lista al Portapapeles';
+  String get labelCopyListClipboard => 'Copiar lista actual al portapapeles';
 
   @override
   String get labelMoveUp => 'Subir';
@@ -232,92 +235,91 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelMoveDown => 'Bajar';
 
   @override
-  String get labelRefresh => 'Actualizar Todo';
+  String get labelRefresh => 'Refrescar todo';
 
   @override
-  String get labelMenuMore => 'Más Acciones';
+  String get labelMenuMore => 'Más operaciones';
 
   @override
-  String get labelMenuSettings => 'Configuración';
+  String get labelMenuSettings => 'Ajustes';
 
   @override
-  String get labelMenuFolder => 'Menú';
+  String get labelMenuFolder => 'Menú de carpetas';
 
   @override
-  String get labelNumStringNumber => 'Cadena + Núm';
+  String get labelNumStringNumber => 'Cadena + Número';
 
   @override
-  String get labelNumOriginalNumber => 'Original + Núm';
+  String get labelNumOriginalNumber => 'Original + Número';
 
   @override
-  String get labelNumNumberString => 'Núm + Cadena';
+  String get labelNumNumberString => 'Número + Cadena';
 
   @override
-  String get labelNumNumberOriginal => 'Núm + Original';
+  String get labelNumNumberOriginal => 'Número + Original';
 
   @override
-  String get labelNumBaseStringNumber => 'Base + Cdn + Núm';
+  String get labelNumBaseStringNumber => 'Base + Cadena + Número';
 
   @override
-  String get labelNumBaseStringOriginal => 'Base + Cdn + Original';
+  String get labelNumBaseStringOriginal => 'Base + Cadena + Original';
 
   @override
-  String get labelNumRelativeStringNumber => 'Relativo + Cdn + Núm';
+  String get labelNumRelativeStringNumber => 'Relativo + Cadena + Número';
 
   @override
-  String get labelNumRelativeStringOriginal => 'Relativo + Cdn + Original';
+  String get labelNumRelativeStringOriginal => 'Relativo + Cadena + Original';
 
   @override
-  String get labelNumNumberStringBase => 'Núm + Cdn + Base';
+  String get labelNumNumberStringBase => 'Número + Cadena + Base';
 
   @override
-  String get labelNumNumberStringRelative => 'Núm + Cdn + Relativo';
+  String get labelNumNumberStringRelative => 'Número + Cadena + Relativo';
 
   @override
-  String get labelReplaceFrom => 'Reemplazar';
+  String get labelReplaceFrom => 'Buscar';
 
   @override
-  String get labelReplaceTo => 'Con';
+  String get labelReplaceTo => 'Reemplazar con';
 
   @override
-  String get labelFullPath => 'Ubicación > ';
+  String get labelFullPath => 'Actual > ';
 
   @override
-  String get labelSelectAll => 'Seleccionar Todo';
+  String get labelSelectAll => 'Seleccionar todo';
 
   @override
-  String get labelDeselectAll => '選択解除';
+  String get labelDeselectAll => 'Deseleccionar';
 
   @override
-  String get labelSettingsFilterTitle => 'Ajustes de Filtro';
+  String get labelSettingsFilterTitle => 'Filtro de vista';
 
   @override
-  String get labelFilterAll => 'Todos los Archivos';
+  String get labelFilterAll => 'Todos los archivos';
 
   @override
   String get labelFilterSpecific => 'Específico';
 
   @override
-  String get labelFilterHideSystem => 'Ocultar Archivos del Sistema';
+  String get labelFilterHideSystem => 'Ocultar archivos del sistema';
 
   @override
-  String get labelFilterRecursive => 'Búsqueda Recursiva';
+  String get labelFilterRecursive => 'Búsqueda recursiva';
 
   @override
-  String get labelBetaListRenameHint =>
-      '* Se muestra porque las funciones Beta están activadas';
+  String get labelBetaListRenameHint => 'Visible porque Beta está habilitado';
 
   @override
-  String get labelCtxUpOneFolder => 'Subir una carpeta';
+  String get labelCtxUpOneFolder => 'Subir';
 
   @override
-  String get labelCtxRenameGeneral => 'Renombrar (General)';
+  String get labelCtxRenameGeneral => 'Renombrar (estándar)';
 
   @override
-  String get labelCtxBatchRename => 'Renombrar por lotes';
+  String get labelCtxBatchRename => 'Renombrado por lotes (Namery)';
 
   @override
-  String get labelCtxOpenWithAssoc => 'Abrir con asociación';
+  String get labelCtxOpenWithAssoc => 'Abrir con asoc';
 
   @override
   String get labelCtxMoveToTop => 'Mover al principio';
@@ -326,7 +328,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelCtxMoveToBottom => 'Mover al final';
 
   @override
-  String get labelCtxDeleteItems => 'Eliminar seleccionados (Supr)';
+  String get labelCtxDeleteItems => 'Eliminar elementos (Supr)';
 
   @override
   String get labelCtxMoveCaret => 'Mover cursor';
@@ -335,16 +337,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelCtxCaretSettings => 'Configuración del cursor';
 
   @override
-  String get labelCtxRefresh => 'Actualizar (F5)';
+  String get labelCtxRefresh => 'Refrescar (F5)';
 
   @override
-  String get labelCtxProperties => 'Propiedades (R)';
+  String get labelCtxProperties => 'Propiedades(R)';
 
   @override
-  String get labelFilterPreview => 'Mostrar Vista Previa';
+  String get labelFilterPreview => 'Mostrar vista previa';
 
   @override
-  String get labelExtensionLower => 'Extensión en Minúsculas';
+  String get labelExtensionLower => 'Ext a minúsculas';
 
   @override
   String get labelNavBack => 'Atrás';
@@ -353,25 +355,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelNavForward => 'Adelante';
 
   @override
-  String get labelNavUp => 'Subir una carpeta';
+  String get labelNavUp => 'Subir';
 
   @override
-  String get labelHistoryBack => 'Historial (Atrás)';
+  String get labelHistoryBack => 'Atrás (Historial)';
 
   @override
-  String get labelHistoryForward => 'Historial (Adelante)';
+  String get labelHistoryForward => 'Adelante (Historial)';
 
   @override
-  String get labelNavQuickAccess => 'Acceso Rápido';
+  String get labelNavQuickAccess => 'Acceso rápido';
 
   @override
-  String get labelDeleteFront => 'Desde el Frente';
+  String get labelDeleteFront => 'desde el frente';
 
   @override
-  String get labelDeleteBack => 'Desde Atrás';
+  String get labelDeleteBack => 'desde atrás';
 
   @override
-  String get labelDeleteUntil => 'Eliminar Hasta';
+  String get labelDeleteUntil => 'Eliminar hasta';
 
   @override
   String get labelFindHint => 'Buscar';
@@ -386,40 +388,41 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelString => 'Cadena';
 
   @override
-  String get labelStartDigit => 'Inicio/Dígitos';
+  String get labelStartDigit => 'Inicio/Dígito';
 
   @override
   String get labelStart => 'Inicio';
 
   @override
-  String get labelDigit => 'Dígitos';
+  String get labelDigit => 'Dígito';
 
   @override
-  String get labelSettingsTitle => 'Configuración';
+  String get labelSettingsTitle => 'Ajustes';
 
   @override
-  String get labelSettingsSectionDisplay => 'Visualización';
+  String get labelSettingsSectionDisplay => 'Pantalla';
 
   @override
   String get labelSettingsSectionAppearance => 'Apariencia';
 
   @override
-  String get labelSettingsSectionOS => 'Modo de Operación';
+  String get labelSettingsSectionOS => 'Modo de funcionamiento (SO)';
 
   @override
-  String get labelSettingsSectionInitialDir => 'Carpeta Inicial';
+  String get labelSettingsSectionInitialDir => 'Carpeta inicial';
 
   @override
   String get labelSettingsSectionReset => 'Restablecer';
 
   @override
-  String get labelSettingsTouchModeTitle => 'Modo Táctil';
+  String get labelSettingsTouchModeTitle => 'Modo táctil';
 
   @override
-  String get labelSettingsTouchModeSubtitle => 'Mejora el uso táctil';
+  String get labelSettingsTouchModeSubtitle =>
+      'Aumentar el espacio para listas y botones';
 
   @override
-  String get labelSettingsMenuLabelTitle => 'Idioma';
+  String get labelSettingsMenuLabelTitle => 'Idioma / Etiquetas';
 
   @override
   String get labelSettingsLangJP => 'Japonés';
@@ -437,13 +440,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelSettingsLangES => 'Español';
 
   @override
-  String get labelSettingsThemeTitle => 'Modo de Tema';
+  String get labelSettingsThemeTitle => 'Modo de tema';
 
   @override
   String get labelSettingsThemeSystem => 'Sistema';
 
   @override
-  String get labelSettingsThemeLight => 'Claro';
+  String get labelSettingsThemeLight => 'Luz';
 
   @override
   String get labelSettingsThemeDark => 'Oscuro';
@@ -452,45 +455,46 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelSettingsThemeGray => 'Gris';
 
   @override
-  String get labelSettingsColorTitle => 'Color del Tema';
+  String get labelSettingsColorTitle => 'Color del tema';
 
   @override
   String get labelSettingsOSTitle => 'Modo SO';
 
   @override
-  String get labelSettingsOSSubtitle => 'Adapta validación al SO';
+  String get labelSettingsOSSubtitle =>
+      'Ajustar los límites del nombre de archivo para que coincidan con el SO';
 
   @override
   String get labelSettingsOSAuto => 'Auto';
 
   @override
-  String get labelSettingsInitDirTitle => 'Ubicación de Inicio';
+  String get labelSettingsInitDirTitle => 'Ubicación de inicio';
 
   @override
-  String get labelSettingsInitDirLast => 'Usado Última Vez';
+  String get labelSettingsInitDirLast => 'Última ubicación utilizada';
 
   @override
-  String get labelSettingsInitDirFixed => 'Ruta Fija';
+  String get labelSettingsInitDirFixed => 'Ubicación fija';
 
   @override
-  String get labelSettingsClearHistory => 'Borrar Historial';
+  String get labelSettingsClearHistory => 'Borrar historial de entrada';
 
   @override
-  String get labelSettingsClearHistorySub => 'Borra el historial de entrada';
+  String get labelSettingsClearHistorySub =>
+      'Borrar el historial de completado de cadenas';
 
   @override
-  String get labelSettingsResetAll => 'Restablecer Todo';
+  String get labelSettingsResetAll => 'Restablecer todos los ajustes';
 
   @override
-  String get labelSettingsResetAllSub =>
-      'Restaura la configuración predeterminada';
+  String get labelSettingsResetAllSub => 'Volver al estado predeterminado';
 
   @override
-  String get labelSettingsBetaTitle => 'Funciones Beta';
+  String get labelSettingsBetaTitle => 'Habilitar funciones Beta';
 
   @override
   String get labelSettingsBetaSubtitle =>
-      'Muestra funciones experimentales (ej. Renombrar por Lista)';
+      'Mostrar funciones experimentales (por ejemplo, renombrar lista)';
 
   @override
   String get labelDialogCancel => 'Cancelar';
@@ -505,16 +509,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelMsgHistoryCleared => 'Historial borrado';
 
   @override
-  String get labelMsgSettingsReset => 'Configuración restablecida';
+  String get labelMsgSettingsReset => 'Ajustes restablecidos';
 
   @override
-  String get labelFilterHideFolders => 'Ocultar Carpetas';
+  String get labelFilterHideFolders => 'Ocultar carpetas';
 
   @override
-  String get labelFilterShowFolders => 'Mostrar Carpetas';
+  String get labelFilterShowFolders => 'Mostrar carpetas';
 
   @override
-  String get labelPreviewNoSelection => 'Sin selección';
+  String get labelPreviewNoSelection => 'Ningún archivo seleccionado';
 
   @override
   String labelPreviewSelectedCount(int count) {
@@ -529,7 +533,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String labelPreviewOmitted(String size) {
-    return '... (Omitido: total $size KB)';
+    return '... (Omitido: $size KB en total)';
   }
 
   @override
@@ -537,7 +541,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Vista previa no disponible: binario o codificación desconocida';
 
   @override
-  String get labelGoRenamery => 'Ejecutar Renombrado';
+  String get labelGoRenamery => 'Renombrar todo';
 
   @override
   String get labelTermFolder => 'Carpeta';
@@ -558,7 +562,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelTypeAudio => 'Audio';
 
   @override
-  String get labelTypeDocument => 'Doc';
+  String get labelTypeDocument => 'Documento';
 
   @override
   String get labelTypeExecutable => 'App';
@@ -583,14 +587,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String labelMsgExecutedCount(int count) {
-    return 'Renombrados $count archivos';
+    return 'Cambiado el nombre de $count archivos';
   }
 
   @override
   String get labelMsgNoSelection => 'No hay archivos seleccionados';
 
   @override
-  String get labelCopyListPath => 'Copiar lista al portapapeles (Ruta)';
+  String get labelCopyListPath => 'Copiar lista al portapapeles (ruta)';
 
   @override
   String get labelMenuGo => 'Ir';
@@ -611,16 +615,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get labelNumSaveSequenceTooltip =>
-      'Guardar número de secuencia (continuar enumerando la próxima vez)';
+      'Guardar el número de secuencia después del cambio (continuar la próxima vez)';
 
   @override
   String labelStatusDisplayCount(int current, int total, int selected) {
-    return 'Mostrando: $current / Total: $total Archivos : Seleccionados $selected Archivos';
+    return 'Pantalla: $current / Total $total archivos : Seleccionado $selected';
   }
 
   @override
   String labelStatusTotalCount(int total, int selected) {
-    return 'Total $total Archivos : Seleccionados $selected Archivos';
+    return 'Total $total archivos : Seleccionado $selected';
   }
 
   @override
@@ -630,24 +634,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelStatusReady => 'Listo';
 
   @override
-  String get labelDeleteConfirmTitle => 'Confirmar Eliminación';
+  String get labelDeleteConfirmTitle => 'Confirmar eliminación';
 
   @override
   String labelDeleteConfirmMessage(int count) {
-    return '¿Está seguro de que desea eliminar permanentemente $count archivos?\nEsta acción no se puede deshacer.';
+    return '¿Eliminar $count archivos permanentemente?\nEsto no se puede deshacer.';
   }
 
   @override
   String labelMsgDeletedCount(int count) {
-    return 'Eliminados $count archivos';
+    return 'Eliminado $count archivos';
   }
 
   @override
-  String get labelUndoTitle => 'Deshacer Operación';
+  String get labelUndoTitle => 'Restaurar / Deshacer';
 
   @override
   String labelUndoConfirm(int count) {
-    return '¿Está seguro de que desea deshacer los últimos $count cambios?';
+    return '¿Revertir $count cambios de la última operación?';
   }
 
   @override
@@ -657,35 +661,35 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelUndoRecoverBtn => 'Restaurar';
 
   @override
-  String get labelMsgNoUndoRecord => 'No se encontraron cambios anteriores';
+  String get labelMsgNoUndoRecord => 'No hay historial de deshacer disponible';
 
   @override
   String get labelMsgUndoRecordCopied =>
-      'Registro de deshacer copiado al portapapeles';
+      'Registro de cambios copiado al portapapeles';
 
   @override
   String labelMsgCopyNamesSuccess(int count) {
-    return 'Copiados $count nombres de archivo';
+    return 'Copiado $count nombres de archivo';
   }
 
   @override
   String labelMsgCopyFilesSuccess(int count) {
-    return 'Copiados $count archivos';
+    return 'Copiado $count archivos';
   }
 
   @override
   String labelMsgCutFilesSuccess(int count) {
-    return 'Cortados $count archivos';
+    return 'Cortado $count archivos';
   }
 
   @override
   String labelMsgCopyRelativePathsSuccess(int count) {
-    return 'Copiadas $count rutas relativas';
+    return 'Copiado $count rutas relativas';
   }
 
   @override
   String labelMsgCopyFullPathsSuccess(int count) {
-    return 'Copiadas $count rutas completas';
+    return 'Copiado $count rutas completas';
   }
 
   @override
@@ -695,20 +699,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelAboutVersion => 'Versión';
 
   @override
-  String get labelAboutOriginal => 'Idea Original';
+  String get labelAboutOriginal => 'Idea original';
 
   @override
-  String get labelAboutDev => 'Desarrollado por';
+  String get labelAboutDev => 'Planificación/Desarrollo';
 
   @override
   String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
 
   @override
   String get labelAboutRespect =>
-      'Esta aplicación fue creada con respeto a \'Namery\' por Jun Arai.';
+      'Esta aplicación fue creada con respeto por \'Namery\' del Sr. Jun Arai.';
 
   @override
-  String get labelAboutVisitWebsite => 'Visitar Sitio Web';
+  String get labelAboutVisitWebsite => 'Visitar sitio web';
 
   @override
   String get labelHistoryTooltip => 'Mostrar historial';
@@ -723,10 +727,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelSettingsSystemFiles => 'Archivos del sistema';
 
   @override
-  String get labelSettingsDisableRecursive => 'Deshabilitar subcarpetas';
+  String get labelSettingsDisableRecursive => 'Desactivar recursivo';
 
   @override
-  String get labelSettingsRecursive => 'Subcarpetas';
+  String get labelSettingsRecursive => 'Búsqueda recursiva';
 
   @override
   String get labelDialogTrashTitle => 'Eliminar elementos';
@@ -748,11 +752,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelCtxCreateFolder => 'Crear nueva carpeta';
 
   @override
-  String get labelFilterOptions => 'フィルターオプション';
+  String get labelFilterOptions => 'Configuración de búsqueda y pantalla';
 
   @override
-  String get labelDialogClose => '閉じる';
+  String get labelMenuRenameSettings => 'Configuración de cambio de nombre';
 
   @override
-  String get labelSearchHint => 'ファイル名で検索...';
+  String get labelDialogClose => 'Cerrar';
+
+  @override
+  String get labelSearchHint => 'Buscar por nombre de archivo...';
 }

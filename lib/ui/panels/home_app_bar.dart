@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../core/directory_provider.dart';
 import '../helpers/undo_helper.dart';
 import '../helpers/copy_helper.dart';
+import '../helpers/filter_dialog_helper.dart';
 import 'package:path/path.dart' as p;
 import '../settings_screen.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
@@ -537,10 +538,11 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 ),
               ],
 
-              if (!isWide && !showIconFilters) ...[
+              if (!isWide && !showIconFilters && !isNarrow) ...[
                 IconButton(
-                  icon: const Icon(Symbols.filter_list),
-                  onPressed: () => _showFilterPopup(context, l10n),
+                  icon: const Icon(Symbols.search),
+                  tooltip: l10n.labelFilterOptions,
+                  onPressed: () => FilterDialogHelper.showFilterPopup(context),
                 ),
               ],
             ],
@@ -550,6 +552,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
       actions: [
         IconButton(
           icon: const Icon(Symbols.settings, fill: 1.0),
+          tooltip: l10n.labelMenuSettings,
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(
@@ -566,16 +569,17 @@ class _HomeAppBarState extends State<HomeAppBar> {
       DirectoryProvider provider, AppLocalizations l10n) async {
     final executedCount = await provider.executeRename();
     if (context.mounted && executedCount > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.labelMsgExecutedCount(executedCount))),
-      );
+      // (省略)
     }
   }
+
+  // (中略)
 
   List<PopupMenuEntry<int>> _buildCopyMenuItems(
       DirectoryProvider provider, AppLocalizations l10n) {
     return [
-      PopupMenuItem(value: 1, height: 32, child: Text(l10n.labelCopyListClipboard)),
+      PopupMenuItem(
+          value: 1, height: 32, child: Text(l10n.labelCopyListClipboard)),
       PopupMenuItem(value: 2, height: 32, child: Text(l10n.labelCopyListPath)),
       PopupMenuItem(value: 3, height: 32, child: Text(l10n.labelCopyFullPath)),
       PopupMenuItem(value: 4, height: 32, child: Text(l10n.labelCopyUndo)),
@@ -585,114 +589,5 @@ class _HomeAppBarState extends State<HomeAppBar> {
   bool _isFilterActive(BuildContext context) {
     final p = context.read<DirectoryProvider>();
     return p.isFilterSpecific || p.hideSystemFiles || p.recursiveSearch;
-  }
-
-  void _showFilterPopup(BuildContext context, AppLocalizations l10n) {
-    final provider = context.read<DirectoryProvider>();
-    final TextEditingController filterCtrl =
-        TextEditingController(text: provider.filterText);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Consumer<DirectoryProvider>(
-          builder: (context, provider, child) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                      child: TextField(
-                        controller: filterCtrl,
-                        decoration: InputDecoration(
-                          hintText: 'ファイル名で検索...',
-                          prefixIcon: const Icon(Symbols.search, size: 20),
-                          suffixIcon: filterCtrl.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Symbols.close, size: 16),
-                                  onPressed: () {
-                                    filterCtrl.clear();
-                                    provider.updateFilterSettings(
-                                        isSpecific: false, filter: '');
-                                  },
-                                )
-                              : null,
-                          isDense: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onChanged: (val) {
-                          provider.updateFilterSettings(
-                              isSpecific: val.isNotEmpty, filter: val);
-                        },
-                      ),
-                    ),
-                    const Divider(),
-                    ListTile(
-                      leading: Icon(
-                        provider.showFolders
-                            ? Symbols.folder
-                            : Symbols.folder_off,
-                        fill: 1,
-                        color: provider.showFolders
-                            ? Colors.amber[700]
-                            : Colors.grey,
-                      ),
-                      title: Text(l10n.labelSettingsFolders),
-                      trailing: Switch(
-                        value: provider.showFolders,
-                        onChanged: (val) =>
-                            provider.updateFilterSettings(showFolders: val),
-                      ),
-                    ),
-                    ListTile(
-                      leading: Icon(
-                        Symbols.shield,
-                        fill: provider.hideSystemFiles ? 0 : 1,
-                        color: provider.hideSystemFiles
-                            ? Theme.of(context).colorScheme.onSurfaceVariant
-                            : Theme.of(context).colorScheme.primary,
-                      ),
-                      title: Text(l10n.labelSettingsSystemFiles),
-                      trailing: Switch(
-                        value: !provider.hideSystemFiles,
-                        onChanged: (val) =>
-                            provider.updateFilterSettings(hideSystem: !val),
-                      ),
-                    ),
-                    ListTile(
-                      leading: Icon(
-                        Symbols.account_tree,
-                        fill: provider.recursiveSearch ? 1 : 0,
-                        color: provider.recursiveSearch
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      title: Text(l10n.labelSettingsRecursive),
-                      trailing: Switch(
-                        value: provider.recursiveSearch,
-                        onChanged: (val) =>
-                            provider.updateFilterSettings(recursive: val),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    ).then((_) => filterCtrl.dispose());
   }
 }

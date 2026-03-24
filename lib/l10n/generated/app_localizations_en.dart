@@ -752,6 +752,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelFilterOptions => 'Filter Options';
 
   @override
+  String get labelMenuRenameSettings => 'Rename Settings';
+
+  @override
   String get labelDialogClose => 'Close';
 
   @override

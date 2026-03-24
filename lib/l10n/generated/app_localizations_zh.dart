@@ -9,16 +9,16 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get labelMainTab => '主要';
+  String get labelMainTab => '基础';
 
   @override
-  String get labelSubTab => '次要';
+  String get labelSubTab => '扩展';
 
   @override
-  String get labelExtraTab => '额外';
+  String get labelExtraTab => '高级';
 
   @override
-  String get labelEtcTab => '其它';
+  String get labelEtcTab => '属性';
 
   @override
   String get labelCategoryAdd => '添加文本';
@@ -27,7 +27,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelCategoryRemove => '删除文本';
 
   @override
-  String get labelCategoryReplace => '替换和转换';
+  String get labelCategoryReplace => '替换/转换';
 
   @override
   String get labelCategoryNumbering => '编号';
@@ -36,10 +36,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelCategoryExtension => '扩展名';
 
   @override
-  String get labelCategoryAdvanced => '高级操作';
+  String get labelCategoryAdvanced => '高级';
 
   @override
-  String get labelStringInput => '文本';
+  String get labelStringInput => '字符串';
 
   @override
   String get labelColName => '名称';
@@ -63,19 +63,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelColAttr => '属性';
 
   @override
-  String get labelOpPrefix => '添加前缀';
+  String get labelOpPrefix => '添加到开头';
 
   @override
-  String get labelOpSuffix => '添加后缀';
+  String get labelOpSuffix => '添加到末尾';
 
   @override
-  String get labelOpInsert => '插入位置';
+  String get labelOpInsert => '在位置插入';
 
   @override
   String get labelOpDeleteStart => '从开头删除';
 
   @override
-  String get labelOpDeleteEnd => '从结尾删除';
+  String get labelOpDeleteEnd => '从末尾删除';
 
   @override
   String get labelOpDeleteFrom => '从指定位置删除';
@@ -84,10 +84,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelOpCapitalize => '首字母大写';
 
   @override
-  String get labelOpUpper => '转为大写';
+  String get labelOpUpper => '全部大写';
 
   @override
-  String get labelOpLower => '转为小写';
+  String get labelOpLower => '全部小写';
 
   @override
   String get labelOpExtChange => '更改扩展名';
@@ -96,55 +96,55 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelOpExtAdd => '添加扩展名';
 
   @override
-  String get labelOpExtRemove => '移除扩展名';
+  String get labelOpExtRemove => '删除扩展名';
 
   @override
-  String get labelOpExtUpper => '扩展名转大写';
+  String get labelOpExtUpper => '扩展名大写';
 
   @override
-  String get labelOpExtLower => '扩展名转小写';
+  String get labelOpExtLower => '扩展名小写';
 
   @override
-  String get labelSubExtChangeTitle => '扩展名';
+  String get labelSubExtChangeTitle => '扩展名更改';
 
   @override
-  String get labelSubFormatTitle => '格式';
+  String get labelSubFormatTitle => '单词格式';
 
   @override
-  String get labelSubFormatProperCase => '单词首字母大写';
+  String get labelSubFormatProperCase => '词首大写 (空格/连字符/下划线)';
 
   @override
   String get labelSubListTitle => '列表重命名';
 
   @override
-  String get labelSubListModeText => '文本输入';
+  String get labelSubListModeText => '文本输入 (原文件名[TAB]新文件名)';
 
   @override
-  String get labelSubListSample1 => '示例：顺序';
+  String get labelSubListSample1 => '示例：编号文件';
 
   @override
-  String get labelSubListSample2 => '示例：替换扩展名';
+  String get labelSubListSample2 => '示例：批量更改扩展名';
 
   @override
-  String get labelSubListSample3 => 'サンプル: 特定文字の置換';
+  String get labelSubListSample3 => '示例：特定替换';
 
   @override
-  String get labelSubListHint => '旧.txt\t新.txt';
+  String get labelSubListHint => '旧文件名.txt\t新文件名.txt\n文件01.png\t图片01.png';
 
   @override
-  String get labelExtraAppendDate => '附加日期';
+  String get labelExtraAppendDate => '附加文件日期';
 
   @override
-  String get labelExtraDateFormatHint => '日期格式';
+  String get labelExtraDateFormatHint => '日期格式 (如: yyyymmdd_)';
 
   @override
   String get labelExtraPosition => '位置';
 
   @override
-  String get labelExtraFront => '前面';
+  String get labelExtraFront => '前方';
 
   @override
-  String get labelExtraBack => '后面';
+  String get labelExtraBack => '后方';
 
   @override
   String get labelExtraConvHalfToFull => '半角转全角';
@@ -177,7 +177,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelEtcAttribSystem => '系统';
 
   @override
-  String get labelEtcTimestampChange => '更改时间戳';
+  String get labelEtcTimestampChange => '修改时间戳';
 
   @override
   String get labelEtcPickTime => '选择时间';
@@ -186,16 +186,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelEtcPickDateTooltip => '选择日期和时间';
 
   @override
-  String get labelEtcTimestampNote => '(例: 2002/03/30 17:30)';
+  String get labelEtcTimestampNote => '(如: 2002/03/30 17:30)';
 
   @override
-  String get labelEtcAttributeChange => '更改属性';
+  String get labelEtcAttributeChange => '修改属性';
 
   @override
   String get labelEtcCautionTitle => '无法撤销';
 
   @override
-  String get labelEtcCautionMessage => '时间戳和属性的更改无法撤销。';
+  String get labelEtcCautionMessage => '此类别（时间戳/属性）中的更改无法使用撤销功能。请谨慎操作。';
 
   @override
   String get labelUndo => '撤销';
@@ -204,7 +204,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelExecute => '执行';
 
   @override
-  String get labelErrorInvalidFilename => '错误：文件名无效';
+  String get labelErrorInvalidFilename => '错误：文件名包含非法字符';
 
   @override
   String get labelCopyName => '复制名称';
@@ -219,10 +219,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelCopyOptions => '复制选项';
 
   @override
-  String get labelCopyUndo => '复制撤销记录';
+  String get labelCopyUndo => '复制更改日志';
 
   @override
-  String get labelCopyListClipboard => '复制列表到剪贴板';
+  String get labelCopyListClipboard => '将当前列表复制到剪贴板';
 
   @override
   String get labelMoveUp => '上移';
@@ -231,7 +231,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelMoveDown => '下移';
 
   @override
-  String get labelRefresh => '全部刷新';
+  String get labelRefresh => '刷新全部';
 
   @override
   String get labelMenuMore => '更多操作';
@@ -240,55 +240,55 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelMenuSettings => '设置';
 
   @override
-  String get labelMenuFolder => '菜单';
+  String get labelMenuFolder => '文件夹菜单';
 
   @override
-  String get labelNumStringNumber => '字符串 + 数字';
+  String get labelNumStringNumber => '字符串 + 编号';
 
   @override
-  String get labelNumOriginalNumber => '原名 + 数字';
+  String get labelNumOriginalNumber => '原名 + 编号';
 
   @override
-  String get labelNumNumberString => '数字 + 字符串';
+  String get labelNumNumberString => '编号 + 字符串';
 
   @override
-  String get labelNumNumberOriginal => '数字 + 原名';
+  String get labelNumNumberOriginal => '编号 + 原名';
 
   @override
-  String get labelNumBaseStringNumber => '原名 + 字符 + 数字';
+  String get labelNumBaseStringNumber => '基本名 + 字符串 + 编号';
 
   @override
-  String get labelNumBaseStringOriginal => '原名 + 字符 + 原名';
+  String get labelNumBaseStringOriginal => '基本名 + 字符串 + 原名';
 
   @override
-  String get labelNumRelativeStringNumber => '相对 + 字符 + 数字';
+  String get labelNumRelativeStringNumber => '相对名 + 字符串 + 编号';
 
   @override
-  String get labelNumRelativeStringOriginal => '相对 + 字符 + 原名';
+  String get labelNumRelativeStringOriginal => '相对名 + 字符串 + 原名';
 
   @override
-  String get labelNumNumberStringBase => '数字 + 字符 + 原名';
+  String get labelNumNumberStringBase => '编号 + 字符串 + 基本名';
 
   @override
-  String get labelNumNumberStringRelative => '数字 + 字符 + 相对';
+  String get labelNumNumberStringRelative => '编号 + 字符串 + 相对名';
 
   @override
-  String get labelReplaceFrom => '替换';
+  String get labelReplaceFrom => '查找';
 
   @override
-  String get labelReplaceTo => '为';
+  String get labelReplaceTo => '替换为';
 
   @override
-  String get labelFullPath => '位置 > ';
+  String get labelFullPath => '当前 > ';
 
   @override
   String get labelSelectAll => '全选';
 
   @override
-  String get labelDeselectAll => '選択解除';
+  String get labelDeselectAll => '取消全选';
 
   @override
-  String get labelSettingsFilterTitle => '过滤设置';
+  String get labelSettingsFilterTitle => '视图过滤';
 
   @override
   String get labelFilterAll => '所有文件';
@@ -303,28 +303,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelFilterRecursive => '递归搜索';
 
   @override
-  String get labelBetaListRenameHint => '* 显示是因为已启用 Beta 功能';
+  String get labelBetaListRenameHint => '测试版已启用，此项可见';
 
   @override
-  String get labelCtxUpOneFolder => '向上移至父文件夹';
+  String get labelCtxUpOneFolder => '向上移动';
 
   @override
-  String get labelCtxRenameGeneral => '重命名 (常规)';
+  String get labelCtxRenameGeneral => '重命名 (标准)';
 
   @override
-  String get labelCtxBatchRename => '批量重命名';
+  String get labelCtxBatchRename => '批量重命名 (Namery)';
 
   @override
   String get labelCtxOpenWithAssoc => '使用关联程序打开';
 
   @override
-  String get labelCtxMoveToTop => '移到顶部';
+  String get labelCtxMoveToTop => '移至顶部';
 
   @override
-  String get labelCtxMoveToBottom => '移到底部';
+  String get labelCtxMoveToBottom => '移至底部';
 
   @override
-  String get labelCtxDeleteItems => '删除所选 (Del)';
+  String get labelCtxDeleteItems => '删除项目 (Del)';
 
   @override
   String get labelCtxMoveCaret => '移动光标';
@@ -336,13 +336,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelCtxRefresh => '刷新 (F5)';
 
   @override
-  String get labelCtxProperties => '属性 (R)';
+  String get labelCtxProperties => '属性(R)';
 
   @override
   String get labelFilterPreview => '显示预览';
 
   @override
-  String get labelExtensionLower => '扩展名小写';
+  String get labelExtensionLower => '扩展名转小写';
 
   @override
   String get labelNavBack => '后退';
@@ -351,22 +351,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelNavForward => '前进';
 
   @override
-  String get labelNavUp => '返回上级';
+  String get labelNavUp => '向上';
 
   @override
-  String get labelHistoryBack => '历史记录 (后退)';
+  String get labelHistoryBack => '后退 (历史)';
 
   @override
-  String get labelHistoryForward => '历史记录 (前进)';
+  String get labelHistoryForward => '前进 (历史)';
 
   @override
   String get labelNavQuickAccess => '快速访问';
 
   @override
-  String get labelDeleteFront => '从前面';
+  String get labelDeleteFront => '从开头删除';
 
   @override
-  String get labelDeleteBack => '从后面';
+  String get labelDeleteBack => '从末尾删除';
 
   @override
   String get labelDeleteUntil => '删除直到';
@@ -378,7 +378,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelReplaceHint => '替换';
 
   @override
-  String get labelRegex => '正则表达式';
+  String get labelRegex => '正则';
 
   @override
   String get labelString => '字符串';
@@ -402,10 +402,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelSettingsSectionAppearance => '外观';
 
   @override
-  String get labelSettingsSectionOS => '运行模式';
+  String get labelSettingsSectionOS => '操作模式 (OS)';
 
   @override
-  String get labelSettingsSectionInitialDir => '初始文件夹';
+  String get labelSettingsSectionInitialDir => '启动文件夹';
 
   @override
   String get labelSettingsSectionReset => '重置';
@@ -414,31 +414,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelSettingsTouchModeTitle => '触摸模式';
 
   @override
-  String get labelSettingsTouchModeSubtitle => '改善触摸使用体验';
+  String get labelSettingsTouchModeSubtitle => '增大列表和按钮的间距';
 
   @override
-  String get labelSettingsMenuLabelTitle => '语言';
+  String get labelSettingsMenuLabelTitle => '语言 / 标签';
 
   @override
-  String get labelSettingsLangJP => '日语';
+  String get labelSettingsLangJP => '日本語';
 
   @override
   String get labelSettingsLangNamery => 'Namery';
 
   @override
-  String get labelSettingsLangEN => '英语';
+  String get labelSettingsLangEN => 'English';
 
   @override
-  String get labelSettingsLangCN => '中文';
+  String get labelSettingsLangCN => '简体中文';
 
   @override
-  String get labelSettingsLangES => '西班牙语';
+  String get labelSettingsLangES => 'Español';
 
   @override
   String get labelSettingsThemeTitle => '主题模式';
 
   @override
-  String get labelSettingsThemeSystem => '系统';
+  String get labelSettingsThemeSystem => '跟随系统';
 
   @override
   String get labelSettingsThemeLight => '浅色';
@@ -453,10 +453,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelSettingsColorTitle => '主题颜色';
 
   @override
-  String get labelSettingsOSTitle => '操作系统模式';
+  String get labelSettingsOSTitle => 'OS 模式';
 
   @override
-  String get labelSettingsOSSubtitle => '使验证适配操作系统';
+  String get labelSettingsOSSubtitle => '根据系统调整文件名限制';
 
   @override
   String get labelSettingsOSAuto => '自动';
@@ -465,25 +465,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelSettingsInitDirTitle => '启动位置';
 
   @override
-  String get labelSettingsInitDirLast => '上次使用';
+  String get labelSettingsInitDirLast => '最后使用的位置';
 
   @override
-  String get labelSettingsInitDirFixed => '固定路径';
+  String get labelSettingsInitDirFixed => '固定位置';
 
   @override
-  String get labelSettingsClearHistory => '清除历史记录';
+  String get labelSettingsClearHistory => '清除输入历史';
 
   @override
-  String get labelSettingsClearHistorySub => '清除输入历史记录';
+  String get labelSettingsClearHistorySub => '清除字符串补全历史';
 
   @override
-  String get labelSettingsResetAll => '全部重置';
+  String get labelSettingsResetAll => '重置所有设置';
 
   @override
-  String get labelSettingsResetAllSub => '恢复默认设置';
+  String get labelSettingsResetAllSub => '恢复到默认状态';
 
   @override
-  String get labelSettingsBetaTitle => 'Beta 功能';
+  String get labelSettingsBetaTitle => '启用测试功能';
 
   @override
   String get labelSettingsBetaSubtitle => '显示实验性功能 (如列表重命名)';
@@ -510,7 +510,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelFilterShowFolders => '显示文件夹';
 
   @override
-  String get labelPreviewNoSelection => '未选择';
+  String get labelPreviewNoSelection => '未选择文件';
 
   @override
   String labelPreviewSelectedCount(int count) {
@@ -518,14 +518,14 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get labelPreviewImageLoadFailed => '加载图片失败';
+  String get labelPreviewImageLoadFailed => '图片加载失败';
 
   @override
   String get labelPreviewUnavailable => '无法预览';
 
   @override
   String labelPreviewOmitted(String size) {
-    return '... (已省略：共 $size KB)';
+    return '... (共省略 $size KB)';
   }
 
   @override
@@ -559,13 +559,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelTypeExecutable => '应用';
 
   @override
-  String get labelTypeArchive => '压缩';
+  String get labelTypeArchive => '压缩包';
 
   @override
-  String get labelTypeOther => '其它';
+  String get labelTypeOther => '其他';
 
   @override
-  String get labelSettingsOSMac => 'Mac (兼容 Finder)';
+  String get labelSettingsOSMac => 'Mac (Finder 兼容)';
 
   @override
   String get labelSettingsOSLinux => 'Linux';
@@ -578,24 +578,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String labelMsgExecutedCount(int count) {
-    return '重命名了 $count 个文件';
+    return '已重命名 $count 个文件';
   }
 
   @override
   String get labelMsgNoSelection => '未选择文件';
 
   @override
-  String get labelCopyListPath => '将列表复制到剪贴板 (路径)';
+  String get labelCopyListPath => '复制路径列表到剪贴板';
 
   @override
-  String get labelMenuGo => '转到';
+  String get labelMenuGo => '前往';
 
   @override
-  String get labelNoFiles => '没有文件';
+  String get labelNoFiles => '无文件';
 
   @override
   String labelSelectFolderPrompt(Object term) {
-    return '请选择一个 $term';
+    return '请选择$term';
   }
 
   @override
@@ -605,16 +605,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelNavPC => '此电脑';
 
   @override
-  String get labelNumSaveSequenceTooltip => '保存序号 (下次继续编号)';
+  String get labelNumSaveSequenceTooltip => '保存重命名后的序列号 (下次继续)';
 
   @override
   String labelStatusDisplayCount(int current, int total, int selected) {
-    return '显示: $current / 总计: $total 文件 : 已选 $selected 文件';
+    return '显示: $current / 总计 $total 个文件 : 已选择 $selected';
   }
 
   @override
   String labelStatusTotalCount(int total, int selected) {
-    return '总计 $total 文件 : 已选 $selected 文件';
+    return '总计 $total 个文件 : 已选择 $selected';
   }
 
   @override
@@ -628,37 +628,37 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String labelDeleteConfirmMessage(int count) {
-    return '您确定要永久删除 $count 个文件吗？\n此操作无法撤销。';
+    return '确定要永久删除这 $count 个文件吗？\n此操作无法撤销。';
   }
 
   @override
   String labelMsgDeletedCount(int count) {
-    return '删除了 $count 个文件';
+    return '已删除 $count 个文件';
   }
 
   @override
-  String get labelUndoTitle => '撤销操作';
+  String get labelUndoTitle => '还原 / 撤销';
 
   @override
   String labelUndoConfirm(int count) {
-    return '您确定要撤销最后的 $count 次更改吗？';
+    return '要还原上次操作中的 $count 处更改吗？';
   }
 
   @override
-  String get labelMsgUndoSuccess => '恢复成功';
+  String get labelMsgUndoSuccess => '还原成功';
 
   @override
-  String get labelUndoRecoverBtn => '恢复';
+  String get labelUndoRecoverBtn => '还原';
 
   @override
-  String get labelMsgNoUndoRecord => '没有找到之前的更改';
+  String get labelMsgNoUndoRecord => '没有可撤销的历史记录';
 
   @override
-  String get labelMsgUndoRecordCopied => '撤销日志已复制到剪贴板';
+  String get labelMsgUndoRecordCopied => '更改日志已复制到剪贴板';
 
   @override
   String labelMsgCopyNamesSuccess(int count) {
-    return '复制了 $count 个文件名';
+    return '已复制 $count 个文件名';
   }
 
   @override
@@ -688,16 +688,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelAboutVersion => '版本';
 
   @override
-  String get labelAboutOriginal => '原始构想';
+  String get labelAboutOriginal => '原创想法';
 
   @override
-  String get labelAboutDev => '开发';
+  String get labelAboutDev => '策划/开发';
 
   @override
   String get labelAboutCopyright => '© 2024 Toyo Craft Lab.';
 
   @override
-  String get labelAboutRespect => '本应用为了致敬 Jun Arai 的 \'Namery\' 而创建。';
+  String get labelAboutRespect => '本应用致敬 Jun Arai 先生的 \'Namery\'。';
 
   @override
   String get labelAboutVisitWebsite => '访问网站';
@@ -715,16 +715,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelSettingsSystemFiles => '系统文件';
 
   @override
-  String get labelSettingsDisableRecursive => '禁用子文件夹';
+  String get labelSettingsDisableRecursive => '禁用递归';
 
   @override
-  String get labelSettingsRecursive => '子文件夹';
+  String get labelSettingsRecursive => '递归搜索';
 
   @override
   String get labelDialogTrashTitle => '删除项目';
 
   @override
-  String get labelDialogTrashMessage => '将选定文件移至回收站？';
+  String get labelDialogTrashMessage => '将选中的文件移至回收站？';
 
   @override
   String get labelCtxPasteItems => '粘贴项目';
@@ -739,11 +739,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelCtxCreateFolder => '新建文件夹';
 
   @override
-  String get labelFilterOptions => 'フィルターオプション';
+  String get labelFilterOptions => '搜索和显示设置';
 
   @override
-  String get labelDialogClose => '閉じる';
+  String get labelMenuRenameSettings => '重命名设置';
 
   @override
-  String get labelSearchHint => 'ファイル名で検索...';
+  String get labelDialogClose => '关闭';
+
+  @override
+  String get labelSearchHint => '按文件名搜索...';
 }

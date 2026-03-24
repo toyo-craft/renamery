@@ -742,7 +742,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelCtxCreateFolder => '新しいフォルダーの作成';
 
   @override
-  String get labelFilterOptions => 'フィルターオプション';
+  String get labelFilterOptions => '検索と表示設定';
+
+  @override
+  String get labelMenuRenameSettings => 'リネーム設定';
 
   @override
   String get labelDialogClose => '閉じる';
@@ -1486,7 +1489,10 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelCtxCreateFolder => '新規作成';
 
   @override
-  String get labelFilterOptions => '指定...';
+  String get labelFilterOptions => '検索と表示設定';
+
+  @override
+  String get labelMenuRenameSettings => 'リネーム設定';
 
   @override
   String get labelDialogClose => '閉じる';

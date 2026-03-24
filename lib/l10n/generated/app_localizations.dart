@@ -1510,8 +1510,14 @@ abstract class AppLocalizations {
   /// No description provided for @labelFilterOptions.
   ///
   /// In ja, this message translates to:
-  /// **'フィルターオプション'**
+  /// **'検索と表示設定'**
   String get labelFilterOptions;
+
+  /// No description provided for @labelMenuRenameSettings.
+  ///
+  /// In ja, this message translates to:
+  /// **'リネーム設定'**
+  String get labelMenuRenameSettings;
 
   /// No description provided for @labelDialogClose.
   ///
