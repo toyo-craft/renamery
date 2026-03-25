@@ -1,7 +1,7 @@
 ﻿name: renamery
 description: Flutterを使用したNameryファイルリネームツールの復活版。
 publish_to: 'none'
-version: 0.9.1
+version: 0.9.4
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -36,6 +36,7 @@ dependencies:
   flutter_svg: ^2.2.4
   printing: ^5.14.3
   archive: ^4.0.9
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
@@ -43,6 +44,7 @@ dev_dependencies:
   flutter_lints: ^3.0.1
   flutter_launcher_icons: ^0.14.3
   msix: ^3.16.12
+  debian: ^1.0.0
 
 flutter:
   generate: true
@@ -53,6 +55,8 @@ flutter:
 
 flutter_launcher_icons:
   image_path: "assets/icon/app_icon.png"
+  android: true
+  linux: true
   windows:
     generate: true
     image_path: "assets/icon/app_icon.png"
@@ -63,6 +67,20 @@ msix_config:
   publisher_display_name: Toyo Craft Lab
   identity_name: ToyoCraftLab.ReNamery
   publisher: "CN=ToyoCraftLab"
-  msix_version: 0.9.1.0
+  msix_version: 0.9.4.0
   logo_path: assets/icon/app_icon.png
   store: true
+
+debian:
+  name: renamery
+  parent: ToyoCraftLab
+  arch: amd64
+  description: ReNamery - A modern batch renaming utility.
+  maintainer: toyo-craft <toyo-craft@example.com>
+  section: utils
+  priority: optional
+  essentials:
+    - libgtk-3-0
+    - libblkid1
+    - liblzma5
+    - libgcrypt20

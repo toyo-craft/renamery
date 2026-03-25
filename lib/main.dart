@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'ui/home_screen.dart';
 import 'core/directory_provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:window_manager/window_manager.dart';
 import 'core/settings_service.dart';
@@ -15,6 +17,11 @@ import 'package:windows_single_instance/windows_single_instance.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Android Permissions
+  if (!kIsWeb && Platform.isAndroid) {
+    await _requestAndroidPermissions();
+  }
 
   if (!kIsWeb && Platform.isWindows) {
     await WindowsSingleInstance.ensureSingleInstance(
@@ -197,5 +204,15 @@ class ReNameryApp extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+Future<void> _requestAndroidPermissions() async {
+  if (await Permission.manageExternalStorage.request().isGranted) {
+    return;
+  }
+  // Android 11+ requires special MANAGE_EXTERNAL_STORAGE permission
+  if (await Permission.manageExternalStorage.isDenied) {
+    await Permission.manageExternalStorage.request();
   }
 }
