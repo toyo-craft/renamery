@@ -1,28 +1,18 @@
 # ReNamery
 
-[![Multi-Platform Release](https://github.com/YourGitHubUsername/renamery/actions/workflows/release.yml/badge.svg)](https://github.com/YourGitHubUsername/renamery/releases)
+[![Multi-Platform Release](https://github.com/toyo-craft/renamery/actions/workflows/release.yml/badge.svg)](https://github.com/toyo-craft/renamery/releases)
 
-Windows XP時代に多くのユーザーに支持された伝説的な高機能リネーマー「Namery」。その類まれな直感性と優れたUXを現代に復刻し、PCからモバイルまでシームレスに使えるように進化させた、現代のバッチリネーム・ユーティリティです。
-
+Windows XP時代に多くのユーザーに支持された伝説皁E��高機�Eリネ�Eマ�E「Namery」。その類まれな直感性と優れたUXを現代に復刻し、PCからモバイルまでシームレスに使えるように進化させた、現代のバッチリネ�Eム・ユーチE��リチE��です、E
 <p align="center">
   <img src="https://toyo-craft.net/images/cap_renamery01.png" width="80%" alt="ReNamery Desktop Screenshot">
 </p>
 
 ## ✨ 特徴
 
-- **直感的な3ペイン構成:** フォルダツリー、ファイルリスト、リネーム設定を一画面で把握。
-- **リアルタイム・プレビュー:** 変更後のファイル名を即座に確認。画像、PDF、SVG、ZIPの中身までその場でチェック可能。
-- **多彩なリネームモード:**
-  - テキストの追加・削除・置換
-  - 高度な連番（桁数指定、ステップ指定）
-  - 正規表現による高度な置換
-  - 拡張子の一括変更
-  - ファイル日時や属性の変更（Windows版）
-- **マルチプラットフォーム対応:** Windows, Linux (.deb), Android で動作。
-- **モバイル最適化:** 片手で操作できる実行ボタンや検索バー付きフィルター設定。
-- **安心のUndo機能:** 実行後でもワンクリックで元のファイル名に戻せます。
-
-## 📸 スクリーンショット
+- **直感的な3ペイン構�E:** フォルダチE��ー、ファイルリスト、リネ�Eム設定を一画面で把握、E- **リアルタイム・プレビュー:** 変更後�Eファイル名を即座に確認。画像、PDF、SVG、ZIPの中身までそ�E場でチェチE��可能、E- **多彩なリネ�EムモーチE**
+  - チE��スト�E追加・削除・置揁E  - 高度な連番�E�桁数持E��、スチE��プ指定！E  - 正規表現による高度な置揁E  - 拡張子�E一括変更
+  - ファイル日時や属性の変更�E�Eindows版！E- **マルチ�EラチE��フォーム対忁E** Windows, Linux (.deb), Android で動作、E- **モバイル最適匁E** 牁E��で操作できる実行�EタンめE��索バ�E付きフィルター設定、E- **安忁E�EUndo機�E:** 実行後でもワンクリチE��で允E�Eファイル名に戻せます、E
+## 📸 スクリーンショチE��
 
 <p align="center">
   <img src="https://toyo-craft.net/images/cap_renamery02.png" width="22%" alt="Mobile Screenshot 1">
@@ -30,28 +20,16 @@ Windows XP時代に多くのユーザーに支持された伝説的な高機能�
   <img src="https://toyo-craft.net/images/cap_renamery04.png" width="22%" alt="Mobile Screenshot 3">
 </p>
 
-## 🚀 ダウンロード
+## 🚀 ダウンローチE
+最新のリリースは [GitHub Releases](https://github.com/toyo-craft/renamery/releases) ペ�Eジからダウンロードできます、E
+- **Windows:** ポ�EタブルZIP形式。インスト�Eル不要、E- **Android:** APKファイルを直接インスト�Eル、E- **Linux:** Ubuntu/Debian 向け `.deb` パッケージ、およ�Eポ�Eタブル `.tar.gz`、E
+## 🛠 使ぁE��
 
-最新のリリースは [GitHub Releases](https://github.com/YourGitHubUsername/renamery/releases) ページからダウンロードできます。
-
-- **Windows:** ポータブルZIP形式。インストール不要。
-- **Android:** APKファイルを直接インストール。
-- **Linux:** Ubuntu/Debian 向け `.deb` パッケージ、およびポータブル `.tar.gz`。
-
-## 🛠 使い方
-
-1. 左側のエクスプローラーでフォルダを選択します。
-2. 右側のパネルでリネームの条件（追加、置換、連番など）を設定します。
-3. リスト上で「新しい名前」を確認します。
-4. 中央下（モバイル）または右下（PC）の実行ボタンを押してリネーム完了！
-
-## 🤝 リスペクト
-
-当アプリは、Jun Arai様の名作フリーソフト **['Namery'](https://www.vector.co.jp/soft/winnt/util/se217399.html)** をリスペクトして作成されました。長年愛された操作感を継承しつつ、現代の技術（Flutter）で再構築することを目的としています。
-
+1. 左側のエクスプローラーでフォルダを選択します、E2. 右側のパネルでリネ�Eムの条件�E�追加、置換、E��番など�E�を設定します、E3. リスト上で「新しい名前」を確認します、E4. 中央下（モバイル�E�また�E右下！EC�E��E実行�Eタンを押してリネ�Eム完亁E��E
+## 🤁EリスペクチE
+当アプリは、Jun Arai様�E名作フリーソフト **['Namery'](https://www.vector.co.jp/soft/winnt/util/se217399.html)** をリスペクトして作�Eされました。長年愛された操作感を継承しつつ、現代の技術！Elutter�E�で再構築することを目皁E��してぁE��す、E
 ## 📄 ライセンス
 
-このプロジェクトは [MIT ライセンス](LICENSE) の下で公開されています。
-
+こ�Eプロジェクト�E [MIT ライセンス](LICENSE) の下で公開されてぁE��す、E
 ---
 Developed by [TOYO CRAFT Laboratory&Co.](https://toyo-craft.net/apps)
