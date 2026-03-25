@@ -54,3 +54,6 @@ final_crash_log.txt
 # User / Prompt History
 docs/prompt_history.md
 docs/.obsidian/
+
+# Specific old binary to exclude
+renamery_v0.1.0_windows.zip
