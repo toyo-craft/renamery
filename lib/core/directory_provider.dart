@@ -132,8 +132,15 @@ class DirectoryProvider extends ChangeNotifier {
 
     if (targetDir != null && await targetDir.exists()) {
       await setDirectory(targetDir);
-    } else if (_currentDirectory != null) {
-      _applyFilters();
+    } else {
+      if (!kIsWeb && Platform.isAndroid) {
+        final androidRoot = Directory('/storage/emulated/0');
+        if (await androidRoot.exists()) {
+          await setDirectory(androidRoot);
+        }
+      } else if (_currentDirectory != null) {
+        _applyFilters();
+      }
     }
   }
 

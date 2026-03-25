@@ -51,8 +51,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            *.zip
-            *.apk
-            *.tar.gz
+            ReNamery_Windows_Portable.zip
+            ReNamery_Android.apk
+            ReNamery_Linux_Portable.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -208,11 +208,17 @@ class ReNameryApp extends StatelessWidget {
 }
 
 Future<void> _requestAndroidPermissions() async {
-  if (await Permission.manageExternalStorage.request().isGranted) {
-    return;
-  }
-  // Android 11+ requires special MANAGE_EXTERNAL_STORAGE permission
-  if (await Permission.manageExternalStorage.isDenied) {
-    await Permission.manageExternalStorage.request();
+  // Check current status
+  var status = await Permission.manageExternalStorage.status;
+  
+  if (!status.isGranted) {
+    // First request
+    status = await Permission.manageExternalStorage.request();
+    
+    // If still not granted (user needs to toggle in settings)
+    if (!status.isGranted) {
+      // Open app settings page for MANAGE_EXTERNAL_STORAGE
+      await openAppSettings();
+    }
   }
 }
