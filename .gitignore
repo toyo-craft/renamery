@@ -45,11 +45,11 @@ permission_check.txt
 # Temp & Debug Logs
 *.log
 *_log.txt
-
+analyze.txt
 analyze_*.txt
 chrome_log*.txt
 final_crash_log.txt
-繧ｹ繧ｯ繝ｪ繝ｼ繝ｳ繧ｷ繝ｧ繝ヨ.png
+スクリーンショット*.png
 
 # User / Prompt History
 docs/prompt_history.md
