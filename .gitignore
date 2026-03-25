@@ -44,7 +44,8 @@ permission_check.txt
 
 # Temp & Debug Logs
 *.log
-debug_log.txt
+*_log.txt
+
 analyze_*.txt
 chrome_log*.txt
 final_crash_log.txt
