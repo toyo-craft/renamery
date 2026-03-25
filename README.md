@@ -1,33 +1,59 @@
-# ReNamery (リネームリー)
+# ReNamery
 
-> [!WARNING]
-> **免責事項・ご注意**
-> 本アプリはベータ版であり、利用実績がまだ浅いため予期せぬ不具合が含まれている可能性があります。
-> また、本アプリは名作ソフト「Namery」をリスペクトして作成された**非公式**のアプリケーションであり、**原作者様とは一切関係がありません**。
-> 本アプリの使用によって生じたいかなる損害についても、作者は責任を負いかねます（付属の `LICENSE` ファイルをご確認ください）。
+[**日本語版 (Japanese)**](README_ja.md)
 
-## 概要
-ReNameryは、Windows用ファイルリネームツール「Namery」の操作感を再現し、現代の技術（Flutter）で再構築したクロスプラットフォーム対応のリネームツールです。
+[![Multi-Platform Release](https://github.com/YourGitHubUsername/renamery/actions/workflows/release.yml/badge.svg)](https://github.com/YourGitHubUsername/renamery/releases)
 
-## インストール・起動方法
-本ソフトはインストール不要です。
-1. ZIPファイルを解凍してください。
-2. フォルダ内の `renamery.exe` をダブルクリックして起動してください。
+ReNamery is a modern batch renaming utility that revives the legendary high-performance renamer "Namery" from the Windows XP era. It features exceptional intuitiveness and a superior UX, evolved to work seamlessly across PC and mobile devices.
 
-## 使い方
-詳しい使い方は、`docs` フォルダ内のマニュアルをご覧ください。
-- **日本語マニュアル**: [docs/user_manual.md](renamery/docs/user_manual.md)
-- **English Manual**: [docs/user_manual_en.md](docs/user_manual_en.md)
+<p align="center">
+  <img src="https://toyo-craft.net/images/cap_renamery01.png" width="80%" alt="ReNamery Desktop Screenshot">
+</p>
 
-## 主な機能
-*   **リアルタイムプレビュー**: リネーム結果を即座に確認できます。
-*   **多彩なリネーム**: 連番、置換、拡張子変更、TSVリストによる一括リネームなど。
-*   **アンドゥ機能**: 間違えても元に戻すことができます。
-*   **クロスプラットフォーム**: Windows, Android, Chromebook 等に対応。
+## ✨ Features
 
-## ライセンス
-BSD 3-Clause License
-詳細は `LICENSE` ファイルをご確認ください。
+- **Intuitive 3-Pane Layout:** View the folder tree, file list, and rename settings all on one screen.
+- **Real-time Preview:** Instantly see renamed results. Supports previews for Images, PDFs, SVGs, and even ZIP contents.
+- **Versatile Renaming Modes:**
+  - Add, Remove, or Replace text.
+  - Advanced Numbering (digit count, steps, etc.).
+  - Regex-based complex replacements.
+  - Bulk Extension change.
+  - File Timestamp and Attribute modification (Windows version).
+- **Multi-Platform Support:** Runs on Windows, Linux (.deb), and Android.
+- **Mobile Optimized:** Floating execution button and search-integrated filter settings for one-handed operation.
+- **Reliable Undo:** Revert to original filenames with a single click even after execution.
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="https://toyo-craft.net/images/cap_renamery02.png" width="22%" alt="Mobile Screenshot 1">
+  <img src="https://toyo-craft.net/images/cap_renamery03.png" width="22%" alt="Mobile Screenshot 2">
+  <img src="https://toyo-craft.net/images/cap_renamery04.png" width="22%" alt="Mobile Screenshot 3">
+</p>
+
+## 🚀 Download
+
+Latest binaries are available on the [GitHub Releases](https://github.com/YourGitHubUsername/renamery/releases) page.
+
+- **Windows:** Portable ZIP format. No installation required.
+- **Android:** APK file for direct installation.
+- **Linux:** `.deb` package for Ubuntu/Debian, and portable `.tar.gz`.
+
+## 🛠 Usage
+
+1. Select a folder from the explorer on the left.
+2. Configure renaming conditions (Add, Replace, Numbering, etc.) in the right panel.
+3. Check the "New Name" in the list.
+4. Click the Execute button (Bottom center on mobile / Bottom right on PC) to finish!
+
+## 🤝 Respect
+
+This application was created with respect for the masterpiece freeware **['Namery'](https://www.vector.co.jp/soft/winnt/util/se217399.html)** by Jun Arai. The goal is to inherit its long-loved operability while rebuilding it with modern technology (Flutter).
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
 
 ---
-**企画・開発**: Toyo Craft Lab (https://toyo-craft.net/)
+Developed by [TOYO CRAFT Laboratory&Co.](https://toyo-craft.net/apps)

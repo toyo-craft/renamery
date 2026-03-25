@@ -1,71 +1,55 @@
-# Miscellaneous
-*.class
-*.log
-*.lock
-debug_log.txt
-permission_check.txt
-shortpaths.txt
-*.pyc
-*.swp
+# 機密情報 (Secrets)
+.env
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+signing.properties
+
+# OS Cache
+Thumbs.db
+desktop.ini
 .DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
+# IDE - IntelliJ/Android Studio
 .idea/
+*.iml
+*.iws
+*.ipr
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# IDE - VS Code
+.vscode/
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Flutter/Dart Cache & Build
 .dart_tool/
 .dart_tool_old/
+/build/
+.flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
-/build/
-/coverage/
 
-# Symbolication related
-app.*.symbols
+# Local Scripts & Executables
+*.bat
+*.ps1
+test_launcher.dart
 
-# Obfuscation related
-app.*.map.json
+# Project Specific Local Files
+gemini.md
+shortpaths.txt
+permission_check.txt
+0001-*.patch
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
-
-# User Docs
-docs/issues.md
-docs/md3_gap_report.md
-docs/prompt_history.md
-
-# Local Environment Scripts
-mount_*.bat
-mount_*.ps1
-run_mount_ps.bat
-clean_rebuild.bat
-force_cleanup.bat
-run_app.bat
-run_debug.bat
-
-# Debug logs
-*_log.txt
-*_log2.txt
+# Temp & Debug Logs
+*.log
+debug_log.txt
+analyze_*.txt
 chrome_log*.txt
 final_crash_log.txt
-analyze_result*.txt
+繧ｹ繧ｯ繝ｪ繝ｼ繝ｳ繧ｷ繝ｧ繝ヨ.png
+
+# User / Prompt History
+docs/prompt_history.md
+docs/.obsidian/
