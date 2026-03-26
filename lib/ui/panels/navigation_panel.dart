@@ -317,8 +317,15 @@ class _DirectoryTileState extends State<_DirectoryTile> {
       try {
         final List<FileSystemEntity> entities =
             await widget.directory.list().toList();
-        final List<Directory> subDirs =
-            entities.whereType<Directory>().toList();
+        
+        // Android 等では typeSync で明示的に Directory かを確認する必要がある
+        final List<Directory> subDirs = entities.where((entity) {
+          try {
+            return FileSystemEntity.typeSync(entity.path) == FileSystemEntityType.directory;
+          } catch (_) {
+            return entity is Directory; // Fallback
+          }
+        }).map((e) => Directory(e.path)).toList();
 
         // Sort
         subDirs.sort(

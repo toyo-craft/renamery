@@ -283,10 +283,19 @@ class DirectoryProvider extends ChangeNotifier {
   Color get seedColor => _seedColor;
 
   Future<void> checkClipboard() async {
-    final clipboard = SystemClipboard.instance;
-    if (clipboard == null) { _canPaste = false; notifyListeners(); return; }
-    final reader = await clipboard.read();
-    _canPaste = reader.canProvide(Formats.fileUri);
+    try {
+      final clipboard = SystemClipboard.instance;
+      if (clipboard == null) {
+        _canPaste = false;
+        notifyListeners();
+        return;
+      }
+      final reader = await clipboard.read();
+      _canPaste = reader.canProvide(Formats.fileUri);
+    } catch (e) {
+      debugPrint('Clipboard check failed (Native library error): $e');
+      _canPaste = false; // 失敗時は貼り付け不可として扱う
+    }
     notifyListeners();
   }
 
@@ -772,7 +781,13 @@ class DirectoryProvider extends ChangeNotifier {
       _scanSubscription = _startMinimalScan(directory.path, _recursiveSearch).listen(
         (paths) {
           for (var p in paths) {
-            final f = FileModel(entity: File(p)); // 最小限の生成
+            // パスからファイルかディレクトリかを判別して生成
+            final type = FileSystemEntity.typeSync(p);
+            final FileSystemEntity entity = (type == FileSystemEntityType.directory) 
+                ? Directory(p) 
+                : File(p);
+            
+            final f = FileModel(entity: entity);
             _allFiles.add(f);
             _currentFiles.add(f);
           }
@@ -893,7 +908,13 @@ class DirectoryProvider extends ChangeNotifier {
       for (var c = 'A'.codeUnitAt(0); c <= 'Z'.codeUnitAt(0); c++) {
         final d = Directory('${String.fromCharCode(c)}:\\\\'); if (await d.exists()) ds.add(d);
       }
-    } else ds.add(Directory('/'));
+    } else if (Platform.isAndroid) {
+      // Android: Internal Storage
+      final d = Directory('/storage/emulated/0');
+      if (await d.exists()) ds.add(d);
+    } else {
+      ds.add(Directory('/'));
+    }
     return ds;
   }
 
