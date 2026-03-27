@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:multi_split_view/multi_split_view.dart';
@@ -20,8 +19,6 @@ class _NavigationPanelState extends State<NavigationPanel> {
   List<Directory> _drives = [];
   List<Directory> _quickAccess = [];
   bool _loading = true;
-  int _quickAccessVersion = 0;
-  bool _isSuppressingAutoExpand = false; // 自動展開の抑制フラグ
 
   late final MultiSplitViewController _splitterController;
 
@@ -30,8 +27,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
     super.initState();
     _splitterController = MultiSplitViewController(
       areas: [
-        Area(flex: 0.7, builder: (c, a) => _buildTreeSection()),
-        Area(flex: 0.3, builder: (c, a) => _buildPreviewSection()),
+        Area(flex: 0.7, builder: (context, area) => _buildTreeSection()),
+        Area(flex: 0.3, builder: (context, area) => _buildPreviewSection()),
       ],
     );
     _loadData();
@@ -285,7 +282,7 @@ class _DirectoryTile extends StatefulWidget {
   final bool isRoot;
   final bool isQuickAccess;
   final String? contextRoot;
-  final bool isSuppressingAutoExpand; // 追加
+  final bool isSuppressingAutoExpand;
 
   const _DirectoryTile({
     required this.directory,
@@ -293,7 +290,7 @@ class _DirectoryTile extends StatefulWidget {
     this.isRoot = false,
     this.isQuickAccess = false,
     this.contextRoot,
-    this.isSuppressingAutoExpand = false, // 追加
+    this.isSuppressingAutoExpand = false,
   });
 
   @override

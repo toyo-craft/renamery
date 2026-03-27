@@ -51,7 +51,7 @@ Windows XP時代に多くのユーザーに支持された伝説的な高機能�
 
 ## 📄 ライセンス
 
-このプロジェクトは [MIT ライセンス](LICENSE) の下で公開されています。
+このプロジェクトは [BSD 3-Clause ライセンス](LICENSE) の下で公開されています。
 
 ---
 Developed by [TOYO CRAFT Laboratory&Co.](https://toyo-craft.net/apps)

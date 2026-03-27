@@ -373,7 +373,11 @@ class DirectoryProvider extends ChangeNotifier {
               await ent.rename(destP);
               transaction.add(UndoAction(srcP, destP, type: UndoType.rename));
             } else {
-              if (ent is File) await ent.copy(destP); else await _copyDirectory(ent as Directory, Directory(destP));
+              if (ent is File) {
+                await ent.copy(destP);
+              } else {
+                await _copyDirectory(ent as Directory, Directory(destP));
+              }
               transaction.add(UndoAction(srcP, destP, type: UndoType.copy));
             }
           } catch (e) { if (kDebugMode) print('Paste error: $e'); }
@@ -403,7 +407,9 @@ class DirectoryProvider extends ChangeNotifier {
     await destination.create(recursive: true);
     await for (var entity in source.list(recursive: false)) {
       final newP = p.join(destination.path, p.basename(entity.path));
-      if (entity is Directory) await _copyDirectory(entity, Directory(newP)); else if (entity is File) await entity.copy(newP);
+      if (entity is Directory) {
+        await _copyDirectory(entity, Directory(newP));
+      } else if (entity is File) await entity.copy(newP);
     }
   }
 
@@ -486,13 +492,19 @@ class DirectoryProvider extends ChangeNotifier {
     if (saveSequenceNumber != null) _saveSequenceNumber = saveSequenceNumber;
 
     if (mode != null) {
-      if (isSubMode(mode)) _lastSubMode = mode; else if (isMainMode(mode)) _lastMainMode = mode;
+      if (isSubMode(mode)) {
+        _lastSubMode = mode;
+      } else if (isMainMode(mode)) _lastMainMode = mode;
       else if (isExtraMode(mode)) _lastExtraMode = mode; else if (isEtcMode(mode)) _lastEtcMode = mode;
       if (mode == RenameMode.append || mode == RenameMode.prepend || mode == RenameMode.insert || mode == RenameMode.numbering) _lastStringMode = mode;
     }
 
     _previewTimer?.cancel();
-    if (immediate) _updatePreviews(); else _previewTimer = Timer(const Duration(milliseconds: 200), () => _updatePreviews());
+    if (immediate) {
+      _updatePreviews();
+    } else {
+      _previewTimer = Timer(const Duration(milliseconds: 200), () => _updatePreviews());
+    }
     _saveState(); notifyListeners();
   }
 
@@ -513,7 +525,9 @@ class DirectoryProvider extends ChangeNotifier {
     final nameCounts = <String, int>{};
     for (var f in _currentFiles) {
       if (f.validationErrorMessage != null &&
-          f.validationErrorMessage != 'ファイル名が重複しています') _hasValidationError = true;
+          f.validationErrorMessage != 'ファイル名が重複しています') {
+        _hasValidationError = true;
+      }
       // ID 008: 異なるフォルダの同名ファイルを許容するため、キーに親パスを含める
       final fullPathKey = p.canonicalize(p.join(f.parentPath, f.newName));
       nameCounts[fullPathKey] = (nameCounts[fullPathKey] ?? 0) + 1;
@@ -554,7 +568,9 @@ class DirectoryProvider extends ChangeNotifier {
     _resetCount++; _applyFilters(); _saveState(); notifyListeners();
   }
 
-  void selectAll(bool select) { for (var f in _currentFiles) f.isSelected = select; _updatePreviews(); notifyListeners(); }
+  void selectAll(bool select) { for (var f in _currentFiles) {
+    f.isSelected = select;
+  } _updatePreviews(); notifyListeners(); }
 
   void selectRange(int start, int end, {bool exclusive = true, List<bool>? baseStates}) {
     final minIdx = start < end ? start : end;
@@ -780,19 +796,33 @@ class DirectoryProvider extends ChangeNotifier {
     try {
       _scanSubscription = _startMinimalScan(directory.path, _recursiveSearch).listen(
         (paths) {
-          for (var p in paths) {
+          final String rootPath = directory.path;
+          for (var pStr in paths) {
             // パスからファイルかディレクトリかを判別して生成
-            final type = FileSystemEntity.typeSync(p);
-            final FileSystemEntity entity = (type == FileSystemEntityType.directory) 
-                ? Directory(p) 
-                : File(p);
-            
+            final type = FileSystemEntity.typeSync(pStr);
+            final FileSystemEntity entity = (type == FileSystemEntityType.directory)
+                ? Directory(pStr)
+                : File(pStr);
+
             final f = FileModel(entity: entity);
+
+            // 相対パスの計算とセット
+            try {
+              String rel = p.relative(p.dirname(pStr), from: rootPath);
+              if (rel == '.') {
+                rel = ''; // 同一ディレクトリ内の場合は空文字
+              }
+              f.setDisplayRelativePath(rel);
+            } catch (e) {
+              f.setDisplayRelativePath('');
+            }
+
             _allFiles.add(f);
             _currentFiles.add(f);
           }
           notifyListeners();
         },
+
         onDone: () async {
           _isLoading = false;
           // まずは現在の手元にあるデータでUIを表示させる

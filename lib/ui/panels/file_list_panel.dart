@@ -202,9 +202,13 @@ class _FileListPanelState extends State<FileListPanel> {
 
     // その他のモードは従来の差分アルゴリズムを使用
     int prefixLen = 0;
-    while (prefixLen < oldText.length && prefixLen < newText.length && oldText[prefixLen] == newText[prefixLen]) prefixLen++;
+    while (prefixLen < oldText.length && prefixLen < newText.length && oldText[prefixLen] == newText[prefixLen]) {
+      prefixLen++;
+    }
     int suffixLen = 0;
-    while (suffixLen < oldText.length - prefixLen && suffixLen < newText.length - prefixLen && oldText[oldText.length - 1 - suffixLen] == newText[newText.length - 1 - suffixLen]) suffixLen++;
+    while (suffixLen < oldText.length - prefixLen && suffixLen < newText.length - prefixLen && oldText[oldText.length - 1 - suffixLen] == newText[newText.length - 1 - suffixLen]) {
+      suffixLen++;
+    }
     final prefix = oldText.substring(0, prefixLen);
     final deleted = oldText.substring(prefixLen, oldText.length - suffixLen);
     final added = newText.substring(prefixLen, newText.length - suffixLen);
@@ -488,6 +492,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                           width: totalWidth,
                                           child: Listener(
                                             onPointerDown: (event) {
+                                              // マウス操作のみ矩形選択を開始する（タッチ操作はスクロールを優先）
+                                              if (event.kind != PointerDeviceKind.mouse) return;
+
                                               if (event.buttons == kPrimaryMouseButton) {
                                                 // ドラッグハンドルやチェックボックスの領域（左端 72px）でのクリックは無視
                                                 if (event.localPosition.dx < (_widthDragHandle + _widthCheckbox + _widthSpace)) {

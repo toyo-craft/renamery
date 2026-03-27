@@ -4,7 +4,6 @@ import 'dart:ffi' as ffi;
 import 'package:ffi/ffi.dart' as pkg_ffi;
 import 'package:win32/win32.dart';
 import '../core/file_model.dart';
-import 'platform_utils_stub.dart';
 
 const int SEE_MASK_INVOKEIDLIST = 0x0000000C;
 

@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:printing/printing.dart';
-import 'package:pdf/pdf.dart';
 import 'package:archive/archive.dart';
 import '../../core/file_model.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';

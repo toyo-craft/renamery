@@ -409,7 +409,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         onPressed: provider.canExecute ? () => _confirmAndExecute(context, provider, l10n) : null,
         backgroundColor: provider.canExecute 
             ? Theme.of(context).colorScheme.primaryContainer 
-            : Theme.of(context).colorScheme.surfaceVariant,
+            : Theme.of(context).colorScheme.surfaceContainerHighest,
         foregroundColor: provider.canExecute 
             ? Theme.of(context).colorScheme.onPrimaryContainer 
             : Theme.of(context).colorScheme.onSurfaceVariant,
@@ -650,12 +650,14 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   Widget _buildBody(bool showLeftPane, bool showRightPane) {
     if (showLeftPane && showRightPane) {
       return MultiSplitView(
+        axis: Axis.horizontal,
         controller: _threePaneController,
         resizable: true,
         onDividerDragEnd: (index) => _saveSplitState(),
       );
     } else if (!showLeftPane && showRightPane) {
       return MultiSplitView(
+        axis: Axis.horizontal,
         controller: _twoPaneController,
         resizable: true,
         onDividerDragEnd: (index) => _saveSplitState(),
