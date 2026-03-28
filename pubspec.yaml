@@ -1,4 +1,4 @@
-﻿name: renamery
+name: renamery
 description: Flutterを使用したNameryファイルリネームツールの復活版。
 publish_to: 'none'
 version: 0.10.0
@@ -44,7 +44,6 @@ dev_dependencies:
   flutter_lints: ^3.0.1
   flutter_launcher_icons: ^0.14.3
   msix: ^3.16.12
-  flutter_to_debian: ^2.0.2
 
 flutter:
   generate: true
@@ -70,9 +69,3 @@ msix_config:
   msix_version: 0.10.0.0
   logo_path: assets/icon/app_icon.png
   store: true
-
-flutter_to_debian:
-  description: "ReNamery - A modern batch renaming utility."
-  maintainer: "toyo-craft <toyo-craft@example.com>"
-  section: "utils"
-  dependencies: "libgtk-3-0, libblkid1, liblzma5, libgcrypt20"

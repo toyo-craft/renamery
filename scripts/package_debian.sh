@@ -1,22 +1,75 @@
 #!/bin/bash
 
-# Debian (.deb) パッケージ作成スクリプト
-# Linux環境またはWSL上で実行してください。
+# Debian (.deb) パッケージ手動作成スクリプト
+# ツール (flutter_to_debian) のバグを回避するため、直接構築します。
 
 set -e
 
-echo "Cleaning build directory..."
+PKG_NAME="renamery"
+VERSION="0.10.0"
+ARCH="amd64"
+MAINTAINER="toyo-craft <toyo-craft@example.com>"
+DESC="ReNamery - A modern batch renaming utility."
+
+echo "Cleaning and Building..."
 flutter clean
-
-echo "Getting dependencies..."
 flutter pub get
-
-echo "Building Linux release..."
 flutter build linux --release
 
-echo "Creating Debian package..."
-flutter pub run flutter_to_debian
+echo "Preparing Debian staging area..."
+STAGING="build/debian_staging"
+rm -rf "$STAGING"
+mkdir -p "$STAGING/DEBIAN"
+mkdir -p "$STAGING/usr/lib/$PKG_NAME"
+mkdir -p "$STAGING/usr/bin"
+mkdir -p "$STAGING/usr/share/applications"
+mkdir -p "$STAGING/usr/share/icons/hicolor/256x256/apps"
+
+# 1. バイナリとアセットのコピー
+cp -r build/linux/x64/release/bundle/* "$STAGING/usr/lib/$PKG_NAME/"
+
+# 2. アイコンの配置
+if [ -f "assets/icon/app_icon.png" ]; then
+    cp assets/icon/app_icon.png "$STAGING/usr/share/icons/hicolor/256x256/apps/$PKG_NAME.png"
+fi
+
+# 3. デスクトップエントリの作成
+cat <<EOT > "$STAGING/usr/share/applications/$PKG_NAME.desktop"
+[Desktop Entry]
+Version=$VERSION
+Name=ReNamery
+Comment=$DESC
+Exec=/usr/bin/$PKG_NAME
+Icon=$PKG_NAME
+Terminal=false
+Type=Application
+Categories=Utility;
+EOT
+
+# 4. 実行用ラッパースクリプトの作成
+cat <<EOT > "$STAGING/usr/bin/$PKG_NAME"
+#!/bin/bash
+/usr/lib/$PKG_NAME/renamery "\$@"
+EOT
+chmod +x "$STAGING/usr/bin/$PKG_NAME"
+
+# 5. Control ファイルの作成（手動でクリーンに記述）
+cat <<EOT > "$STAGING/DEBIAN/control"
+Package: $PKG_NAME
+Version: $VERSION
+Section: utils
+Priority: optional
+Architecture: $ARCH
+Maintainer: $MAINTAINER
+Description: $DESC
+Depends: libgtk-3-0, libblkid1, liblzma5, libgcrypt20
+EOT
+
+# 6. パッケージのビルド
+echo "Building .deb package..."
+mkdir -p build/debian
+dpkg-deb --build "$STAGING" "build/debian/${PKG_NAME}_${VERSION}_${ARCH}.deb"
 
 echo "--------------------------------------------------"
-echo "Done! The .deb package should be in build/debian/"
+echo "Success! build/debian/${PKG_NAME}_${VERSION}_${ARCH}.deb"
 echo "--------------------------------------------------"

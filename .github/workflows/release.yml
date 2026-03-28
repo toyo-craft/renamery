@@ -37,16 +37,14 @@ jobs:
           mv build/app/outputs/flutter-apk/app-release.apk ReNamery_Android.apk
 
       # --- Linux ビルド ---
-      - name: Build Linux
+      - name: Build Linux and Debian Package
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libblkid-dev liblzma-dev libgcrypt20-dev pkg-config
-          flutter build linux --release
-          # Debian パッケージの作成
-          flutter pub get
-          flutter pub run flutter_to_debian
-          # ポータブル版の作成
+          chmod +x scripts/package_debian.sh
+          ./scripts/package_debian.sh
+          # ポータブル版の作成（スクリプト内のビルド成果物を使用）
           cd build/linux/x64/release/bundle
           tar -czf ../../../../../ReNamery_Linux_Portable.tar.gz .
 
