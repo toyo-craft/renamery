@@ -44,7 +44,7 @@ dev_dependencies:
   flutter_lints: ^3.0.1
   flutter_launcher_icons: ^0.14.3
   msix: ^3.16.12
-  flutter_to_debian: ^1.2.0
+  flutter_to_debian: ^2.0.2
 
 flutter:
   generate: true
