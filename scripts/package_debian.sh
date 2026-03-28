@@ -15,7 +15,7 @@ echo "Building Linux release..."
 flutter build linux --release
 
 echo "Creating Debian package..."
-flutter pub run debian:create
+flutter pub run debian
 
 echo "--------------------------------------------------"
 echo "Done! The .deb package should be in build/debian/"

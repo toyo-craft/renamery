@@ -45,7 +45,7 @@ jobs:
           flutter build linux --release
           # Debian パッケージの作成
           flutter pub get
-          flutter pub run debian:create
+          flutter pub run debian
           # ポータブル版の作成
           cd build/linux/x64/release/bundle
           tar -czf ../../../../../ReNamery_Linux_Portable.tar.gz .
