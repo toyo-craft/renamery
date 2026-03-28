@@ -75,3 +75,4 @@ flutter_to_debian:
   description: "ReNamery - A modern batch renaming utility."
   maintainer: "toyo-craft <toyo-craft@example.com>"
   section: "utils"
+  dependencies: "libgtk-3-0, libblkid1, liblzma5, libgcrypt20"
