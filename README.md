@@ -36,9 +36,10 @@ ReNamery is a modern batch renaming utility that revives the legendary high-perf
 
 Latest binaries are available on the [GitHub Releases](https://github.com/toyo-craft/renamery/releases) page.
 
-- **Windows:** Portable ZIP format. No installation required.
-- **Android:** APK file for direct installation.
-- **Linux:** `.deb` package for Ubuntu/Debian, and portable `.tar.gz`.
+- **Windows:** `.zip` archive (Portable). No installation required.
+- **Android:** `.apk` file for direct installation.
+- **Linux:** `.deb` package for Ubuntu/Debian, and `.tar.gz`.
+
 
 ## 🛠 Usage
 

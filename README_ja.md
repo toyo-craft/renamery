@@ -34,9 +34,9 @@ Windows XP時代に多くのユーザーに支持された伝説的な高機能�
 
 最新のリリースは [GitHub Releases](https://github.com/toyo-craft/renamery/releases) ページからダウンロードできます。
 
-- **Windows:** ポータブルZIP形式。インストール不要。
-- **Android:** APKファイルを直接インストール。
-- **Linux:** Ubuntu/Debian 向け `.deb` パッケージ、およびポータブル `.tar.gz`。
+- **Windows:** `.zip` 形式。インストール不要。
+- **Android:** `.apk` ファイル。
+- **Linux:** Ubuntu/Debian 向け `.deb` パッケージ、および `.tar.gz`。
 
 ## 🛠 使い方
 

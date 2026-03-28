@@ -27,7 +27,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           flutter build windows --release
-          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ReNamery_Windows_Portable.zip
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ReNamery_Windows.zip
 
       # --- Android ビルド ---
       - name: Build Android
@@ -46,16 +46,16 @@ jobs:
           ./scripts/package_debian.sh
           # ポータブル版の作成（スクリプト内のビルド成果物を使用）
           cd build/linux/x64/release/bundle
-          tar -czf ../../../../../ReNamery_Linux_Portable.tar.gz .
+          tar -czf ../../../../../ReNamery_Linux.tar.gz .
 
       # --- GitHub へのアップロード ---
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ReNamery_Windows_Portable.zip
+            ReNamery_Windows.zip
             ReNamery_Android.apk
-            ReNamery_Linux_Portable.tar.gz
+            ReNamery_Linux.tar.gz
             build/debian/*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
