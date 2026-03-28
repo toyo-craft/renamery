@@ -71,16 +71,15 @@ msix_config:
   logo_path: assets/icon/app_icon.png
   store: true
 
-debian:
-  name: renamery
-  parent: ToyoCraftLab
-  arch: amd64
-  description: ReNamery - A modern batch renaming utility.
-  maintainer: toyo-craft <toyo-craft@example.com>
-  section: utils
-  priority: optional
-  essentials:
-    - libgtk-3-0
-    - libblkid1
-    - liblzma5
-    - libgcrypt20
+flutter_to_debian:
+  name: "renamery"
+  arch: "amd64"
+  description: "ReNamery - A modern batch renaming utility."
+  maintainer: "toyo-craft <toyo-craft@example.com>"
+  section: "utils"
+  priority: "optional"
+  dependencies:
+    - "libgtk-3-0"
+    - "libblkid1"
+    - "liblzma5"
+    - "libgcrypt20"
