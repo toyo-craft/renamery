@@ -51,9 +51,13 @@ chrome_log*.txt
 final_crash_log.txt
 スクリーンショット*.png
 
-# User / Prompt History
-docs/prompt_history.md
-docs/.obsidian/
+# Documentation & Manuals
+namery_manuals/
+namery_docs/
+docs/
+
+# Multimedia Originals
+.picasaoriginals/
 
 # Specific old binary to exclude
 renamery_v0.1.0_windows.zip
