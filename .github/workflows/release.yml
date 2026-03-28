@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-22.04]
     
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +38,7 @@ jobs:
 
       # --- Linux ビルド ---
       - name: Build Linux and Debian Package
-        if: matrix.os == 'ubuntu-latest'
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libblkid-dev liblzma-dev libgcrypt20-dev pkg-config

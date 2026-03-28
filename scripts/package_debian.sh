@@ -49,9 +49,11 @@ EOT
 # 4. 実行用ラッパースクリプトの作成
 cat <<EOT > "$STAGING/usr/bin/$PKG_NAME"
 #!/bin/bash
-/usr/lib/$PKG_NAME/renamery "\$@"
+cd /usr/lib/$PKG_NAME
+exec ./renamery "\$@"
 EOT
 chmod +x "$STAGING/usr/bin/$PKG_NAME"
+chmod +x "$STAGING/usr/lib/$PKG_NAME/renamery"
 
 # 5. Control ファイルの作成（手動でクリーンに記述）
 cat <<EOT > "$STAGING/DEBIAN/control"
@@ -62,7 +64,7 @@ Priority: optional
 Architecture: $ARCH
 Maintainer: $MAINTAINER
 Description: $DESC
-Depends: libgtk-3-0, libblkid1, liblzma5, libgcrypt20
+Depends: libgtk-3-0, libglib2.0-0, libstdc++6, libblkid1, liblzma5, libgcrypt20, libsecret-1-0, libfontconfig1, libdbus-1-3
 EOT
 
 # 6. パッケージのビルド
