@@ -32,9 +32,10 @@ class _SettingsPanelState extends State<SettingsPanel> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isCompact = constraints.maxWidth <= 360;
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool isCompact = constraints.maxWidth <= 360;
 
         return Column(
           children: [
@@ -141,6 +142,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
           ],
         );
       },
-    );
-  }
+    ),
+  );
+}
 }

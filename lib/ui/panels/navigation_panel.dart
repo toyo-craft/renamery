@@ -80,68 +80,72 @@ class _NavigationPanelState extends State<NavigationPanel> {
   Widget _buildTreeSection() {
     final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<DirectoryProvider>(); // provider を監視
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Fixed Header for Quick Access
-        if (_quickAccess.isNotEmpty)
-          _buildSectionHeader(
-            l10n.labelNavQuickAccess,
-            onAction: () => provider.resetNavTree(), // Provider のメソッドを呼ぶ
-            actionIcon: Symbols.collapse_all,
-          ),
-        
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Scrollbar(
-                controller: _horizontalController,
-                child: SingleChildScrollView(
+    return SafeArea(
+      top: true,
+      bottom: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Fixed Header for Quick Access
+          if (_quickAccess.isNotEmpty)
+            _buildSectionHeader(
+              l10n.labelNavQuickAccess,
+              onAction: () => provider.resetNavTree(), // Provider のメソッドを呼ぶ
+              actionIcon: Symbols.collapse_all,
+            ),
+          
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Scrollbar(
                   controller: _horizontalController,
-                  scrollDirection: Axis.horizontal,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                    child: IntrinsicWidth(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Quick Access Items
-                            if (_quickAccess.isNotEmpty)
-                              KeyedSubtree(
-                                // Provider のカウンタを Key に含めることで確実に再生成
-                                key: ValueKey('qa_${provider.navTreeResetTick}'),
-                                child: Column(
-                                  children: _quickAccess.map((dir) => _DirectoryTile(
-                                    directory: dir,
-                                    customIcon: _getIconForPath(dir.path),
-                                    isRoot: true,
-                                    isQuickAccess: true,
-                                    contextRoot: dir.path,
-                                    // 抑制フラグも Provider 側の状態で管理可能
-                                  )).toList(),
+                  child: SingleChildScrollView(
+                    controller: _horizontalController,
+                    scrollDirection: Axis.horizontal,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                      child: IntrinsicWidth(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Quick Access Items
+                              if (_quickAccess.isNotEmpty)
+                                KeyedSubtree(
+                                  // Provider のカウンタを Key に含めることで確実に再生成
+                                  key: ValueKey('qa_${provider.navTreeResetTick}'),
+                                  child: Column(
+                                    children: _quickAccess.map((dir) => _DirectoryTile(
+                                      directory: dir,
+                                      customIcon: _getIconForPath(dir.path),
+                                      isRoot: true,
+                                      isQuickAccess: true,
+                                      contextRoot: dir.path,
+                                      // 抑制フラグも Provider 側の状態で管理可能
+                                    )).toList(),
+                                  ),
                                 ),
-                              ),
-                            
-                            // PC Section
-                            _buildSectionHeader(l10n.labelNavPC),
-                            ..._drives.map((dir) => _DirectoryTile(
-                              directory: dir,
-                              customIcon: Icons.computer,
-                              isRoot: true,
-                              isQuickAccess: false,
-                            )),
-                          ],
+                              
+                              // PC Section
+                              _buildSectionHeader(l10n.labelNavPC),
+                              ..._drives.map((dir) => _DirectoryTile(
+                                directory: dir,
+                                customIcon: Icons.computer,
+                                isRoot: true,
+                                isQuickAccess: false,
+                              )),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -370,11 +374,9 @@ class _DirectoryTileState extends State<_DirectoryTile> {
   @override
   void initState() {
     super.initState();
-    // 案2の実装: 初期化時に現在の選択バージョンを「処理済み」として記憶する
-    // これにより、一括折りたたみ後の再描画で勝手に展開されるのを防ぐ
-    final provider = context.read<DirectoryProvider>();
-    _lastHandledSelectionVersion = provider.selectionVersion;
-    _lastHandledSelectionPath = provider.currentDirectory?.path;
+    // モバイル版のドロワーなど、マウント時に現在の選択箇所まで展開させるため、
+    // ここで _lastHandledSelectionVersion を現在のバージョンに設定せず、初期値のままにする。
+    _lastHandledSelectionVersion = -1; 
   }
 
   // State to track the last selection path we handled for auto-expansion.
@@ -457,7 +459,12 @@ class _DirectoryTileState extends State<_DirectoryTile> {
       bool isDescendant = false;
 
       try {
-        isDescendant = p.isWithin(widget.directory.path, currentDir.path);
+        // Android/Linux ではパスの正規化が重要
+        final String canonicalCurrent = p.canonicalize(currentDir.path);
+        final String canonicalMine = p.canonicalize(widget.directory.path);
+        
+        isDescendant = p.isWithin(canonicalMine, canonicalCurrent);
+        isSelected = canonicalCurrent == canonicalMine;
       } catch (e) {
         // Ignore path parsing errors
       }

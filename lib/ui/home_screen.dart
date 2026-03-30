@@ -17,7 +17,6 @@ import 'panels/home_app_bar.dart';
 import 'widgets/preview_window.dart';
 
 import 'helpers/undo_helper.dart';
-import 'helpers/copy_helper.dart';
 import 'helpers/filter_dialog_helper.dart';
 import 'dart:io';
 import 'dart:async';
@@ -301,16 +300,20 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
             drawer: !showLeftPane
                 ? Drawer(
                     width: 300,
-                    child: Consumer<DirectoryProvider>(
-                      builder: (context, provider, child) =>
-                          NavigationPanel(key: ValueKey(provider.resetCount)),
+                    child: SafeArea(
+                      child: Consumer<DirectoryProvider>(
+                        builder: (context, provider, child) =>
+                            NavigationPanel(key: ValueKey(provider.resetCount)),
+                      ),
                     ),
                   )
                 : null,
             endDrawer: !showRightPane
                 ? const Drawer(
                     width: 350,
-                    child: SettingsPanel(),
+                    child: SafeArea(
+                      child: SettingsPanel(),
+                    ),
                   )
                 : null,
             body: Column(
