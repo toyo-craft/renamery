@@ -6,7 +6,7 @@
 set -e
 
 PKG_NAME="renamery"
-VERSION="0.10.0"
+VERSION="0.10.1"
 ARCH="amd64"
 MAINTAINER="toyo-craft <toyo-craft@example.com>"
 DESC="ReNamery - A modern batch renaming utility."
