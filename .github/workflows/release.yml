@@ -38,18 +38,28 @@ jobs:
           dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64" --install-certificate false
 
           # 3. MSI (Standard Installer) の作成
-          # heat.exe でディレクトリ構造をスキャン (srd オプションでルートディレクトリ自身を含めないようにする)
+          # heat.exe でディレクトリ構造をスキャン
           heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -template fragment -arch x64 -out AppFiles.wxs
 
+          # アイコンリソースの準備 (Flutterビルド済みexeから抽出するか、アセットを使用)
+          # ここでは確実に存在する exe をアイコンソースとして指定します
+          
           $MAIN_WXS = @"
           <?xml version='1.0' encoding='windows-1252'?>
-          <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+          <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
               <Product Name='ReNamery' Id='*' UpgradeCode='7eb57432-8432-4234-8432-1234567890ab'
                   Language='1033' Codepage='1252' Version='$RAW_VER' Manufacturer='Toyo Craft Lab'>
                   <Package Id='*' Keywords='Installer' Description="ReNamery Installer"
                       Comments='ReNamery' Manufacturer='Toyo Craft Lab'
                       InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' Platform='x64' />
+                  
+                  <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
                   <Media Id='1' Cabinet='App.cab' EmbedCab='yes' />
+
+                  <!-- アイコン設定 -->
+                  <Icon Id="AppIcon" SourceFile="build\windows\x64\runner\Release\renamery.exe" />
+                  <Property Id="ARPPRODUCTICON" Value="AppIcon" /> <!-- コントロールパネル用 -->
+
                   <Directory Id='TARGETDIR' Name='SourceDir'>
                       <Directory Id='ProgramFiles64Folder'>
                           <Directory Id='INSTALLDIR' Name='ReNamery' />
@@ -64,30 +74,43 @@ jobs:
                       </Directory>
                       <Directory Id="DesktopFolder" Name="Desktop" />
                   </Directory>
+
                   <Feature Id='MainFeature' Title='Main Feature' Level='1'>
                       <ComponentGroupRef Id='AppFiles' />
                       <ComponentRef Id='ProgramMenuDirComp' />
                       <ComponentRef Id='ApplicationShortcut' />
                       <ComponentRef Id='ApplicationShortcutDesktop' />
                   </Feature>
+
                   <DirectoryRef Id="ProgramMenuDir">
                       <Component Id="ApplicationShortcut" Guid="*" Win64="yes">
-                          <Shortcut Id="ApplicationStartMenuShortcut" Name="ReNamery" Description="ReNamery" Target="[INSTALLDIR]renamery.exe" WorkingDirectory="INSTALLDIR" />
+                          <Shortcut Id="ApplicationStartMenuShortcut" Name="ReNamery" Description="ReNamery" Target="[INSTALLDIR]renamery.exe" WorkingDirectory="INSTALLDIR" Icon="AppIcon" />
                           <RegistryValue Root="HKCU" Key="Software\ToyoCraftLab\ReNamery" Name="installed" Type="integer" Value="1" KeyPath="yes" />
                       </Component>
                   </DirectoryRef>
+
                   <DirectoryRef Id="DesktopFolder">
                       <Component Id="ApplicationShortcutDesktop" Guid="*" Win64="yes">
-                          <Shortcut Id="ApplicationDesktopShortcut" Name="ReNamery" Description="ReNamery" Target="[INSTALLDIR]renamery.exe" WorkingDirectory="INSTALLDIR" />
+                          <Shortcut Id="ApplicationDesktopShortcut" Name="ReNamery" Description="ReNamery" Target="[INSTALLDIR]renamery.exe" WorkingDirectory="INSTALLDIR" Icon="AppIcon" />
                           <RegistryValue Root="HKCU" Key="Software\ToyoCraftLab\ReNamery" Name="installed_desktop" Type="integer" Value="1" KeyPath="yes" />
                       </Component>
                   </DirectoryRef>
+
+                  <!-- インストール完了後の「起動する」チェックボックス -->
+                  <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch ReNamery" />
+                  <Property Id="WixShellExecTarget" Value="[INSTALLDIR]renamery.exe" />
+                  <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+
+                  <UI>
+                      <UIRef Id="WixUI_Minimal" />
+                      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX</Publish>
+                  </UI>
               </Product>
           </Wix>
           "@
           $MAIN_WXS | Out-File -FilePath "main.wxs" -Encoding ascii
           candle -arch x64 main.wxs AppFiles.wxs
-          light -ext WixUIExtension -b build\windows\x64\runner\Release main.wixobj AppFiles.wixobj -o ReNamery-${{ github.ref_name }}-windows-x64.msi
+          light -ext WixUIExtension -ext WixUtilExtension -b build\windows\x64\runner\Release main.wixobj AppFiles.wixobj -o ReNamery-${{ github.ref_name }}-windows-x64.msi
 
       # --- Android ビルド ---
       - name: Build Android
