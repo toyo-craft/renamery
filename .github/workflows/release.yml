@@ -38,9 +38,8 @@ jobs:
           dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64" --install-certificate false
 
           # 3. MSI (Standard Installer) の作成
-          # WiX Toolset を使用して MSI を作成
-          # heat.exe でディレクトリ構造をスキャン
-          heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -dr INSTALLDIR -template fragment -out AppFiles.wxs
+          # heat.exe でディレクトリ構造をスキャン (x64 アーキテクチャを明示)
+          heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -dr INSTALLDIR -template fragment -arch x64 -out AppFiles.wxs
 
           $MAIN_WXS = @"
           <?xml version='1.0' encoding='windows-1252'?>
@@ -49,7 +48,7 @@ jobs:
                   Language='1033' Codepage='1252' Version='$RAW_VER' Manufacturer='Toyo Craft Lab'>
                   <Package Id='*' Keywords='Installer' Description="ReNamery Installer"
                       Comments='ReNamery' Manufacturer='Toyo Craft Lab'
-                      InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+                      InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' Platform='x64' />
                   <Media Id='1' Cabinet='App.cab' EmbedCab='yes' />
                   <Directory Id='TARGETDIR' Name='SourceDir'>
                       <Directory Id='ProgramFiles64Folder'>
@@ -57,7 +56,7 @@ jobs:
                       </Directory>
                       <Directory Id="ProgramMenuFolder">
                           <Directory Id="ProgramMenuDir" Name="ReNamery">
-                              <Component Id="ProgramMenuDirComp" Guid="*">
+                              <Component Id="ProgramMenuDirComp" Guid="*" Win64="yes">
                                   <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
                                   <RegistryValue Root='HKCU' Key='Software\ToyoCraftLab\ReNamery' Type='string' Value='' KeyPath='yes' />
                               </Component>
@@ -72,13 +71,13 @@ jobs:
                       <ComponentRef Id='ApplicationShortcutDesktop' />
                   </Feature>
                   <DirectoryRef Id="ProgramMenuDir">
-                      <Component Id="ApplicationShortcut" Guid="*">
+                      <Component Id="ApplicationShortcut" Guid="*" Win64="yes">
                           <Shortcut Id="ApplicationStartMenuShortcut" Name="ReNamery" Description="ReNamery" Target="[INSTALLDIR]renamery.exe" WorkingDirectory="INSTALLDIR" />
                           <RegistryValue Root="HKCU" Key="Software\ToyoCraftLab\ReNamery" Name="installed" Type="integer" Value="1" KeyPath="yes" />
                       </Component>
                   </DirectoryRef>
                   <DirectoryRef Id="DesktopFolder">
-                      <Component Id="ApplicationShortcutDesktop" Guid="*">
+                      <Component Id="ApplicationShortcutDesktop" Guid="*" Win64="yes">
                           <Shortcut Id="ApplicationDesktopShortcut" Name="ReNamery" Description="ReNamery" Target="[INSTALLDIR]renamery.exe" WorkingDirectory="INSTALLDIR" />
                           <RegistryValue Root="HKCU" Key="Software\ToyoCraftLab\ReNamery" Name="installed_desktop" Type="integer" Value="1" KeyPath="yes" />
                       </Component>
@@ -87,8 +86,7 @@ jobs:
           </Wix>
           "@
           $MAIN_WXS | Out-File -FilePath "main.wxs" -Encoding ascii
-          candle main.wxs AppFiles.wxs
-          # light.exe 実行時に基準パス (-b) を指定することでファイルを見つけられるようにする
+          candle -arch x64 main.wxs AppFiles.wxs
           light -ext WixUIExtension -b build\windows\x64\runner\Release main.wixobj AppFiles.wixobj -o ReNamery-${{ github.ref_name }}-windows-x64.msi
 
       # --- Android ビルド ---
