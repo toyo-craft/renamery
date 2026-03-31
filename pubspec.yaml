@@ -55,6 +55,9 @@ flutter:
 flutter_launcher_icons:
   image_path: "assets/icon/app_icon.png"
   android: true
+  # Android アダプティブアイコン（背景と前景の分離）設定を追加
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
   linux: true
   windows:
     generate: true
