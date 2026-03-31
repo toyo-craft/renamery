@@ -27,7 +27,13 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           flutter build windows --release
+          # ZIP版の作成
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ReNamery-${{ github.ref_name }}-windows-x64.zip
+          # MSIXインストーラーの作成 (タグ名 v0.10.1 -> 0.10.1.0 に変換)
+          $RAW_VER = "${{ github.ref_name }}".Replace("v", "")
+          $MSIX_VER = "$RAW_VER.0"
+          flutter pub run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --msix-version=$MSIX_VER --output-path=build\windows\x64\runner\Release --output-name=ReNamery-${{ github.ref_name }}-windows-x64
+          mv build\windows\x64\runner\Release\ReNamery-${{ github.ref_name }}-windows-x64.msix .
 
       # --- Android ビルド ---
       - name: Build Android
@@ -54,6 +60,7 @@ jobs:
         with:
           files: |
             ReNamery-${{ github.ref_name }}-windows-x64.zip
+            ReNamery-${{ github.ref_name }}-windows-x64.msix
             ReNamery-${{ github.ref_name }}-android-universal.apk
             ReNamery-${{ github.ref_name }}-linux-x64.tar.gz
             build/debian/*.deb
