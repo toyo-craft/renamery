@@ -29,11 +29,10 @@ jobs:
           flutter build windows --release
           # ZIP版の作成
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ReNamery-${{ github.ref_name }}-windows-x64.zip
-          # MSIXインストーラーの作成 (タグ名 v0.10.1 -> 0.10.1.0 に変換)
-          $RAW_VER = "${{ github.ref_name }}".Replace("v", "")
+          # MSIXインストーラーの作成 (タグ名 v0.10.2 -> 0.10.2.0 に変換)
+          $RAW_VER = "${{ github.ref_name }}".TrimStart("v")
           $MSIX_VER = "$RAW_VER.0"
-          flutter pub run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --msix-version=$MSIX_VER --output-path=build\windows\x64\runner\Release --output-name=ReNamery-${{ github.ref_name }}-windows-x64
-          mv build\windows\x64\runner\Release\ReNamery-${{ github.ref_name }}-windows-x64.msix .
+          dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --msix-version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64"
 
       # --- Android ビルド ---
       - name: Build Android
