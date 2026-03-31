@@ -70,8 +70,9 @@ EOT
 # 6. パッケージのビルド
 echo "Building .deb package..."
 mkdir -p build/debian
-dpkg-deb --build "$STAGING" "build/debian/${PKG_NAME}_${VERSION}_${ARCH}.deb"
+OUTPUT_FILENAME="ReNamery-v${VERSION}-linux-${ARCH}.deb"
+dpkg-deb --build "$STAGING" "build/debian/$OUTPUT_FILENAME"
 
 echo "--------------------------------------------------"
-echo "Success! build/debian/${PKG_NAME}_${VERSION}_${ARCH}.deb"
+echo "Success! build/debian/$OUTPUT_FILENAME"
 echo "--------------------------------------------------"
