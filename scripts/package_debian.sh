@@ -7,7 +7,7 @@ set -e
 
 PKG_NAME="renamery"
 # pubspec.yaml からバージョンを取得
-VERSION=$(grep 'version: ' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1 | tr -d ' ')
+VERSION=$(grep '^version: ' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1 | tr -d ' ')
 ARCH="amd64"
 MAINTAINER="toyo-craft <toyo-craft@example.com>"
 DESC="ReNamery - A modern batch renaming utility."
