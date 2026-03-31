@@ -30,9 +30,10 @@ jobs:
           # ZIP版の作成
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ReNamery-${{ github.ref_name }}-windows-x64.zip
           # MSIXインストーラーの作成 (タグ名 v0.10.2 -> 0.10.2.0 に変換)
-          $RAW_VER = "${{ github.ref_name }}".TrimStart("v")
+          $TAG_NAME = "${{ github.ref_name }}"
+          $RAW_VER = $TAG_NAME.Replace("v", "")
           $MSIX_VER = "$RAW_VER.0"
-          dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --msix-version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64"
+          dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64"
 
       # --- Android ビルド ---
       - name: Build Android
