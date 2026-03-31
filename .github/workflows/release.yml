@@ -38,8 +38,8 @@ jobs:
           dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64" --install-certificate false
 
           # 3. MSI (Standard Installer) の作成
-          # heat.exe でディレクトリ構造をスキャン (x64 アーキテクチャを明示)
-          heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -dr INSTALLDIR -template fragment -arch x64 -out AppFiles.wxs
+          # heat.exe でディレクトリ構造をスキャン (srd オプションでルートディレクトリ自身を含めないようにする)
+          heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -template fragment -arch x64 -out AppFiles.wxs
 
           $MAIN_WXS = @"
           <?xml version='1.0' encoding='windows-1252'?>
