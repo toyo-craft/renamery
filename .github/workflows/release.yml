@@ -39,57 +39,8 @@ jobs:
 
           # 3. MSI (Standard Installer) の作成
           # WiX Toolset を使用して MSI を作成
-          $WXS_CONTENT = @"
-          <?xml version='1.0' encoding='windows-1252'?>
-          <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-              <Product Name='ReNamery' Id='*' UpgradeCode='7eb57432-8432-4234-8432-1234567890ab'
-                  Language='1033' Codepage='1252' Version='$RAW_VER' Manufacturer='Toyo Craft Lab'>
-                  <Package Id='*' Keywords='Installer' Description="ReNamery Installer"
-                      Comments='ReNamery' Manufacturer='Toyo Craft Lab'
-                      InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
-                  <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt="CD-ROM #1" />
-                  <Property Id='DiskPrompt' Value="ReNamery Installation [1]" />
-                  <Directory Id='TARGETDIR' Name='SourceDir'>
-                      <Directory Id='ProgramFiles64Folder' Name='PFiles'>
-                          <Directory Id='INSTALLDIR' Name='ReNamery'>
-                              <Component Id='MainExecutable' Guid='*'>
-                                  <File Id='ReNameryEXE' Name='renamery.exe' DiskId='1' Source='build\windows\x64\runner\Release\renamery.exe' KeyPath='yes'>
-                                      <Shortcut Id="startmenuReNamery" Directory="ProgramMenuDir" Name="ReNamery" WorkingDirectory='INSTALLDIR' Icon="renamery.exe" IconIndex="0" Advertise="yes" />
-                                      <Shortcut Id="desktopReNamery" Directory="DesktopFolder" Name="ReNamery" WorkingDirectory='INSTALLDIR' Icon="renamery.exe" IconIndex="0" Advertise="yes" />
-                                  </File>
-                              </Component>
-                              <Component Id='FlutterEngine' Guid='*'>
-                                  <File Id='FlutterEngineDLL' Name='flutter_windows.dll' DiskId='1' Source='build\windows\x64\runner\Release\flutter_windows.dll' KeyPath='yes' />
-                              </Component>
-                              <!-- data フォルダはディレクトリ構造として扱う必要があるため、ビルド後にフォルダごとコピーする運用にする -->
-                          </Directory>
-                      </Directory>
-                      <Directory Id="ProgramMenuFolder" Name="Programs">
-                          <Directory Id="ProgramMenuDir" Name="ReNamery">
-                              <Component Id="ProgramMenuDir" Guid="*">
-                                  <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
-                                  <RegistryValue Root='HKCU' Key='Software\ToyoCraftLab\ReNamery' Type='string' Value='' KeyPath='yes' />
-                              </Component>
-                          </Directory>
-                      </Directory>
-                      <Directory Id="DesktopFolder" Name="Desktop" />
-                  </Directory>
-                  <Feature Id='MainFeature' Title='Main Feature' Level='1'>
-                      <ComponentRef Id='MainExecutable' />
-                      <ComponentRef Id='FlutterEngine' />
-                      <ComponentRef Id='ProgramMenuDir' />
-                  </Feature>
-                  <Icon Id="renamery.exe" SourceFile="build\windows\x64\runner\Release\renamery.exe" />
-              </Product>
-          </Wix>
-          "@
-          # 本来は data フォルダ内の全ファイルを定義する必要があるが、CIでの簡略化のため
-          # 最小構成でMSIを作成し、足りないファイル（dataフォルダ）は MSI 側のカスタムアクションで補うか、
-          # WiX の heat.exe で自動生成するのが正攻法。
-          # 今回は、heat.exe を使ってビルドディレクトリ全体をスキャンして WXS を生成する方式に切り替えます。
-
-          $HEAT_CMD = "heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -dr INSTALLDIR -template fragment -out AppFiles.wxs"
-          Invoke-Expression $HEAT_CMD
+          # heat.exe でディレクトリ構造をスキャン
+          heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -dr INSTALLDIR -template fragment -out AppFiles.wxs
 
           $MAIN_WXS = @"
           <?xml version='1.0' encoding='windows-1252'?>
@@ -137,7 +88,8 @@ jobs:
           "@
           $MAIN_WXS | Out-File -FilePath "main.wxs" -Encoding ascii
           candle main.wxs AppFiles.wxs
-          light -ext WixUIExtension main.wixobj AppFiles.wixobj -o ReNamery-${{ github.ref_name }}-windows-x64.msi
+          # light.exe 実行時に基準パス (-b) を指定することでファイルを見つけられるようにする
+          light -ext WixUIExtension -b build\windows\x64\runner\Release main.wixobj AppFiles.wixobj -o ReNamery-${{ github.ref_name }}-windows-x64.msi
 
       # --- Android ビルド ---
       - name: Build Android
