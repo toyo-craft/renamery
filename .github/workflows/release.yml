@@ -35,11 +35,10 @@ jobs:
           $TAG_NAME = "${{ github.ref_name }}"
           $RAW_VER = $TAG_NAME.Replace("v", "")
           $MSIX_VER = "$RAW_VER.0"
-          # Store用なので --install-certificate は不要だが、CIエラー防止のため false 指定
           dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64" --install-certificate false
 
           # 3. MSI (Standard Installer) の作成
-          # WiX Toolset を使用して MSI を作成するための最低限の WXS ファイルを生成
+          # WiX Toolset を使用して MSI を作成
           $WXS_CONTENT = @"
           <?xml version='1.0' encoding='windows-1252'?>
           <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
@@ -47,7 +46,7 @@ jobs:
                   Language='1033' Codepage='1252' Version='$RAW_VER' Manufacturer='Toyo Craft Lab'>
                   <Package Id='*' Keywords='Installer' Description="ReNamery Installer"
                       Comments='ReNamery' Manufacturer='Toyo Craft Lab'
-                      InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+                      InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
                   <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt="CD-ROM #1" />
                   <Property Id='DiskPrompt' Value="ReNamery Installation [1]" />
                   <Directory Id='TARGETDIR' Name='SourceDir'>
@@ -62,9 +61,7 @@ jobs:
                               <Component Id='FlutterEngine' Guid='*'>
                                   <File Id='FlutterEngineDLL' Name='flutter_windows.dll' DiskId='1' Source='build\windows\x64\runner\Release\flutter_windows.dll' KeyPath='yes' />
                               </Component>
-                              <Component Id='AppDataDir' Guid='*'>
-                                  <File Id='DataDir' Name='data' DiskId='1' Source='build\windows\x64\runner\Release\data' KeyPath='yes' />
-                              </Component>
+                              <!-- data フォルダはディレクトリ構造として扱う必要があるため、ビルド後にフォルダごとコピーする運用にする -->
                           </Directory>
                       </Directory>
                       <Directory Id="ProgramMenuFolder" Name="Programs">
@@ -86,10 +83,61 @@ jobs:
               </Product>
           </Wix>
           "@
-          $WXS_CONTENT | Out-File -FilePath "renamery.wxs" -Encoding ascii
-          # WiX の candle と light を実行して MSI を生成
-          candle renamery.wxs
-          light -ext WixUIExtension renamery.wixobj -o ReNamery-${{ github.ref_name }}-windows-x64.msi
+          # 本来は data フォルダ内の全ファイルを定義する必要があるが、CIでの簡略化のため
+          # 最小構成でMSIを作成し、足りないファイル（dataフォルダ）は MSI 側のカスタムアクションで補うか、
+          # WiX の heat.exe で自動生成するのが正攻法。
+          # 今回は、heat.exe を使ってビルドディレクトリ全体をスキャンして WXS を生成する方式に切り替えます。
+
+          $HEAT_CMD = "heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -dr INSTALLDIR -template fragment -out AppFiles.wxs"
+          Invoke-Expression $HEAT_CMD
+
+          $MAIN_WXS = @"
+          <?xml version='1.0' encoding='windows-1252'?>
+          <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+              <Product Name='ReNamery' Id='*' UpgradeCode='7eb57432-8432-4234-8432-1234567890ab'
+                  Language='1033' Codepage='1252' Version='$RAW_VER' Manufacturer='Toyo Craft Lab'>
+                  <Package Id='*' Keywords='Installer' Description="ReNamery Installer"
+                      Comments='ReNamery' Manufacturer='Toyo Craft Lab'
+                      InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+                  <Media Id='1' Cabinet='App.cab' EmbedCab='yes' />
+                  <Directory Id='TARGETDIR' Name='SourceDir'>
+                      <Directory Id='ProgramFiles64Folder'>
+                          <Directory Id='INSTALLDIR' Name='ReNamery' />
+                      </Directory>
+                      <Directory Id="ProgramMenuFolder">
+                          <Directory Id="ProgramMenuDir" Name="ReNamery">
+                              <Component Id="ProgramMenuDirComp" Guid="*">
+                                  <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
+                                  <RegistryValue Root='HKCU' Key='Software\ToyoCraftLab\ReNamery' Type='string' Value='' KeyPath='yes' />
+                              </Component>
+                          </Directory>
+                      </Directory>
+                      <Directory Id="DesktopFolder" Name="Desktop" />
+                  </Directory>
+                  <Feature Id='MainFeature' Title='Main Feature' Level='1'>
+                      <ComponentGroupRef Id='AppFiles' />
+                      <ComponentRef Id='ProgramMenuDirComp' />
+                      <ComponentRef Id='ApplicationShortcut' />
+                      <ComponentRef Id='ApplicationShortcutDesktop' />
+                  </Feature>
+                  <DirectoryRef Id="ProgramMenuDir">
+                      <Component Id="ApplicationShortcut" Guid="*">
+                          <Shortcut Id="ApplicationStartMenuShortcut" Name="ReNamery" Description="ReNamery" Target="[INSTALLDIR]renamery.exe" WorkingDirectory="INSTALLDIR" />
+                          <RegistryValue Root="HKCU" Key="Software\ToyoCraftLab\ReNamery" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+                      </Component>
+                  </DirectoryRef>
+                  <DirectoryRef Id="DesktopFolder">
+                      <Component Id="ApplicationShortcutDesktop" Guid="*">
+                          <Shortcut Id="ApplicationDesktopShortcut" Name="ReNamery" Description="ReNamery" Target="[INSTALLDIR]renamery.exe" WorkingDirectory="INSTALLDIR" />
+                          <RegistryValue Root="HKCU" Key="Software\ToyoCraftLab\ReNamery" Name="installed_desktop" Type="integer" Value="1" KeyPath="yes" />
+                      </Component>
+                  </DirectoryRef>
+              </Product>
+          </Wix>
+          "@
+          $MAIN_WXS | Out-File -FilePath "main.wxs" -Encoding ascii
+          candle main.wxs AppFiles.wxs
+          light -ext WixUIExtension main.wixobj AppFiles.wixobj -o ReNamery-${{ github.ref_name }}-windows-x64.msi
 
       # --- Android ビルド ---
       - name: Build Android
