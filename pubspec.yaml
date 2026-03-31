@@ -72,5 +72,3 @@ msix_config:
   msix_version: 0.10.2.0
   logo_path: assets/icon/app_icon.png
   store: true
-n/app_icon.png
-  store: false
