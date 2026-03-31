@@ -33,7 +33,7 @@ jobs:
           $TAG_NAME = "${{ github.ref_name }}"
           $RAW_VER = $TAG_NAME.Replace("v", "")
           $MSIX_VER = "$RAW_VER.0"
-          dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64"
+          dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64" --install-certificate false
 
       # --- Android ビルド ---
       - name: Build Android
