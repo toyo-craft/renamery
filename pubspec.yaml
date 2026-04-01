@@ -37,6 +37,7 @@ dependencies:
   printing: ^5.14.3
   archive: ^4.0.9
   permission_handler: ^11.3.1
+  upgrader: ^10.3.0
 
 dev_dependencies:
   flutter_test:

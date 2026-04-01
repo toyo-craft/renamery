@@ -22,6 +22,8 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'package:upgrader/upgrader.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -290,8 +292,15 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
         return KeyEventResult.ignored;
       },
-      child: Stack(
-        children: [
+      child: UpgradeAlert(
+        upgrader: Upgrader(
+          languageCode: Localizations.localeOf(context).languageCode,
+          minAppVersion: '0.10.0',
+          debugLogging: false,
+          durationUntilAlertAgain: const Duration(days: 1),
+        ),
+        child: Stack(
+          children: [
           Scaffold(
             key: _scaffoldKey,
             appBar: HomeAppBar(
@@ -402,6 +411,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
             ),
         ],
       ),
+    ),
     );
   }
 

@@ -41,9 +41,13 @@ jobs:
           # heat.exe でディレクトリ構造をスキャン
           heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -template fragment -arch x64 -out AppFiles.wxs
 
-          # アイコンリソースの準備 (Flutterビルド済みexeから抽出するか、アセットを使用)
-          # ここでは確実に存在する exe をアイコンソースとして指定します
-          
+          # ライセンスファイル (RTF形式) の簡易生成
+          $LICENSE_TEXT = Get-Content LICENSE -Raw
+          $RTF_HEADER = "{\rtf1\ansi\deff0{\fonttbl{\f0 Arial;}}\f0\fs20 "
+          $RTF_FOOTER = "}"
+          $RTF_CONTENT = $RTF_HEADER + ($LICENSE_TEXT -replace "\r\n", "\par ") + $RTF_FOOTER
+          $RTF_CONTENT | Out-File -FilePath "license.rtf" -Encoding ascii
+
           $MAIN_WXS = @"
           <?xml version='1.0' encoding='windows-1252'?>
           <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
@@ -58,7 +62,10 @@ jobs:
 
                   <!-- アイコン設定 -->
                   <Icon Id="AppIcon" SourceFile="build\windows\x64\runner\Release\renamery.exe" />
-                  <Property Id="ARPPRODUCTICON" Value="AppIcon" /> <!-- コントロールパネル用 -->
+                  <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+
+                  <!-- ライセンス設定 -->
+                  <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
 
                   <Directory Id='TARGETDIR' Name='SourceDir'>
                       <Directory Id='ProgramFiles64Folder'>
