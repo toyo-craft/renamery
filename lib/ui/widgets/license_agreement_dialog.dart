@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:renamery/core/directory_provider.dart';
@@ -76,8 +78,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         actions: [
           TextButton(
             onPressed: () {
-              // 同意しない場合はアプリを終了させる（または何もしない）
-              // ここではシンプルに何もしないか、メッセージを出す
+              if (Platform.isAndroid || Platform.isIOS) {
+                SystemNavigator.pop();
+              } else {
+                exit(0);
+              }
             },
             child: const Text('同意しない'),
           ),
