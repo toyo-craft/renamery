@@ -21,6 +21,7 @@ class DirectoryProvider extends ChangeNotifier {
   bool _enableBetaFeatures = false;
   int _treeVersion = 0;
   final UndoManager _undoManager = UndoManager();
+  final SettingsService _settings = SettingsService(); // 追加
   StreamSubscription? _scanSubscription;
 
   bool _canPaste = false;

@@ -23,6 +23,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:upgrader/upgrader.dart';
+import 'widgets/license_agreement_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
