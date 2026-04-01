@@ -127,68 +127,18 @@ class RenameEngine {
       String extension;
       String newBaseName;
 
-      // ID 001: フォルダの場合はドットを含めて全体をベース名として扱う
+      // フォルダの場合はドットを含めて全体をベース名として扱う
+      // ファイルの場合は拡張子を分離する
       if (file.entity is Directory) {
         originalBaseName = file.originalName;
         extension = '';
-        newBaseName = originalBaseName;
       } else {
         originalBaseName = p.basenameWithoutExtension(file.originalName);
         extension = p.extension(file.originalName);
-        newBaseName = originalBaseName;
       }
+      newBaseName = originalBaseName;
 
       switch (mode) {
-        // ... (previous cases) ...
-        case RenameMode.numbering:
-          // ... (existing logic) ...
-          String numberStr = counter.toString().padLeft(digits, '0');
-          String text = appendText ?? '';
-
-          // Get Base Folder Name
-          String parentName = baseDirName ?? '';
-          if (parentName.isEmpty) {
-            try {
-              parentName = p.basename(file.parentPath);
-            } catch (_) {}
-          }
-
-          String relativeName = file.relativePath;
-
-          switch (numberingMode) {
-            case NumberingMode.stringNumber:
-              newBaseName = '$text$numberStr';
-              break;
-            case NumberingMode.originalNumber:
-              newBaseName = '$originalBaseName$numberStr';
-              break;
-            case NumberingMode.numberString:
-              newBaseName = '$numberStr$text';
-              break;
-            case NumberingMode.numberOriginal:
-              newBaseName = '$numberStr$originalBaseName';
-              break;
-            case NumberingMode.baseStringNumber:
-              newBaseName = '$parentName$text$numberStr';
-              break;
-            case NumberingMode.baseStringOriginal:
-              newBaseName = '$parentName$text$originalBaseName';
-              break;
-            case NumberingMode.relativeStringNumber:
-              newBaseName = '$relativeName$text$numberStr';
-              break;
-            case NumberingMode.relativeStringOriginal:
-              newBaseName = '$relativeName$text$originalBaseName';
-              break;
-            case NumberingMode.numberStringBase:
-              newBaseName = '$numberStr$text$parentName';
-              break;
-            case NumberingMode.numberStringRelative:
-              newBaseName = '$numberStr$text$relativeName';
-              break;
-          }
-          counter++;
-          break;
         case RenameMode.deleteStart:
           int count = digits;
           if (count > 0) {
@@ -205,6 +155,7 @@ class RenameEngine {
             if (count >= newBaseName.length) {
               newBaseName = '';
             } else {
+              // ここで newBaseName は常に拡張子を除いた名前であることを保証
               newBaseName = newBaseName.substring(0, newBaseName.length - count);
             }
           }
