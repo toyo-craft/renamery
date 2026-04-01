@@ -40,8 +40,18 @@ class DirectoryProvider extends ChangeNotifier {
     }
   }
 
+  bool _isLicenseAccepted = false;
+  bool get isLicenseAccepted => _isLicenseAccepted;
+
+  Future<void> acceptLicense() async {
+    _isLicenseAccepted = true;
+    _settings.set('isLicenseAccepted', true);
+    notifyListeners();
+  }
+
   Future<void> init() async {
-    final s = SettingsService();
+    final s = _settings;
+    _isLicenseAccepted = s.getBool('isLicenseAccepted') ?? false;
     _filterText = s.getString('filterText') ?? '';
     _hideSystemFiles = s.getBool('hideSystemFiles') ?? false;
     _recursiveSearch = s.getBool('recursiveSearch') ?? false;

@@ -94,6 +94,18 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     );
 
     _loadSplitState();
+
+    // ライセンス同意のチェック
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<DirectoryProvider>();
+      if (!provider.isLicenseAccepted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const LicenseAgreementDialog(),
+        );
+      }
+    });
   }
 
   @override
