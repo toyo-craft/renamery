@@ -16,6 +16,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup Java
+        if: matrix.os == 'windows-latest'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -38,36 +45,14 @@ jobs:
           dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64" --install-certificate false
 
           # 3. MSI (Standard Installer) の作成
-          # heat.exe でディレクトリ構造をスキャン
           heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -template fragment -arch x64 -out AppFiles.wxs
 
-          # ライセンスファイル (RTF形式) の生成
-          # docs\License定義.md に基づく統合ライセンスドキュメント
-          $EULA_CONTENT = @"
-          {\rtf1\ansi\deff0{\fonttbl{\f0 Arial;}{\f1 Segoe UI;}}
-          {\colortbl ;\red0\green0\blue255;}
-          \f1\fs24\b ReNamery End User License Agreement\b0\fs20\par\par
-          
-          \b 1. INSTALLER CONSENT NOTICE\b0\par
-          Please read the following before installing or using ReNamery.\par
-          By downloading, installing, launching, or using ReNamery, you acknowledge and agree that:\par
-          - ReNamery is provided under the BSD 3-Clause License.\par
-          - Provided on an "AS IS" basis, without warranties of any kind.\par
-          - Toyo Craft Lab shall not be liable for any damages arising out of use.\par
-          - ReNamery may access the network for updates and version info.\par\par
-
-          \b 2. BSD 3-CLAUSE LICENSE\b0\par
-          Copyright (c) 2026, Toyo Craft Lab. All rights reserved.\par
-          Redistribution and use in source and binary forms, with or without modification, are permitted provided that the conditions in the full BSD 3-Clause License are met.\par\par
-
-          \b 3. TERMS OF USE & PRIVACY POLICY\b0\par
-          Additional terms and privacy policies apply to your use of this software. \par
-          The full text of the Terms of Use and Privacy Policy can be found in the documentation provided with this application or on the official distribution page.\par\par
-          
-          If you do not agree to these terms, do not install or use ReNamery.
-          }
-          "@
-          $EULA_CONTENT | Out-File -FilePath "license.rtf" -Encoding ascii
+          # ライセンスファイル (RTF形式) の簡易生成
+          $LICENSE_TEXT = Get-Content LICENSE -Raw
+          $RTF_HEADER = "{\rtf1\ansi\deff0{\fonttbl{\f0 Arial;}}\f0\fs20 "
+          $RTF_FOOTER = "}"
+          $RTF_CONTENT = $RTF_HEADER + ($LICENSE_TEXT -replace "\r\n", "\par ") + $RTF_FOOTER
+          $RTF_CONTENT | Out-File -FilePath "license.rtf" -Encoding ascii
 
           $MAIN_WXS = @"
           <?xml version='1.0' encoding='windows-1252'?>
@@ -83,7 +68,6 @@ jobs:
 
                   <Icon Id="AppIcon" SourceFile="build\windows\x64\runner\Release\renamery.exe" />
                   <Property Id="ARPPRODUCTICON" Value="AppIcon" />
-
                   <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
 
                   <Directory Id='TARGETDIR' Name='SourceDir'>
@@ -141,7 +125,7 @@ jobs:
       - name: Build Android
         if: matrix.os == 'windows-latest'
         run: |
-          flutter build apk --release
+          flutter build apk --release -v
           mv build/app/outputs/flutter-apk/app-release.apk ReNamery-${{ github.ref_name }}-android-universal.apk
 
       # --- Linux ビルド ---
@@ -152,7 +136,7 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libblkid-dev liblzma-dev libgcrypt20-dev pkg-config
           chmod +x scripts/package_debian.sh
           ./scripts/package_debian.sh
-          # ポータブル版の作成（スクリプト内のビルド成果物を使用）
+          # ポータブル版の作成
           cd build/linux/x64/release/bundle
           tar -czf ../../../../../ReNamery-${{ github.ref_name }}-linux-x64.tar.gz .
 
