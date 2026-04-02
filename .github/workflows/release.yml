@@ -125,8 +125,9 @@ jobs:
       - name: Build Android
         if: matrix.os == 'windows-latest'
         run: |
-          # SDKライセンスへの自動同意
-          yes | flutter doctor --android-licenses
+          # SDKライセンスへの自動同意 (PowerShell 代替)
+          $inputs = @("y") * 10
+          $inputs | flutter doctor --android-licenses
           flutter build apk --release
           mv build/app/outputs/flutter-apk/app-release.apk ReNamery-${{ github.ref_name }}-android-universal.apk
 
