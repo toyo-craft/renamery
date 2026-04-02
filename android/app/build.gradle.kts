@@ -36,9 +36,9 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
             
-            // ProGuard / R8 設定を追加
-            minifyEnabled = true
-            shrinkResources = true
+            // ProGuard / R8 設定（署名設定が整うまで一時的に無効化）
+            minifyEnabled = false
+            shrinkResources = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
