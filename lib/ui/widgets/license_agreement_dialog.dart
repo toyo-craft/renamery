@@ -76,7 +76,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           ),
         ),
         actions: [
-          TextButton(
+          FilledButton(
             onPressed: () {
               if (Platform.isAndroid || Platform.isIOS) {
                 SystemNavigator.pop();
@@ -84,9 +84,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 exit(0);
               }
             },
-            child: const Text('同意しない'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.errorContainer,
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('同意しない（アプリを終了する）'),
           ),
-          FilledButton(
+          TextButton(
             onPressed: () {
               context.read<DirectoryProvider>().acceptLicense();
               Navigator.of(context).pop();

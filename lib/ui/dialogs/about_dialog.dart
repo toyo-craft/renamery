@@ -295,9 +295,17 @@ class AboutAppDialog extends StatelessWidget {
   }
 
   Future<void> _launchUrl(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      debugPrint('Could not launch $url');
+    try {
+      final Uri uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        if (!await launchUrl(uri, mode: LaunchMode.platformDefault)) {
+          debugPrint('Could not launch $url');
+        }
+      } else {
+        debugPrint('Cannot launch $url (canLaunchUrl returned false)');
+      }
+    } catch (e) {
+      debugPrint('Error launching URL: $e');
     }
   }
 }
