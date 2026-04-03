@@ -436,6 +436,19 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   Widget? _buildFAB(bool isNarrow, bool showRightPane, BuildContext context, AppLocalizations l10n) {
     if (isNarrow) {
       final provider = context.watch<DirectoryProvider>();
+      
+      // スキャン中（読み込み中）は停止ボタンとして機能させる
+      if (provider.isLoading) {
+        return FloatingActionButton(
+          onPressed: () => provider.cancelScan(),
+          backgroundColor: Theme.of(context).colorScheme.errorContainer,
+          foregroundColor: Theme.of(context).colorScheme.error,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 4,
+          child: const Icon(Symbols.stop_circle, size: 32, fill: 0),
+        );
+      }
+
       return FloatingActionButton(
         onPressed: provider.canExecute ? () => _confirmAndExecute(context, provider, l10n) : null,
         backgroundColor: provider.canExecute 
@@ -446,7 +459,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
             : Theme.of(context).colorScheme.onSurfaceVariant,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), 
         elevation: 4,
-        child: const Icon(Symbols.play_arrow, size: 32, fill: 1), // サイズアップとFill
+        child: const Icon(Symbols.play_arrow, size: 32, fill: 0),
       );
     } else if (!showRightPane) {
       return FloatingActionButton(
@@ -487,13 +500,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                 onPressed: () => FilterDialogHelper.showFilterPopup(context),
                 tooltip: l10n.labelFilterOptions,
               ),
-              
-              if (provider.isLoading)
-                IconButton(
-                  icon: const Icon(Symbols.stop_circle),
-                  onPressed: () => provider.cancelScan(),
-                  color: Theme.of(context).colorScheme.error,
-                ),
               
               Expanded(
                 child: Align(
