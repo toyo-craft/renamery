@@ -62,7 +62,16 @@ class DirectoryProvider extends ChangeNotifier {
     _isCompactMode = s.getBool('isCompactMode') ?? true;
     _isFilterSpecific = _filterText.isNotEmpty;
     _enableBetaFeatures = s.getBool('enableBetaFeatures') ?? false;
-    _touchMode = s.getBool('touchMode') ?? false;
+    
+    // タッチモードの初期設定: 未設定（初回起動）の場合はプラットフォームで判定
+    final savedTouchMode = s.getBool('touchMode');
+    if (savedTouchMode != null) {
+      _touchMode = savedTouchMode;
+    } else {
+      // モバイル端末（Android, iOS）の場合はデフォルトでタッチモードをONに設定
+      // デスクトップ端末やタブレット（Windows, macOS, Linux, Web）はデフォルトOFF
+      _touchMode = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+    }
 
     final appThemeStr = s.getString('appTheme') ?? 'light';
     _appTheme = AppThemeType.values.firstWhere((e) => e.name == appThemeStr, orElse: () => AppThemeType.light);

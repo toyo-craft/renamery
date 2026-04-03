@@ -550,30 +550,29 @@ class _DirectoryTileState extends State<_DirectoryTile> {
                       ),
                     )
                   : null,
-              padding: const EdgeInsets.symmetric(
-                vertical: 4.0, // Increased vertical padding for touch target
+              padding: EdgeInsets.symmetric(
+                vertical: provider.touchMode ? 10.0 : 4.0, // タッチモードで行の高さを確保
               ),
               child: Row(
                 children: [
                   // Indent / Expand Button
-                  // We use a fixed width container for alignment
                   SizedBox(
-                    width: 24,
-                    height: 24,
+                    width: provider.touchMode ? 32 : 24,
+                    height: provider.touchMode ? 32 : 24,
                     child: InkWell(
                       onTap: _toggleExpand,
                       child: Icon(
                         _isExpanded
                             ? Symbols.keyboard_arrow_down
                             : Symbols.keyboard_arrow_right,
-                        size: 16,
+                        size: provider.touchMode ? 24 : 16,
                         color: Colors.grey,
                       ),
                     ),
                   ),
                   // Folder Icon
-                  Icon(icon, size: 20, color: iconColor), // Increased icon size
-                  const SizedBox(width: 12), // More gap
+                  Icon(icon, size: provider.touchMode ? 28 : 20, color: iconColor),
+                  const SizedBox(width: 12),
                   // Text
                   Flexible(
                     child: Text(
@@ -582,7 +581,7 @@ class _DirectoryTileState extends State<_DirectoryTile> {
                       overflow: TextOverflow
                           .visible, // Let it expand in IntrinsicWidth
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: provider.touchMode ? 15 : 13,
                         color: isSelected
                             ? Theme.of(context).colorScheme.onSecondaryContainer
                             : null,
@@ -600,7 +599,7 @@ class _DirectoryTileState extends State<_DirectoryTile> {
         if (_isExpanded)
           Container(
             margin:
-                const EdgeInsets.only(left: 11.0), // Align with arrow center
+                EdgeInsets.only(left: provider.touchMode ? 15.0 : 11.0), // アイコンサイズに合わせて調整
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(
@@ -609,7 +608,7 @@ class _DirectoryTileState extends State<_DirectoryTile> {
                 ),
               ),
             ),
-            padding: const EdgeInsets.only(left: 12.0), // Tree Indentation
+            padding: EdgeInsets.only(left: provider.touchMode ? 16.0 : 12.0), // Tree Indentation
             child: Column(
               children: _subDirectories.where((dir) {
                 if (provider.hideSystemFiles) {
