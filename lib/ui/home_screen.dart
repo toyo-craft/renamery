@@ -585,39 +585,37 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                     ],
                   ),
                 ),
-                if (provider.isLoading) ...[
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    height: 36,
-                    child: FilledButton.tonalIcon(
-                      onPressed: () => provider.cancelScan(),
-                      icon: const Icon(Symbols.stop_circle, size: 18),
-                      label: const Text('スキャン中止'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                        foregroundColor: Theme.of(context).colorScheme.error,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                    ),
-                  ),
-                ],
                 const SizedBox(width: 16),
                 SizedBox(
                   height: 48,
                   width: 200,
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    onPressed: canExecute ? () => _confirmAndExecute(context, provider, l10n) : null,
-                    icon: const Icon(Symbols.play_arrow, size: 24),
-                    label: Text(
-                      l10n.labelGoRenamery,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ),
+                  child: provider.isLoading
+                      ? FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                            foregroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                          onPressed: () => provider.cancelScan(),
+                          icon: const Icon(Symbols.stop_circle, size: 24),
+                          label: const Text(
+                            'スキャン中止',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        )
+                      : FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                          onPressed: canExecute ? () => _confirmAndExecute(context, provider, l10n) : null,
+                          icon: const Icon(Symbols.play_arrow, size: 24),
+                          label: Text(
+                            l10n.labelGoRenamery,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
                 ),
               ],
             );
