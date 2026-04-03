@@ -749,4 +749,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get labelSearchHint => '按文件名搜索...';
+
+  @override
+  String get labelPermissionFileAccessTitle => '文件访问权限设置';
+
+  @override
+  String get labelPermissionFileAccessMessage =>
+      '为了在本应用中重命名文件，您需要在 Android 系统设置中允许“所有文件访问权限”。\n\n请在接下来的页面中找到“ReNamery”并打开开关。';
+
+  @override
+  String get labelPermissionFileAccessButton => '前往设置';
 }

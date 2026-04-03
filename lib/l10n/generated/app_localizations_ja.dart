@@ -752,6 +752,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get labelSearchHint => 'ファイル名で検索...';
+
+  @override
+  String get labelPermissionFileAccessTitle => 'ファイルアクセス権限の設定';
+
+  @override
+  String get labelPermissionFileAccessMessage =>
+      '本アプリでファイルをリネームするには、Androidシステムの設定で「すべてのファイルの管理」を許可する必要があります。\n\n次の画面で「ReNamery」を探して、スイッチをONにしてください。';
+
+  @override
+  String get labelPermissionFileAccessButton => '設定画面へ進む';
 }
 
 /// The translations for Japanese (`ja_NM`).

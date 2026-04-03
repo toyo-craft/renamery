@@ -762,4 +762,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get labelSearchHint => 'Buscar por nombre de archivo...';
+
+  @override
+  String get labelPermissionFileAccessTitle =>
+      'Configuración de permisos de acceso a archivos';
+
+  @override
+  String get labelPermissionFileAccessMessage =>
+      'Para renombrar archivos con esta aplicación, debe permitir el \"Acceso a todos los archivos\" en la configuración del sistema Android.\n\nBusque \"ReNamery\" en la siguiente pantalla y active el interruptor.';
+
+  @override
+  String get labelPermissionFileAccessButton => 'Ir a Ajustes';
 }

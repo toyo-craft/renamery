@@ -154,16 +154,17 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
 
               // 3. Execute
-              IconButton(
-                icon: const Icon(Symbols.play_arrow),
-                iconSize: iconSize,
-                tooltip: provider.hasInvalidFilenamesSelected
-                    ? '一部のファイルにエラーがあります (クリックで詳細)'
-                    : l10n.labelExecute,
-                onPressed: provider.canExecute
-                    ? () => _confirmAndExecute(context, provider, l10n)
-                    : null,
-              ),
+              if (!isNarrow)
+                IconButton(
+                  icon: const Icon(Symbols.play_arrow),
+                  iconSize: iconSize,
+                  tooltip: provider.hasInvalidFilenamesSelected
+                      ? '一部のファイルにエラーがあります (クリックで詳細)'
+                      : l10n.labelExecute,
+                  onPressed: provider.canExecute
+                      ? () => _confirmAndExecute(context, provider, l10n)
+                      : null,
+                ),
 
               // 4. Undo
               if (!isNarrow)

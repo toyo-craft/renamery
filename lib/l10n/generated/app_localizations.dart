@@ -1530,6 +1530,24 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'ファイル名で検索...'**
   String get labelSearchHint;
+
+  /// No description provided for @labelPermissionFileAccessTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'ファイルアクセス権限の設定'**
+  String get labelPermissionFileAccessTitle;
+
+  /// No description provided for @labelPermissionFileAccessMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'本アプリでファイルをリネームするには、Androidシステムの設定で「すべてのファイルの管理」を許可する必要があります。\n\n次の画面で「ReNamery」を探して、スイッチをONにしてください。'**
+  String get labelPermissionFileAccessMessage;
+
+  /// No description provided for @labelPermissionFileAccessButton.
+  ///
+  /// In ja, this message translates to:
+  /// **'設定画面へ進む'**
+  String get labelPermissionFileAccessButton;
 }
 
 class _AppLocalizationsDelegate

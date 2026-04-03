@@ -759,4 +759,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelSearchHint => 'Search by filename...';
+
+  @override
+  String get labelPermissionFileAccessTitle => 'File Access Permission';
+
+  @override
+  String get labelPermissionFileAccessMessage =>
+      'To rename files with this app, you must allow \"All Files Access\" in Android system settings.\n\nPlease find \"ReNamery\" in the next screen and turn the switch ON.';
+
+  @override
+  String get labelPermissionFileAccessButton => 'Go to Settings';
 }
