@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -318,14 +318,15 @@ class _FileListPanelState extends State<FileListPanel> {
     final minY = (_dragStart!.dy < currentAbsY ? _dragStart!.dy : currentAbsY);
     final maxY = (_dragStart!.dy > currentAbsY ? _dragStart!.dy : currentAbsY);
     
-    final filesHeight = files.length * 34.0;
+    final rowH = provider.touchMode ? 50.0 : 34.0;
+    final filesHeight = files.length * rowH;
     if (minY >= filesHeight || maxY <= 0) {
       provider.selectRange(-1, -1, exclusive: !HardwareKeyboard.instance.isControlPressed, baseStates: _initialSelectionStates);
       return;
     }
 
-    final startIndex = (minY / 34.0).floor().clamp(0, files.length - 1);
-    final endIndex = (maxY / 34.0).floor().clamp(0, files.length - 1);
+    final startIndex = (minY / rowH).floor().clamp(0, files.length - 1);
+    final endIndex = (maxY / rowH).floor().clamp(0, files.length - 1);
     
     provider.selectRange(startIndex, endIndex, exclusive: !HardwareKeyboard.instance.isControlPressed, baseStates: _initialSelectionStates);
   }
@@ -407,12 +408,12 @@ class _FileListPanelState extends State<FileListPanel> {
                               controller: _pathController,
                               style: const TextStyle(fontSize: 13),
                               decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8), border: InputBorder.none, isDense: true),
-                              onSubmitted: (value) => provider.setDirectory(Directory(value)),
+                              onSubmitted: (value) => provider.setDirectory(io.Directory(value)),
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
-                        IconButton(icon: Icon(Icons.arrow_forward, color: Theme.of(context).colorScheme.primary), tooltip: l10n.labelMenuGo, onPressed: () => provider.setDirectory(Directory(_pathController.text))),
+                        IconButton(icon: Icon(Icons.arrow_forward, color: Theme.of(context).colorScheme.primary), tooltip: l10n.labelMenuGo, onPressed: () => provider.setDirectory(io.Directory(_pathController.text))),
                         const SizedBox(width: 8),
                         SizedBox(
                           height: 32,
@@ -582,7 +583,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                     children: [
                                                       if (files.isNotEmpty)
                                                         SizedBox(
-                                                          height: files.length * 34.0,
+                                                          height: files.length * (provider.touchMode ? 50.0 : 34.0),
                                                           child: ReorderableListView.builder(
                                                             key: _reorderableListKey,
                                                             primary: false,
@@ -600,6 +601,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                   final provider = context.read<DirectoryProvider>();
                                                                   final selectedCount = provider.currentFiles.where((f) => f.isSelected).length;
                                                                   final isMultiMove = provider.currentFiles[index].isSelected && selectedCount > 1;
+                                                                  final rowH = provider.touchMode ? 48.0 : 32.0;
 
                                                                   return Material(
                                                                     elevation: 12.0,
@@ -609,11 +611,11 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                       clipBehavior: Clip.none,
                                                                       children: [
                                                                         if (isMultiMove) ...[
-                                                                          // 背後レイヤー 2 (最深部: さらに右下にズラし、幅も最も狭い)
+                                                                          // 背後レイヤー 2
                                                                           Positioned(
                                                                             top: 8, left: 8, right: 8, bottom: -8,
                                                                             child: Container(
-                                                                              height: 32, margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
+                                                                              height: rowH, margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
                                                                               decoration: BoxDecoration(
                                                                                 color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
                                                                                 borderRadius: BorderRadius.circular(8),
@@ -621,11 +623,11 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                               ),
                                                                             ),
                                                                           ),
-                                                                          // 背後レイヤー 1 (中間)
+                                                                          // 背後レイヤー 1
                                                                           Positioned(
                                                                             top: 4, left: 4, right: 4, bottom: -4,
                                                                             child: Container(
-                                                                              height: 32, margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
+                                                                              height: rowH, margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
                                                                               decoration: BoxDecoration(
                                                                                 color: Theme.of(context).colorScheme.surfaceContainerHigh.withValues(alpha: 0.7),
                                                                                 borderRadius: BorderRadius.circular(8),
@@ -634,7 +636,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                             ),
                                                                           ),
                                                                         ],
-                                                                        // メインの行 (最前面)
+                                                                        // メインの行
                                                                         Stack(
                                                                           children: [
                                                                             Positioned.fill(
@@ -685,8 +687,12 @@ class _FileListPanelState extends State<FileListPanel> {
                                                             },
                                                             itemBuilder: (context, index) {
                                                               final file = files[index];
-                                                              final isDir = file.entity is Directory;
+                                                              final isDir = file.entity is io.Directory;
                                                               final isEditing = _editingFilePath == file.entity.path;
+
+                                                              final rowH = provider.touchMode ? 48.0 : 32.0;
+                                                              final iconS = provider.touchMode ? 28.0 : 18.0;
+                                                              final dragS = provider.touchMode ? 24.0 : 16.0;
                                                               
                                                               // 現在移動中の他の選択項目をゴースト化（半透明）
                                                               final isGhost = _draggingIndex != null && file.isSelected && index != _draggingIndex;
@@ -695,7 +701,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                               final currentOpacity = isGhost ? 0.3 : (file.isCut ? 0.5 : 1.0);
                                                               // 切り取り中のテキストスタイル
                                                               final baseStyle = TextStyle(
-                                                                fontSize: 12, 
+                                                                fontSize: provider.touchMode ? 15.0 : 12.0, 
                                                                 fontWeight: file.isSelected ? FontWeight.w600 : FontWeight.normal,
                                                                 fontStyle: file.isCut ? FontStyle.italic : FontStyle.normal,
                                                                 color: file.isCut ? Theme.of(context).colorScheme.onSurfaceVariant : null,
@@ -710,18 +716,18 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                   child: InkWell(
                                                                     onTap: () => provider.toggleSelection(file),
                                                                     child: Container(
-                                                                      height: 32,
+                                                                      height: rowH,
                                                                       margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 1.0),
                                                                       decoration: BoxDecoration(
                                                                         color: file.isSelected ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5) : (index % 2 == 0 ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.surfaceContainerLow),
                                                                         borderRadius: BorderRadius.circular(8),
                                                                         border: file.isSelected ? Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)) : null,
                                                                       ),
-                                                                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                                                                      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: provider.touchMode ? 4.0 : 2.0),
                                                                       child: Row(
                                                                         children: [
-                                                                          SizedBox(width: _widthDragHandle, child: ReorderableDragStartListener(index: index, child: Icon(Icons.drag_indicator, size: 16, color: file.isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant))),
-                                                                          SizedBox(width: _widthCheckbox, child: Checkbox(value: file.isSelected, onChanged: (val) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
+                                                                          SizedBox(width: provider.touchMode ? 40.0 : _widthDragHandle, child: ReorderableDragStartListener(index: index, child: Icon(Icons.drag_indicator, size: dragS, color: file.isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant))),
+                                                                          SizedBox(width: provider.touchMode ? 40.0 : _widthCheckbox, child: Checkbox(value: file.isSelected, onChanged: (val) => provider.toggleSelection(file), visualDensity: provider.touchMode ? VisualDensity.standard : VisualDensity.compact)),
                                                                           SizedBox(width: _widthSpace),
                                                                           SizedBox(
                                                                             width: _colWidthOriginal,
@@ -730,7 +736,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                                     controller: _renameController,
                                                                                     focusNode: _renameFocusNode,
                                                                                     autofocus: true,
-                                                                                    style: const TextStyle(fontSize: 12),
+                                                                                    style: TextStyle(fontSize: provider.touchMode ? 15.0 : 12.0),
                                                                                     decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()),
                                                                                     onSubmitted: (val) {
                                                                                       provider.renameOneFile(file, val);
@@ -741,9 +747,10 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                                 : Row(
                                                                                     children: [
                                                                                       GestureDetector(
-                                                                                        onDoubleTap: () { if (isDir) { provider.setDirectory(file.entity as Directory); } else { PlatformUtils.openFile(file.entity.path); } },
-                                                                                        child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: 18),
+                                                                                        onDoubleTap: () { if (isDir) { provider.setDirectory(file.entity as io.Directory); } else { PlatformUtils.openFile(file.entity.path); } },
+                                                                                        child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: iconS),
                                                                                       ),
+
                                                                                       const SizedBox(width: 8),
                                                                                       Expanded(
                                                                                         child: GestureDetector(
@@ -759,7 +766,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                                                                   ),
                                                                           ),
                                                                           SizedBox(width: _widthSpace + 16),
-                                                                          SizedBox(width: _colWidthNew, child: Row(children: [Expanded(child: RichText(text: _buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.error_outline, color: Colors.red, size: 16)))] )),
+                                                                          SizedBox(width: _colWidthNew, child: Row(children: [Expanded(child: RichText(text: _buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: Padding(padding: const EdgeInsets.only(left: 4), child: Icon(Icons.error_outline, color: Colors.red, size: iconS - 2)))] )),
                                                                           SizedBox(width: _widthSpace + 16),
                                                                           _buildCell(file.size, _colWidthSize, style: baseStyle),
                                                                           SizedBox(width: _widthSpace + 16),

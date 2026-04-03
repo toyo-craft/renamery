@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -36,26 +36,26 @@ class PreviewWindow extends StatelessWidget {
 
     // 1. Image Preview
     if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'ico'].contains(ext)) {
-      return _ImagePreview(file: File(path), l10n: l10n);
+      return _ImagePreview(file: io.File(path), l10n: l10n);
     }
 
     // 2. SVG Preview
     if (ext == 'svg') {
-      return _SvgPreview(file: File(path), l10n: l10n);
+      return _SvgPreview(file: io.File(path), l10n: l10n);
     }
 
     // 3. PDF Preview
     if (ext == 'pdf') {
-      return _PdfPreview(file: File(path), l10n: l10n);
+      return _PdfPreview(file: io.File(path), l10n: l10n);
     }
 
     // 4. Archive Preview
     if (ext == 'zip') {
-      return _ArchivePreview(file: File(path), l10n: l10n);
+      return _ArchivePreview(file: io.File(path), l10n: l10n);
     }
 
     // 5. Text Preview (Default)
-    return _TextPreview(file: File(path), l10n: l10n);
+    return _TextPreview(file: io.File(path), l10n: l10n);
   }
 }
 
@@ -127,11 +127,19 @@ class _ThumbnailTile extends StatelessWidget {
 
     Widget content;
     if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'ico'].contains(ext)) {
-      content = Image.file(File(path), fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.broken_image, size: 16));
+      content = Image.file(io.File(path), fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.broken_image, size: 16));
     } else if (ext == 'svg') {
-      content = SvgPicture.file(File(path), fit: BoxFit.contain, placeholderBuilder: (c) => const Icon(Icons.image, size: 16));
+      // SVG の型不一致を避けるため memory から読み込む
+      content = FutureBuilder<Uint8List>(
+        future: io.File(path).readAsBytes(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return SvgPicture.memory(snapshot.data!, fit: BoxFit.contain, placeholderBuilder: (c) => const Icon(Icons.image, size: 16));
+          }
+          return const Icon(Icons.image, size: 16);
+        },
+      );
     } else if (ext == 'pdf') {
-      // PDF もサムネイル表示に対応
       content = FutureBuilder<Uint8List?>(
         future: _renderThumbnail(path),
         builder: (context, snapshot) {
@@ -145,9 +153,8 @@ class _ThumbnailTile extends StatelessWidget {
         },
       );
     } else if (ext == 'zip') {
-      // ZIP もタイル表示に対応
       content = FutureBuilder<List<String>>(
-        future: _listArchiveFiles(File(path)),
+        future: _listArchiveFiles(io.File(path)),
         builder: (context, snapshot) {
           if (snapshot.hasData && snapshot.data!.isNotEmpty) {
             return Padding(
@@ -162,15 +169,12 @@ class _ThumbnailTile extends StatelessWidget {
           return const Icon(Icons.inventory_2_outlined, color: Colors.grey, size: 24);
         },
       );
-    } else if (file.entity is Directory) {
+    } else if (file.entity is io.Directory) {
       content = const Icon(Icons.folder, color: Colors.amber, size: 24);
     } else {
-      // テキスト系拡張子の判定
       final isTextExt = ['txt', 'csv', 'json', 'ini', 'log', 'dart', 'yaml', 'md', 'html', 'xml', 'sql', 'js', 'py', 'css'].contains(ext);
-      
-      // テキストファイルの可能性がある場合は中身をチラ見せ
       content = FutureBuilder<String>(
-        future: _readText(File(path), l10n, limit: 200),
+        future: _readText(io.File(path), l10n, limit: 200),
         builder: (context, snapshot) {
           if (snapshot.hasData && snapshot.data != l10n.labelPreviewBinaryError && (isTextExt || snapshot.data!.length > 10)) {
             return Padding(
@@ -198,7 +202,6 @@ class _ThumbnailTile extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Center(child: content),
-          // ファイル名オーバーレイ
           Positioned(
             left: 0,
             right: 0,
@@ -223,9 +226,8 @@ class _ThumbnailTile extends StatelessWidget {
 
   Future<Uint8List?> _renderThumbnail(String path) async {
     try {
-      final file = File(path);
+      final file = io.File(path);
       final bytes = await file.readAsBytes();
-      // サムネイル用なので低解像度で高速に
       final images = Printing.raster(bytes, pages: [0], dpi: 72);
       await for (final image in images) {
         return await image.toPng();
@@ -238,7 +240,7 @@ class _ThumbnailTile extends StatelessWidget {
 }
 
 class _ImagePreview extends StatelessWidget {
-  final File file;
+  final io.File file;
   final AppLocalizations l10n;
 
   const _ImagePreview({required this.file, required this.l10n});
@@ -258,26 +260,37 @@ class _ImagePreview extends StatelessWidget {
 }
 
 class _SvgPreview extends StatelessWidget {
-  final File file;
+  final io.File file;
   final AppLocalizations l10n;
 
   const _SvgPreview({required this.file, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: SvgPicture.file(
-        file,
-        fit: BoxFit.contain,
-        placeholderBuilder: (context) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      ),
+    return FutureBuilder<Uint8List>(
+      future: file.readAsBytes(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return Center(child: Text(l10n.labelPreviewImageLoadFailed));
+        }
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SvgPicture.memory(
+            snapshot.data!,
+            fit: BoxFit.contain,
+            placeholderBuilder: (context) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          ),
+        );
+      },
     );
   }
 }
 
 class _PdfPreview extends StatelessWidget {
-  final File file;
+  final io.File file;
   final AppLocalizations l10n;
 
   const _PdfPreview({required this.file, required this.l10n});
@@ -306,12 +319,9 @@ class _PdfPreview extends StatelessWidget {
 
   Future<Uint8List?> _renderFirstPage(String path) async {
     try {
-      final file = File(path);
+      final file = io.File(path);
       final bytes = await file.readAsBytes();
-      
-      // raster を使用して1ページ目を取得
       final images = Printing.raster(bytes, pages: [0], dpi: 144);
-      
       await for (final image in images) {
         return await image.toPng();
       }
@@ -324,7 +334,7 @@ class _PdfPreview extends StatelessWidget {
 }
 
 class _ArchivePreview extends StatelessWidget {
-  final File file;
+  final io.File file;
   final AppLocalizations l10n;
 
   const _ArchivePreview({required this.file, required this.l10n});
@@ -340,7 +350,6 @@ class _ArchivePreview extends StatelessWidget {
         if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
           return Center(child: Text(l10n.labelPreviewUnavailable, style: const TextStyle(fontSize: 10, color: Colors.grey)));
         }
-        
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
@@ -372,11 +381,10 @@ class _ArchivePreview extends StatelessWidget {
   }
 }
 
-Future<List<String>> _listArchiveFiles(File file) async {
+Future<List<String>> _listArchiveFiles(io.File file) async {
   try {
     final bytes = await file.readAsBytes();
     final archive = ZipDecoder().decodeBytes(bytes);
-    // 先頭20件までのファイル名を返す。ディレクトリ判定は名前の末尾または isFile を使用。
     return archive.files.take(20).map((f) => '  ${f.name}${(!f.isFile || f.name.endsWith('/')) ? "" : ""}').toList();
   } catch (e) {
     return [];
@@ -384,7 +392,7 @@ Future<List<String>> _listArchiveFiles(File file) async {
 }
 
 class _TextPreview extends StatelessWidget {
-  final File file;
+  final io.File file;
   final AppLocalizations l10n;
 
   const _TextPreview({required this.file, required this.l10n});
@@ -417,18 +425,15 @@ class _TextPreview extends StatelessWidget {
   }
 }
 
-Future<String> _readText(File file, AppLocalizations l10n, {int limit = 2048}) async {
+Future<String> _readText(io.File file, AppLocalizations l10n, {int limit = 2048}) async {
   try {
     final len = await file.length();
     final stream = file.openRead(0, limit);
     final chunks = await stream.toList();
     final bytes = chunks.expand((element) => element).toList();
-    
-    // バイナリチェック
     if (bytes.contains(0)) {
       return l10n.labelPreviewBinaryError;
     }
-
     String content = utf8.decode(bytes, allowMalformed: true);
     if (len > limit) {
       final sizeStr = (len / 1024).toStringAsFixed(1);

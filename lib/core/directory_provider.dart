@@ -62,6 +62,7 @@ class DirectoryProvider extends ChangeNotifier {
     _isCompactMode = s.getBool('isCompactMode') ?? true;
     _isFilterSpecific = _filterText.isNotEmpty;
     _enableBetaFeatures = s.getBool('enableBetaFeatures') ?? false;
+    _touchMode = s.getBool('touchMode') ?? false;
 
     final appThemeStr = s.getString('appTheme') ?? 'light';
     _appTheme = AppThemeType.values.firstWhere((e) => e.name == appThemeStr, orElse: () => AppThemeType.light);
@@ -165,6 +166,7 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('showFolders', _showFolders);
     s.set('saveSequenceNumber', _saveSequenceNumber);
     s.set('isCompactMode', _isCompactMode);
+    s.set('touchMode', _touchMode);
     s.set('enableBetaFeatures', _enableBetaFeatures);
     s.set('appTheme', _appTheme.name);
     s.set('menuLabelType', _menuLabelType.name);
@@ -225,7 +227,7 @@ class DirectoryProvider extends ChangeNotifier {
   List<String> _findHistory = []; List<String> _replaceHistory = []; List<String> _extensionHistory = [];
   String _filterText = ''; bool _isFilterSpecific = false; bool _hideSystemFiles = false;
   bool _recursiveSearch = false; bool _showPreview = true; bool _showFolders = true;
-  bool _saveSequenceNumber = false; bool _isCompactMode = false;
+  bool _saveSequenceNumber = false; bool _isCompactMode = false; bool _touchMode = false;
   AppThemeType _appTheme = AppThemeType.light; MenuLabelType _menuLabelType = MenuLabelType.standard;
   Color _seedColor = Colors.green;
   String _dateFormat = 'yyyyMMdd_'; DatePosition _datePosition = DatePosition.front;
@@ -244,6 +246,7 @@ class DirectoryProvider extends ChangeNotifier {
   ValidationType get validationType => _validationType;
   InitialDirectoryMode get initialDirectoryMode => _initialDirectoryMode;
   String get fixedInitialDirectory => _fixedInitialDirectory;
+  bool get touchMode => _touchMode;
 
   void updateInitialDirectorySettings(InitialDirectoryMode mode, String path) {
     _initialDirectoryMode = mode; _fixedInitialDirectory = path; _saveState(); notifyListeners();
@@ -455,6 +458,7 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   void setCompactMode(bool isCompact) { _isCompactMode = isCompact; _saveState(); notifyListeners(); }
+  void setTouchMode(bool value) { _touchMode = value; _saveState(); notifyListeners(); }
   void setEnableBetaFeatures(bool enable) { _enableBetaFeatures = enable; _saveState(); notifyListeners(); }
   void setAppTheme(AppThemeType theme) { _appTheme = theme; _saveState(); notifyListeners(); }
   void setMenuLabelType(MenuLabelType type) { _menuLabelType = type; _saveState(); notifyListeners(); }

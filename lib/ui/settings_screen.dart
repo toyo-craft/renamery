@@ -31,9 +31,9 @@ class SettingsScreen extends StatelessWidget {
           SwitchListTile(
             title: Text(l10n.labelSettingsTouchModeTitle),
             subtitle: Text(l10n.labelSettingsTouchModeSubtitle),
-            value: !provider.isCompactMode,
+            value: provider.touchMode,
             onChanged: (val) {
-              provider.setCompactMode(!val);
+              provider.setTouchMode(val);
             },
           ),
           const Divider(),
