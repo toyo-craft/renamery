@@ -9,6 +9,9 @@ import 'rename_engine.dart';
 import 'undo_manager.dart';
 import 'settings_service.dart';
 
+import 'package:permission_handler/permission_handler.dart';
+import 'package:renamery/l10n/generated/app_localizations.dart';
+
 enum HistoryType { find, replace, add, extension, remove, deleteTo }
 enum AppThemeType { system, light, dark, darkGray }
 enum MenuLabelType { standard, namery, english, chinese, spanish }
@@ -992,6 +995,44 @@ class DirectoryProvider extends ChangeNotifier {
       case MenuLabelType.english: return const Locale('en');
       case MenuLabelType.chinese: return const Locale('zh');
       case MenuLabelType.spanish: return const Locale('es');
+    }
+  }
+
+  Future<void> requestAndroidPermissions(BuildContext context) async {
+    if (kIsWeb || !Platform.isAndroid) return;
+
+    var status = await Permission.manageExternalStorage.status;
+    if (status.isGranted) return;
+
+    if (!context.mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    final bool? proceed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.security, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 12),
+            Expanded(child: Text(l10n.labelPermissionFileAccessTitle)),
+          ],
+        ),
+        content: Text(l10n.labelPermissionFileAccessMessage),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.labelPermissionFileAccessButton),
+          ),
+        ],
+      ),
+    );
+
+    if (proceed == true) {
+      status = await Permission.manageExternalStorage.request();
+      if (!status.isGranted) {
+        await openAppSettings();
+      }
     }
   }
 }

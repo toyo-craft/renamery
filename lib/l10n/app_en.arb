@@ -311,5 +311,8 @@
   "labelFilterOptions": "Filter Options",
   "labelMenuRenameSettings": "Rename Settings",
   "labelDialogClose": "Close",
-  "labelSearchHint": "Search by filename..."
+  "labelSearchHint": "Search by filename...",
+  "labelPermissionFileAccessTitle": "File Access Permission",
+  "labelPermissionFileAccessMessage": "To rename files with this app, you must allow \"All Files Access\" in Android system settings.\n\nPlease find \"ReNamery\" in the next screen and turn the switch ON.",
+  "labelPermissionFileAccessButton": "Go to Settings"
 }

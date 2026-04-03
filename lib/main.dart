@@ -17,11 +17,6 @@ import 'package:windows_single_instance/windows_single_instance.dart';
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Android Permissions
-  if (!kIsWeb && Platform.isAndroid) {
-    await _requestAndroidPermissions();
-  }
-
   if (!kIsWeb && Platform.isWindows) {
     await WindowsSingleInstance.ensureSingleInstance(
         args, "ToyoCraftLab.ReNamery.SingleInstance",
@@ -206,17 +201,40 @@ class ReNameryApp extends StatelessWidget {
   }
 }
 
-Future<void> _requestAndroidPermissions() async {
-  // Check current status
+Future<void> _requestAndroidPermissions(BuildContext context) async {
+  if (kIsWeb || !Platform.isAndroid) return;
+
   var status = await Permission.manageExternalStorage.status;
-  
-  if (!status.isGranted) {
-    // First request
+  if (status.isGranted) return;
+
+  if (!context.mounted) return;
+  final l10n = AppLocalizations.of(context)!;
+
+  // Show educational dialog before requesting
+  final bool? proceed = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.security, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(child: Text(l10n.labelPermissionFileAccessTitle)),
+        ],
+      ),
+      content: Text(l10n.labelPermissionFileAccessMessage),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(l10n.labelPermissionFileAccessButton),
+        ),
+      ],
+    ),
+  );
+
+  if (proceed == true) {
     status = await Permission.manageExternalStorage.request();
-    
-    // If still not granted (user needs to toggle in settings)
     if (!status.isGranted) {
-      // Open app settings page for MANAGE_EXTERNAL_STORAGE
       await openAppSettings();
     }
   }

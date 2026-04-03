@@ -317,5 +317,8 @@
   "labelFilterOptions": "検索と表示設定",
   "labelMenuRenameSettings": "リネーム設定",
   "labelDialogClose": "閉じる",
-  "labelSearchHint": "ファイル名で検索..."
+  "labelSearchHint": "ファイル名で検索...",
+  "labelPermissionFileAccessTitle": "ファイルアクセス権限の設定",
+  "labelPermissionFileAccessMessage": "本アプリでファイルをリネームするには、Androidシステムの設定で「すべてのファイルの管理」を許可する必要があります。\n\n次の画面で「ReNamery」を探して、スイッチをONにしてください。",
+  "labelPermissionFileAccessButton": "設定画面へ進む"
 }

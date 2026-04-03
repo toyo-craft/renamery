@@ -94,17 +94,22 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
       ],
     );
 
-    _loadSplitState();
-
-    // ライセンス同意のチェック
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // 初期チェックフロー (ライセンス同意 -> Android権限)
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = context.read<DirectoryProvider>();
+      
+      // 1. ライセンス同意のチェック
       if (!provider.isLicenseAccepted) {
-        showDialog(
+        await showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => const LicenseAgreementDialog(),
         );
+      }
+      
+      // 2. Android 権限のチェック (説明ダイアログ付き)
+      if (mounted) {
+        await provider.requestAndroidPermissions(context);
       }
     });
   }
