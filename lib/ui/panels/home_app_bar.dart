@@ -586,9 +586,4 @@ class _HomeAppBarState extends State<HomeAppBar> {
       PopupMenuItem(value: 4, height: 32, child: Text(l10n.labelCopyUndo)),
     ];
   }
-
-  bool _isFilterActive(BuildContext context) {
-    final p = context.read<DirectoryProvider>();
-    return p.isFilterSpecific || p.hideSystemFiles || p.recursiveSearch;
-  }
 }

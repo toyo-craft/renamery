@@ -240,6 +240,15 @@ class DirectoryProvider extends ChangeNotifier {
   String _filterText = ''; bool _isFilterSpecific = false; bool _hideSystemFiles = false;
   bool _recursiveSearch = false; bool _showPreview = true; bool _showFolders = true;
   bool _saveSequenceNumber = false; bool _isCompactMode = false; bool _touchMode = false;
+  bool _isEnlargedPreviewOpen = false;
+  int _enlargedPreviewIndex = -1;
+  double _textPreviewFontSize = 13.0;
+  double get textPreviewFontSize => _textPreviewFontSize;
+
+  void setTextPreviewFontSize(double size) {
+    _textPreviewFontSize = size.clamp(8.0, 40.0);
+    notifyListeners();
+  }
   AppThemeType _appTheme = AppThemeType.light; MenuLabelType _menuLabelType = MenuLabelType.standard;
   Color _seedColor = Colors.green;
   String _dateFormat = 'yyyyMMdd_'; DatePosition _datePosition = DatePosition.front;
@@ -259,6 +268,57 @@ class DirectoryProvider extends ChangeNotifier {
   InitialDirectoryMode get initialDirectoryMode => _initialDirectoryMode;
   String get fixedInitialDirectory => _fixedInitialDirectory;
   bool get touchMode => _touchMode;
+  bool get isEnlargedPreviewOpen => _isEnlargedPreviewOpen;
+  int get enlargedPreviewIndex => _enlargedPreviewIndex;
+  FileModel? get enlargedPreviewFile => (_enlargedPreviewIndex >= 0 && _enlargedPreviewIndex < _currentFiles.length) ? _currentFiles[_enlargedPreviewIndex] : null;
+
+  int get enlargedPreviewSelectedListIndex {
+    final file = enlargedPreviewFile;
+    if (file == null) return -1;
+    final selectedFiles = _currentFiles.where((f) => f.isSelected).toList();
+    return selectedFiles.indexOf(file);
+  }
+
+  int get selectedFilesCount => _currentFiles.where((f) => f.isSelected).length;
+
+  void openEnlargedPreview(FileModel file) {
+    _enlargedPreviewIndex = _currentFiles.indexOf(file);
+    if (_enlargedPreviewIndex != -1) {
+      _isEnlargedPreviewOpen = true;
+      notifyListeners();
+    }
+  }
+
+  void closeEnlargedPreview() {
+    _isEnlargedPreviewOpen = false;
+    notifyListeners();
+  }
+
+  void nextEnlargedPreview() {
+    final selectedFiles = _currentFiles.where((f) => f.isSelected).toList();
+    if (selectedFiles.isEmpty) return;
+
+    final currentFile = enlargedPreviewFile;
+    int selectedIdx = selectedFiles.indexOf(currentFile!);
+    
+    // 次の選択ファイルへ（ループ対応）
+    selectedIdx = (selectedIdx + 1) % selectedFiles.length;
+    _enlargedPreviewIndex = _currentFiles.indexOf(selectedFiles[selectedIdx]);
+    notifyListeners();
+  }
+
+  void prevEnlargedPreview() {
+    final selectedFiles = _currentFiles.where((f) => f.isSelected).toList();
+    if (selectedFiles.isEmpty) return;
+
+    final currentFile = enlargedPreviewFile;
+    int selectedIdx = selectedFiles.indexOf(currentFile!);
+    
+    // 前の選択ファイルへ（ループ対応）
+    selectedIdx = (selectedIdx - 1 + selectedFiles.length) % selectedFiles.length;
+    _enlargedPreviewIndex = _currentFiles.indexOf(selectedFiles[selectedIdx]);
+    notifyListeners();
+  }
 
   void updateInitialDirectorySettings(InitialDirectoryMode mode, String path) {
     _initialDirectoryMode = mode; _fixedInitialDirectory = path; _saveState(); notifyListeners();
@@ -781,7 +841,6 @@ class DirectoryProvider extends ChangeNotifier {
       case HistoryType.extension: target = _extensionHistory; break;
       case HistoryType.remove: target = _deleteFromHistory; break;
       case HistoryType.deleteTo: target = _deleteToHistory; break;
-      default: return;
     }
     target.remove(value); target.insert(0, value); if (target.length > 20) target.removeRange(20, target.length);
     _saveState(); notifyListeners();
