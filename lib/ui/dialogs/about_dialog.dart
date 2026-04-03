@@ -1,5 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show rootBundle, MethodChannel;
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -296,16 +297,22 @@ class AboutAppDialog extends StatelessWidget {
 
   Future<void> _launchUrl(String url) async {
     try {
-      final Uri uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        if (!await launchUrl(uri, mode: LaunchMode.platformDefault)) {
+      if (Platform.isAndroid) {
+        final channel = MethodChannel('jp.toyocraft.renamery/launcher');
+        await channel.invokeMethod('launchUrl', {'url': url});
+      } else {
+        final Uri uri = Uri.parse(url);
+        if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
           debugPrint('Could not launch $url');
         }
-      } else {
-        debugPrint('Cannot launch $url (canLaunchUrl returned false)');
       }
     } catch (e) {
       debugPrint('Error launching URL: $e');
+      // フォールバックとして従来の url_launcher も試みる
+      try {
+        final Uri uri = Uri.parse(url);
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {}
     }
   }
 }
