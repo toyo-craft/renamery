@@ -15,6 +15,7 @@ import 'panels/file_list_panel.dart';
 import 'panels/settings_panel.dart';
 import 'panels/home_app_bar.dart';
 import 'widgets/preview_window.dart';
+import 'widgets/enlarged_preview_overlay.dart';
 
 import 'helpers/undo_helper.dart';
 import 'helpers/filter_dialog_helper.dart';
@@ -93,6 +94,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         Area(flex: 0.4, builder: (c, a) => const SettingsPanel()),
       ],
     );
+
+    _loadSplitState();
 
     // 初期チェックフロー (ライセンス同意 -> Android権限)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -241,6 +244,28 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
         final logicalKey = event.logicalKey;
         final isCtrl = HardwareKeyboard.instance.isControlPressed;
+        final provider = context.read<DirectoryProvider>();
+
+        if (logicalKey == LogicalKeyboardKey.escape) {
+          if (provider.isEnlargedPreviewOpen) {
+            provider.closeEnlargedPreview();
+            return KeyEventResult.handled;
+          }
+        }
+
+        if (logicalKey == LogicalKeyboardKey.arrowLeft) {
+          if (provider.isEnlargedPreviewOpen) {
+            provider.prevEnlargedPreview();
+            return KeyEventResult.handled;
+          }
+        }
+
+        if (logicalKey == LogicalKeyboardKey.arrowRight) {
+          if (provider.isEnlargedPreviewOpen) {
+            provider.nextEnlargedPreview();
+            return KeyEventResult.handled;
+          }
+        }
 
         if (isCtrl && logicalKey == LogicalKeyboardKey.keyZ) {
           final provider = context.read<DirectoryProvider>();
@@ -397,7 +422,11 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                     child: IgnorePointer(
                       ignoring: !_showFloatingPreview,
                       child: GestureDetector(
-                        onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                        onTap: () {
+                          if (selected.isNotEmpty) {
+                            provider.openEnlargedPreview(selected.last);
+                          }
+                        },
                         child: Container(
                           width: 100,
                           height: 100,
@@ -427,6 +456,10 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                 );
               },
             ),
+          
+          // モバイル版クイックルック
+          if (isNarrow)
+            const EnlargedPreviewOverlay(isMobile: true),
         ],
       ),
     ),
@@ -683,23 +716,38 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   }
 
   Widget _buildBody(bool showLeftPane, bool showRightPane) {
+    final provider = context.watch<DirectoryProvider>();
+    Widget mainContent;
+
     if (showLeftPane && showRightPane) {
-      return MultiSplitView(
+      mainContent = MultiSplitView(
         axis: Axis.horizontal,
         controller: _threePaneController,
         resizable: true,
         onDividerDragEnd: (index) => _saveSplitState(),
       );
     } else if (!showLeftPane && showRightPane) {
-      return MultiSplitView(
+      mainContent = MultiSplitView(
         axis: Axis.horizontal,
         controller: _twoPaneController,
         resizable: true,
         onDividerDragEnd: (index) => _saveSplitState(),
       );
     } else {
-      return const FileListPanel();
+      mainContent = const FileListPanel();
     }
+
+    // デスクトップ版サイドシート対応
+    if (showRightPane && provider.isEnlargedPreviewOpen) {
+      return Row(
+        children: [
+          Expanded(child: mainContent),
+          EnlargedPreviewOverlay(isMobile: false),
+        ],
+      );
+    }
+
+    return mainContent;
   }
 
   Future<void> _handleDelete(
