@@ -518,8 +518,8 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   icon: const Icon(Symbols.more_vert),
                   onSelected: (value) async {
                     switch (value) {
-                      case 'copy_name':
-                        await CopyHelper.handleCopy(context, provider);
+                      case 'copy_options':
+                        CopyHelper.showCopyOptionsBottomSheet(context, provider);
                         break;
                       case 'refresh':
                         provider.refresh();
@@ -528,8 +528,8 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   },
                   itemBuilder: (context) => [
                     PopupMenuItem(
-                      value: 'copy_name',
-                      child: Text(l10n.labelCopyName),
+                      value: 'copy_options',
+                      child: Text('${l10n.labelCopyOptions}...'),
                     ),
                     PopupMenuItem(
                       value: 'refresh',

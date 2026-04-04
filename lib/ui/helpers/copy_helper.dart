@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For Clipboard
+import 'package:material_symbols_icons/symbols.dart';
 import '../../core/directory_provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 
@@ -82,5 +83,77 @@ class CopyHelper {
         SnackBar(content: Text(message)),
       );
     }
+  }
+
+  // モバイル版：コピー形式を選択するボトムシートを表示
+  static void showCopyOptionsBottomSheet(BuildContext context, DirectoryProvider provider) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  l10n.labelCopyOptions,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+              const Divider(height: 1),
+              _buildBottomSheetItem(
+                context,
+                icon: Symbols.file_copy,
+                title: l10n.labelCopyListClipboard,
+                onTap: () {
+                  Navigator.pop(context);
+                  handleCopyMenu(context, provider, 1);
+                },
+              ),
+              _buildBottomSheetItem(
+                context,
+                icon: Symbols.account_tree,
+                title: l10n.labelCopyListPath,
+                onTap: () {
+                  Navigator.pop(context);
+                  handleCopyMenu(context, provider, 2);
+                },
+              ),
+              _buildBottomSheetItem(
+                context,
+                icon: Symbols.terminal,
+                title: l10n.labelCopyFullPath,
+                onTap: () {
+                  Navigator.pop(context);
+                  handleCopyMenu(context, provider, 3);
+                },
+              ),
+              _buildBottomSheetItem(
+                context,
+                icon: Symbols.history,
+                title: l10n.labelCopyUndo,
+                onTap: () {
+                  Navigator.pop(context);
+                  handleCopyMenu(context, provider, 4);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  static Widget _buildBottomSheetItem(BuildContext context, {required IconData icon, required String title, required VoidCallback onTap}) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title, style: const TextStyle(fontSize: 14)),
+      onTap: onTap,
+    );
   }
 }
