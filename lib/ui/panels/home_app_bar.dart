@@ -37,7 +37,6 @@ class _HomeAppBarState extends State<HomeAppBar> {
   @override
   void didUpdateWidget(HomeAppBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 外部からのフィルタテキスト変更を反映
     final provider = context.read<DirectoryProvider>();
     if (_filterController.text != provider.filterText) {
       _filterController.text = provider.filterText;
@@ -56,7 +55,6 @@ class _HomeAppBarState extends State<HomeAppBar> {
     final provider = context.watch<DirectoryProvider>();
     const iconSize = 28.0;
 
-    // 同期を確実にする
     if (_filterController.text != provider.filterText) {
       _filterController.text = provider.filterText;
     }
@@ -84,7 +82,6 @@ class _HomeAppBarState extends State<HomeAppBar> {
           return Row(
             children: [
               const SizedBox(width: 8),
-              // 1. Back Group
               IconButton(
                 icon: const Icon(Symbols.arrow_back),
                 iconSize: iconSize,
@@ -109,8 +106,6 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 },
                 tooltip: l10n.labelHistoryBack,
               ),
-
-              // 2. Forward Group
               IconButton(
                 icon: const Icon(Symbols.arrow_forward),
                 iconSize: iconSize,
@@ -136,8 +131,6 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 },
                 tooltip: l10n.labelHistoryForward,
               ),
-
-              // 2.5. Up Group
               IconButton(
                 icon: const Icon(Symbols.arrow_upward),
                 iconSize: iconSize,
@@ -148,12 +141,9 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-
               const SizedBox(
                   height: 24,
                   child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-
-              // 3. Execute
               if (!isNarrow)
                 IconButton(
                   icon: const Icon(Symbols.play_arrow),
@@ -165,8 +155,6 @@ class _HomeAppBarState extends State<HomeAppBar> {
                       ? () => _confirmAndExecute(context, provider, l10n)
                       : null,
                 ),
-
-              // 4. Undo
               if (!isNarrow)
                 TextButton.icon(
                   icon: const Icon(Symbols.undo),
@@ -191,13 +179,10 @@ class _HomeAppBarState extends State<HomeAppBar> {
                       ? () => UndoHelper.handleUndo(context, provider)
                       : null,
                 ),
-
               if (!isNarrow) ...[
                 const SizedBox(
                     height: 24,
                     child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-
-                // 5. Copy Group
                 IconButton(
                   icon: const Icon(Symbols.content_copy),
                   iconSize: iconSize,
@@ -218,11 +203,9 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   itemBuilder: (context) => _buildCopyMenuItems(provider, l10n),
                   tooltip: l10n.labelCopyOptions,
                 ),
-
                 const SizedBox(
                     height: 24,
                     child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-
                 IconButton(
                   icon: const Icon(Symbols.expand_less),
                   iconSize: iconSize,
@@ -239,24 +222,20 @@ class _HomeAppBarState extends State<HomeAppBar> {
                       ? () => provider.moveSelection(false)
                       : null,
                 ),
-
                 const SizedBox(
                     height: 24,
                     child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-
                 IconButton(
                   icon: const Icon(Symbols.refresh),
                   iconSize: iconSize,
                   tooltip: l10n.labelRefresh,
                   onPressed: () => provider.refresh(),
                 ),
-
                 if (isWide) ...[
                   const SizedBox(
                       height: 24,
                       child:
                           VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-                  // 9. Filter Controls
                   Tooltip(
                     message: provider.showFolders
                         ? l10n.labelFilterHideFolders
@@ -292,7 +271,6 @@ class _HomeAppBarState extends State<HomeAppBar> {
                     ),
                   ),
                   const SizedBox(width: 4),
-
                   Tooltip(
                     message: provider.hideSystemFiles
                         ? l10n.labelSettingsShowSystemFiles
@@ -363,54 +341,8 @@ class _HomeAppBarState extends State<HomeAppBar> {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  // Search Field (Stable Controller)
-                  SizedBox(
-                    width: 130,
-                    height: 28,
-                    child: TextField(
-                      controller: _filterController,
-                      textAlignVertical: TextAlignVertical.center,
-                      decoration: InputDecoration(
-                        hintText: 'ファイル名...',
-                        hintStyle:
-                            const TextStyle(fontSize: 11, color: Colors.grey),
-                        prefixIcon: const Icon(Symbols.search, size: 14),
-                        prefixIconConstraints:
-                            const BoxConstraints(minWidth: 26, minHeight: 28),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 0),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        suffixIcon: provider.isFilterSpecific
-                            ? IconButton(
-                                icon: const Icon(Symbols.close, size: 14),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () {
-                                  _filterController.clear();
-                                  context
-                                      .read<DirectoryProvider>()
-                                      .updateFilterSettings(
-                                          isSpecific: false, filter: '');
-                                },
-                              )
-                            : null,
-                        suffixIconConstraints:
-                            const BoxConstraints(minWidth: 24),
-                      ),
-                      style: const TextStyle(fontSize: 12),
-                      onSubmitted: (value) {
-                        context.read<DirectoryProvider>().updateFilterSettings(
-                              isSpecific: value.isNotEmpty,
-                              filter: value,
-                            );
-                      },
-                    ),
-                  ),
+                  _buildRegexSearchBar(context, provider, l10n, isNarrow ? 120 : 160),
                 ],
-
                 if (showIconFilters) ...[
                   const SizedBox(
                       height: 24,
@@ -463,56 +395,10 @@ class _HomeAppBarState extends State<HomeAppBar> {
                             recursive: !provider.recursiveSearch),
                   ),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 100,
-                    height: 28,
-                    child: TextField(
-                      controller: _filterController,
-                      textAlignVertical: TextAlignVertical.center,
-                      decoration: InputDecoration(
-                        hintText: 'ファイル名...',
-                        hintStyle:
-                            const TextStyle(fontSize: 11, color: Colors.grey),
-                        prefixIcon: const Icon(Symbols.search, size: 14),
-                        prefixIconConstraints:
-                            const BoxConstraints(minWidth: 26, minHeight: 28),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 0),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        suffixIcon: provider.isFilterSpecific
-                            ? IconButton(
-                                icon: const Icon(Symbols.close, size: 14),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () {
-                                  _filterController.clear();
-                                  context
-                                      .read<DirectoryProvider>()
-                                      .updateFilterSettings(
-                                          isSpecific: false, filter: '');
-                                },
-                              )
-                            : null,
-                        suffixIconConstraints:
-                            const BoxConstraints(minWidth: 24),
-                      ),
-                      style: const TextStyle(fontSize: 12),
-                      onSubmitted: (value) {
-                        context.read<DirectoryProvider>().updateFilterSettings(
-                              isSpecific: value.isNotEmpty,
-                              filter: value,
-                            );
-                      },
-                    ),
-                  ),
+                  _buildRegexSearchBar(context, provider, l10n, 100),
                 ],
               ],
-
               if (isNarrow || (!isWide && !showIconFilters)) const Spacer(),
-
               if (isNarrow) ...[
                 PopupMenuButton<String>(
                   icon: const Icon(Symbols.more_vert),
@@ -538,7 +424,6 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   ],
                 ),
               ],
-
               if (!isWide && !showIconFilters && !isNarrow) ...[
                 IconButton(
                   icon: const Icon(Symbols.search),
@@ -566,15 +451,80 @@ class _HomeAppBarState extends State<HomeAppBar> {
     );
   }
 
+  Widget _buildRegexSearchBar(BuildContext context, DirectoryProvider provider, AppLocalizations l10n, double width) {
+    final bool isRegex = provider.isFilterRegex;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: width,
+      height: 32, // 少し高さを広げる
+      decoration: ShapeDecoration(
+        color: isRegex ? colorScheme.inverseSurface : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        shape: StadiumBorder(
+          side: isRegex ? BorderSide(color: colorScheme.primary, width: 1) : BorderSide.none,
+        ),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 4),
+          Center(
+            child: IconButton(
+              icon: Icon(
+                Symbols.regular_expression, 
+                size: 16,
+                fill: isRegex ? 1 : 0,
+                color: isRegex ? colorScheme.onInverseSurface : colorScheme.onSurfaceVariant,
+              ),
+              onPressed: () {
+                provider.updateFilterSettings(isRegex: !isRegex);
+              },
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 32),
+              tooltip: l10n.labelRegex,
+            ),
+          ),
+          Expanded(
+            child: Align(
+              alignment: const Alignment(0, -0.2), // 物理的な微調整でセンターラインを合わせる
+              child: TextField(
+                controller: _filterController,
+                decoration: InputDecoration.collapsed(
+                  hintText: isRegex ? l10n.labelRegexSearchHint : l10n.labelSearchHint,
+                  hintStyle: TextStyle(
+                    fontSize: 11, 
+                    color: isRegex ? colorScheme.onInverseSurface.withValues(alpha: 0.6) : Colors.grey
+                  ),
+                ),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isRegex ? colorScheme.onInverseSurface : colorScheme.onSurface,
+                ),
+                onChanged: (value) => provider.updateFilterSettings(isSpecific: value.isNotEmpty, filter: value),
+              ),
+            ),
+          ),
+          if (provider.isFilterSpecific)
+            Center(
+              child: IconButton(
+                icon: Icon(Symbols.close, size: 14, color: isRegex ? colorScheme.onInverseSurface : null),
+                onPressed: () {
+                  _filterController.clear();
+                  provider.updateFilterSettings(isSpecific: false, filter: '');
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 32),
+              ),
+            ),
+          const SizedBox(width: 4),
+        ],
+      ),
+    );
+  }
+
   Future<void> _confirmAndExecute(BuildContext context,
       DirectoryProvider provider, AppLocalizations l10n) async {
     final executedCount = await provider.executeRename();
-    if (context.mounted && executedCount > 0) {
-      // (省略)
-    }
   }
-
-  // (中略)
 
   List<PopupMenuEntry<int>> _buildCopyMenuItems(
       DirectoryProvider provider, AppLocalizations l10n) {

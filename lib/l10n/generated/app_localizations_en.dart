@@ -217,16 +217,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelCopyPath => 'Copy Path';
 
   @override
-  String get labelCopyFullPath => 'Copy Full Path';
+  String get labelCopyFullPath => 'Copy List of Full Paths';
 
   @override
-  String get labelCopyOptions => 'Copy Options';
+  String get labelCopyOptions => 'Copy Current List';
 
   @override
-  String get labelCopyUndo => 'Copy Change Log';
+  String get labelCopyUndo => 'Copy List of Renamed Filenames';
 
   @override
-  String get labelCopyListClipboard => 'Copy Current List to Clipboard';
+  String get labelCopyListClipboard => 'Copy List of Current Filenames';
 
   @override
   String get labelMoveUp => 'Move Up';
@@ -593,7 +593,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelMsgNoSelection => 'No files selected';
 
   @override
-  String get labelCopyListPath => 'Copy List to Clipboard (Path)';
+  String get labelCopyListPath => 'Copy List of Relative Paths';
 
   @override
   String get labelMenuGo => 'Go';
@@ -759,6 +759,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelSearchHint => 'Search by filename...';
+
+  @override
+  String get labelRegexSearchHint => 'Search with Regex...';
 
   @override
   String get labelPermissionFileAccessTitle => 'File Access Permission';

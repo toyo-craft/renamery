@@ -238,12 +238,14 @@ class DirectoryProvider extends ChangeNotifier {
   List<String> _appendHistory = []; List<String> _deleteFromHistory = []; List<String> _deleteToHistory = [];
   List<String> _findHistory = []; List<String> _replaceHistory = []; List<String> _extensionHistory = [];
   String _filterText = ''; bool _isFilterSpecific = false; bool _hideSystemFiles = false;
+  bool _isFilterRegex = false;
   bool _recursiveSearch = false; bool _showPreview = true; bool _showFolders = true;
   bool _saveSequenceNumber = false; bool _isCompactMode = false; bool _touchMode = false;
   bool _isEnlargedPreviewOpen = false;
   int _enlargedPreviewIndex = -1;
   double _textPreviewFontSize = 13.0;
   double get textPreviewFontSize => _textPreviewFontSize;
+  bool get isFilterRegex => _isFilterRegex;
 
   void setTextPreviewFontSize(double size) {
     _textPreviewFontSize = size.clamp(8.0, 40.0);
@@ -513,10 +515,16 @@ class DirectoryProvider extends ChangeNotifier {
     } catch (e) { if (kDebugMode) print('Create Folder error: $e'); }
   }
 
-  void updateFilterSettings({String? filter, bool? hideSystem, bool? recursive, bool? preview, bool? showFolders, bool? isSpecific}) {
+  void updateFilterSettings({String? filter, bool? hideSystem, bool? recursive, bool? preview, bool? showFolders, bool? isSpecific, bool? isRegex}) {
     bool needRescan = false; bool needRefilter = false;
     if (isSpecific != null) { if (_isFilterSpecific != isSpecific) { _isFilterSpecific = isSpecific; if (!isSpecific) _filterText = ''; needRefilter = true; } }
     if (filter != null) { _filterText = filter; if (filter.isNotEmpty) _isFilterSpecific = true; needRefilter = true; }
+    if (isRegex != null) { 
+      debugPrint('DEBUG: DirectoryProvider.updateFilterSettings called with isRegex: $isRegex');
+      _isFilterRegex = isRegex; 
+      needRefilter = true;
+      notifyListeners(); // 視覚的フィードバック（背景色等）を即座に反映
+    }
     if (hideSystem != null) { _hideSystemFiles = hideSystem; needRefilter = true; }
     if (recursive != null) { if (_recursiveSearch != recursive) { _recursiveSearch = recursive; needRescan = true; } }
     if (preview != null) { _showPreview = preview; notifyListeners(); }
@@ -542,9 +550,30 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   bool _shouldShowFile(FileModel file) {
+    // 1. システムファイルの除外
     if (_hideSystemFiles && p.basename(file.originalName).startsWith('.')) return false;
+    
+    // 2. フォルダの表示・非表示
     if (!_showFolders && file.entity is Directory) return false;
-    if (_filterText.isNotEmpty && !file.originalName.toLowerCase().contains(_filterText.toLowerCase())) return false;
+    
+    // 3. 検索フィルタ（絞り込み）
+    if (_filterText.isNotEmpty) {
+      if (_isFilterRegex) {
+        // 正規表現モード
+        try {
+          final regex = RegExp(_filterText, caseSensitive: false, unicode: true);
+          return regex.hasMatch(file.originalName);
+        } catch (e) {
+          // 正規表現として不正な文字列が入力されている間（例: \ や \( の途中）は、
+          // 意図的に true を返してフィルタリングを一時停止する（＝消えないようにする）
+          return true;
+        }
+      } else {
+        // 通常モード（部分一致）
+        return file.originalName.toLowerCase().contains(_filterText.toLowerCase());
+      }
+    }
+    
     return true;
   }
 

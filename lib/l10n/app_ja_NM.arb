@@ -237,5 +237,6 @@
   "labelFilterOptions": "検索と表示設定",
   "labelMenuRenameSettings": "リネーム設定",
   "labelDialogClose": "閉じる",
-  "labelSearchHint": "検索..."
+  "labelSearchHint": "検索...",
+  "labelRegexSearchHint": "正規表現で検索..."
 }

@@ -217,16 +217,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelCopyPath => 'Copiar ruta';
 
   @override
-  String get labelCopyFullPath => 'Copiar ruta completa';
+  String get labelCopyFullPath => 'Copiar lista de rutas completas';
 
   @override
-  String get labelCopyOptions => 'Opciones de copia';
+  String get labelCopyOptions => 'Copiar lista actual';
 
   @override
-  String get labelCopyUndo => 'Copiar registro de cambios';
+  String get labelCopyUndo => 'Copiar lista de nombres renombrados';
 
   @override
-  String get labelCopyListClipboard => 'Copiar lista actual al portapapeles';
+  String get labelCopyListClipboard => 'Copiar lista de nombres actuales';
 
   @override
   String get labelMoveUp => 'Subir';
@@ -762,6 +762,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get labelSearchHint => 'Buscar por nombre de archivo...';
+
+  @override
+  String get labelRegexSearchHint => 'Buscar con Regex...';
 
   @override
   String get labelPermissionFileAccessTitle =>

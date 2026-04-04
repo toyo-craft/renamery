@@ -20,6 +20,9 @@ class FilterDialogHelper {
       builder: (context) {
         return Consumer<DirectoryProvider>(
           builder: (context, provider, child) {
+            final bool isRegex = provider.isFilterRegex;
+            final colorScheme = Theme.of(context).colorScheme;
+
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -31,7 +34,7 @@ class FilterDialogHelper {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                       child: Text(
-                        l10n.labelFilterOptions, // 「検索と表示設定」
+                        l10n.labelFilterOptions, 
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -40,30 +43,70 @@ class FilterDialogHelper {
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                      child: TextField(
-                        controller: filterCtrl,
-                        decoration: InputDecoration(
-                          hintText: l10n.labelSearchHint,
-                          prefixIcon: const Icon(Symbols.search, size: 20),
-                          suffixIcon: filterCtrl.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Symbols.close, size: 16),
+                      child: Container(
+                        height: 48,
+                        decoration: ShapeDecoration(
+                          color: isRegex ? colorScheme.inverseSurface : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                          shape: StadiumBorder(
+                            side: isRegex ? BorderSide(color: colorScheme.primary, width: 1) : BorderSide.none,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 8),
+                            Center(
+                              child: IconButton(
+                                icon: Icon(
+                                  Symbols.regular_expression, 
+                                  size: 24,
+                                  fill: isRegex ? 1 : 0,
+                                  color: isRegex ? colorScheme.onInverseSurface : colorScheme.onSurfaceVariant,
+                                ),
+                                onPressed: () {
+                                  provider.updateFilterSettings(isRegex: !isRegex);
+                                },
+                                tooltip: l10n.labelRegex,
+                              ),
+                            ),
+                            Expanded(
+                              child: Align(
+                                alignment: const Alignment(0, -0.1), // 垂直方向の微調整
+                                child: TextField(
+                                  controller: filterCtrl,
+                                  decoration: InputDecoration.collapsed(
+                                    hintText: isRegex ? l10n.labelRegexSearchHint : l10n.labelSearchHint,
+                                    hintStyle: TextStyle(
+                                      color: isRegex ? colorScheme.onInverseSurface.withValues(alpha: 0.6) : null
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    color: isRegex ? colorScheme.onInverseSurface : null,
+                                  ),
+                                  onChanged: (val) {
+                                    provider.updateFilterSettings(
+                                        isSpecific: val.isNotEmpty, filter: val);
+                                  },
+                                ),
+                              ),
+                            ),
+                            if (filterCtrl.text.isNotEmpty)
+                              Center(
+                                child: IconButton(
+                                  icon: Icon(
+                                    Symbols.close, 
+                                    size: 20,
+                                    color: isRegex ? colorScheme.onInverseSurface : null,
+                                  ),
                                   onPressed: () {
                                     filterCtrl.clear();
                                     provider.updateFilterSettings(
                                         isSpecific: false, filter: '');
                                   },
-                                )
-                              : null,
-                          isDense: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                                ),
+                              ),
+                            const SizedBox(width: 8),
+                          ],
                         ),
-                        onChanged: (val) {
-                          provider.updateFilterSettings(
-                              isSpecific: val.isNotEmpty, filter: val);
-                        },
                       ),
                     ),
                     const Divider(),

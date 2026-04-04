@@ -215,16 +215,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelCopyPath => 'コピー (パス)';
 
   @override
-  String get labelCopyFullPath => 'コピー (フルパス)';
+  String get labelCopyFullPath => '現在のフルパスリストをコピー';
 
   @override
-  String get labelCopyOptions => 'コピーオプション';
+  String get labelCopyOptions => '現在のリストをコピー';
 
   @override
-  String get labelCopyUndo => '変更記録をコピー';
+  String get labelCopyUndo => 'リネーム後のファイル名リストをコピー';
 
   @override
-  String get labelCopyListClipboard => 'クリップボードへ現在のリストをコピー';
+  String get labelCopyListClipboard => '現在のファイル名リストをコピー';
 
   @override
   String get labelMoveUp => '上に移動';
@@ -587,7 +587,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelMsgNoSelection => 'ファイルが選択されていません';
 
   @override
-  String get labelCopyListPath => 'リストをクリップボードにコピー (Path)';
+  String get labelCopyListPath => '現在の相対パスリストをコピー';
 
   @override
   String get labelMenuGo => '移動';
@@ -752,6 +752,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get labelSearchHint => 'ファイル名で検索...';
+
+  @override
+  String get labelRegexSearchHint => '正規表現で検索...';
 
   @override
   String get labelPermissionFileAccessTitle => 'ファイルアクセス権限の設定';
@@ -973,16 +976,16 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelCopyPath => 'パスコピー';
 
   @override
-  String get labelCopyFullPath => 'フルパスコピー';
+  String get labelCopyFullPath => '現在のフルパスリストをコピー';
 
   @override
-  String get labelCopyOptions => 'コピーオプション';
+  String get labelCopyOptions => '現在のリストをコピー';
 
   @override
-  String get labelCopyUndo => '履歴コピー';
+  String get labelCopyUndo => 'リネーム後の名前リストをコピー';
 
   @override
-  String get labelCopyListClipboard => '全リストコピー';
+  String get labelCopyListClipboard => '現在のファイル名リストをコピー';
 
   @override
   String get labelMoveUp => '上へ';
@@ -1345,7 +1348,7 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelMsgNoSelection => '未選択です';
 
   @override
-  String get labelCopyListPath => 'リストコピー';
+  String get labelCopyListPath => '現在の相対パスリストをコピー';
 
   @override
   String get labelMenuGo => '移動';
@@ -1509,4 +1512,7 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
 
   @override
   String get labelSearchHint => '検索...';
+
+  @override
+  String get labelRegexSearchHint => '正規表現で検索...';
 }

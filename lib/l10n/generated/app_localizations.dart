@@ -514,25 +514,25 @@ abstract class AppLocalizations {
   /// No description provided for @labelCopyFullPath.
   ///
   /// In ja, this message translates to:
-  /// **'コピー (フルパス)'**
+  /// **'現在のフルパスリストをコピー'**
   String get labelCopyFullPath;
 
   /// No description provided for @labelCopyOptions.
   ///
   /// In ja, this message translates to:
-  /// **'コピーオプション'**
+  /// **'現在のリストをコピー'**
   String get labelCopyOptions;
 
   /// No description provided for @labelCopyUndo.
   ///
   /// In ja, this message translates to:
-  /// **'変更記録をコピー'**
+  /// **'リネーム後のファイル名リストをコピー'**
   String get labelCopyUndo;
 
   /// No description provided for @labelCopyListClipboard.
   ///
   /// In ja, this message translates to:
-  /// **'クリップボードへ現在のリストをコピー'**
+  /// **'現在のファイル名リストをコピー'**
   String get labelCopyListClipboard;
 
   /// No description provided for @labelMoveUp.
@@ -1246,7 +1246,7 @@ abstract class AppLocalizations {
   /// No description provided for @labelCopyListPath.
   ///
   /// In ja, this message translates to:
-  /// **'リストをクリップボードにコピー (Path)'**
+  /// **'現在の相対パスリストをコピー'**
   String get labelCopyListPath;
 
   /// No description provided for @labelMenuGo.
@@ -1530,6 +1530,12 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'ファイル名で検索...'**
   String get labelSearchHint;
+
+  /// No description provided for @labelRegexSearchHint.
+  ///
+  /// In ja, this message translates to:
+  /// **'正規表現で検索...'**
+  String get labelRegexSearchHint;
 
   /// No description provided for @labelPermissionFileAccessTitle.
   ///

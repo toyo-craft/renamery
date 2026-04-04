@@ -213,16 +213,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelCopyPath => '复制路径';
 
   @override
-  String get labelCopyFullPath => '复制完整路径';
+  String get labelCopyFullPath => '复制当前完整路径列表';
 
   @override
-  String get labelCopyOptions => '复制选项';
+  String get labelCopyOptions => '复制当前列表';
 
   @override
-  String get labelCopyUndo => '复制更改日志';
+  String get labelCopyUndo => '复制重命名后的文件名列表';
 
   @override
-  String get labelCopyListClipboard => '将当前列表复制到剪贴板';
+  String get labelCopyListClipboard => '复制当前文件名列表';
 
   @override
   String get labelMoveUp => '上移';
@@ -749,6 +749,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get labelSearchHint => '按文件名搜索...';
+
+  @override
+  String get labelRegexSearchHint => '正则表达式搜索...';
 
   @override
   String get labelPermissionFileAccessTitle => '文件访问权限设置';

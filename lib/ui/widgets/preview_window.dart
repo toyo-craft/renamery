@@ -21,6 +21,7 @@ class PreviewWindow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    // 複数選択時は仮想化グリッドプレビューを表示
     if (selectedFiles.length > 1) {
       return _MultiSelectGridPreview(files: selectedFiles, l10n: l10n);
     }
@@ -70,49 +71,31 @@ class _MultiSelectGridPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const int maxDisplay = 9;
-    final displayFiles = files.take(maxDisplay).toList();
-    final remaining = files.length - maxDisplay;
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Stack(
-        children: [
-          GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
+    // 画面幅に応じて列数を動的に調整
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = (constraints.maxWidth / 100).floor().clamp(2, 6);
+        
+        return Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: GridView.builder(
+            // GridView.builder により仮想化（画面外のタイルは描画しない）を有効化
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
               crossAxisSpacing: 4,
               mainAxisSpacing: 4,
             ),
-            itemCount: displayFiles.length,
+            itemCount: files.length,
             itemBuilder: (context, index) {
-              final file = displayFiles[index];
-              return _ThumbnailTile(file: file, l10n: l10n);
+              return _ThumbnailTile(
+                key: ValueKey(files[index].entity.path),
+                file: files[index], 
+                l10n: l10n
+              );
             },
           ),
-          if (remaining > 0)
-            Positioned(
-              right: 4,
-              bottom: 4,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Theme.of(context).colorScheme.primary),
-                ),
-                child: Text(
-                  '+$remaining',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -121,7 +104,7 @@ class _ThumbnailTile extends StatelessWidget {
   final FileModel file;
   final AppLocalizations l10n;
 
-  const _ThumbnailTile({required this.file, required this.l10n});
+  const _ThumbnailTile({super.key, required this.file, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -131,63 +114,9 @@ class _ThumbnailTile extends StatelessWidget {
     final isEnlarged = provider.isEnlargedPreviewOpen;
     final isEnlargedActive = isEnlarged && provider.enlargedPreviewFile == file;
 
-    // テキスト・PDF・アーカイブ等は常に白背景
+    // 文書系は常に白背景
     final bool isDocumentType = ['txt', 'pdf', 'zip', 'csv', 'json', 'ini', 'log', 'dart', 'yaml', 'md', 'html', 'xml', 'sql', 'js', 'py', 'css'].contains(ext);
     final Color? contentBgColor = (isEnlarged && isDocumentType) ? Colors.white : (isEnlarged ? null : Theme.of(context).colorScheme.surfaceContainerLow);
-
-    Widget content;
-    if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'ico'].contains(ext)) {
-      content = Image.file(io.File(path), fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.broken_image, size: 16));
-    } else if (ext == 'svg') {
-      content = FutureBuilder<Uint8List>(
-        future: io.File(path).readAsBytes(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return SvgPicture.memory(snapshot.data!, fit: BoxFit.contain, placeholderBuilder: (c) => const Icon(Icons.image, size: 16));
-          }
-          return const Icon(Icons.image, size: 16);
-        },
-      );
-    } else if (ext == 'pdf') {
-      content = _PdfPreview(file: file, l10n: l10n, isThumbnail: true);
-    } else if (ext == 'zip') {
-      content = FutureBuilder<List<String>>(
-        future: _listArchiveFiles(io.File(path)),
-        builder: (context, snapshot) {
-          if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-            return Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: Text(
-                snapshot.data!.join('\n'),
-                style: const TextStyle(fontSize: 5, fontFamily: 'Consolas', height: 1.0, color: Colors.black87),
-                overflow: TextOverflow.fade,
-              ),
-            );
-          }
-          return const Icon(Icons.inventory_2_outlined, color: Colors.grey, size: 24);
-        },
-      );
-    } else if (file.entity is io.Directory) {
-      content = const Icon(Icons.folder, color: Colors.amber, size: 24);
-    } else {
-      final isTextExt = ['txt', 'csv', 'json', 'ini', 'log', 'dart', 'yaml', 'md', 'html', 'xml', 'sql', 'js', 'py', 'css'].contains(ext);
-      content = FutureBuilder<String>(
-        future: _readText(io.File(path), l10n, limit: 200),
-        builder: (context, snapshot) {
-          if (snapshot.hasData && snapshot.data != l10n.labelPreviewBinaryError && (isTextExt || snapshot.data!.length > 10)) {
-            return Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: Text(
-                snapshot.data!,
-                style: const TextStyle(fontSize: 6, fontFamily: 'Consolas', height: 1.1, color: Colors.black87),
-                overflow: TextOverflow.fade,
-              ),
-            );
-          }
-          return const Icon(Icons.insert_drive_file, color: Colors.grey, size: 24);
-        },
-      );
-    }
 
     return InkWell(
       onTap: () => provider.openEnlargedPreview(file),
@@ -206,7 +135,8 @@ class _ThumbnailTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Center(child: content),
+            Center(child: _buildContent(context, path, ext)),
+            // リスト表示時のみファイル名オーバーレイを表示
             if (!isEnlarged)
               Positioned(
                 left: 0,
@@ -233,17 +163,67 @@ class _ThumbnailTile extends StatelessWidget {
     );
   }
 
-  Future<Uint8List?> _renderThumbnail(String path) async {
-    try {
-      final file = io.File(path);
-      final bytes = await file.readAsBytes();
-      final images = Printing.raster(bytes, pages: [0], dpi: 72);
-      await for (final image in images) {
-        return await image.toPng();
-      }
-      return null;
-    } catch (_) {
-      return null;
+  Widget _buildContent(BuildContext context, String path, String ext) {
+    // 段階的レンダリング: まずはアイコンを表示し、準備ができたら中身を表示
+    if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'ico'].contains(ext)) {
+      return Image.file(
+        io.File(path), 
+        fit: BoxFit.cover, 
+        errorBuilder: (c, e, s) => const Icon(Icons.broken_image, size: 16),
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded || frame != null) return child;
+          return const Icon(Icons.image, color: Colors.grey, size: 24); // ロード中プレースホルダー
+        },
+      );
+    } else if (ext == 'svg') {
+      return FutureBuilder<Uint8List>(
+        future: io.File(path).readAsBytes(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return SvgPicture.memory(snapshot.data!, fit: BoxFit.contain);
+          }
+          return const Icon(Icons.image, color: Colors.grey, size: 24);
+        },
+      );
+    } else if (ext == 'pdf') {
+      return _PdfPreview(file: file, l10n: l10n, isThumbnail: true);
+    } else if (ext == 'zip') {
+      return FutureBuilder<List<String>>(
+        future: _listArchiveFiles(io.File(path)),
+        builder: (context, snapshot) {
+          if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+            return Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: Text(
+                snapshot.data!.join('\n'),
+                style: const TextStyle(fontSize: 5, fontFamily: 'Consolas', height: 1.0, color: Colors.black87),
+                overflow: TextOverflow.fade,
+              ),
+            );
+          }
+          return const Icon(Icons.inventory_2_outlined, color: Colors.grey, size: 24);
+        },
+      );
+    } else if (file.entity is io.Directory) {
+      return const Icon(Icons.folder, color: Colors.amber, size: 24);
+    } else {
+      final isTextExt = ['txt', 'csv', 'json', 'ini', 'log', 'dart', 'yaml', 'md', 'html', 'xml', 'sql', 'js', 'py', 'css'].contains(ext);
+      return FutureBuilder<String>(
+        future: _readText(io.File(path), l10n, limit: 200),
+        builder: (context, snapshot) {
+          if (snapshot.hasData && snapshot.data != l10n.labelPreviewBinaryError && (isTextExt || snapshot.data!.length > 10)) {
+            return Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: Text(
+                snapshot.data!,
+                style: const TextStyle(fontSize: 6, fontFamily: 'Consolas', height: 1.1, color: Colors.black87),
+                overflow: TextOverflow.fade,
+              ),
+            );
+          }
+          return const Icon(Icons.insert_drive_file, color: Colors.grey, size: 24);
+        },
+      );
     }
   }
 }
@@ -359,7 +339,9 @@ class _PdfPreviewState extends State<_PdfPreview> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading && _cachedImageData == null) {
-      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+      return widget.isThumbnail 
+          ? const Icon(Icons.picture_as_pdf, color: Colors.red, size: 24)
+          : const Center(child: CircularProgressIndicator(strokeWidth: 2));
     }
 
     if (_cachedImageData == null) {
@@ -372,7 +354,7 @@ class _PdfPreviewState extends State<_PdfPreview> {
         padding: EdgeInsets.all(widget.isThumbnail ? 0.0 : 4.0),
         child: Image.memory(
           _cachedImageData!,
-          fit: BoxFit.contain,
+          fit: widget.isThumbnail ? BoxFit.cover : BoxFit.contain,
         ),
       ),
     );
@@ -514,7 +496,6 @@ class _TextPreview extends StatelessWidget {
   }
 }
 
-// プレビュー不可等のメッセージをテキスト表示に合わせたデザインで出力する共通部品
 class _ErrorDocumentView extends StatelessWidget {
   final String message;
   const _ErrorDocumentView({required this.message});
