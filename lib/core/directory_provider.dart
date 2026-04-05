@@ -411,22 +411,108 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   int _previewVersion = 0;
+  bool _isProcessingPreview = false; // 現在計算中かどうかのロック
+  bool _needsRetryPreview = false;   // 計算中に次の要求が来たか
+
   Future<void> _updatePreviews() async {
-    if (_currentFiles.isEmpty) return; final currentVersion = ++_previewVersion; List<FileModel> targets = [];
-    for (var f in _currentFiles) { if (f.isSelected) targets.add(f); f.setNewName(f.originalName, notify: false); f.setValidationError(null, notify: false); }
-    if (targets.isEmpty) { for (var f in _currentFiles) f.notifyIfChanged(); notifyListeners(); return; }
-    String? curFind = (_renameMode == RenameMode.deleteFrontTo || _renameMode == RenameMode.deleteBackTo) ? _deleteToText : _findText;
-    String? curReplace = (_renameMode == RenameMode.extension) ? _extensionChangeText : (_renameMode == RenameMode.extensionAdd ? _extensionAddText : _replaceText);
-    String? baseDir = _currentDirectory != null ? p.basename(_currentDirectory!.path) : null;
-    final input = {'mode': _renameMode, 'fileData': targets.map((f) => {'originalName': f.originalName, 'isDirectory': f.entity is Directory, 'modified': f.entity.statSync().modified}).toList(), 'findText': curFind, 'replaceText': curReplace, 'appendText': _appendText, 'startNumber': _startNumber, 'insertIndex': _insertIndex, 'digits': _digits, 'caseConversion': CaseConversion.none, 'extensionToLowerCase': _extensionToLowerCase, 'useRegex': _useRegex, 'numberingMode': _numberingMode, 'baseDirName': baseDir, 'listText': _listRenameText, 'dateFormat': _dateFormat, 'datePosition': _datePosition, 'validationType': _validationType, 'isWindows': !kIsWeb && Platform.isWindows, 'isMacOS': !kIsWeb && Platform.isMacOS};
-    final results = await compute(RenameEngine.computeGeneratePreviews, input); if (currentVersion != _previewVersion) return;
-    for (int i = 0; i < targets.length; i++) { final f = targets[i]; final res = results[i]; f.setNewName(res['newName']!, notify: false); f.setValidationError(res['error'], notify: false); }
-    _hasValidationError = false; final nameCounts = <String, int>{};
-    for (var f in _currentFiles) { if (f.validationErrorMessage != null && f.validationErrorMessage != 'ファイル名が重複しています') _hasValidationError = true; final fullPathKey = p.join(f.parentPath, f.newName).toLowerCase(); nameCounts[fullPathKey] = (nameCounts[fullPathKey] ?? 0) + 1; }
-    for (var f in targets) {
-      if (f.validationErrorMessage == null || f.validationErrorMessage == 'ファイル名が重複しています') { final fullPathKey = p.join(f.parentPath, f.newName).toLowerCase(); if ((nameCounts[fullPathKey] ?? 0) > 1) { f.setValidationError('ファイル名が重複しています', notify: false); _hasValidationError = true; } else f.setValidationError(null, notify: false); }
+    if (_currentFiles.isEmpty) return;
+
+    // すでに計算中の場合は、完了後に再実行する予約だけして戻る
+    if (_isProcessingPreview) {
+      _needsRetryPreview = true;
+      return;
     }
-    for (var f in _currentFiles) f.notifyIfChanged(); notifyListeners();
+
+    _isProcessingPreview = true;
+    _needsRetryPreview = false;
+
+    try {
+      final currentVersion = ++_previewVersion;
+      List<FileModel> targets = [];
+      for (var f in _currentFiles) {
+        if (f.isSelected) targets.add(f);
+        f.setNewName(f.originalName, notify: false);
+        f.setValidationError(null, notify: false);
+      }
+
+      if (targets.isEmpty) {
+        for (var f in _currentFiles) f.notifyIfChanged();
+        notifyListeners();
+        return;
+      }
+
+      String? curFind = (_renameMode == RenameMode.deleteFrontTo || _renameMode == RenameMode.deleteBackTo) ? _deleteToText : _findText;
+      String? curReplace = (_renameMode == RenameMode.extension) ? _extensionChangeText : (_renameMode == RenameMode.extensionAdd ? _extensionAddText : _replaceText);
+      String? baseDir = _currentDirectory != null ? p.basename(_currentDirectory!.path) : null;
+
+      final input = {
+        'mode': _renameMode,
+        'fileData': targets.map((f) => {
+          'originalName': f.originalName,
+          'isDirectory': f.entity is Directory,
+          'modified': f.entity.statSync().modified,
+        }).toList(),
+        'findText': curFind,
+        'replaceText': curReplace,
+        'appendText': _appendText,
+        'startNumber': _startNumber,
+        'insertIndex': _insertIndex,
+        'digits': _digits,
+        'caseConversion': CaseConversion.none,
+        'extensionToLowerCase': _extensionToLowerCase,
+        'useRegex': _useRegex,
+        'numberingMode': _numberingMode,
+        'baseDirName': baseDir,
+        'listText': _listRenameText,
+        'dateFormat': _dateFormat,
+        'datePosition': _datePosition,
+        'validationType': _validationType,
+        'isWindows': !kIsWeb && Platform.isWindows,
+        'isMacOS': !kIsWeb && Platform.isMacOS,
+      };
+
+      // Isolate での重い計算
+      final results = await compute(RenameEngine.computeGeneratePreviews, input);
+
+      if (currentVersion != _previewVersion) return;
+
+      for (int i = 0; i < targets.length; i++) {
+        final f = targets[i];
+        final res = results[i];
+        f.setNewName(res['newName']!, notify: false);
+        f.setValidationError(res['error'], notify: false);
+      }
+
+      _hasValidationError = false;
+      final nameCounts = <String, int>{};
+      for (var f in _currentFiles) {
+        if (f.validationErrorMessage != null && f.validationErrorMessage != 'ファイル名が重複しています') {
+          _hasValidationError = true;
+        }
+        final fullPathKey = p.join(f.parentPath, f.newName).toLowerCase();
+        nameCounts[fullPathKey] = (nameCounts[fullPathKey] ?? 0) + 1;
+      }
+      for (var f in targets) {
+        if (f.validationErrorMessage == null || f.validationErrorMessage == 'ファイル名が重複しています') {
+          final fullPathKey = p.join(f.parentPath, f.newName).toLowerCase();
+          if ((nameCounts[fullPathKey] ?? 0) > 1) {
+            f.setValidationError('ファイル名が重複しています', notify: false);
+            _hasValidationError = true;
+          } else {
+            f.setValidationError(null, notify: false);
+          }
+        }
+      }
+      for (var f in _currentFiles) f.notifyIfChanged();
+      notifyListeners();
+    } finally {
+      _isProcessingPreview = false;
+      // 計算中に次のリクエストが来ていた場合は、最新データで再実行
+      if (_needsRetryPreview) {
+        _needsRetryPreview = false;
+        _updatePreviews();
+      }
+    }
   }
 
   bool _hasValidationError = false; bool get hasValidationError => _hasValidationError;
