@@ -24,7 +24,7 @@ class FileListPanel extends StatefulWidget {
 class _FileListPanelState extends State<FileListPanel> {
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _verticalController = ScrollController();
-  Key _reorderableListKey = UniqueKey(); // GlobalKey から Key に変更
+  Key _reorderableListKey = UniqueKey();
   final FocusNode _fileListFocusNode = FocusNode();
   final FocusNode _renameFocusNode = FocusNode();
   final TextEditingController _renameController = TextEditingController();
@@ -35,6 +35,7 @@ class _FileListPanelState extends State<FileListPanel> {
   Offset? _dragUpdate;
   List<bool>? _initialSelectionStates;
   int? _draggingIndex;
+  Timer? _autoScrollTimer;
 
   late Map<int, double> _columnWidths;
   static const double _widthDragHandle = 32.0;
@@ -44,18 +45,11 @@ class _FileListPanelState extends State<FileListPanel> {
   void initState() {
     super.initState();
     _columnWidths = {
-      0: 300.0, // Original Name
-      1: 300.0, // New Name
-      2: 80.0,  // Size
-      3: 200.0, // Path
-      4: 100.0, // Type
-      5: 140.0, // Date
-      6: 80.0,  // Attr
+      0: 300.0, 1: 300.0, 2: 80.0, 3: 200.0, 4: 100.0, 5: 140.0, 6: 80.0,
     };
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _fileListFocusNode.requestFocus();
     });
-    // ESCキー等のグローバルハンドラを登録
     HardwareKeyboard.instance.addHandler(_handleGlobalKey);
   }
 
@@ -63,32 +57,24 @@ class _FileListPanelState extends State<FileListPanel> {
     if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
       final provider = context.read<DirectoryProvider>();
       bool handled = false;
-
-      // 1. ドラッグ移動のキャンセル
       if (_draggingIndex != null) {
-        setState(() {
-          _draggingIndex = null;
-          _reorderableListKey = UniqueKey(); // 重要: Keyを更新してWidgetを強制再生成
-        });
+        setState(() { _draggingIndex = null; _reorderableListKey = UniqueKey(); });
         handled = true;
       }
-      // 2. インラインリネームのキャンセル
       if (_editingFilePath != null) {
         setState(() { _editingFilePath = null; });
         provider.setInlineRenaming(false);
         handled = true;
       }
-      // 3. 矩形選択のキャンセル
       if (_dragStart != null) {
+        _stopAutoScroll();
         setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; });
         handled = true;
       }
-      // 4. 全選択解除（優先度低）
       if (!handled && provider.currentFiles.any((f) => f.isSelected)) {
         provider.selectAll(false);
         handled = true;
       }
-      // 5. 切り取り解除
       if (!handled && provider.isCutMode) {
         provider.clearCutState();
         handled = true;
@@ -100,6 +86,7 @@ class _FileListPanelState extends State<FileListPanel> {
 
   @override
   void dispose() {
+    _stopAutoScroll();
     HardwareKeyboard.instance.removeHandler(_handleGlobalKey);
     _horizontalController.dispose();
     _verticalController.dispose();
@@ -110,6 +97,26 @@ class _FileListPanelState extends State<FileListPanel> {
     super.dispose();
   }
 
+  void _startAutoScroll(double delta, List<FileModel> files, DirectoryProvider provider) {
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (_dragStart == null) { _stopAutoScroll(); return; }
+      final double newOffset = (_verticalController.offset + delta).clamp(0.0, _verticalController.position.maxScrollExtent);
+      _verticalController.jumpTo(newOffset);
+      
+      // スクロール後の位置で選択範囲を再計算
+      if (_dragUpdate != null) {
+        final currentAbsY = _dragUpdate!.dy; // _dragUpdateはすでに絶対座標
+        _updateSelection(currentAbsY, files, provider);
+      }
+    });
+  }
+
+  void _stopAutoScroll() {
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -117,8 +124,8 @@ class _FileListPanelState extends State<FileListPanel> {
     final files = provider.currentFiles;
     _pathController.text = provider.currentDirectory?.path ?? '';
 
-    double totalWidth = _widthDragHandle + _widthCheckbox + 16.0; // Space
-    for (var w in _columnWidths.values) { totalWidth += w + 16.0; }
+    double contentWidth = _widthDragHandle + _widthCheckbox + 16.0;
+    for (var w in _columnWidths.values) { contentWidth += w + 16.0; }
 
     final rowHeight = provider.touchMode ? 50.0 : 34.0;
 
@@ -126,221 +133,193 @@ class _FileListPanelState extends State<FileListPanel> {
       children: [
         _buildAddressBar(context, provider, l10n),
         Expanded(
-          child: CallbackShortcuts(
-            bindings: {
-              const SingleActivator(LogicalKeyboardKey.keyA, control: true): () => provider.selectAll(true),
-              const SingleActivator(LogicalKeyboardKey.keyD, control: true): () => provider.selectAll(false),
-              const SingleActivator(LogicalKeyboardKey.f2): () {
-                final selected = files.where((f) => f.isSelected).toList();
-                if (selected.isNotEmpty) {
-                  setState(() { _editingFilePath = selected.first.entity.path; _renameController.text = selected.first.originalName; });
-                  provider.setInlineRenaming(true);
-                  WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
-                }
-              },
-              const SingleActivator(LogicalKeyboardKey.delete): () {
-                if (provider.currentFiles.any((f) => f.isSelected)) {
-                  _showDeleteConfirmDialog(context, provider, l10n);
-                }
-              },
-            },
-            child: Focus(
-              focusNode: _fileListFocusNode,
-              child: Scrollbar(
-                controller: _horizontalController,
-                child: SingleChildScrollView(
-                  controller: _horizontalController,
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: totalWidth,
-                    child: Column(
-                      children: [
-                        _buildHeader(context, provider, l10n),
-                        Expanded(
-                          child: Listener(
-                            onPointerDown: (event) {
-                              // ドラッグハンドルとチェックボックスのエリアを避ける
-                              final safeZone = _widthDragHandle + _widthCheckbox + 16.0;
-                              if (event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone) {
-                                setState(() {
-                                  _dragStart = event.localPosition;
-                                  _dragUpdate = event.localPosition;
-                                  _initialSelectionStates = files.map((f) => f.isSelected).toList();
-                                });
-                              }
-                            },
-                            onPointerMove: (event) {
-                              if (_dragStart != null) {
-                                setState(() { _dragUpdate = event.localPosition; });
-                                _updateSelection(event.localPosition, files, provider);
-                              }
-                            },
-                            onPointerUp: (_) {
-                              setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; });
-                            },
-                            child: Stack(
-                              children: [
-                                ListView(
-                                  controller: _verticalController,
-                                  padding: EdgeInsets.zero,
-                                  children: [
-                                    SizedBox(
-                                      height: files.length * rowHeight,
-                                      child: ReorderableListView.builder(
-                                        key: _reorderableListKey,
-                                        itemCount: files.length,
-                                        onReorder: provider.reorderFiles,
-                                        onReorderStart: (index) => setState(() => _draggingIndex = index),
-                                        onReorderEnd: (_) => setState(() => _draggingIndex = null),
-                                        buildDefaultDragHandles: false,
-                                        proxyDecorator: (child, index, animation) {
-                                          return AnimatedBuilder(
-                                            animation: animation,
-                                            builder: (context, child) {
-                                              final selectedCount = provider.selectedFilesCount;
-                                              final isMultiMove = files[index].isSelected && selectedCount > 1;
-                                              final rowH = provider.touchMode ? 50.0 : 34.0;
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final double totalWidth = contentWidth.clamp(constraints.maxWidth, double.infinity);
 
-                                              return Material(
-                                                elevation: 12.0,
-                                                color: Colors.transparent,
-                                                shadowColor: Colors.black.withValues(alpha: 0.4),
-                                                child: Stack(
-                                                  clipBehavior: Clip.none,
-                                                  children: [
-                                                    if (isMultiMove) ...[
-                                                      // 背後レイヤー 2
-                                                      Positioned(
-                                                        top: 8, left: 8, right: 8, bottom: -8,
-                                                        child: Container(
-                                                          height: rowH,
-                                                          decoration: BoxDecoration(
-                                                            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-                                                            borderRadius: BorderRadius.circular(8),
-                                                            border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      // 背後レイヤー 1
-                                                      Positioned(
-                                                        top: 4, left: 4, right: 4, bottom: -4,
-                                                        child: Container(
-                                                          height: rowH,
-                                                          decoration: BoxDecoration(
-                                                            color: Theme.of(context).colorScheme.surfaceContainerHigh.withValues(alpha: 0.7),
-                                                            borderRadius: BorderRadius.circular(8),
-                                                            border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.4)),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                    // メインの行
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Theme.of(context).colorScheme.surface,
-                                                        borderRadius: BorderRadius.circular(8),
-                                                        boxShadow: [
-                                                          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4)),
-                                                        ],
-                                                      ),
-                                                      child: child,
-                                                    ),
-                                                    if (isMultiMove)
-                                                      Positioned(
-                                                        right: -12,
-                                                        top: -12,
-                                                        child: Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                                          decoration: BoxDecoration(
-                                                            color: Theme.of(context).colorScheme.primary,
-                                                            borderRadius: BorderRadius.circular(20),
-                                                            boxShadow: [
-                                                              BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 3)),
-                                                            ],
-                                                          ),
-                                                          child: Row(
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              const Icon(Icons.copy_all, color: Colors.white, size: 14),
-                                                              const SizedBox(width: 4),
-                                                              Text(
-                                                                '$selectedCount',
-                                                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ),
-                                                  ],
+              return CallbackShortcuts(
+                bindings: {
+                  const SingleActivator(LogicalKeyboardKey.keyA, control: true): () => provider.selectAll(true),
+                  const SingleActivator(LogicalKeyboardKey.keyD, control: true): () => provider.selectAll(false),
+                  const SingleActivator(LogicalKeyboardKey.f2): () {
+                    final selected = files.where((f) => f.isSelected).toList();
+                    if (selected.isNotEmpty) _startEdit(selected.first.entity.path, selected.first.originalName, provider);
+                  },
+                  const SingleActivator(LogicalKeyboardKey.delete): () {
+                    if (provider.currentFiles.any((f) => f.isSelected)) _showDeleteConfirmDialog(context, provider, l10n);
+                  },
+                },
+                child: Focus(
+                  focusNode: _fileListFocusNode,
+                  child: Scrollbar(
+                    controller: _horizontalController,
+                    thumbVisibility: true,
+                    child: SingleChildScrollView(
+                      controller: _horizontalController,
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: totalWidth,
+                        child: Column(
+                          children: [
+                            _buildHeader(context, provider, l10n),
+                            Expanded(
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => _fileListFocusNode.requestFocus(),
+                                onSecondaryTapDown: (details) => _showBackgroundContextMenu(context, details, provider, l10n),
+                                child: Stack(
+                                  children: [
+                                    Listener(
+                                      onPointerDown: (event) {
+                                        final safeZone = _widthDragHandle + _widthCheckbox + 16.0;
+                                        if (event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone && files.isNotEmpty) {
+                                          setState(() {
+                                            _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
+                                            _dragUpdate = _dragStart;
+                                            _initialSelectionStates = files.map((f) => f.isSelected).toList();
+                                          });
+                                        }
+                                      },
+                                      onPointerMove: (event) {
+                                        if (_dragStart != null) {
+                                          final currentAbsY = event.localPosition.dy + _verticalController.offset;
+                                          setState(() { _dragUpdate = Offset(event.localPosition.dx, currentAbsY); });
+                                          
+                                          // オートスクロール判定
+                                          const scrollZone = 40.0;
+                                          if (event.localPosition.dy < scrollZone) {
+                                            _startAutoScroll(-15.0, files, provider);
+                                          } else if (event.localPosition.dy > (constraints.maxHeight - 32.0 - scrollZone)) {
+                                            _startAutoScroll(15.0, files, provider);
+                                          } else {
+                                            _stopAutoScroll();
+                                          }
+
+                                          _updateSelection(currentAbsY, files, provider);
+                                        }
+                                      },
+                                      onPointerUp: (_) {
+                                        _stopAutoScroll();
+                                        setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; });
+                                      },
+                                      child: ListView(
+                                        controller: _verticalController,
+                                        padding: EdgeInsets.zero,
+                                        physics: const AlwaysScrollableScrollPhysics(),
+                                        children: [
+                                          if (files.isNotEmpty)
+                                            SizedBox(
+                                              height: files.length * rowHeight,
+                                              child: ReorderableListView.builder(
+                                                key: _reorderableListKey,
+                                                itemCount: files.length,
+                                                onReorder: provider.reorderFiles,
+                                                onReorderStart: (index) => setState(() => _draggingIndex = index),
+                                                onReorderEnd: (_) => setState(() => _draggingIndex = null),
+                                                buildDefaultDragHandles: false,
+                                                proxyDecorator: (child, index, animation) => _buildProxyDecorator(child, index, animation, provider, rowHeight),
+                                                itemBuilder: (context, index) => RepaintBoundary(
+                                                  key: ValueKey(files[index].entity.path),
+                                                  child: _FileRow(
+                                                    index: index,
+                                                    file: files[index],
+                                                    columnWidths: _columnWidths,
+                                                    isEditing: _editingFilePath == files[index].entity.path,
+                                                    isDragging: _draggingIndex != null,
+                                                    isDraggedItem: _draggingIndex == index,
+                                                    renameController: _renameController,
+                                                    renameFocusNode: _renameFocusNode,
+                                                    onStartEdit: (path, name) => _startEdit(path, name, provider),
+                                                    onEndEdit: () => setState(() { _editingFilePath = null; provider.setInlineRenaming(false); }),
+                                                    onShowMenu: (details, file) => _showRowContextMenu(context, details, file, provider, l10n),
+                                                  ),
                                                 ),
-                                              );
-                                            },
-                                            child: child,
-                                          );
-                                        },
-                                        itemBuilder: (context, index) => RepaintBoundary(
-                                          key: ValueKey(files[index].entity.path),
-                                          child: _FileRow(
-                                            index: index,
-                                            file: files[index],
-                                            columnWidths: _columnWidths,
-                                            isEditing: _editingFilePath == files[index].entity.path,
-                                            isDragging: _draggingIndex != null, // 追加
-                                            isDraggedItem: _draggingIndex == index, // 追加
-                                            renameController: _renameController,
-                                            renameFocusNode: _renameFocusNode,
-                                            onStartEdit: (path, name) {
-                                              setState(() { _editingFilePath = path; _renameController.text = name; });
-                                              provider.setInlineRenaming(true);
-                                              WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
-                                            },
-                                            onEndEdit: () {
-                                              setState(() { _editingFilePath = null; });
-                                              provider.setInlineRenaming(false);
-                                            },
+                                              ),
+                                            ),
+                                          const SizedBox(height: 500),
+                                        ],
+                                      ),
+                                    ),
+                                    if (files.isEmpty)
+                                      Positioned(
+                                        top: 100, left: 0,
+                                        child: IgnorePointer(
+                                          child: Container(
+                                            width: constraints.maxWidth,
+                                            alignment: Alignment.center,
+                                            child: Text(l10n.labelNoFiles, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                if (_dragStart != null && _dragUpdate != null)
-                                  Positioned.fill(
-                                    child: IgnorePointer(
-                                      child: CustomPaint(
-                                        painter: SelectionPainter(
-                                          start: Offset(_dragStart!.dx, _dragStart!.dy + _verticalController.offset),
-                                          update: Offset(_dragUpdate!.dx, _dragUpdate!.dy + _verticalController.offset),
-                                          color: Theme.of(context).colorScheme.primary,
+                                    if (_dragStart != null && _dragUpdate != null)
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: CustomPaint(
+                                            painter: SelectionPainter(
+                                              start: Offset(_dragStart!.dx, _dragStart!.dy - _verticalController.offset),
+                                              update: Offset(_dragUpdate!.dx, _dragUpdate!.dy - _verticalController.offset),
+                                              color: Theme.of(context).colorScheme.primary,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                              ],
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  void _updateSelection(Offset localPosition, List<FileModel> files, DirectoryProvider provider) {
-    if (_dragStart == null || _initialSelectionStates == null) return;
-    final rowH = provider.touchMode ? 50.0 : 34.0;
-    final startY = _dragStart!.dy + _verticalController.offset - 32.0; // Header offset
-    final currentY = localPosition.dy + _verticalController.offset - 32.0;
-    
-    final minIndex = ((startY < currentY ? startY : currentY) / rowH).floor().clamp(0, files.length - 1);
-    final maxIndex = ((startY > currentY ? startY : currentY) / rowH).floor().clamp(0, files.length - 1);
+  void _startEdit(String path, String name, DirectoryProvider provider) {
+    setState(() { _editingFilePath = path; _renameController.text = name; });
+    provider.setInlineRenaming(true);
+    WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
+  }
 
+  Widget _buildProxyDecorator(Widget child, int index, Animation<double> animation, DirectoryProvider provider, double rowH) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final selectedCount = provider.selectedFilesCount;
+        final isMultiMove = provider.currentFiles[index].isSelected && selectedCount > 1;
+        return Material(
+          elevation: 12.0, color: Colors.transparent,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              if (isMultiMove) ...[
+                Positioned(top: 8, left: 8, right: 8, bottom: -8, child: Container(height: rowH, decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4), borderRadius: BorderRadius.circular(8)))),
+                Positioned(top: 4, left: 4, right: 4, bottom: -4, child: Container(height: rowH, decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHigh.withOpacity(0.7), borderRadius: BorderRadius.circular(8)))),
+              ],
+              Container(decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(8)), child: child),
+              if (isMultiMove) Positioned(right: -12, top: -12, child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(20)), child: Text('$selectedCount', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)))),
+            ],
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+
+  void _updateSelection(double currentAbsY, List<FileModel> files, DirectoryProvider provider) {
+    if (_dragStart == null || _initialSelectionStates == null || files.isEmpty) return;
+    final rowH = provider.touchMode ? 50.0 : 34.0;
+    final startY = _dragStart!.dy;
+    int idx1 = (startY / rowH).floor();
+    int idx2 = (currentAbsY / rowH).floor();
+    final minIndex = (idx1 < idx2 ? idx1 : idx2).clamp(0, files.length - 1);
+    final maxIndex = (idx1 > idx2 ? idx1 : idx2).clamp(0, files.length - 1);
     provider.selectRange(minIndex, maxIndex, baseStates: _initialSelectionStates);
   }
 
@@ -354,13 +333,7 @@ class _FileListPanelState extends State<FileListPanel> {
           IconButton(icon: const Icon(Icons.arrow_forward), onPressed: provider.canGoForward ? provider.goForward : null),
           IconButton(icon: const Icon(Icons.arrow_upward), onPressed: provider.goUp),
           const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: _pathController,
-              decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10), border: OutlineInputBorder()),
-              onSubmitted: (val) => provider.setDirectory(io.Directory(val)),
-            ),
-          ),
+          Expanded(child: TextField(controller: _pathController, decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10), border: OutlineInputBorder()), onSubmitted: (val) => provider.setDirectory(io.Directory(val)))),
           const SizedBox(width: 8),
           IconButton(icon: const Icon(Icons.refresh), onPressed: provider.refresh),
         ],
@@ -372,22 +345,13 @@ class _FileListPanelState extends State<FileListPanel> {
     final files = provider.currentFiles;
     final selectedCount = provider.selectedFilesCount;
     final bool? allSelected = files.isEmpty ? false : (selectedCount == 0 ? false : (selectedCount == files.length ? true : null));
-
     return Container(
       height: 32,
       color: Theme.of(context).colorScheme.surfaceContainerHigh,
       child: Row(
         children: [
           const SizedBox(width: _widthDragHandle),
-          SizedBox(
-            width: _widthCheckbox,
-            child: Checkbox(
-              value: allSelected,
-              tristate: true,
-              onChanged: (val) => provider.selectAll(val ?? false),
-              visualDensity: VisualDensity.compact,
-            ),
-          ),
+          SizedBox(width: _widthCheckbox, child: Checkbox(value: allSelected, tristate: true, onChanged: (val) => provider.selectAll(val ?? false), visualDensity: VisualDensity.compact)),
           const SizedBox(width: 16),
           _buildHeaderCell(context, provider, l10n.labelColName, 0),
           _buildHeaderCell(context, provider, l10n.labelColNewName, 1),
@@ -404,52 +368,81 @@ class _FileListPanelState extends State<FileListPanel> {
   Widget _buildHeaderCell(BuildContext context, DirectoryProvider provider, String label, int index) {
     final isActive = provider.sortColumnIndex == index;
     final color = isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface;
-
     return SizedBox(
       width: _columnWidths[index]! + 16,
       child: Row(
         children: [
-          Expanded(
-            child: InkWell(
-              onTap: () => provider.sortFiles(index, isActive ? !provider.sortAscending : true),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: color),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (isActive)
-                    Icon(provider.sortAscending ? Icons.expand_less : Icons.expand_more, size: 14, color: color),
-                ],
-              ),
-            ),
-          ),
-          GestureDetector(
-            onHorizontalDragUpdate: (details) {
-              setState(() { _columnWidths[index] = (_columnWidths[index]! + details.delta.dx).clamp(40.0, 1000.0); });
-            },
-            child: MouseRegion(cursor: SystemMouseCursors.resizeColumn, child: Container(width: 4, height: 20, color: Colors.grey.withValues(alpha: 0.3))),
-          ),
+          Expanded(child: InkWell(onTap: () => provider.sortFiles(index, isActive ? !provider.sortAscending : true), child: Row(children: [Expanded(child: Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: color), overflow: TextOverflow.ellipsis)), if (isActive) Icon(provider.sortAscending ? Icons.expand_less : Icons.expand_more, size: 14, color: color)]))),
+          GestureDetector(onHorizontalDragUpdate: (details) => setState(() { _columnWidths[index] = (_columnWidths[index]! + details.delta.dx).clamp(40.0, 1000.0); }), child: MouseRegion(cursor: SystemMouseCursors.resizeColumn, child: Container(width: 4, height: 20, color: Colors.grey.withOpacity(0.3)))),
         ],
       ),
     );
   }
 
-  Future<void> _showDeleteConfirmDialog(BuildContext context, DirectoryProvider provider, AppLocalizations l10n) async {
-    final confirm = await showDialog<bool>(
+  Future<void> _showRowContextMenu(BuildContext context, TapDownDetails details, FileModel file, DirectoryProvider provider, AppLocalizations l10n) async {
+    if (!file.isSelected) provider.toggleSelection(file);
+    final result = await showMenu<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.labelDialogTrashTitle),
-        content: Text(l10n.labelDialogTrashMessage),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.labelDialogCancel)),
-          TextButton(onPressed: () => Navigator.pop(context, true), style: TextButton.styleFrom(foregroundColor: Colors.red), child: Text(l10n.labelDialogDelete)),
-        ],
-      ),
+      position: RelativeRect.fromRect(details.globalPosition & const Size(40, 40), Offset.zero & MediaQuery.of(context).size),
+      items: [
+        PopupMenuItem(value: 'up_folder', child: Text(l10n.labelCtxUpOneFolder)),
+        const PopupMenuDivider(),
+        PopupMenuItem(value: 'copy', child: Text(l10n.labelCtxCopyItems)),
+        PopupMenuItem(value: 'cut', child: Text(l10n.labelCtxCutItems)),
+        const PopupMenuDivider(),
+        PopupMenuItem(value: 'rename', child: Text(l10n.labelCtxRenameGeneral)),
+        PopupMenuItem(value: 'batch_rename', child: Text(l10n.labelCtxBatchRename)),
+        const PopupMenuDivider(),
+        PopupMenuItem(value: 'top', child: Text(l10n.labelCtxMoveToTop)),
+        PopupMenuItem(value: 'bottom', child: Text(l10n.labelCtxMoveToBottom)),
+        PopupMenuItem(value: 'delete', child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(l10n.labelCtxDeleteItems, style: const TextStyle(color: Colors.red)), const Icon(Icons.delete, color: Colors.red, size: 20)])),
+        const PopupMenuDivider(),
+        PopupMenuItem(value: 'properties', child: Text(l10n.labelCtxProperties)),
+      ],
     );
+    if (result == null) return;
+    switch (result) {
+      case 'copy': await provider.copySelection(); break;
+      case 'cut': await provider.cutSelection(); break;
+      case 'rename': _startEdit(file.entity.path, file.originalName, provider); break;
+      case 'batch_rename': await provider.executeRename(); break;
+      case 'top': provider.moveSelectedToTop(); break;
+      case 'bottom': provider.moveSelectedToBottom(); break;
+      case 'delete': _showDeleteConfirmDialog(context, provider, l10n); break;
+      case 'properties': PlatformUtils.showPropertiesDialog(context, file); break;
+      case 'up_folder': await provider.goUp(); break;
+    }
+  }
+
+  Future<void> _showBackgroundContextMenu(BuildContext context, TapDownDetails details, DirectoryProvider provider, AppLocalizations l10n) async {
+    final result = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(details.globalPosition & const Size(40, 40), Offset.zero & MediaQuery.of(context).size),
+      items: [
+        PopupMenuItem(value: 'up_folder', child: Text(l10n.labelCtxUpOneFolder)),
+        const PopupMenuDivider(),
+        PopupMenuItem(value: 'new_folder', child: Text(l10n.labelCtxCreateFolder)),
+        PopupMenuItem(value: 'paste', enabled: provider.canPaste, child: Text(l10n.labelCtxPasteItems)),
+        const PopupMenuDivider(),
+        PopupMenuItem(value: 'select_all', child: Text(l10n.labelSelectAll)),
+        PopupMenuItem(value: 'deselect_all', child: Text(l10n.labelDeselectAll)),
+        const PopupMenuDivider(),
+        PopupMenuItem(value: 'refresh', child: Text(l10n.labelCtxRefresh)),
+      ],
+    );
+    if (result == null) return;
+    switch (result) {
+      case 'new_folder': await provider.createNewFolder(); break;
+      case 'paste': await provider.pasteFromClipboard(); break;
+      case 'select_all': provider.selectAll(true); break;
+      case 'deselect_all': provider.selectAll(false); break;
+      case 'refresh': await provider.refresh(); break;
+      case 'up_folder': await provider.goUp(); break;
+    }
+  }
+
+  Future<void> _showDeleteConfirmDialog(BuildContext context, DirectoryProvider provider, AppLocalizations l10n) async {
+    final confirm = await showDialog<bool>(context: context, builder: (context) => AlertDialog(title: Text(l10n.labelDialogTrashTitle), content: Text(l10n.labelDialogTrashMessage), actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.labelDialogCancel)), TextButton(onPressed: () => Navigator.pop(context, true), style: TextButton.styleFrom(foregroundColor: Colors.red), child: Text(l10n.labelDialogDelete))]));
     if (confirm == true) await provider.deleteSelectedFiles();
   }
 }
@@ -459,12 +452,13 @@ class _FileRow extends StatelessWidget {
   final FileModel file;
   final Map<int, double> columnWidths;
   final bool isEditing;
-  final bool isDragging; // 追加
-  final bool isDraggedItem; // 追加
+  final bool isDragging;
+  final bool isDraggedItem;
   final TextEditingController renameController;
   final FocusNode renameFocusNode;
   final Function(String, String) onStartEdit;
   final VoidCallback onEndEdit;
+  final Function(TapDownDetails, FileModel) onShowMenu;
 
   const _FileRow({
     super.key,
@@ -472,12 +466,13 @@ class _FileRow extends StatelessWidget {
     required this.file,
     required this.columnWidths,
     required this.isEditing,
-    this.isDragging = false, // 追加
-    this.isDraggedItem = false, // 追加
+    this.isDragging = false,
+    this.isDraggedItem = false,
     required this.renameController,
     required this.renameFocusNode,
     required this.onStartEdit,
     required this.onEndEdit,
+    required this.onShowMenu,
   });
 
   @override
@@ -490,26 +485,17 @@ class _FileRow extends StatelessWidget {
           final rowH = provider.touchMode ? 50.0 : 34.0;
           final iconS = provider.touchMode ? 28.0 : 18.0;
           final isDir = file.entity is io.Directory;
-
-          // 現在移動中の他の選択項目をゴースト化（半透明）
           final isGhost = isDragging && file.isSelected && !isDraggedItem;
-
-          final baseStyle = TextStyle(
-            fontSize: provider.touchMode ? 15.0 : 12.0,
-            fontWeight: file.isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: file.isCut ? Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5) : null,
-          );
+          final baseStyle = TextStyle(fontSize: provider.touchMode ? 15.0 : 12.0, fontWeight: file.isSelected ? FontWeight.w600 : FontWeight.normal, color: file.isCut ? Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5) : null);
 
           return Opacity(
-            opacity: isGhost ? 0.3 : 1.0, // ゴースト表示
+            opacity: isGhost ? 0.3 : 1.0,
             child: InkWell(
               onTap: () => provider.toggleSelection(file),
+              onSecondaryTapDown: (details) => onShowMenu(details, file),
               child: Container(
                 height: rowH,
-                decoration: BoxDecoration(
-                  color: file.isSelected ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.4) : (index % 2 == 0 ? null : Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.3)),
-                  border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1), width: 0.5)),
-                ),
+                decoration: BoxDecoration(color: file.isSelected ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.4) : (index % 2 == 0 ? null : Theme.of(context).colorScheme.surfaceContainerLow.withOpacity(0.3)), border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1), width: 0.5))),
                 child: Row(
                   children: [
                     SizedBox(width: 32, child: ReorderableDragStartListener(index: index, child: const Icon(Icons.drag_indicator, size: 18, color: Colors.grey))),
@@ -517,15 +503,33 @@ class _FileRow extends StatelessWidget {
                     const SizedBox(width: 8),
                     _buildCell(0, isEditing 
                       ? TextField(controller: renameController, focusNode: renameFocusNode, autofocus: true, style: baseStyle, decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()), onSubmitted: (val) { provider.renameOneFile(file, val); onEndEdit(); }) 
-                      : Row(children: [
-                          GestureDetector(onDoubleTap: () { if (isDir) provider.setDirectory(file.entity as io.Directory); else PlatformUtils.openFile(file.entity.path); }, child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: iconS)),
-                          const SizedBox(width: 8),
-                          Expanded(child: GestureDetector(onDoubleTap: () => onStartEdit(file.entity.path, file.originalName), child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle))),
-                        ]), baseStyle),
-                    _buildCell(1, Row(children: [
-                      Expanded(child: RichText(text: RenameEngine.buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)),
-                      if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Icon(Icons.error_outline, color: Colors.red, size: 16)),
-                    ]), baseStyle),
+                      : Row(
+                          children: [
+                            GestureDetector(
+                              onDoubleTap: () {
+                                if (isDir) {
+                                  provider.setDirectory(io.Directory(file.entity.path));
+                                } else {
+                                  PlatformUtils.openFile(file.entity.path);
+                                }
+                              },
+                              child: Icon(
+                                isDir ? Icons.folder : Icons.insert_drive_file,
+                                color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary,
+                                size: iconS,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: GestureDetector(
+                                onDoubleTap: () => onStartEdit(file.entity.path, file.originalName),
+                                child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle),
+                              ),
+                            ),
+                          ],
+                        ),
+                      baseStyle),
+                    _buildCell(1, Row(children: [Expanded(child: RichText(text: RenameEngine.buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) const Icon(Icons.error_outline, color: Colors.red, size: 16)]), baseStyle),
                     _buildCell(2, Text(file.size, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
                     _buildCell(3, Text(file.displayRelativePath, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)), baseStyle),
                     _buildCell(4, Text(file.fileType, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
@@ -541,27 +545,18 @@ class _FileRow extends StatelessWidget {
     );
   }
 
-  Widget _buildCell(int colIndex, Widget content, TextStyle style) {
-    return SizedBox(width: columnWidths[colIndex]!, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8.0), child: content));
-  }
+  Widget _buildCell(int colIndex, Widget content, TextStyle style) => SizedBox(width: columnWidths[colIndex]!, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8.0), child: content));
 }
 
 class SelectionPainter extends CustomPainter {
-  final Offset start;
-  final Offset update;
-  final Color color;
-
+  final Offset start; final Offset update; final Color color;
   SelectionPainter({required this.start, required this.update, required this.color});
-
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Rect.fromPoints(start, update);
-    final paint = Paint()..color = color.withValues(alpha: 0.2)..style = PaintingStyle.fill;
-    canvas.drawRect(rect, paint);
-    final borderPaint = Paint()..color = color..strokeWidth = 1.0..style = PaintingStyle.stroke;
-    canvas.drawRect(rect, borderPaint);
+    canvas.drawRect(rect, Paint()..color = color.withOpacity(0.2)..style = PaintingStyle.fill);
+    canvas.drawRect(rect, Paint()..color = color..strokeWidth = 1.0..style = PaintingStyle.stroke);
   }
-
   @override
   bool shouldRepaint(SelectionPainter oldDelegate) => oldDelegate.start != start || oldDelegate.update != update;
 }

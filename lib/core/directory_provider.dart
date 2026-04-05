@@ -600,7 +600,27 @@ class DirectoryProvider extends ChangeNotifier {
     _updatePreviews(); notifyListeners();
   }
 
-  void goUp() { if (_currentDirectory != null) { final p = _currentDirectory!.parent; if (p.path != _currentDirectory!.path) setDirectory(p); } }
+  void moveSelectedToTop() {
+    final s = _currentFiles.where((f) => f.isSelected).toList();
+    final u = _currentFiles.where((f) => !f.isSelected).toList();
+    if (s.isNotEmpty) {
+      _currentFiles = [...s, ...u];
+      _updatePreviews();
+      notifyListeners();
+    }
+  }
+
+  void moveSelectedToBottom() {
+    final s = _currentFiles.where((f) => f.isSelected).toList();
+    final u = _currentFiles.where((f) => !f.isSelected).toList();
+    if (s.isNotEmpty) {
+      _currentFiles = [...u, ...s];
+      _updatePreviews();
+      notifyListeners();
+    }
+  }
+
+  Future<void> goUp() async { if (_currentDirectory != null) { final p = _currentDirectory!.parent; if (p.path != _currentDirectory!.path) await setDirectory(p); } }
   void resetSettings() {
     _appTheme = AppThemeType.light; _menuLabelType = MenuLabelType.standard; _seedColor = Colors.green; _isCompactMode = false; _initialDirectoryMode = InitialDirectoryMode.lastUsed; _fixedInitialDirectory = ''; _renameMode = RenameMode.numbering; _numberingMode = NumberingMode.stringNumber; _startNumber = 1; _insertIndex = 1; _digits = 3; _findText = ''; _replaceText = ''; _appendText = ''; _deleteToText = ''; _extensionToLowerCase = true; _useRegex = false; _saveSequenceNumber = false; _dateFormat = 'yyyyMMdd_'; _datePosition = DatePosition.front;
     final now = DateTime.now(); _etcTimestamp = '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}'; _etcAttribReadOnly = false; _etcAttribHidden = false; _etcAttribArchive = false; _etcAttribSystem = false; _showFolders = true; _hideSystemFiles = true; _recursiveSearch = false; _showPreview = true; _validationType = ValidationType.auto; _resetCount++; _applyFilters(); _saveState(); notifyListeners();
