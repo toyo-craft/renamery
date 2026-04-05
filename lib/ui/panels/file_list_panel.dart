@@ -226,12 +226,26 @@ class _FileListPanelState extends State<FileListPanel> {
   }
 
   Widget _buildHeader(BuildContext context, DirectoryProvider provider, AppLocalizations l10n) {
+    final files = provider.currentFiles;
+    final selectedCount = provider.selectedFilesCount;
+    final bool? allSelected = files.isEmpty ? false : (selectedCount == 0 ? false : (selectedCount == files.length ? true : null));
+
     return Container(
       height: 32,
       color: Theme.of(context).colorScheme.surfaceContainerHigh,
       child: Row(
         children: [
-          const SizedBox(width: _widthDragHandle + _widthCheckbox + 16),
+          const SizedBox(width: _widthDragHandle),
+          SizedBox(
+            width: _widthCheckbox,
+            child: Checkbox(
+              value: allSelected,
+              tristate: true,
+              onChanged: (val) => provider.selectAll(val ?? false),
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+          const SizedBox(width: 16),
           _buildHeaderCell(l10n.labelColName, 0),
           _buildHeaderCell(l10n.labelColNewName, 1),
           _buildHeaderCell(l10n.labelColSize, 2),
