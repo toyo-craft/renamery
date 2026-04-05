@@ -294,6 +294,7 @@ class _DirectoryTile extends StatefulWidget {
     this.isRoot = false,
     this.isQuickAccess = false,
     this.contextRoot,
+    this.isSuppressingAutoExpand = false,
   });
 
   @override
