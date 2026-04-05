@@ -148,7 +148,94 @@ class _FileListPanelState extends State<FileListPanel> {
                                         key: _reorderableListKey,
                                         itemCount: files.length,
                                         onReorder: provider.reorderFiles,
+                                        onReorderStart: (index) => setState(() => _draggingIndex = index),
+                                        onReorderEnd: (_) => setState(() => _draggingIndex = null),
                                         buildDefaultDragHandles: false,
+                                        proxyDecorator: (child, index, animation) {
+                                          return AnimatedBuilder(
+                                            animation: animation,
+                                            builder: (context, child) {
+                                              final selectedCount = provider.selectedFilesCount;
+                                              final isMultiMove = files[index].isSelected && selectedCount > 1;
+                                              final rowH = provider.touchMode ? 50.0 : 34.0;
+
+                                              return Material(
+                                                elevation: 12.0,
+                                                color: Colors.transparent,
+                                                shadowColor: Colors.black.withValues(alpha: 0.4),
+                                                child: Stack(
+                                                  clipBehavior: Clip.none,
+                                                  children: [
+                                                    if (isMultiMove) ...[
+                                                      // 背後レイヤー 2
+                                                      Positioned(
+                                                        top: 8, left: 8, right: 8, bottom: -8,
+                                                        child: Container(
+                                                          height: rowH,
+                                                          decoration: BoxDecoration(
+                                                            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                            border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      // 背後レイヤー 1
+                                                      Positioned(
+                                                        top: 4, left: 4, right: 4, bottom: -4,
+                                                        child: Container(
+                                                          height: rowH,
+                                                          decoration: BoxDecoration(
+                                                            color: Theme.of(context).colorScheme.surfaceContainerHigh.withValues(alpha: 0.7),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                            border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.4)),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                    // メインの行
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Theme.of(context).colorScheme.surface,
+                                                        borderRadius: BorderRadius.circular(8),
+                                                        boxShadow: [
+                                                          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4)),
+                                                        ],
+                                                      ),
+                                                      child: child,
+                                                    ),
+                                                    if (isMultiMove)
+                                                      Positioned(
+                                                        right: -12,
+                                                        top: -12,
+                                                        child: Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                          decoration: BoxDecoration(
+                                                            color: Theme.of(context).colorScheme.primary,
+                                                            borderRadius: BorderRadius.circular(20),
+                                                            boxShadow: [
+                                                              BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 3)),
+                                                            ],
+                                                          ),
+                                                          child: Row(
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              const Icon(Icons.copy_all, color: Colors.white, size: 14),
+                                                              const SizedBox(width: 4),
+                                                              Text(
+                                                                '$selectedCount',
+                                                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                            child: child,
+                                          );
+                                        },
                                         itemBuilder: (context, index) => RepaintBoundary(
                                           key: ValueKey(files[index].entity.path),
                                           child: _FileRow(
@@ -156,6 +243,8 @@ class _FileListPanelState extends State<FileListPanel> {
                                             file: files[index],
                                             columnWidths: _columnWidths,
                                             isEditing: _editingFilePath == files[index].entity.path,
+                                            isDragging: _draggingIndex != null, // 追加
+                                            isDraggedItem: _draggingIndex == index, // 追加
                                             renameController: _renameController,
                                             renameFocusNode: _renameFocusNode,
                                             onStartEdit: (path, name) {
@@ -328,6 +417,8 @@ class _FileRow extends StatelessWidget {
   final FileModel file;
   final Map<int, double> columnWidths;
   final bool isEditing;
+  final bool isDragging; // 追加
+  final bool isDraggedItem; // 追加
   final TextEditingController renameController;
   final FocusNode renameFocusNode;
   final Function(String, String) onStartEdit;
@@ -339,6 +430,8 @@ class _FileRow extends StatelessWidget {
     required this.file,
     required this.columnWidths,
     required this.isEditing,
+    this.isDragging = false, // 追加
+    this.isDraggedItem = false, // 追加
     required this.renameController,
     required this.renameFocusNode,
     required this.onStartEdit,
@@ -356,42 +449,48 @@ class _FileRow extends StatelessWidget {
           final iconS = provider.touchMode ? 28.0 : 18.0;
           final isDir = file.entity is io.Directory;
 
+          // 現在移動中の他の選択項目をゴースト化（半透明）
+          final isGhost = isDragging && file.isSelected && !isDraggedItem;
+
           final baseStyle = TextStyle(
             fontSize: provider.touchMode ? 15.0 : 12.0,
             fontWeight: file.isSelected ? FontWeight.w600 : FontWeight.normal,
             color: file.isCut ? Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5) : null,
           );
 
-          return InkWell(
-            onTap: () => provider.toggleSelection(file),
-            child: Container(
-              height: rowH,
-              decoration: BoxDecoration(
-                color: file.isSelected ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.4) : (index % 2 == 0 ? null : Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.3)),
-                border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1), width: 0.5)),
-              ),
-              child: Row(
-                children: [
-                  SizedBox(width: 32, child: ReorderableDragStartListener(index: index, child: const Icon(Icons.drag_indicator, size: 18, color: Colors.grey))),
-                  SizedBox(width: 32, child: Checkbox(value: file.isSelected, onChanged: (_) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
-                  const SizedBox(width: 8),
-                  _buildCell(0, isEditing 
-                    ? TextField(controller: renameController, focusNode: renameFocusNode, autofocus: true, style: baseStyle, decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()), onSubmitted: (val) { provider.renameOneFile(file, val); onEndEdit(); }) 
-                    : Row(children: [
-                        GestureDetector(onDoubleTap: () { if (isDir) provider.setDirectory(file.entity as io.Directory); else PlatformUtils.openFile(file.entity.path); }, child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: iconS)),
-                        const SizedBox(width: 8),
-                        Expanded(child: GestureDetector(onDoubleTap: () => onStartEdit(file.entity.path, file.originalName), child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle))),
-                      ]), baseStyle),
-                  _buildCell(1, Row(children: [
-                    Expanded(child: RichText(text: RenameEngine.buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)),
-                    if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Icon(Icons.error_outline, color: Colors.red, size: 16)),
-                  ]), baseStyle),
-                  _buildCell(2, Text(file.size, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
-                  _buildCell(3, Text(file.displayRelativePath, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)), baseStyle),
-                  _buildCell(4, Text(file.fileType, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
-                  _buildCell(5, Text(file.dateModified, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
-                  _buildCell(6, Text(file.attributes, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)), baseStyle),
-                ],
+          return Opacity(
+            opacity: isGhost ? 0.3 : 1.0, // ゴースト表示
+            child: InkWell(
+              onTap: () => provider.toggleSelection(file),
+              child: Container(
+                height: rowH,
+                decoration: BoxDecoration(
+                  color: file.isSelected ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.4) : (index % 2 == 0 ? null : Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.3)),
+                  border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1), width: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: 32, child: ReorderableDragStartListener(index: index, child: const Icon(Icons.drag_indicator, size: 18, color: Colors.grey))),
+                    SizedBox(width: 32, child: Checkbox(value: file.isSelected, onChanged: (_) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
+                    const SizedBox(width: 8),
+                    _buildCell(0, isEditing 
+                      ? TextField(controller: renameController, focusNode: renameFocusNode, autofocus: true, style: baseStyle, decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()), onSubmitted: (val) { provider.renameOneFile(file, val); onEndEdit(); }) 
+                      : Row(children: [
+                          GestureDetector(onDoubleTap: () { if (isDir) provider.setDirectory(file.entity as io.Directory); else PlatformUtils.openFile(file.entity.path); }, child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: iconS)),
+                          const SizedBox(width: 8),
+                          Expanded(child: GestureDetector(onDoubleTap: () => onStartEdit(file.entity.path, file.originalName), child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle))),
+                        ]), baseStyle),
+                    _buildCell(1, Row(children: [
+                      Expanded(child: RichText(text: RenameEngine.buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)),
+                      if (file.hasValidationError) Tooltip(message: file.validationErrorMessage ?? 'Error', child: const Icon(Icons.error_outline, color: Colors.red, size: 16)),
+                    ]), baseStyle),
+                    _buildCell(2, Text(file.size, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
+                    _buildCell(3, Text(file.displayRelativePath, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)), baseStyle),
+                    _buildCell(4, Text(file.fileType, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
+                    _buildCell(5, Text(file.dateModified, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
+                    _buildCell(6, Text(file.attributes, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)), baseStyle),
+                  ],
+                ),
               ),
             ),
           );
