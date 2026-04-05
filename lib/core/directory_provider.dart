@@ -184,7 +184,8 @@ class DirectoryProvider extends ChangeNotifier {
   void setTextPreviewFontSize(double size) { _textPreviewFontSize = size.clamp(8.0, 40.0); notifyListeners(); }
   AppThemeType _appTheme = AppThemeType.light; MenuLabelType _menuLabelType = MenuLabelType.standard;
   Color _seedColor = Colors.green; String _dateFormat = 'yyyyMMdd_'; DatePosition _datePosition = DatePosition.front;
-  String _etcTimestamp = ''; bool _etcAttribReadOnly = false; bool _etcAttribHidden = false; bool _etcAttribArchive = false; bool _etcAttribSystem = false;
+  String _etcTimestamp = ''; bool _etcAttribReadOnly = false; bool _etcAttribHidden = false;
+  bool _etcAttribArchive = false; bool _etcAttribSystem = false;
   List<FileModel> _allFiles = []; Directory? get currentDirectory => _currentDirectory;
   List<FileModel> get currentFiles => _currentFiles; int get allFilesCount => _allFiles.length;
   bool get isLoading => _isLoading; bool get canUndo => _undoManager.canUndo; int get undoCount => _undoManager.undoCount;
@@ -537,25 +538,68 @@ class DirectoryProvider extends ChangeNotifier {
     _saveState(); await checkClipboard(); notifyListeners();
 
     try {
-      // 究極の高速化: Isolate でスキャンからデータパッキングまで完結させる
-      final results = await compute(RenameEngine.computeScan, {'rootPath': directory.path, 'recursive': _recursiveSearch});
-      
-      _allFiles = results.map((data) {
-        final f = FileModel(entity: data['isDir'] ? Directory(data['path']) : File(data['path']));
-        f.setDisplayRelativePath(data['rel']); return f;
-      }).toList();
+      if (!kIsWeb && Platform.isWindows) {
+        // 真・究極の高速化: バイト列スキャン & Isolate デコード
+        // これが feature/performance-debug ブランチの「魔法」の正体
+        final List<int> allBytes = [];
+        final process = await Process.start('cmd', ['/c', 'dir', '/b', _recursiveSearch ? '/s' : '', '/a'], workingDirectory: directory.path);
+        
+        _scanSubscription = process.stdout.listen((bytes) {
+          allBytes.addAll(bytes);
+          // 読み込み中も「進行中」であることを示すために、少しずつ処理して表示
+          if (allBytes.length > 1024 * 50) { // 50KBごとに中間処理
+            _processBytesIncremental(allBytes, directory.path);
+          }
+        }, onDone: () async {
+          // 最後に一括で Isolate へ投げる (究極の整合性)
+          final results = await compute(RenameEngine.computeScanBytes, {
+            'bytes': allBytes,
+            'rootPath': directory.path,
+            'recursive': _recursiveSearch,
+          });
+          
+          _allFiles = results.map((data) {
+            final f = FileModel(entity: File(data['path'])); // Type は表示時に Lazy 判別
+            f.setDisplayRelativePath(data['rel']); return f;
+          }).toList();
 
-      // 一括でフィルタ適用（100件ずつの逐次通知で体感速度を維持）
-      final List<FileModel> filtered = [];
-      for (int i = 0; i < _allFiles.length; i++) {
-        final f = _allFiles[i];
-        if (_shouldShowFile(f)) {
-          filtered.add(f);
-          if (filtered.length % 100 == 0) { _currentFiles = List.from(filtered); notifyListeners(); }
-        }
+          _applyFilters();
+          _isLoading = false;
+          _scanSubscription = null;
+          notifyListeners();
+        });
+      } else {
+        // Fallback for non-windows
+        final results = await compute(RenameEngine.computeScan, {'rootPath': directory.path, 'recursive': _recursiveSearch});
+        _allFiles = results.map((data) {
+          final f = FileModel(entity: data['isDir'] ? Directory(data['path']) : File(data['path']));
+          f.setDisplayRelativePath(data['rel']); return f;
+        }).toList();
+        _applyFilters(); _isLoading = false; notifyListeners();
       }
-      _currentFiles = filtered; _isLoading = false; notifyListeners();
     } catch (e) { _allFiles = []; _currentFiles = []; _isLoading = false; notifyListeners(); }
+  }
+
+  void _processBytesIncremental(List<int> bytes, String rootPath) {
+    // 中間表示用: メインスレッドで軽くデコードしてフィルタを通す
+    try {
+      final String partial = systemEncoding.decode(bytes);
+      final lines = partial.split('\r\n');
+      if (lines.length < 2) return;
+      
+      final List<FileModel> increment = [];
+      for (int i = 0; i < lines.length - 1; i++) {
+        final line = lines[i]; if (line.isEmpty) continue;
+        final fullPath = _recursiveSearch ? line : p.join(rootPath, line);
+        final f = FileModel(entity: File(fullPath));
+        if (_shouldShowFile(f)) increment.add(f);
+      }
+      
+      // 重複を避けつつ追加
+      final Set<String> existing = _currentFiles.map((f) => f.entity.path).toSet();
+      _currentFiles.addAll(increment.where((f) => !existing.contains(f.entity.path)));
+      notifyListeners();
+    } catch (_) {}
   }
 
   int _navTreeResetTick = 0; int get navTreeResetTick => _navTreeResetTick;

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
@@ -23,32 +24,46 @@ enum CaseConversion { none, upper, lower, capitalize }
 enum ValidationType { auto, windows, mac, linux, ios, android }
 
 class RenameEngine {
-  /// 超高速スキャン用の Isolate 関数
+  /// 究極の高速化: バイト列から直接パッキングする Isolate 関数
+  /// メインスレッドでの文字列生成負荷を排除
+  static List<Map<String, dynamic>> computeScanBytes(Map<String, dynamic> params) {
+    final List<int> stdoutBytes = params['bytes'];
+    final String rootPath = params['rootPath'];
+    final bool recursive = params['recursive'];
+    final List<Map<String, dynamic>> results = [];
+    
+    // Isolate 内でデコードを実行
+    final output = systemEncoding.decode(stdoutBytes);
+    final lines = output.split('\r\n'); // Windows cmd の改行
+
+    for (var line in lines) {
+      if (line.isEmpty) continue;
+      final fullPath = recursive ? line : p.join(rootPath, line);
+      
+      // I/O を最小化するため、Isolate 内では存在確認程度に留める
+      // 型（フォルダかファイルか）は後ほど Lazy に判別するか、パス文字列から推測
+      results.add({
+        'path': fullPath,
+        'name': p.basename(fullPath),
+        'rel': recursive ? (p.dirname(fullPath).length > rootPath.length ? p.dirname(fullPath).substring(rootPath.length).replaceFirst(RegExp(r'^[\\/]+'), '') : '') : '',
+      });
+    }
+    return results;
+  }
+
   static List<Map<String, dynamic>> computeScan(Map<String, dynamic> params) {
     final String rootPath = params['rootPath'];
     final bool recursive = params['recursive'];
     final List<Map<String, dynamic>> results = [];
-    final dir = Directory(rootPath);
-
     try {
-      final entities = dir.listSync(recursive: recursive, followLinks: false);
+      final entities = Directory(rootPath).listSync(recursive: recursive, followLinks: false);
       for (final entity in entities) {
         final path = entity.path;
-        final name = path.split(Platform.isWindows ? '\\' : '/').last;
-        
-        String rel = '';
-        if (recursive && path.length > rootPath.length) {
-          rel = path.substring(rootPath.length).replaceFirst(RegExp(r'^[\\/]+'), '');
-          // dirname
-          final lastSep = rel.lastIndexOf(Platform.isWindows ? '\\' : '/');
-          rel = lastSep == -1 ? '' : rel.substring(0, lastSep);
-        }
-
         results.add({
           'path': path,
-          'name': name,
+          'name': p.basename(path),
           'isDir': entity is Directory,
-          'rel': rel,
+          'rel': recursive ? (p.dirname(path).length > rootPath.length ? p.dirname(path).substring(rootPath.length).replaceFirst(RegExp(r'^[\\/]+'), '') : '') : '',
         });
       }
     } catch (_) {}
