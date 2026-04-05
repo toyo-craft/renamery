@@ -202,43 +202,57 @@ class _FileListPanelState extends State<FileListPanel> {
                                         _stopAutoScroll();
                                         setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; });
                                       },
-                                      child: ListView(
-                                        controller: _verticalController,
-                                        padding: EdgeInsets.zero,
-                                        physics: const AlwaysScrollableScrollPhysics(),
-                                        children: [
-                                          if (files.isNotEmpty)
-                                            SizedBox(
-                                              height: files.length * rowHeight,
-                                              child: ReorderableListView.builder(
-                                                key: _reorderableListKey,
-                                                itemCount: files.length,
-                                                onReorder: provider.reorderFiles,
-                                                onReorderStart: (index) => setState(() => _draggingIndex = index),
-                                                onReorderEnd: (_) => setState(() => _draggingIndex = null),
-                                                buildDefaultDragHandles: false,
-                                                proxyDecorator: (child, index, animation) => _buildProxyDecorator(child, index, animation, provider, rowHeight),
-                                                itemBuilder: (context, index) => RepaintBoundary(
-                                                  key: ValueKey(files[index].entity.path),
-                                                  child: _FileRow(
-                                                    index: index,
-                                                    file: files[index],
-                                                    columnWidths: _columnWidths,
-                                                    isEditing: _editingFilePath == files[index].entity.path,
-                                                    isDragging: _draggingIndex != null,
-                                                    isDraggedItem: _draggingIndex == index,
-                                                    renameController: _renameController,
-                                                    renameFocusNode: _renameFocusNode,
-                                                    onStartEdit: (path, name) => _startEdit(path, name, provider),
-                                                    onEndEdit: () => setState(() { _editingFilePath = null; provider.setInlineRenaming(false); }),
-                                                    onShowMenu: (details, file) => _showRowContextMenu(context, details, file, provider, l10n),
+                                      child: NotificationListener<ScrollNotification>(
+                                        onNotification: (notification) {
+                                          if (notification is ScrollUpdateNotification || notification is ScrollEndNotification) {
+                                            final offset = _verticalController.offset;
+                                            final viewport = constraints.maxHeight;
+                                            // 表示範囲のインデックスを算出
+                                            final start = (offset / rowHeight).floor();
+                                            final end = ((offset + viewport) / rowHeight).ceil();
+                                            provider.updateVisibleRange(start, end);
+                                          }
+                                          return false;
+                                        },
+                                        child: ListView(
+                                          controller: _verticalController,
+                                          padding: EdgeInsets.zero,
+                                          physics: const AlwaysScrollableScrollPhysics(),
+                                          children: [
+                                            if (files.isNotEmpty)
+                                              SizedBox(
+                                                height: files.length * rowHeight,
+                                                child: ReorderableListView.builder(
+                                                  key: _reorderableListKey,
+                                                  itemCount: files.length,
+                                                  onReorder: provider.reorderFiles,
+                                                  onReorderStart: (index) => setState(() => _draggingIndex = index),
+                                                  onReorderEnd: (_) => setState(() => _draggingIndex = null),
+                                                  buildDefaultDragHandles: false,
+                                                  proxyDecorator: (child, index, animation) => _buildProxyDecorator(child, index, animation, provider, rowHeight),
+                                                  itemBuilder: (context, index) => RepaintBoundary(
+                                                    key: ValueKey(files[index].entity.path),
+                                                    child: _FileRow(
+                                                      index: index,
+                                                      file: files[index],
+                                                      columnWidths: _columnWidths,
+                                                      isEditing: _editingFilePath == files[index].entity.path,
+                                                      isDragging: _draggingIndex != null,
+                                                      isDraggedItem: _draggingIndex == index,
+                                                      renameController: _renameController,
+                                                      renameFocusNode: _renameFocusNode,
+                                                      onStartEdit: (path, name) => _startEdit(path, name, provider),
+                                                      onEndEdit: () => setState(() { _editingFilePath = null; provider.setInlineRenaming(false); }),
+                                                      onShowMenu: (details, file) => _showRowContextMenu(context, details, file, provider, l10n),
+                                                    ),
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                          const SizedBox(height: 500),
-                                        ],
+                                            const SizedBox(height: 500),
+                                          ],
+                                        ),
                                       ),
+
                                     ),
                                     if (files.isEmpty)
                                       Positioned(

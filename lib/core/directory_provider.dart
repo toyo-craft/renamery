@@ -411,28 +411,49 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   int _previewVersion = 0;
-  bool _isProcessingPreview = false; // 現在計算中かどうかのロック
-  bool _needsRetryPreview = false;   // 計算中に次の要求が来たか
+  bool _isProcessingPreview = false;
+  bool _needsRetryPreview = false;
+
+  // 仮想化計算用の表示範囲
+  int _visibleStartIndex = 0;
+  int _visibleEndIndex = 100; // 初期値
+
+  void updateVisibleRange(int start, int end) {
+    if (_visibleStartIndex != start || _visibleEndIndex != end) {
+      _visibleStartIndex = start;
+      _visibleEndIndex = end;
+      // 範囲が変わったらプレビューを更新（短いデバウンス）
+      _updatePreviewsDebounced();
+    }
+  }
 
   Future<void> _updatePreviews() async {
     if (_currentFiles.isEmpty) return;
-
-    // すでに計算中の場合は、完了後に再実行する予約だけして戻る
-    if (_isProcessingPreview) {
-      _needsRetryPreview = true;
-      return;
-    }
+    if (_isProcessingPreview) { _needsRetryPreview = true; return; }
 
     _isProcessingPreview = true;
     _needsRetryPreview = false;
 
     try {
       final currentVersion = ++_previewVersion;
+      
+      // 全件ではなく、表示範囲（＋バッファ）内の選択済みファイルのみを計算対象にする
+      final buffer = 20; // 上下に20件のバッファを持たせる
+      final start = (_visibleStartIndex - buffer).clamp(0, _currentFiles.length);
+      final end = (_visibleEndIndex + buffer).clamp(0, _currentFiles.length);
+
       List<FileModel> targets = [];
-      for (var f in _currentFiles) {
-        if (f.isSelected) targets.add(f);
-        f.setNewName(f.originalName, notify: false);
-        f.setValidationError(null, notify: false);
+      // 表示範囲内のファイルを収集
+      for (int i = 0; i < _currentFiles.length; i++) {
+        final f = _currentFiles[i];
+        if (i >= start && i < end) {
+          if (f.isSelected) targets.add(f);
+        } else {
+          // 範囲外のプレビューは一旦リセット（または維持）
+          // 重い計算は行わず、元の名前に戻しておく
+          f.setNewName(f.originalName, notify: false);
+          f.setValidationError(null, notify: false);
+        }
       }
 
       if (targets.isEmpty) {
