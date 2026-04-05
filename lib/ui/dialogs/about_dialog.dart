@@ -298,7 +298,7 @@ class AboutAppDialog extends StatelessWidget {
   Future<void> _launchUrl(String url) async {
     try {
       if (Platform.isAndroid) {
-        final channel = MethodChannel('jp.toyocraft.renamery/launcher');
+        const channel = MethodChannel('jp.toyocraft.renamery/launcher');
         await channel.invokeMethod('launchUrl', {'url': url});
       } else {
         final Uri uri = Uri.parse(url);

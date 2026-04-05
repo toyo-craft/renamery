@@ -78,8 +78,9 @@ class RenameEngine {
 
     if (mode == RenameMode.deleteStart || mode == RenameMode.deleteEnd || mode == RenameMode.deleteFrom) {
       int delStart = 0; int delCount = digits ?? 0;
-      if (mode == RenameMode.deleteStart) delStart = 0;
-      else if (mode == RenameMode.deleteEnd) delStart = oldText.length - delCount;
+      if (mode == RenameMode.deleteStart) {
+        delStart = 0;
+      } else if (mode == RenameMode.deleteEnd) delStart = oldText.length - delCount;
       else if (mode == RenameMode.deleteFrom) delStart = (startNumber ?? 1) - 1;
       delStart = delStart.clamp(0, oldText.length);
       int delEnd = (delStart + delCount).clamp(0, oldText.length);
@@ -94,9 +95,13 @@ class RenameEngine {
     }
 
     int prefixLen = 0;
-    while (prefixLen < oldText.length && prefixLen < newText.length && oldText[prefixLen] == newText[prefixLen]) prefixLen++;
+    while (prefixLen < oldText.length && prefixLen < newText.length && oldText[prefixLen] == newText[prefixLen]) {
+      prefixLen++;
+    }
     int suffixLen = 0;
-    while (suffixLen < oldText.length - prefixLen && suffixLen < newText.length - prefixLen && oldText[oldText.length - 1 - suffixLen] == newText[newText.length - 1 - suffixLen]) suffixLen++;
+    while (suffixLen < oldText.length - prefixLen && suffixLen < newText.length - prefixLen && oldText[oldText.length - 1 - suffixLen] == newText[newText.length - 1 - suffixLen]) {
+      suffixLen++;
+    }
     final prefix = oldText.substring(0, prefixLen);
     final deleted = oldText.substring(prefixLen, oldText.length - suffixLen);
     final added = newText.substring(prefixLen, newText.length - suffixLen);
@@ -211,7 +216,9 @@ class RenameEngine {
                   });
                 });
               } catch (_) {}
-            } else newBaseName = originalBaseName.replaceAll(findText, replacement);
+            } else {
+              newBaseName = originalBaseName.replaceAll(findText, replacement);
+            }
           }
           break;
         case RenameMode.append: if (appendText != null) newBaseName = '$originalBaseName$appendText'; break;
@@ -228,7 +235,9 @@ class RenameEngine {
           if (renameMap.containsKey(originalName)) {
             String mapped = renameMap[originalName]!;
             if (p.extension(mapped).isNotEmpty) { newBaseName = p.basenameWithoutExtension(mapped); extension = p.extension(mapped); }
-            else newBaseName = mapped;
+            else {
+              newBaseName = mapped;
+            }
           } else if (renameMap.containsKey(originalBaseName)) newBaseName = renameMap[originalBaseName]!;
           break;
         default: break;
@@ -285,15 +294,17 @@ class RenameEngine {
         case ValidationType.mac: case ValidationType.ios: invalidChars = RegExp(r'[:/]'); break;
         case ValidationType.linux: case ValidationType.android: invalidChars = RegExp(r'[/]'); break;
         case ValidationType.auto:
-          if (isWindows) invalidChars = RegExp(r'[\\/:*?"<>|]');
-          else if (isMacOS) invalidChars = RegExp(r'[:/]');
+          if (isWindows) {
+            invalidChars = RegExp(r'[\\/:*?"<>|]');
+          } else if (isMacOS) invalidChars = RegExp(r'[:/]');
           else invalidChars = RegExp(r'[/]');
           break;
       }
 
       String? error;
-      if (invalidChars.hasMatch(newName)) error = 'ファイル名に使用できない文字が含まれています';
-      else if (RegExp(r'[\x00-\x1f]').hasMatch(newName)) error = '制御文字が含まれています';
+      if (invalidChars.hasMatch(newName)) {
+        error = 'ファイル名に使用できない文字が含まれています';
+      } else if (RegExp(r'[\x00-\x1f]').hasMatch(newName)) error = '制御文字が含まれています';
       else if (newName.trim().isEmpty || newName == '.') error = 'ファイル名が空です';
       results.add({'newName': newName, 'error': error});
     }
@@ -307,13 +318,17 @@ class JpTextConverter {
   static const Map<String, String> _halfToFullMap = {'ｶﾞ': 'ガ','ｷﾞ': 'ギ','ｸﾞ': 'グ','ｹﾞ': 'ゲ','ｺﾞ': 'ゴ','ｻﾞ': 'ザ','ｼﾞ': 'ジ','ｽﾞ': 'ズ','ｾﾞ': 'ゼ','ｿﾞ': 'ゾ','ﾀﾞ': 'ダ','ﾁﾞ': 'ヂ','ﾂﾞ': 'ヅ','ﾃﾞ': 'デ','ﾄﾞ': 'ド','ﾊﾞ': 'バ','ﾋﾞ': 'ビ','ﾌﾞ': 'ブ','ﾍﾞ': 'ベ','ﾎﾞ': 'ボ','ﾊﾟ': 'パ','ﾋﾟ': 'ピ','ﾌﾟ': 'プ','ﾍﾟ': 'ペ','ﾎﾟ': 'ポ','ｳﾞ': 'ヴ'};
   static String toFullWidth(String text) {
     String result = text; _halfToFullMap.forEach((k, v) => result = result.replaceAll(k, v));
-    for (int i = 0; i < _halfKana.length; i++) result = result.replaceAll(_halfKana[i], _fullKana[i]);
+    for (int i = 0; i < _halfKana.length; i++) {
+      result = result.replaceAll(_halfKana[i], _fullKana[i]);
+    }
     return result.runes.map((r) => r == 0x20 ? 0x3000 : (r >= 0x21 && r <= 0x7E ? r + 0xFEE0 : r)).map((c) => String.fromCharCode(c)).join();
   }
   static String toHalfWidth(String text) {
     String result = text.runes.map((r) => r == 0x3000 ? 0x20 : (r >= 0xFF01 && r <= 0xFF5E ? r - 0xFEE0 : r)).map((c) => String.fromCharCode(c)).join();
     _halfToFullMap.map((k, v) => MapEntry(v, k)).forEach((k, v) => result = result.replaceAll(k, v));
-    for (int i = 0; i < _fullKana.length; i++) result = result.replaceAll(_fullKana[i], _halfKana[i]);
+    for (int i = 0; i < _fullKana.length; i++) {
+      result = result.replaceAll(_fullKana[i], _halfKana[i]);
+    }
     return result;
   }
   static String kataToHira(String text) => text.runes.map((r) => (r >= 0x30A1 && r <= 0x30F6) ? r - 0x60 : r).map((c) => String.fromCharCode(c)).join();

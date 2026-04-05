@@ -171,7 +171,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                   children: [
                                     Listener(
                                       onPointerDown: (event) {
-                                        final safeZone = _widthDragHandle + _widthCheckbox + 16.0;
+                                        const safeZone = _widthDragHandle + _widthCheckbox + 16.0;
                                         if (event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone && files.isNotEmpty) {
                                           setState(() {
                                             _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
@@ -475,7 +475,6 @@ class _FileRow extends StatelessWidget {
   final Function(TapDownDetails, FileModel) onShowMenu;
 
   const _FileRow({
-    super.key,
     required this.index,
     required this.file,
     required this.columnWidths,

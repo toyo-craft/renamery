@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'ui/home_screen.dart';
 import 'core/directory_provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import 'package:window_manager/window_manager.dart';
 import 'core/settings_service.dart';

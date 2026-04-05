@@ -742,7 +742,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
       return Row(
         children: [
           Expanded(child: mainContent),
-          EnlargedPreviewOverlay(isMobile: false),
+          const EnlargedPreviewOverlay(isMobile: false),
         ],
       );
     }

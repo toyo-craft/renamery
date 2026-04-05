@@ -29,7 +29,11 @@ class FileModel extends ChangeNotifier {
   void setSelected(bool value, {bool notify = true}) {
     if (_isSelected != value) {
       _isSelected = value;
-      if (notify) notifyListeners(); else _hasPendingChanges = true;
+      if (notify) {
+        notifyListeners();
+      } else {
+        _hasPendingChanges = true;
+      }
     }
   }
 
@@ -39,7 +43,11 @@ class FileModel extends ChangeNotifier {
   void setCut(bool value, {bool notify = true}) {
     if (_isCut != value) {
       _isCut = value;
-      if (notify) notifyListeners(); else _hasPendingChanges = true;
+      if (notify) {
+        notifyListeners();
+      } else {
+        _hasPendingChanges = true;
+      }
     }
   }
 
@@ -51,7 +59,11 @@ class FileModel extends ChangeNotifier {
     if (_newName != name) {
       _newName = name;
       _status = FileStatus.pending;
-      if (notify) notifyListeners(); else _hasPendingChanges = true;
+      if (notify) {
+        notifyListeners();
+      } else {
+        _hasPendingChanges = true;
+      }
     }
   }
 
@@ -74,7 +86,11 @@ class FileModel extends ChangeNotifier {
         _hasValidationError = false; _validationErrorMessage = null; hasChanged = true;
       }
     }
-    if (hasChanged) { if (notify) notifyListeners(); else _hasPendingChanges = true; }
+    if (hasChanged) { if (notify) {
+      notifyListeners();
+    } else {
+      _hasPendingChanges = true;
+    } }
   }
 
   void notifyIfChanged() { if (_hasPendingChanges) { _hasPendingChanges = false; notifyListeners(); } }
