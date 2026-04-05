@@ -1,196 +1,182 @@
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'file_model.dart';
 
 enum RenameMode {
-  replace,
-  append,
-  prepend,
-  numbering,
-  extension,
-  upper,
-  lower,
-  capitalize,
-  insert, // 文字列挿入
-  // Deletion placeholders
-  deleteStart,
-  deleteEnd,
-  deleteFrom,
-  deleteFrontTo,
-  deleteBackTo,
-  // Sub Tab
-  extensionRemove,
-  extensionAdd,
-  extensionUpper,
-  extensionLower,
-  formatProperCase,
-  listRename,
-  // Extra Tab
-  appendDate,
-  convHalfToFull,
-  convFullToHalf,
-  convFullKataToHira,
-  convHiraToFullKata,
-  convFullAlphaToHalfAlpha,
-  convNumToHalf,
-  // Etc Tab
-  changeTimestamp,
-  changeAttributes,
+  replace, append, prepend, numbering, extension, upper, lower, capitalize, insert,
+  deleteStart, deleteEnd, deleteFrom, deleteFrontTo, deleteBackTo,
+  extensionRemove, extensionAdd, extensionUpper, extensionLower, formatProperCase, listRename,
+  appendDate, convHalfToFull, convFullToHalf, convFullKataToHira, convHiraToFullKata, convFullAlphaToHalfAlpha, convNumToHalf,
+  changeTimestamp, changeAttributes,
 }
 
 enum DatePosition { front, back }
-
 enum NumberingMode {
-  stringNumber, // 文字列 + 連番
-  originalNumber, // 現在名 + 連番
-  numberString, // 連番 + 文字列
-  numberOriginal, // 連番 + 現在名
-  baseStringNumber, // 基本フォルダ名 + 文字列 + 連番
-  baseStringOriginal, // 基本フォルダ名 + 文字列 + 現在名
-  relativeStringNumber, // 相対フォルダ名 + 文字列 + 連番
-  relativeStringOriginal, // 相対フォルダ名 + 文字列 + 現在名
-  numberStringBase, // 連番 + 文字列 + 基本フォルダ名
-  numberStringRelative, // 連番 + 文字列 + 相対フォルダ名
+  stringNumber, originalNumber, numberString, numberOriginal,
+  baseStringNumber, baseStringOriginal, relativeStringNumber, relativeStringOriginal,
+  numberStringBase, numberStringRelative,
 }
-
 enum CaseConversion { none, upper, lower, capitalize }
-
-// Moving ValidationType here to avoid circular dependency issues if DirectoryProvider imports RenameEngine
-enum ValidationType {
-  auto,
-  windows,
-  mac,
-  linux,
-  ios,
-  android,
-}
+enum ValidationType { auto, windows, mac, linux, ios, android }
 
 class RenameEngine {
-  /// パラメータに基づいてファイルのプレビュー名を生成します。
-  static List<FileModel> generatePreviews(
-    List<FileModel> files,
-    RenameMode mode, {
-    String? findText,
-    String? replaceText,
-    String? appendText,
-    int startNumber = 1,
-    int insertIndex = 1, // Used for Insert Mode
-    int digits = 3,
-    CaseConversion caseConversion = CaseConversion.none,
-    bool extensionToLowerCase = false,
-    bool useRegex = false,
-    NumberingMode numberingMode = NumberingMode.stringNumber,
-    String? baseDirName, // Name of the root directory (Base Folder)
-    String? listText, // For List Rename
-    String? dateFormat, // For Date Append
-    DatePosition datePosition = DatePosition.front, // For Date Append
-    ValidationType validationType = ValidationType.auto,
-  }) {
-    int counter = startNumber;
+  /// 超高速スキャン用の Isolate 関数
+  static List<Map<String, dynamic>> computeScan(Map<String, dynamic> params) {
+    final String rootPath = params['rootPath'];
+    final bool recursive = params['recursive'];
+    final List<Map<String, dynamic>> results = [];
+    final dir = Directory(rootPath);
 
-    // Pre-parse List Rename Map if needed (Performance optimization)
+    try {
+      final entities = dir.listSync(recursive: recursive, followLinks: false);
+      for (final entity in entities) {
+        final path = entity.path;
+        final name = path.split(Platform.isWindows ? '\\' : '/').last;
+        
+        String rel = '';
+        if (recursive && path.length > rootPath.length) {
+          rel = path.substring(rootPath.length).replaceFirst(RegExp(r'^[\\/]+'), '');
+          // dirname
+          final lastSep = rel.lastIndexOf(Platform.isWindows ? '\\' : '/');
+          rel = lastSep == -1 ? '' : rel.substring(0, lastSep);
+        }
+
+        results.add({
+          'path': path,
+          'name': name,
+          'isDir': entity is Directory,
+          'rel': rel,
+        });
+      }
+    } catch (_) {}
+    return results;
+  }
+
+  static TextSpan buildDiffTextSpan(BuildContext context, String oldText, String newText, bool hasError, {TextStyle? style, RenameMode? mode, int? startNumber, int? digits}) {
+    final baseTextStyle = (style ?? const TextStyle()).copyWith(fontSize: 12, color: hasError ? Theme.of(context).colorScheme.error : style?.color ?? Theme.of(context).colorScheme.onSurface);
+    if (oldText == newText || hasError) return TextSpan(text: newText, style: baseTextStyle);
+
+    if (mode == RenameMode.deleteStart || mode == RenameMode.deleteEnd || mode == RenameMode.deleteFrom) {
+      int delStart = 0; int delCount = digits ?? 0;
+      if (mode == RenameMode.deleteStart) delStart = 0;
+      else if (mode == RenameMode.deleteEnd) delStart = oldText.length - delCount;
+      else if (mode == RenameMode.deleteFrom) delStart = (startNumber ?? 1) - 1;
+      delStart = delStart.clamp(0, oldText.length);
+      int delEnd = (delStart + delCount).clamp(0, oldText.length);
+      final prefix = oldText.substring(0, delStart);
+      final deleted = oldText.substring(delStart, delEnd);
+      final suffix = oldText.substring(delEnd);
+      return TextSpan(style: baseTextStyle, children: [
+        if (prefix.isNotEmpty) TextSpan(text: prefix),
+        if (deleted.isNotEmpty) TextSpan(text: deleted, style: TextStyle(color: Colors.red.withValues(alpha: 0.7), decoration: TextDecoration.lineThrough)),
+        if (suffix.isNotEmpty) TextSpan(text: suffix),
+      ]);
+    }
+
+    int prefixLen = 0;
+    while (prefixLen < oldText.length && prefixLen < newText.length && oldText[prefixLen] == newText[prefixLen]) prefixLen++;
+    int suffixLen = 0;
+    while (suffixLen < oldText.length - prefixLen && suffixLen < newText.length - prefixLen && oldText[oldText.length - 1 - suffixLen] == newText[newText.length - 1 - suffixLen]) suffixLen++;
+    final prefix = oldText.substring(0, prefixLen);
+    final deleted = oldText.substring(prefixLen, oldText.length - suffixLen);
+    final added = newText.substring(prefixLen, newText.length - suffixLen);
+    final suffix = oldText.substring(oldText.length - suffixLen);
+    return TextSpan(style: baseTextStyle, children: [
+      if (prefix.isNotEmpty) TextSpan(text: prefix),
+      if (deleted.isNotEmpty) TextSpan(text: deleted, style: TextStyle(color: Colors.red.withValues(alpha: 0.7), decoration: TextDecoration.lineThrough)),
+      if (added.isNotEmpty) TextSpan(text: added, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+      if (suffix.isNotEmpty) TextSpan(text: suffix),
+    ]);
+  }
+
+  static void generatePreviews(List<FileModel> files, RenameMode mode, {String? findText, String? replaceText, String? appendText, int startNumber = 1, int insertIndex = 1, int digits = 3, CaseConversion caseConversion = CaseConversion.none, bool extensionToLowerCase = false, bool useRegex = false, NumberingMode numberingMode = NumberingMode.stringNumber, String? baseDirName, String? listText, String? dateFormat, DatePosition datePosition = DatePosition.front, ValidationType validationType = ValidationType.auto}) {
+    final input = {
+      'mode': mode,
+      'fileData': files.map((f) => {'originalName': f.originalName, 'isDirectory': f.entity is Directory, 'modified': f.entity.statSync().modified}).toList(),
+      'findText': findText, 'replaceText': replaceText, 'appendText': appendText, 'startNumber': startNumber, 'insertIndex': insertIndex, 'digits': digits, 'caseConversion': caseConversion, 'extensionToLowerCase': extensionToLowerCase, 'useRegex': useRegex, 'numberingMode': numberingMode, 'baseDirName': baseDirName, 'listText': listText, 'dateFormat': dateFormat, 'datePosition': datePosition, 'validationType': validationType, 'isWindows': !kIsWeb && Platform.isWindows, 'isMacOS': !kIsWeb && Platform.isMacOS,
+    };
+    final results = computeGeneratePreviews(input);
+    for (int i = 0; i < files.length; i++) {
+      final f = files[i]; final res = results[i];
+      f.setNewName(res['newName']!, notify: false); f.setValidationError(res['error'], notify: false);
+    }
+  }
+
+  static List<Map<String, String?>> computeGeneratePreviews(Map<String, dynamic> params) {
+    final RenameMode mode = params['mode'];
+    final List<dynamic> fileData = params['fileData'];
+    final String? findText = params['findText'];
+    final String? replaceText = params['replaceText'];
+    final String? appendText = params['appendText'];
+    final int startNumber = params['startNumber'];
+    final int insertIndex = params['insertIndex'];
+    final int digits = params['digits'];
+    final CaseConversion caseConversion = params['caseConversion'];
+    final bool extensionToLowerCase = params['extensionToLowerCase'];
+    final bool useRegex = params['useRegex'];
+    final NumberingMode numberingMode = params['numberingMode'];
+    final String? baseDirName = params['baseDirName'];
+    final String? listText = params['listText'];
+    final String? dateFormat = params['dateFormat'];
+    final DatePosition datePosition = params['datePosition'];
+    final ValidationType validationType = params['validationType'];
+    final bool isWindows = params['isWindows'];
+    final bool isMacOS = params['isMacOS'];
+
     Map<String, String> renameMap = {};
-    if (mode == RenameMode.listRename &&
-        listText != null &&
-        listText.isNotEmpty) {
-      // Parse lines: Old New
-      // Separator: Tab or Pipe or " -> " or just loose?
-      // Namery manual: "Original<TAB>New"
+    if (mode == RenameMode.listRename && listText != null && listText.isNotEmpty) {
       final lines = listText.split('\n');
       for (var line in lines) {
         if (line.trim().isEmpty) continue;
-        // Try tab first
         var parts = line.split('\t');
-        if (parts.length < 2) {
-          // Try comma? manual says Tab. Let's stick to Tab or maybe format "Old<Tab>New".
-          // If user pastes from Excel, it's Tab separated.
-          continue;
-        }
-        if (parts.length >= 2) {
-          renameMap[parts[0].trim()] = parts[1].trim();
-        }
+        if (parts.length >= 2) renameMap[parts[0].trim()] = parts[1].trim();
       }
     }
 
-    for (var file in files) {
-      // 0. Skip Unselected Files
-      if (!file.isSelected) {
-        file.setNewName(file.originalName);
-        file.setValidationError(null);
-        continue;
-      }
+    final results = <Map<String, String?>>[];
+    for (int i = 0; i < fileData.length; i++) {
+      final data = fileData[i];
+      final String originalName = data['originalName'];
+      final bool isDirectory = data['isDirectory'];
+      final DateTime modified = data['modified'];
 
-      // 1. Primary Rename Logic
-      String originalBaseName;
-      String extension;
-      String newBaseName;
-
-      // フォルダの場合はドットを含めて全体をベース名として扱う
-      // ファイルの場合は拡張子を分離する
-      if (file.entity is Directory) {
-        originalBaseName = file.originalName;
-        extension = '';
-      } else {
-        originalBaseName = p.basenameWithoutExtension(file.originalName);
-        extension = p.extension(file.originalName);
-      }
+      String originalBaseName; String extension; String newBaseName;
+      if (isDirectory) { originalBaseName = originalName; extension = ''; }
+      else { originalBaseName = p.basenameWithoutExtension(originalName); extension = p.extension(originalName); }
       newBaseName = originalBaseName;
 
       switch (mode) {
         case RenameMode.deleteStart:
-          int count = digits;
-          if (count > 0) {
-            if (count >= newBaseName.length) {
-              newBaseName = '';
-            } else {
-              newBaseName = newBaseName.substring(count);
-            }
-          }
+          if (digits > 0) newBaseName = digits >= newBaseName.length ? '' : newBaseName.substring(digits);
           break;
         case RenameMode.deleteEnd:
-          int count = digits;
-          if (count > 0) {
-            if (count >= newBaseName.length) {
-              newBaseName = '';
-            } else {
-              // ここで newBaseName は常に拡張子を除いた名前であることを保証
-              newBaseName = newBaseName.substring(0, newBaseName.length - count);
-            }
-          }
+          if (digits > 0) newBaseName = digits >= newBaseName.length ? '' : newBaseName.substring(0, newBaseName.length - digits);
           break;
         case RenameMode.deleteFrom:
           int startIdx = startNumber - 1;
-          int count = digits;
-
-          if (startIdx >= 0 && startIdx < newBaseName.length && count > 0) {
-            int endIdx = startIdx + count;
-            if (endIdx > newBaseName.length) endIdx = newBaseName.length;
+          if (startIdx >= 0 && startIdx < newBaseName.length && digits > 0) {
+            int endIdx = (startIdx + digits).clamp(0, newBaseName.length);
             newBaseName = newBaseName.replaceRange(startIdx, endIdx, '');
           }
           break;
         case RenameMode.deleteFrontTo:
           if (findText != null && findText.isNotEmpty) {
             int idx = newBaseName.indexOf(findText);
-            if (idx != -1) {
-              newBaseName = newBaseName.substring(idx + findText.length);
-            }
+            if (idx != -1) newBaseName = newBaseName.substring(idx + findText.length);
           }
           break;
         case RenameMode.deleteBackTo:
           if (findText != null && findText.isNotEmpty) {
             int idx = newBaseName.lastIndexOf(findText);
-            if (idx != -1) {
-              newBaseName = newBaseName.substring(0, idx);
-            }
+            if (idx != -1) newBaseName = newBaseName.substring(0, idx);
           }
           break;
         case RenameMode.insert:
           if (appendText != null && appendText.isNotEmpty) {
-            int index = insertIndex - 1;
-            if (index < 0) index = 0;
-            if (index > newBaseName.length) index = newBaseName.length;
+            int index = (insertIndex - 1).clamp(0, newBaseName.length);
             newBaseName = newBaseName.replaceRange(index, index, appendText);
           }
           break;
@@ -201,432 +187,120 @@ class RenameEngine {
               try {
                 final regex = RegExp(findText);
                 newBaseName = originalBaseName.replaceAllMapped(regex, (match) {
-                  return replacement.replaceAllMapped(RegExp(r'(?:\$|\\)(\d+)'),
-                      (m) {
+                  return replacement.replaceAllMapped(RegExp(r'(?:\$|\\)(\d+)'), (m) {
                     int groupIdx = int.parse(m.group(1)!);
-                    if (groupIdx <= match.groupCount) {
-                      return match.group(groupIdx) ?? '';
-                    }
-                    return m.group(
-                        0)!; // Group doesn't exist, keep original literal
+                    if (groupIdx <= match.groupCount) return match.group(groupIdx) ?? '';
+                    return m.group(0)!;
                   });
                 });
-              } catch (e) {
-                // Ignore invalid regex
-              }
-            } else {
-              newBaseName = originalBaseName.replaceAll(findText, replacement);
-            }
+              } catch (_) {}
+            } else newBaseName = originalBaseName.replaceAll(findText, replacement);
           }
           break;
-        case RenameMode.append:
-          if (appendText != null) {
-            newBaseName = '$originalBaseName$appendText';
-          }
-          break;
-        case RenameMode.prepend:
-          if (appendText != null) {
-            newBaseName = '$appendText$originalBaseName';
-          }
-          break;
+        case RenameMode.append: if (appendText != null) newBaseName = '$originalBaseName$appendText'; break;
+        case RenameMode.prepend: if (appendText != null) newBaseName = '$appendText$originalBaseName'; break;
         case RenameMode.extension:
-          if (replaceText != null && replaceText.isNotEmpty) {
-            if (replaceText.startsWith('.')) {
-              extension = replaceText;
-            } else {
-              extension = '.$replaceText';
-            }
-          }
+          if (replaceText != null && replaceText.isNotEmpty) extension = replaceText.startsWith('.') ? replaceText : '.$replaceText';
           break;
-        case RenameMode.upper:
-          newBaseName = newBaseName.toUpperCase();
-          break;
-        case RenameMode.lower:
-          newBaseName = newBaseName.toLowerCase();
-          break;
+        case RenameMode.upper: newBaseName = newBaseName.toUpperCase(); break;
+        case RenameMode.lower: newBaseName = newBaseName.toLowerCase(); break;
         case RenameMode.capitalize:
-          if (newBaseName.isNotEmpty) {
-            newBaseName = newBaseName[0].toUpperCase() +
-                newBaseName.substring(1).toLowerCase();
-          }
+          if (newBaseName.isNotEmpty) newBaseName = newBaseName[0].toUpperCase() + newBaseName.substring(1).toLowerCase();
           break;
         case RenameMode.listRename:
-          // Use parsed map (Rename Map logic)
-          if (renameMap.containsKey(file.originalName)) {
-            String? mapped = renameMap[file.originalName];
-            if (mapped != null) {
-              if (p.extension(mapped).isNotEmpty) {
-                newBaseName = p.basenameWithoutExtension(mapped);
-                extension = p.extension(mapped);
-              } else {
-                newBaseName = mapped;
-              }
-            }
-          } else if (renameMap.containsKey(originalBaseName)) {
-            newBaseName = renameMap[originalBaseName]!;
-          }
+          if (renameMap.containsKey(originalName)) {
+            String mapped = renameMap[originalName]!;
+            if (p.extension(mapped).isNotEmpty) { newBaseName = p.basenameWithoutExtension(mapped); extension = p.extension(mapped); }
+            else newBaseName = mapped;
+          } else if (renameMap.containsKey(originalBaseName)) newBaseName = renameMap[originalBaseName]!;
           break;
-        default:
-          break;
+        default: break;
       }
 
-      // 2. Case Conversion (Applied to Base Name)
       switch (caseConversion) {
-        case CaseConversion.upper:
-          newBaseName = newBaseName.toUpperCase();
-          break;
-        case CaseConversion.lower:
-          newBaseName = newBaseName.toLowerCase();
-          break;
+        case CaseConversion.upper: newBaseName = newBaseName.toUpperCase(); break;
+        case CaseConversion.lower: newBaseName = newBaseName.toLowerCase(); break;
         case CaseConversion.capitalize:
-          if (newBaseName.isNotEmpty) {
-            newBaseName = newBaseName[0].toUpperCase() +
-                newBaseName.substring(1).toLowerCase();
-          }
+          if (newBaseName.isNotEmpty) newBaseName = newBaseName[0].toUpperCase() + newBaseName.substring(1).toLowerCase();
           break;
-        case CaseConversion.none:
-          break;
+        case CaseConversion.none: break;
       }
 
-      // 3. Extension Lowercase
-      if (extensionToLowerCase) {
-        extension = extension.toLowerCase();
-      }
+      if (extensionToLowerCase) extension = extension.toLowerCase();
 
-      // --- Sub Tab Features ---
       switch (mode) {
-        case RenameMode.extension:
-          if (replaceText != null) {
-            String newExt = replaceText;
-            if (newExt.isNotEmpty && !newExt.startsWith('.')) {
-              newExt = '.$newExt';
-            }
-            extension = newExt;
-          }
-          break;
-        case RenameMode.extensionRemove:
-          extension = '';
-          break;
-        case RenameMode.extensionAdd:
-          if (replaceText != null && replaceText.isNotEmpty) {
-            String addText = replaceText;
-            if (!addText.startsWith('.')) {
-              addText = '.$addText';
-            }
-            extension += addText;
-          }
-          break;
-        case RenameMode.extensionUpper:
-          extension = extension.toUpperCase();
-          break;
-        case RenameMode.extensionLower:
-          extension = extension.toLowerCase();
-          break;
+        case RenameMode.extensionRemove: extension = ''; break;
+        case RenameMode.extensionAdd: if (replaceText != null && replaceText.isNotEmpty) extension += replaceText.startsWith('.') ? replaceText : '.$replaceText'; break;
+        case RenameMode.extensionUpper: extension = extension.toUpperCase(); break;
+        case RenameMode.extensionLower: extension = extension.toLowerCase(); break;
         case RenameMode.formatProperCase:
-          newBaseName = newBaseName.replaceAllMapped(
-            RegExp(r'([ \-_]+|^)([a-zA-Z0-9]+)'),
-            (match) {
-              String separator = match.group(1) ?? '';
-              String word = match.group(2) ?? '';
-              if (word.isNotEmpty) {
-                word = word[0].toUpperCase() + word.substring(1).toLowerCase();
-              }
-              return '$separator$word';
-            },
-          );
+          newBaseName = newBaseName.replaceAllMapped(RegExp(r'([ \-_]+|^)([a-zA-Z0-9]+)'), (match) {
+            String separator = match.group(1) ?? ''; String word = match.group(2) ?? '';
+            if (word.isNotEmpty) word = word[0].toUpperCase() + word.substring(1).toLowerCase();
+            return '$separator$word';
+          });
           break;
-        // List Rename handled in main switch
-        default:
-          // ...
-          break;
+        default: break;
       }
 
-      // --- Extra Tab Features ---
       switch (mode) {
         case RenameMode.appendDate:
           if (dateFormat != null && dateFormat.isNotEmpty) {
             try {
-              final DateTime date = file.entity.statSync().modified;
-              final formatter = DateFormat(dateFormat);
-              final dateStr = formatter.format(date);
-
-              if (datePosition == DatePosition.front) {
-                newBaseName = '$dateStr$newBaseName';
-              } else {
-                newBaseName = '$newBaseName$dateStr';
-              }
-            } catch (_) {
-              // Ignore invalid formats or stat errors
-            }
+              final dateStr = DateFormat(dateFormat).format(modified);
+              newBaseName = datePosition == DatePosition.front ? '$dateStr$newBaseName' : '$newBaseName$dateStr';
+            } catch (_) {}
           }
           break;
-        case RenameMode.convHalfToFull:
-          newBaseName = JpTextConverter.toFullWidth(newBaseName);
-          break;
-        case RenameMode.convFullToHalf:
-          newBaseName = JpTextConverter.toHalfWidth(newBaseName);
-          break;
-        case RenameMode.convFullKataToHira:
-          newBaseName = JpTextConverter.kataToHira(newBaseName);
-          break;
-        case RenameMode.convHiraToFullKata:
-          newBaseName = JpTextConverter.hiraToKata(newBaseName);
-          break;
-        case RenameMode.convFullAlphaToHalfAlpha:
-          newBaseName = JpTextConverter.fullAlphaToHalf(newBaseName);
-          break;
-        case RenameMode.convNumToHalf:
-          newBaseName = JpTextConverter.fullNumToHalf(newBaseName);
-          break;
-        default:
-          break;
+        case RenameMode.convHalfToFull: newBaseName = JpTextConverter.toFullWidth(newBaseName); break;
+        case RenameMode.convFullToHalf: newBaseName = JpTextConverter.toHalfWidth(newBaseName); break;
+        case RenameMode.convFullKataToHira: newBaseName = JpTextConverter.kataToHira(newBaseName); break;
+        case RenameMode.convHiraToFullKata: newBaseName = JpTextConverter.hiraToKata(newBaseName); break;
+        case RenameMode.convFullAlphaToHalfAlpha: newBaseName = JpTextConverter.fullAlphaToHalf(newBaseName); break;
+        case RenameMode.convNumToHalf: newBaseName = JpTextConverter.fullNumToHalf(newBaseName); break;
+        default: break;
       }
 
-      file.setNewName('$newBaseName$extension');
-
-      // Validation Logic
+      final String newName = '$newBaseName$extension';
       RegExp invalidChars;
-      String errorMsg = 'ファイル名に使用できない文字が含まれています';
-
       switch (validationType) {
-        case ValidationType.windows:
-          invalidChars = RegExp(r'[\\/:*?"<>|]');
-          break;
-        case ValidationType.mac:
-        case ValidationType.ios:
-          invalidChars = RegExp(
-              r'[:/]'); // Colon is restricted in Finder, Slash is path separator
-          break;
-        case ValidationType.linux:
-        case ValidationType.android:
-          invalidChars = RegExp(r'[/]'); // Only slash is strictly forbidden
-          break;
+        case ValidationType.windows: invalidChars = RegExp(r'[\\/:*?"<>|]'); break;
+        case ValidationType.mac: case ValidationType.ios: invalidChars = RegExp(r'[:/]'); break;
+        case ValidationType.linux: case ValidationType.android: invalidChars = RegExp(r'[/]'); break;
         case ValidationType.auto:
-          if (!kIsWeb && Platform.isWindows) {
-            invalidChars = RegExp(r'[\\/:*?"<>|]');
-          } else if (!kIsWeb && Platform.isMacOS) {
-            invalidChars = RegExp(r'[:/]');
-          } else {
-            invalidChars = RegExp(r'[/]');
-          }
+          if (isWindows) invalidChars = RegExp(r'[\\/:*?"<>|]');
+          else if (isMacOS) invalidChars = RegExp(r'[:/]');
+          else invalidChars = RegExp(r'[/]');
           break;
       }
 
-      final controlChars = RegExp(r'[\x00-\x1f]');
-
-      if (invalidChars.hasMatch(file.newName)) {
-        file.setValidationError(errorMsg);
-      } else if (controlChars.hasMatch(file.newName)) {
-        file.setValidationError('制御文字が含まれています');
-      } else if (file.newName.trim().isEmpty || file.newName == '.') {
-        file.setValidationError('ファイル名が空です');
-      } else {
-        file.setValidationError(null);
-      }
+      String? error;
+      if (invalidChars.hasMatch(newName)) error = 'ファイル名に使用できない文字が含まれています';
+      else if (RegExp(r'[\x00-\x1f]').hasMatch(newName)) error = '制御文字が含まれています';
+      else if (newName.trim().isEmpty || newName == '.') error = 'ファイル名が空です';
+      results.add({'newName': newName, 'error': error});
     }
-
-    return files;
+    return results;
   }
 }
 
-// (ValidationType is already defined above or effectively replaced here if I deleted the other instance)
-// Actually, looking at the previous view_file, it seems my previous replace_file_content MIGHT have failed to effectively replace the old instance if I targeted a block.
-// Wait, the previous tool output showed `ValidationType` defined TWICE in the diff?
-// No, the output showed +ValidationType...
-// The file view shows enum at line 437.
-// It also shows switch case using it.
-// The lint says "ValidationType is already defined".
-// This implies it is defined earlier in the file or imported.
-// It is NOT imported (I removed DirectoryProvider import).
-// So it must be defined earlier in the file.
-// Let's check lines 1-100 of rename_engine.dart to see if it's there.
-
 class JpTextConverter {
-// ... (JpTextConverter content remains same)
-  static const String _halfKana =
-      'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮｯｰﾞﾟ';
-  static const List<String> _fullKana = [
-    'ア',
-    'イ',
-    'ウ',
-    'エ',
-    'オ',
-    'カ',
-    'キ',
-    'ク',
-    'ケ',
-    'コ',
-    'サ',
-    'シ',
-    'ス',
-    'セ',
-    'ソ',
-    'タ',
-    'チ',
-    'ツ',
-    'テ',
-    'ト',
-    'ナ',
-    'ニ',
-    'ヌ',
-    'ネ',
-    'ノ',
-    'ハ',
-    'ヒ',
-    'フ',
-    'ヘ',
-    'ホ',
-    'マ',
-    'ミ',
-    'ム',
-    'メ',
-    'モ',
-    'ヤ',
-    'ユ',
-    'ヨ',
-    'ラ',
-    'リ',
-    'ル',
-    'レ',
-    'ロ',
-    'ワ',
-    'ヲ',
-    'ン',
-    'ァ',
-    'ィ',
-    'ゥ',
-    'ェ',
-    'ォ',
-    'ャ',
-    'ュ',
-    'ョ',
-    'ッ',
-    'ー',
-    '゛',
-    '゜'
-  ];
-
-  static const Map<String, String> _halfToFullMap = {
-    'ｶﾞ': 'ガ',
-    'ｷﾞ': 'ギ',
-    'ｸﾞ': 'グ',
-    'ｹﾞ': 'ゲ',
-    'ｺﾞ': 'ゴ',
-    'ｻﾞ': 'ザ',
-    'ｼﾞ': 'ジ',
-    'ｽﾞ': 'ズ',
-    'ｾﾞ': 'ゼ',
-    'ｿﾞ': 'ゾ',
-    'ﾀﾞ': 'ダ',
-    'ﾁﾞ': 'ヂ',
-    'ﾂﾞ': 'ヅ',
-    'ﾃﾞ': 'デ',
-    'ﾄﾞ': 'ド',
-    'ﾊﾞ': 'バ',
-    'ﾋﾞ': 'ビ',
-    'ﾌﾞ': 'ブ',
-    'ﾍﾞ': 'ベ',
-    'ﾎﾞ': 'ボ',
-    'ﾊﾟ': 'パ',
-    'ﾋﾟ': 'ピ',
-    'ﾌﾟ': 'プ',
-    'ﾍﾟ': 'ペ',
-    'ﾎﾟ': 'ポ',
-    'ｳﾞ': 'ヴ',
-  };
-
+  static const String _halfKana = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮｯｰﾞﾟ';
+  static const List<String> _fullKana = ['ア','イ','ウ','エ','オ','カ','キ','ク','ケ','コ','サ','シ','ス','セ','ソ','タ','チ','ツ','テ','ト','ナ','ニ','ヌ','ネ','ノ','ハ','ヒ','フ','ヘ','ホ','マ','ミ','ム','メ','モ','ヤ','ユ','ヨ','ラ','リ','ル','レ','ロ','ワ','ヲ','ン','ァ','ィ','ゥ','ェ','ォ','ャ','ュ','ョ','ッ','ー','゛','゜'];
+  static const Map<String, String> _halfToFullMap = {'ｶﾞ': 'ガ','ｷﾞ': 'ギ','ｸﾞ': 'グ','ｹﾞ': 'ゲ','ｺﾞ': 'ゴ','ｻﾞ': 'ザ','ｼﾞ': 'ジ','ｽﾞ': 'ズ','ｾﾞ': 'ゼ','ｿﾞ': 'ゾ','ﾀﾞ': 'ダ','ﾁﾞ': 'ヂ','ﾂﾞ': 'ヅ','ﾃﾞ': 'デ','ﾄﾞ': 'ド','ﾊﾞ': 'バ','ﾋﾞ': 'ビ','ﾌﾞ': 'ブ','ﾍﾞ': 'ベ','ﾎﾞ': 'ボ','ﾊﾟ': 'パ','ﾋﾟ': 'ピ','ﾌﾟ': 'プ','ﾍﾟ': 'ペ','ﾎﾟ': 'ポ','ｳﾞ': 'ヴ'};
   static String toFullWidth(String text) {
-    String result = text;
-
-    // 1. Resolve composite Half-Kana (Dakuten/Handakuten)
-    _halfToFullMap.forEach((k, v) {
-      result = result.replaceAll(k, v);
-    });
-
-    // 2. Resolve single Half-Kana
-    for (int i = 0; i < _halfKana.length; i++) {
-      result = result.replaceAll(_halfKana[i], _fullKana[i]);
-    }
-
-    // 3. Alphanumeric / Symbols
-    // ASCII 0x21(!) to 0x7E(~) -> +0xFEE0
-    // Space 0x20 -> 0x3000
-    result = result.runes
-        .map((r) {
-          if (r == 0x20) return 0x3000;
-          if (r >= 0x21 && r <= 0x7E) return r + 0xFEE0;
-          return r;
-        })
-        .map((c) => String.fromCharCode(c))
-        .join();
-
-    return result;
+    String result = text; _halfToFullMap.forEach((k, v) => result = result.replaceAll(k, v));
+    for (int i = 0; i < _halfKana.length; i++) result = result.replaceAll(_halfKana[i], _fullKana[i]);
+    return result.runes.map((r) => r == 0x20 ? 0x3000 : (r >= 0x21 && r <= 0x7E ? r + 0xFEE0 : r)).map((c) => String.fromCharCode(c)).join();
   }
-
   static String toHalfWidth(String text) {
-    String result = text;
-    // Simple ASCII reverse
-    result = result.runes
-        .map((r) {
-          if (r == 0x3000) return 0x20;
-          if (r >= 0xFF01 && r <= 0xFF5E) return r - 0xFEE0;
-          return r;
-        })
-        .map((c) => String.fromCharCode(c))
-        .join();
-
-    // Reverse Map for composite
-    final Map<String, String> fullToHalfComposite =
-        _halfToFullMap.map((k, v) => MapEntry(v, k));
-    fullToHalfComposite.forEach((k, v) {
-      result = result.replaceAll(k, v);
-    });
-
-    // Single Kana
-    for (int i = 0; i < _fullKana.length; i++) {
-      result = result.replaceAll(_fullKana[i], _halfKana[i]);
-    }
+    String result = text.runes.map((r) => r == 0x3000 ? 0x20 : (r >= 0xFF01 && r <= 0xFF5E ? r - 0xFEE0 : r)).map((c) => String.fromCharCode(c)).join();
+    _halfToFullMap.map((k, v) => MapEntry(v, k)).forEach((k, v) => result = result.replaceAll(k, v));
+    for (int i = 0; i < _fullKana.length; i++) result = result.replaceAll(_fullKana[i], _halfKana[i]);
     return result;
   }
-
-  static String kataToHira(String text) {
-    return text.runes
-        .map((r) {
-          if (r >= 0x30A1 && r <= 0x30F6) return r - 0x60;
-          return r;
-        })
-        .map((c) => String.fromCharCode(c))
-        .join();
-  }
-
-  static String hiraToKata(String text) {
-    return text.runes
-        .map((r) {
-          if (r >= 0x3041 && r <= 0x3096) return r + 0x60;
-          return r;
-        })
-        .map((c) => String.fromCharCode(c))
-        .join();
-  }
-
-  static String fullAlphaToHalf(String text) {
-    return text.runes
-        .map((r) {
-          if (r >= 0xFF21 && r <= 0xFF3A) return r - 0xFEE0;
-          if (r >= 0xFF41 && r <= 0xFF5A) return r - 0xFEE0;
-          return r;
-        })
-        .map((c) => String.fromCharCode(c))
-        .join();
-  }
-
-  static String fullNumToHalf(String text) {
-    return text.runes
-        .map((r) {
-          if (r >= 0xFF10 && r <= 0xFF19) return r - 0xFEE0;
-          return r;
-        })
-        .map((c) => String.fromCharCode(c))
-        .join();
-  }
+  static String kataToHira(String text) => text.runes.map((r) => (r >= 0x30A1 && r <= 0x30F6) ? r - 0x60 : r).map((c) => String.fromCharCode(c)).join();
+  static String hiraToKata(String text) => text.runes.map((r) => (r >= 0x3041 && r <= 0x3096) ? r + 0x60 : r).map((c) => String.fromCharCode(c)).join();
+  static String fullAlphaToHalf(String text) => text.runes.map((r) => (r >= 0xFF21 && r <= 0xFF3A || r >= 0xFF41 && r <= 0xFF5A) ? r - 0xFEE0 : r).map((c) => String.fromCharCode(c)).join();
+  static String fullNumToHalf(String text) => text.runes.map((r) => (r >= 0xFF10 && r <= 0xFF19) ? r - 0xFEE0 : r).map((c) => String.fromCharCode(c)).join();
 }
