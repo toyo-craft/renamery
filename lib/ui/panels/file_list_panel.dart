@@ -117,7 +117,9 @@ class _FileListPanelState extends State<FileListPanel> {
                         Expanded(
                           child: Listener(
                             onPointerDown: (event) {
-                              if (event.buttons == kPrimaryButton && !provider.isInlineRenaming) {
+                              // ドラッグハンドルとチェックボックスのエリアを避ける
+                              final safeZone = _widthDragHandle + _widthCheckbox + 16.0;
+                              if (event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone) {
                                 setState(() {
                                   _dragStart = event.localPosition;
                                   _dragUpdate = event.localPosition;
@@ -136,30 +138,40 @@ class _FileListPanelState extends State<FileListPanel> {
                             },
                             child: Stack(
                               children: [
-                                ListView.builder(
+                                ListView(
                                   controller: _verticalController,
-                                  itemExtent: rowHeight, // これが重要: スクロール計算を O(1) にする
-                                  itemCount: files.length,
-                                  itemBuilder: (context, index) => RepaintBoundary( // 各行を独立してキャッシュ
-                                    child: _FileRow(
-                                      key: ValueKey(files[index].entity.path),
-                                      index: index,
-                                      file: files[index],
-                                      columnWidths: _columnWidths,
-                                      isEditing: _editingFilePath == files[index].entity.path,
-                                      renameController: _renameController,
-                                      renameFocusNode: _renameFocusNode,
-                                      onStartEdit: (path, name) {
-                                        setState(() { _editingFilePath = path; _renameController.text = name; });
-                                        provider.setInlineRenaming(true);
-                                        WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
-                                      },
-                                      onEndEdit: () {
-                                        setState(() { _editingFilePath = null; });
-                                        provider.setInlineRenaming(false);
-                                      },
+                                  padding: EdgeInsets.zero,
+                                  children: [
+                                    SizedBox(
+                                      height: files.length * rowHeight,
+                                      child: ReorderableListView.builder(
+                                        key: _reorderableListKey,
+                                        itemCount: files.length,
+                                        onReorder: provider.reorderFiles,
+                                        buildDefaultDragHandles: false,
+                                        itemBuilder: (context, index) => RepaintBoundary(
+                                          key: ValueKey(files[index].entity.path),
+                                          child: _FileRow(
+                                            index: index,
+                                            file: files[index],
+                                            columnWidths: _columnWidths,
+                                            isEditing: _editingFilePath == files[index].entity.path,
+                                            renameController: _renameController,
+                                            renameFocusNode: _renameFocusNode,
+                                            onStartEdit: (path, name) {
+                                              setState(() { _editingFilePath = path; _renameController.text = name; });
+                                              provider.setInlineRenaming(true);
+                                              WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _renameFocusNode.requestFocus(); });
+                                            },
+                                            onEndEdit: () {
+                                              setState(() { _editingFilePath = null; });
+                                              provider.setInlineRenaming(false);
+                                            },
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                                 if (_dragStart != null && _dragUpdate != null)
                                   Positioned.fill(
@@ -246,24 +258,44 @@ class _FileListPanelState extends State<FileListPanel> {
             ),
           ),
           const SizedBox(width: 16),
-          _buildHeaderCell(l10n.labelColName, 0),
-          _buildHeaderCell(l10n.labelColNewName, 1),
-          _buildHeaderCell(l10n.labelColSize, 2),
-          _buildHeaderCell(l10n.labelColPath, 3),
-          _buildHeaderCell(l10n.labelColType, 4),
-          _buildHeaderCell(l10n.labelColDate, 5),
-          _buildHeaderCell(l10n.labelColAttr, 6),
+          _buildHeaderCell(context, provider, l10n.labelColName, 0),
+          _buildHeaderCell(context, provider, l10n.labelColNewName, 1),
+          _buildHeaderCell(context, provider, l10n.labelColSize, 2),
+          _buildHeaderCell(context, provider, l10n.labelColPath, 3),
+          _buildHeaderCell(context, provider, l10n.labelColType, 4),
+          _buildHeaderCell(context, provider, l10n.labelColDate, 5),
+          _buildHeaderCell(context, provider, l10n.labelColAttr, 6),
         ],
       ),
     );
   }
 
-  Widget _buildHeaderCell(String label, int index) {
+  Widget _buildHeaderCell(BuildContext context, DirectoryProvider provider, String label, int index) {
+    final isActive = provider.sortColumnIndex == index;
+    final color = isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface;
+
     return SizedBox(
       width: _columnWidths[index]! + 16,
       child: Row(
         children: [
-          Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+          Expanded(
+            child: InkWell(
+              onTap: () => provider.sortFiles(index, isActive ? !provider.sortAscending : true),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: color),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (isActive)
+                    Icon(provider.sortAscending ? Icons.expand_less : Icons.expand_more, size: 14, color: color),
+                ],
+              ),
+            ),
+          ),
           GestureDetector(
             onHorizontalDragUpdate: (details) {
               setState(() { _columnWidths[index] = (_columnWidths[index]! + details.delta.dx).clamp(40.0, 1000.0); });
