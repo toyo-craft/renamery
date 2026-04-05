@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -19,6 +20,7 @@ enum MenuLabelType { standard, namery, english, chinese, spanish }
 class DirectoryProvider extends ChangeNotifier {
   Directory? _currentDirectory;
   List<FileModel> _currentFiles = [];
+  List<FileModel> _allFiles = [];
   bool _isLoading = false;
   bool _isInlineRenaming = false;
   bool _enableBetaFeatures = false;
@@ -82,11 +84,13 @@ class DirectoryProvider extends ChangeNotifier {
     final lSubIndex = s.getInt('lastSubMode');
     if (lSubIndex != null && lSubIndex < RenameMode.values.length) _lastSubMode = RenameMode.values[lSubIndex];
     final lEtcIndex = s.getInt('lastEtcMode');
-    if (lEtcIndex != null && lEtcIndex < RenameMode.values.length) _lastEtcMode = RenameMode.values[lEtcIndex];
+    if (lEtcIndex != null && lEtcIndex < RenameMode.values.length) _lastEtcMode = RenameMode.values[lEtcIndex]; else _lastEtcMode = RenameMode.changeTimestamp;
     final lExtraIndex = s.getInt('lastExtraMode');
-    if (lExtraIndex != null && lExtraIndex < RenameMode.values.length) _lastExtraMode = RenameMode.values[lExtraIndex];
+    if (lExtraIndex != null && lExtraIndex < RenameMode.values.length) _lastExtraMode = RenameMode.values[lExtraIndex]; else _lastExtraMode = RenameMode.appendDate;
+    final lStringIndex = s.getInt('lastStringMode');
+    if (lStringIndex != null && lStringIndex < RenameMode.values.length) _lastStringMode = RenameMode.values[lStringIndex]; else _lastStringMode = RenameMode.append;
 
-    _dateFormat = s.getString('dateFormat') ?? 'yyyymmdd_';
+    _dateFormat = s.getString('dateFormat') ?? 'yyyyMMdd_';
     final dPosIndex = s.getInt('datePosition');
     if (dPosIndex != null && dPosIndex < DatePosition.values.length) _datePosition = DatePosition.values[dPosIndex];
 
@@ -129,7 +133,7 @@ class DirectoryProvider extends ChangeNotifier {
     }
 
     if (targetDir != null && await targetDir.exists()) await setDirectory(targetDir);
-    else if (_currentDirectory != null) _applyFilters();
+    else if (_currentDirectory != null) await _applyFilters();
   }
 
   void _saveState() {
@@ -149,19 +153,16 @@ class DirectoryProvider extends ChangeNotifier {
     if (_deleteToText != null) s.set('deleteToText', _deleteToText);
     s.set('startNumber', _startNumber); s.set('digits', _digits);
     s.set('extensionToLowerCase', _extensionToLowerCase); s.set('useRegex', _useRegex);
-    s.set('appendHistory', _appendHistory); s.set('deleteFromHistory', _deleteFromHistory);
-    s.set('deleteToHistory', _deleteToHistory); s.set('findHistory', _findHistory);
-    s.set('replaceHistory', _replaceHistory); s.set('extensionHistory', _extensionHistory);
     s.set('sortColumnIndex', _sortColumnIndex); s.set('sortAscending', _sortAscending);
     s.set('listRenameText', _listRenameText); s.set('extensionChangeText', _extensionChangeText);
     s.set('extensionAddText', _extensionAddText); s.set('lastMainMode', _lastMainMode.index);
     s.set('lastSubMode', _lastSubMode.index); s.set('lastEtcMode', _lastEtcMode.index);
-    s.set('lastExtraMode', _lastExtraMode.index); s.set('dateFormat', _dateFormat);
-    s.set('datePosition', _datePosition.index); s.set('validationType', _validationType.index);
-    s.set('initialDirectoryMode', _initialDirectoryMode.index); s.set('fixedInitialDirectory', _fixedInitialDirectory);
-    s.set('etcTimestamp', _etcTimestamp); s.set('etcAttribReadOnly', _etcAttribReadOnly);
-    s.set('etcAttribHidden', _etcAttribHidden); s.set('etcAttribArchive', _etcAttribArchive);
-    s.set('etcAttribSystem', _etcAttribSystem);
+    s.set('lastExtraMode', _lastExtraMode.index); s.set('lastStringMode', _lastStringMode.index);
+    s.set('dateFormat', _dateFormat); s.set('datePosition', _datePosition.index);
+    s.set('validationType', _validationType.index); s.set('initialDirectoryMode', _initialDirectoryMode.index);
+    s.set('fixedInitialDirectory', _fixedInitialDirectory); s.set('etcTimestamp', _etcTimestamp);
+    s.set('etcAttribReadOnly', _etcAttribReadOnly); s.set('etcAttribHidden', _etcAttribHidden);
+    s.set('etcAttribArchive', _etcAttribArchive); s.set('etcAttribSystem', _etcAttribSystem);
   }
 
   RenameMode _renameMode = RenameMode.numbering; NumberingMode _numberingMode = NumberingMode.stringNumber;
@@ -186,7 +187,12 @@ class DirectoryProvider extends ChangeNotifier {
   Color _seedColor = Colors.green; String _dateFormat = 'yyyyMMdd_'; DatePosition _datePosition = DatePosition.front;
   String _etcTimestamp = ''; bool _etcAttribReadOnly = false; bool _etcAttribHidden = false;
   bool _etcAttribArchive = false; bool _etcAttribSystem = false;
-  List<FileModel> _allFiles = []; Directory? get currentDirectory => _currentDirectory;
+
+  RenameMode _lastMainMode = RenameMode.numbering; RenameMode _lastSubMode = RenameMode.extension;
+  RenameMode _lastEtcMode = RenameMode.changeTimestamp; RenameMode _lastExtraMode = RenameMode.appendDate;
+  RenameMode _lastStringMode = RenameMode.append;
+
+  Directory? get currentDirectory => _currentDirectory;
   List<FileModel> get currentFiles => _currentFiles; int get allFilesCount => _allFiles.length;
   bool get isLoading => _isLoading; bool get canUndo => _undoManager.canUndo; int get undoCount => _undoManager.undoCount;
   RenameMode get renameMode => _renameMode; NumberingMode get numberingMode => _numberingMode;
@@ -223,9 +229,6 @@ class DirectoryProvider extends ChangeNotifier {
   List<String> get deleteToHistory => _deleteToHistory; List<String> get findHistory => _findHistory;
   List<String> get replaceHistory => _replaceHistory; List<String> get extensionHistory => _extensionHistory;
 
-  RenameMode _lastMainMode = RenameMode.numbering; RenameMode _lastSubMode = RenameMode.extension;
-  RenameMode _lastEtcMode = RenameMode.changeTimestamp; RenameMode _lastExtraMode = RenameMode.appendDate;
-  RenameMode _lastStringMode = RenameMode.append;
   RenameMode get lastMainMode => _lastMainMode; RenameMode get lastSubMode => _lastSubMode;
   RenameMode get lastEtcMode => _lastEtcMode; RenameMode get lastExtraMode => _lastExtraMode;
   RenameMode get lastStringMode => _lastStringMode; String get dateFormat => _dateFormat; DatePosition get datePosition => _datePosition;
@@ -334,6 +337,13 @@ class DirectoryProvider extends ChangeNotifier {
     } catch (e) { if (kDebugMode) print('Create Folder error: $e'); }
   }
 
+  void setCompactMode(bool isCompact) { _isCompactMode = isCompact; _saveState(); notifyListeners(); }
+  void setTouchMode(bool value) { _touchMode = value; _saveState(); notifyListeners(); }
+  void setEnableBetaFeatures(bool enable) { _enableBetaFeatures = enable; _saveState(); notifyListeners(); }
+  void setAppTheme(AppThemeType theme) { _appTheme = theme; _saveState(); notifyListeners(); }
+  void setMenuLabelType(MenuLabelType type) { _menuLabelType = type; _saveState(); notifyListeners(); }
+  void setSeedColor(Color color) { _seedColor = color; _saveState(); notifyListeners(); }
+
   Timer? _filterTimer;
   void updateFilterSettings({String? filter, bool? hideSystem, bool? recursive, bool? preview, bool? showFolders, bool? isSpecific, bool? isRegex}) {
     bool needRescan = false; bool needRefilter = false;
@@ -345,21 +355,14 @@ class DirectoryProvider extends ChangeNotifier {
     if (preview != null) { _showPreview = preview; notifyListeners(); }
     if (showFolders != null) { _showFolders = showFolders; needRefilter = true; }
     if (needRescan) { if (_currentDirectory != null) setDirectory(_currentDirectory!); }
-    else if (needRefilter) { _filterTimer?.cancel(); _filterTimer = Timer(const Duration(milliseconds: 300), () => _applyFilters()); }
+    else if (needRefilter) { _filterTimer?.cancel(); _filterTimer = Timer(Duration(milliseconds: filter != null ? 300 : 20), () => _applyFilters()); }
     _saveState();
   }
-
-  void setCompactMode(bool isCompact) { _isCompactMode = isCompact; _saveState(); notifyListeners(); }
-  void setTouchMode(bool value) { _touchMode = value; _saveState(); notifyListeners(); }
-  void setEnableBetaFeatures(bool enable) { _enableBetaFeatures = enable; _saveState(); notifyListeners(); }
-  void setAppTheme(AppThemeType theme) { _appTheme = theme; _saveState(); notifyListeners(); }
-  void setMenuLabelType(MenuLabelType type) { _menuLabelType = type; _saveState(); notifyListeners(); }
-  void setSeedColor(Color color) { _seedColor = color; _saveState(); notifyListeners(); }
 
   int _filterVersion = 0;
   Future<void> _applyFilters() async {
     final currentVersion = ++_filterVersion; if (_allFiles.isEmpty) { _currentFiles = []; notifyListeners(); return; }
-    final input = {'files': _allFiles.map((f) => {'originalName': f.originalName, 'isDirectory': f.entity is Directory}).toList(), 'filterText': _filterText, 'isFilterRegex': _isFilterRegex, 'hideSystemFiles': _hideSystemFiles, 'showFolders': _showFolders};
+    final input = {'files': _allFiles.map((f) => {'originalName': f.originalName, 'isDirectory': f.entity is Directory, 'isHidden': f.originalName.startsWith('.')}).toList(), 'filterText': _filterText, 'isFilterRegex': _isFilterRegex, 'hideSystemFiles': _hideSystemFiles, 'showFolders': _showFolders};
     final visibility = await compute(_computeFilter, input); if (currentVersion != _filterVersion) return;
     final List<FileModel> filtered = []; for (int i = 0; i < _allFiles.length; i++) { if (visibility[i]) filtered.add(_allFiles[i]); }
     _currentFiles = filtered; for (var f in _allFiles) f.setCut(_cutFilePaths.contains(f.entity.path), notify: false); for (var f in _allFiles) f.notifyIfChanged();
@@ -367,12 +370,11 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   static List<bool> _computeFilter(Map<String, dynamic> params) {
-    final List<dynamic> files = params['files']; final String filterText = params['filterText']; final bool isFilterRegex = params['isFilterRegex'];
-    final bool hideSystemFiles = params['hideSystemFiles']; final bool showFolders = params['showFolders'];
+    final List<dynamic> files = params['files']; final String filterText = params['filterText']; final bool isFilterRegex = params['isFilterRegex']; final bool hideSystemFiles = params['hideSystemFiles']; final bool showFolders = params['showFolders'];
     RegExp? regex; if (filterText.isNotEmpty && isFilterRegex) { try { regex = RegExp(filterText, caseSensitive: false, unicode: true); } catch (_) {} }
     return files.map((f) {
-      final String originalName = f['originalName']; final bool isDirectory = f['isDirectory'];
-      if (hideSystemFiles && originalName.startsWith('.')) return false; if (!showFolders && isDirectory) return false;
+      final String originalName = f['originalName']; final bool isDirectory = f['isDirectory']; final bool isHidden = f['isHidden'];
+      if (hideSystemFiles && isHidden) return false; if (!showFolders && isDirectory) return false;
       if (filterText.isNotEmpty) { if (isFilterRegex) { if (regex == null) return true; return regex.hasMatch(originalName); } else return originalName.toLowerCase().contains(filterText.toLowerCase()); }
       return true;
     }).toList();
@@ -382,7 +384,7 @@ class DirectoryProvider extends ChangeNotifier {
     if (_hideSystemFiles && p.basename(file.originalName).startsWith('.')) return false;
     if (!_showFolders && file.entity is Directory) return false;
     if (_filterText.isNotEmpty) {
-      if (_isFilterRegex) { try { return RegExp(_filterText, caseSensitive: false, unicode: true).hasMatch(file.originalName); } catch (e) { return true; } }
+      if (_isFilterRegex) { try { return RegExp(_filterText, caseSensitive: false, unicode: true).hasMatch(file.originalName); } catch (_) { return true; } }
       else return file.originalName.toLowerCase().contains(_filterText.toLowerCase());
     }
     return true;
@@ -432,11 +434,6 @@ class DirectoryProvider extends ChangeNotifier {
   void toggleSelection(FileModel file) { file.isSelected = !file.isSelected; _updatePreviewsDebounced(); }
   void _updatePreviewsDebounced({bool immediate = false}) { _previewTimer?.cancel(); if (immediate) _updatePreviews(); else _previewTimer = Timer(const Duration(milliseconds: 50), () => _updatePreviews()); }
 
-  void resetSettings() {
-    _appTheme = AppThemeType.light; _menuLabelType = MenuLabelType.standard; _seedColor = Colors.green; _isCompactMode = false; _initialDirectoryMode = InitialDirectoryMode.lastUsed; _fixedInitialDirectory = ''; _renameMode = RenameMode.numbering; _numberingMode = NumberingMode.stringNumber; _startNumber = 1; _insertIndex = 1; _digits = 3; _findText = ''; _replaceText = ''; _appendText = ''; _deleteToText = ''; _extensionToLowerCase = true; _useRegex = false; _saveSequenceNumber = false; _lastMainMode = RenameMode.numbering; _lastSubMode = RenameMode.extension; _lastExtraMode = RenameMode.appendDate; _lastEtcMode = RenameMode.changeTimestamp; _lastStringMode = RenameMode.append; _listRenameText = '01_chapter_intro.mp4\n02_chapter_main.mp4\n03_chapter_end.mp4'; _extensionChangeText = ''; _extensionAddText = ''; _dateFormat = 'yyyyMMdd_'; _datePosition = DatePosition.front;
-    final now = DateTime.now(); _etcTimestamp = '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}'; _etcAttribReadOnly = false; _etcAttribHidden = false; _etcAttribArchive = false; _etcAttribSystem = false; _showFolders = true; _hideSystemFiles = true; _recursiveSearch = false; _showPreview = true; _validationType = ValidationType.auto; _resetCount++; _applyFilters(); _saveState(); notifyListeners();
-  }
-
   void selectAll(bool select) { for (var f in _currentFiles) f.setSelected(select, notify: false); for (var f in _currentFiles) f.notifyIfChanged(); _updatePreviews(); notifyListeners(); }
   void selectRange(int start, int end, {bool exclusive = true, List<bool>? baseStates}) {
     final minIdx = start < end ? start : end; final maxIdx = start > end ? start : end;
@@ -445,8 +442,7 @@ class DirectoryProvider extends ChangeNotifier {
       if (baseStates != null && i < baseStates.length) _currentFiles[i].setSelected(isInside ? !baseStates[i] : baseStates[i], notify: false);
       else { if (isInside) _currentFiles[i].setSelected(true, notify: false); else if (exclusive) _currentFiles[i].setSelected(false, notify: false); }
     }
-    for (var f in _currentFiles) f.notifyIfChanged(); _updatePreviews(); notifyListeners();
-  }
+    for (var f in _currentFiles) f.notifyIfChanged(); _updatePreviews(); notifyListeners(); }
 
   void sortFiles(int columnIndex, bool ascending) {
     _sortColumnIndex = columnIndex; _sortAscending = ascending;
@@ -468,6 +464,117 @@ class DirectoryProvider extends ChangeNotifier {
   Future<void> jumpForward(int steps) async { final ni = _navIndex + steps; if (ni < _navHistory.length) { _navIndex = ni; await _navigateInternal(Directory(_navHistory[_navIndex])); } }
   Future<void> refresh() async { if (_currentDirectory != null) await setDirectory(_currentDirectory!, addToHistory: false); }
   Future<void> _navigateInternal(Directory dir) async => await setDirectory(dir, addToHistory: false);
+
+  int _selectionVersion = 0; int get selectionVersion => _selectionVersion;
+  Future<void> setDirectory(Directory directory, {bool addToHistory = true, String? source, String? contextRoot}) async {
+    _navigationSource = source; _navigationContextRoot = contextRoot;
+    _selectionVersion++; await _scanSubscription?.cancel(); _scanSubscription = null;
+    if (addToHistory && (_currentDirectory == null || _currentDirectory!.path != directory.path)) {
+      if (_navIndex < _navHistory.length - 1) _navHistory = _navHistory.sublist(0, _navIndex + 1);
+      _navHistory.remove(directory.path); _navHistory.add(directory.path); if (_navHistory.length > 20) _navHistory.removeAt(0);
+      _navIndex = _navHistory.length - 1;
+    }
+    _currentDirectory = directory; _isLoading = true; _allFiles = []; _currentFiles = [];
+    _saveState(); await checkClipboard(); notifyListeners();
+    try {
+      if (!kIsWeb && Platform.isWindows) {
+        final List<int> allBytes = [];
+        final process = await Process.start('cmd', ['/c', 'dir', '/b', _recursiveSearch ? '/s' : '', '/a'], workingDirectory: directory.path);
+        _scanSubscription = process.stdout.listen((bytes) {
+          allBytes.addAll(bytes); if (allBytes.length > 1024 * 50) _processBytesIncremental(allBytes, directory.path);
+        }, onDone: () async {
+          final results = await compute(RenameEngine.computeScanBytes, {'bytes': allBytes, 'rootPath': directory.path, 'recursive': _recursiveSearch});
+          _allFiles = results.map((data) {
+            final f = FileModel(entity: data['isDir'] ? Directory(data['path']) : File(data['path']));
+            f.setDisplayRelativePath(data['rel']); return f;
+          }).toList();
+          await _applyFilters(); _isLoading = false; _scanSubscription = null; notifyListeners();
+        });
+      } else {
+        final results = await compute(RenameEngine.computeScan, {'rootPath': directory.path, 'recursive': _recursiveSearch});
+        _allFiles = results.map((data) {
+          final f = FileModel(entity: data['isDir'] ? Directory(data['path']) : File(data['path']));
+          f.setDisplayRelativePath(data['rel']); return f;
+        }).toList();
+        await _applyFilters(); _isLoading = false; notifyListeners();
+      }
+    } catch (e) { _allFiles = []; _currentFiles = []; _isLoading = false; notifyListeners(); }
+  }
+
+  void _processBytesIncremental(List<int> bytes, String rootPath) {
+    try {
+      final String partial = systemEncoding.decode(bytes); final lines = partial.split('\r\n'); if (lines.length < 2) return;
+      final List<FileModel> increment = [];
+      for (int i = 0; i < lines.length - 1; i++) {
+        final line = lines[i]; if (line.isEmpty) continue;
+        final fullPath = _recursiveSearch ? line : p.join(rootPath, line);
+        // インクリメンタル表示時は簡易判定（重いI/Oを避ける）
+        final f = FileModel(entity: File(fullPath));
+        if (_shouldShowFile(f)) increment.add(f);
+      }
+      final Set<String> existing = _currentFiles.map((f) => f.entity.path).toSet();
+      _currentFiles.addAll(increment.where((f) => !existing.contains(f.entity.path))); notifyListeners();
+    } catch (_) {}
+  }
+
+  int _navTreeResetTick = 0; int get navTreeResetTick => _navTreeResetTick;
+  void resetNavTree() { _navTreeResetTick++; notifyListeners(); }
+  void cancelScan() { _scanSubscription?.cancel(); _scanSubscription = null; _isLoading = false; notifyListeners(); }
+
+  Future<void> _loadAttributes(Directory dir) async {
+    try {
+      final res = await Process.run('attrib', ['*', '/D'], workingDirectory: dir.path, stdoutEncoding: systemEncoding);
+      if (res.exitCode == 0) {
+        final lines = (res.stdout as String).split('\n'); final Map<String, String> attrMap = {};
+        for (var line in lines) {
+          line = line.trim(); if (line.length > 21) { final ap = line.substring(0, 20).toUpperCase(); final pp = line.substring(20).trim(); final fp = p.isAbsolute(pp) ? p.canonicalize(pp) : p.canonicalize(p.join(dir.path, pp)); attrMap[fp] = ap; }
+        }
+        for (var f in _currentFiles) { final np = p.canonicalize(f.entity.path); if (attrMap.containsKey(np)) { final a = attrMap[np]!; f.setAttributes(readOnly: a.contains('R'), hidden: a.contains('H'), system: a.contains('S'), archive: a.contains('A')); } }
+      }
+    } catch (_) {}
+  }
+
+  Future<int> executeRename() async {
+    final t = _currentFiles.where((f) => f.isSelected).toList(); if (t.isEmpty) return 0; _isLoading = true; notifyListeners(); List<FileModel> renamed = []; List<UndoAction> transaction = [];
+    for (var file in t) { if (file.validationErrorMessage != null || file.originalName == file.newName) continue; try { final oldP = file.entity.path; final newP = p.join(file.parentPath, file.newName); await file.entity.rename(newP); file.markRenamed(); renamed.add(file); transaction.add(UndoAction(oldP, newP, type: UndoType.rename)); } catch (e) { file.markError(e.toString()); } }
+    if (transaction.isNotEmpty) { _undoManager.addTransaction(transaction); if (_currentDirectory != null) await setDirectory(_currentDirectory!); if (_saveSequenceNumber) { _startNumber += renamed.length; _saveState(); notifyListeners(); } } else { _isLoading = false; notifyListeners(); }
+    return renamed.length;
+  }
+
+  Future<void> renameOneFile(FileModel file, String newName) async {
+    if (file.originalName == newName || newName.isEmpty) return; _isLoading = true; notifyListeners();
+    try { final oldP = file.entity.path; final newP = p.join(file.parentPath, newName); await file.entity.rename(newP); _undoManager.addTransaction([UndoAction(oldP, newP, type: UndoType.rename)]); if (_currentDirectory != null) await setDirectory(_currentDirectory!); } catch (_) { _isLoading = false; notifyListeners(); }
+  }
+
+  Future<Map<String, dynamic>> undo() async { if (!_undoManager.canUndo) return {'count': 0, 'errors': []}; _isLoading = true; notifyListeners(); final r = await _undoManager.undoLastTransaction(); if (_currentDirectory != null) await setDirectory(_currentDirectory!); return r; }
+  Future<int> deleteSelectedFiles() async {
+    final t = _currentFiles.where((f) => f.isSelected).toList(); if (t.isEmpty) return 0; int count = 0; _isLoading = true; notifyListeners();
+    for (var f in t) { try { if (!kIsWeb && Platform.isWindows) { final isDir = f.entity is Directory; final ps = f.entity.path.replaceAll("'", "''"); final script = "Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::Delete${isDir ? 'Directory' : 'File'}('$ps', 'OnlyErrorDialogs', 'SendToRecycleBin')"; final res = await Process.run('powershell', ['-Command', script]); if (res.exitCode == 0) count++; } else { await f.entity.delete(recursive: true); count++; } } catch (_) {} }
+    if (count > 0 && _currentDirectory != null) await setDirectory(_currentDirectory!); else { _isLoading = false; notifyListeners(); }
+    return count;
+  }
+
+  void clearInputHistory() { _findHistory.clear(); _replaceHistory.clear(); _appendHistory.clear(); _extensionHistory.clear(); _deleteFromHistory.clear(); _deleteToHistory.clear(); _saveState(); notifyListeners(); }
+  Locale get currentLocale { switch (_menuLabelType) { case MenuLabelType.namery: return const Locale('ja', 'NM'); case MenuLabelType.english: return const Locale('en'); case MenuLabelType.chinese: return const Locale('zh'); case MenuLabelType.spanish: return const Locale('es'); default: return const Locale('ja'); } }
+
+  static Future<List<Directory>> getQuickAccessDirectories() async {
+    List<Directory> qa = []; if (kIsWeb) return qa; String? home = Platform.isWindows ? Platform.environment['USERPROFILE'] : Platform.environment['HOME'];
+    if (home != null) { final hd = Directory(home); if (await hd.exists()) { qa.add(hd); for (var f in ['Desktop', 'Downloads', 'Documents', 'Pictures', 'Music', 'Videos']) { final d = Directory(p.join(home, f)); if (await d.exists()) qa.add(d); } final od = Directory(p.join(home, 'OneDrive')); if (await od.exists()) qa.add(od); } }
+    return qa;
+  }
+
+  static Future<List<Directory>> getLogicalDrives() async {
+    List<Directory> ds = []; if (kIsWeb) return ds;
+    if (Platform.isWindows) { for (var c = 'A'.codeUnitAt(0); c <= 'Z'.codeUnitAt(0); c++) { final d = Directory('${String.fromCharCode(c)}:\\\\'); if (await d.exists()) ds.add(d); } }
+    else if (Platform.isAndroid) { final d = Directory('/storage/emulated/0'); if (await d.exists()) ds.add(d); } else ds.add(Directory('/'));
+    return ds;
+  }
+
+  Future<void> requestAndroidPermissions(BuildContext context) async {
+    if (kIsWeb || !Platform.isAndroid) return; var status = await Permission.manageExternalStorage.status; if (status.isGranted) return; if (!context.mounted) return; final l10n = AppLocalizations.of(context)!;
+    final bool? proceed = await showDialog<bool>(context: context, barrierDismissible: false, builder: (context) => AlertDialog(title: Row(children: [Icon(Icons.security, color: Theme.of(context).colorScheme.primary), const SizedBox(width: 12), Expanded(child: Text(l10n.labelPermissionFileAccessTitle))]), content: Text(l10n.labelPermissionFileAccessMessage), actions: [FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.labelPermissionFileAccessButton))]));
+    if (proceed == true) { status = await Permission.manageExternalStorage.request(); if (!status.isGranted) await openAppSettings(); }
+  }
 
   bool get canExecute { final s = _currentFiles.where((f) => f.isSelected); return s.isNotEmpty && s.any((f) => f.validationErrorMessage == null && f.originalName != f.newName); }
   bool get hasInvalidFilenamesSelected => _currentFiles.any((f) => f.isSelected && f.validationErrorMessage != null);
@@ -493,162 +600,18 @@ class DirectoryProvider extends ChangeNotifier {
     _updatePreviews(); notifyListeners();
   }
 
-  void moveSelectedToTop() { final s = _currentFiles.where((f) => f.isSelected).toList(); final u = _currentFiles.where((f) => !f.isSelected).toList(); if (s.isNotEmpty) { _currentFiles = [...s, ...u]; _updatePreviews(); notifyListeners(); } }
-  void moveSelectedToBottom() { final s = _currentFiles.where((f) => f.isSelected).toList(); final u = _currentFiles.where((f) => !f.isSelected).toList(); if (s.isNotEmpty) { _currentFiles = [...u, ...s]; _updatePreviews(); notifyListeners(); } }
-  Future<void> goUp() async { if (_currentDirectory != null) { final p = _currentDirectory!.parent; if (p.path != _currentDirectory!.path) await setDirectory(p); } }
-
-  Future<int> executeRename() async {
-    final t = _currentFiles.where((f) => f.isSelected).toList(); if (t.isEmpty) return 0; _isLoading = true; notifyListeners(); List<FileModel> renamed = []; List<UndoAction> transaction = [];
-    for (var file in t) { if (file.validationErrorMessage != null || file.originalName == file.newName) continue; try { final oldP = file.entity.path; final newP = p.join(file.parentPath, file.newName); await file.entity.rename(newP); file.markRenamed(); renamed.add(file); transaction.add(UndoAction(oldP, newP, type: UndoType.rename)); } catch (e) { file.markError(e.toString()); } }
-    if (transaction.isNotEmpty) { _undoManager.addTransaction(transaction); _saveInputHistory(); if (_currentDirectory != null) await setDirectory(_currentDirectory!); if (_saveSequenceNumber) { _startNumber += renamed.length; _saveState(); notifyListeners(); } } else { _isLoading = false; notifyListeners(); }
-    return renamed.length;
+  void goUp() { if (_currentDirectory != null) { final p = _currentDirectory!.parent; if (p.path != _currentDirectory!.path) setDirectory(p); } }
+  void resetSettings() {
+    _appTheme = AppThemeType.light; _menuLabelType = MenuLabelType.standard; _seedColor = Colors.green; _isCompactMode = false; _initialDirectoryMode = InitialDirectoryMode.lastUsed; _fixedInitialDirectory = ''; _renameMode = RenameMode.numbering; _numberingMode = NumberingMode.stringNumber; _startNumber = 1; _insertIndex = 1; _digits = 3; _findText = ''; _replaceText = ''; _appendText = ''; _deleteToText = ''; _extensionToLowerCase = true; _useRegex = false; _saveSequenceNumber = false; _dateFormat = 'yyyyMMdd_'; _datePosition = DatePosition.front;
+    final now = DateTime.now(); _etcTimestamp = '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}'; _etcAttribReadOnly = false; _etcAttribHidden = false; _etcAttribArchive = false; _etcAttribSystem = false; _showFolders = true; _hideSystemFiles = true; _recursiveSearch = false; _showPreview = true; _validationType = ValidationType.auto; _resetCount++; _applyFilters(); _saveState(); notifyListeners();
   }
-
-  Future<void> renameOneFile(FileModel file, String newName) async {
-    if (file.originalName == newName || newName.isEmpty) return; _isLoading = true; notifyListeners();
-    try { final oldP = file.entity.path; final newP = p.join(file.parentPath, newName); await file.entity.rename(newP); _undoManager.addTransaction([UndoAction(oldP, newP, type: UndoType.rename)]); if (_currentDirectory != null) await setDirectory(_currentDirectory!); } catch (e) { _isLoading = false; notifyListeners(); }
-  }
-
-  Future<Map<String, dynamic>> undo() async { if (!_undoManager.canUndo) return {'count': 0, 'errors': []}; _isLoading = true; notifyListeners(); final r = await _undoManager.undoLastTransaction(); if (_currentDirectory != null) await setDirectory(_currentDirectory!); return r; }
-  List<UndoAction> getLastUndoTransaction() => _undoManager.peekLastTransaction();
 
   void addHistory(HistoryType type, String value) {
     if (value.isEmpty) return; List<String> target;
     switch (type) { case HistoryType.find: target = _findHistory; break; case HistoryType.replace: target = _replaceHistory; break; case HistoryType.add: target = _appendHistory; break; case HistoryType.extension: target = _extensionHistory; break; case HistoryType.remove: target = _deleteFromHistory; break; case HistoryType.deleteTo: target = _deleteToHistory; break; }
     target.remove(value); target.insert(0, value); if (target.length > 20) target.removeRange(20, target.length); _saveState(); notifyListeners();
   }
-
-  void _saveInputHistory() {
-    switch (_renameMode) { case RenameMode.replace: if (_findText != null) addHistory(HistoryType.find, _findText!); if (_replaceText != null) addHistory(HistoryType.replace, _replaceText!); break; case RenameMode.append: if (_appendText != null) addHistory(HistoryType.add, _appendText!); break; case RenameMode.deleteFrontTo: case RenameMode.deleteBackTo: case RenameMode.deleteFrom: if (_deleteToText != null) addHistory(HistoryType.remove, _deleteToText!); break; case RenameMode.extension: if (_extensionChangeText.isNotEmpty) addHistory(HistoryType.extension, _extensionChangeText); break; case RenameMode.extensionAdd: if (_extensionAddText.isNotEmpty) addHistory(HistoryType.extension, _extensionAddText); break; default: break; }
-  }
-
-  int _selectionVersion = 0; int get selectionVersion => _selectionVersion;
-  
-  Future<void> setDirectory(Directory directory, {bool addToHistory = true, String? source, String? contextRoot}) async {
-    _navigationSource = source; _navigationContextRoot = contextRoot;
-    _selectionVersion++; await _scanSubscription?.cancel(); _scanSubscription = null;
-
-    if (addToHistory && (_currentDirectory == null || _currentDirectory!.path != directory.path)) {
-      if (_navIndex < _navHistory.length - 1) _navHistory = _navHistory.sublist(0, _navIndex + 1);
-      _navHistory.remove(directory.path); _navHistory.add(directory.path); if (_navHistory.length > 20) _navHistory.removeAt(0);
-      _navIndex = _navHistory.length - 1;
-    }
-    
-    _currentDirectory = directory; _isLoading = true; _allFiles = []; _currentFiles = [];
-    _saveState(); await checkClipboard(); notifyListeners();
-
-    try {
-      if (!kIsWeb && Platform.isWindows) {
-        // 真・究極の高速化: バイト列スキャン & Isolate デコード
-        // これが feature/performance-debug ブランチの「魔法」の正体
-        final List<int> allBytes = [];
-        final process = await Process.start('cmd', ['/c', 'dir', '/b', _recursiveSearch ? '/s' : '', '/a'], workingDirectory: directory.path);
-        
-        _scanSubscription = process.stdout.listen((bytes) {
-          allBytes.addAll(bytes);
-          // 読み込み中も「進行中」であることを示すために、少しずつ処理して表示
-          if (allBytes.length > 1024 * 50) { // 50KBごとに中間処理
-            _processBytesIncremental(allBytes, directory.path);
-          }
-        }, onDone: () async {
-          // 最後に一括で Isolate へ投げる (究極の整合性)
-          final results = await compute(RenameEngine.computeScanBytes, {
-            'bytes': allBytes,
-            'rootPath': directory.path,
-            'recursive': _recursiveSearch,
-          });
-          
-          _allFiles = results.map((data) {
-            final f = FileModel(entity: File(data['path'])); // Type は表示時に Lazy 判別
-            f.setDisplayRelativePath(data['rel']); return f;
-          }).toList();
-
-          _applyFilters();
-          _isLoading = false;
-          _scanSubscription = null;
-          notifyListeners();
-        });
-      } else {
-        // Fallback for non-windows
-        final results = await compute(RenameEngine.computeScan, {'rootPath': directory.path, 'recursive': _recursiveSearch});
-        _allFiles = results.map((data) {
-          final f = FileModel(entity: data['isDir'] ? Directory(data['path']) : File(data['path']));
-          f.setDisplayRelativePath(data['rel']); return f;
-        }).toList();
-        _applyFilters(); _isLoading = false; notifyListeners();
-      }
-    } catch (e) { _allFiles = []; _currentFiles = []; _isLoading = false; notifyListeners(); }
-  }
-
-  void _processBytesIncremental(List<int> bytes, String rootPath) {
-    // 中間表示用: メインスレッドで軽くデコードしてフィルタを通す
-    try {
-      final String partial = systemEncoding.decode(bytes);
-      final lines = partial.split('\r\n');
-      if (lines.length < 2) return;
-      
-      final List<FileModel> increment = [];
-      for (int i = 0; i < lines.length - 1; i++) {
-        final line = lines[i]; if (line.isEmpty) continue;
-        final fullPath = _recursiveSearch ? line : p.join(rootPath, line);
-        final f = FileModel(entity: File(fullPath));
-        if (_shouldShowFile(f)) increment.add(f);
-      }
-      
-      // 重複を避けつつ追加
-      final Set<String> existing = _currentFiles.map((f) => f.entity.path).toSet();
-      _currentFiles.addAll(increment.where((f) => !existing.contains(f.entity.path)));
-      notifyListeners();
-    } catch (_) {}
-  }
-
-  int _navTreeResetTick = 0; int get navTreeResetTick => _navTreeResetTick;
-  void resetNavTree() { _navTreeResetTick++; notifyListeners(); }
-  void cancelScan() { _scanSubscription?.cancel(); _scanSubscription = null; _isLoading = false; notifyListeners(); }
-
-  Future<void> _loadAttributes(Directory dir) async {
-    try {
-      final res = await Process.run('attrib', ['*', '/D'], workingDirectory: dir.path, stdoutEncoding: systemEncoding);
-      if (res.exitCode == 0) {
-        final lines = (res.stdout as String).split('\n'); final Map<String, String> attrMap = {};
-        for (var line in lines) {
-          line = line.trim(); if (line.length > 21) { final ap = line.substring(0, 20).toUpperCase(); final pp = line.substring(20).trim(); final fp = p.isAbsolute(pp) ? p.canonicalize(pp) : p.canonicalize(p.join(dir.path, pp)); attrMap[fp] = ap; }
-        }
-        for (var f in _currentFiles) { final np = p.canonicalize(f.entity.path); if (attrMap.containsKey(np)) { final a = attrMap[np]!; f.setAttributes(readOnly: a.contains('R'), hidden: a.contains('H'), system: a.contains('S'), archive: a.contains('A')); } }
-      }
-    } catch (e) { if (kDebugMode) print('Attrib Error: $e'); }
-  }
-
-  static Future<List<Directory>> getQuickAccessDirectories() async {
-    List<Directory> qa = []; if (kIsWeb) return qa; String? home = Platform.isWindows ? Platform.environment['USERPROFILE'] : Platform.environment['HOME'];
-    if (home != null) { final hd = Directory(home); if (await hd.exists()) { qa.add(hd); for (var f in ['Desktop', 'Downloads', 'Documents', 'Pictures', 'Music', 'Videos']) { final d = Directory(p.join(home, f)); if (await d.exists()) qa.add(d); } final od = Directory(p.join(home, 'OneDrive')); if (await od.exists()) qa.add(od); } }
-    return qa;
-  }
-
-  Future<int> deleteSelectedFiles() async {
-    final t = _currentFiles.where((f) => f.isSelected).toList(); if (t.isEmpty) return 0; int count = 0; _isLoading = true; notifyListeners();
-    for (var f in t) { try { if (!kIsWeb && Platform.isWindows) { final isDir = f.entity is Directory; final ps = f.entity.path.replaceAll("'", "''"); final script = "Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::Delete${isDir ? 'Directory' : 'File'}('$ps', 'OnlyErrorDialogs', 'SendToRecycleBin')"; final res = await Process.run('powershell', ['-Command', script]); if (res.exitCode == 0) count++; } else { await f.entity.delete(recursive: true); count++; } } catch (e) { if (kDebugMode) print('Delete error: $e'); } }
-    if (count > 0 && _currentDirectory != null) { _treeVersion++; await setDirectory(_currentDirectory!); } else { _isLoading = false; notifyListeners(); }
-    return count;
-  }
-
-  bool get hasInvalidFilenames => _hasValidationError;
-  static Future<List<Directory>> getLogicalDrives() async {
-    List<Directory> ds = []; if (kIsWeb) return ds;
-    if (Platform.isWindows) { for (var c = 'A'.codeUnitAt(0); c <= 'Z'.codeUnitAt(0); c++) { final d = Directory('${String.fromCharCode(c)}:\\\\'); if (await d.exists()) ds.add(d); } }
-    else if (Platform.isAndroid) { final d = Directory('/storage/emulated/0'); if (await d.exists()) ds.add(d); } else ds.add(Directory('/'));
-    return ds;
-  }
-
-  String get termFolder { switch (_validationType) { case ValidationType.windows: case ValidationType.mac: case ValidationType.ios: return 'フォルダ'; case ValidationType.linux: case ValidationType.android: return 'ディレクトリ'; default: return (Platform.isWindows || Platform.isMacOS || Platform.isIOS) ? 'フォルダ' : 'ディレクトリ'; } }
-  void clearInputHistory() { _findHistory.clear(); _replaceHistory.clear(); _appendHistory.clear(); _extensionHistory.clear(); _deleteFromHistory.clear(); _deleteToHistory.clear(); _saveState(); notifyListeners(); }
-  Locale get currentLocale { switch (_menuLabelType) { case MenuLabelType.standard: return const Locale('ja'); case MenuLabelType.namery: return const Locale('ja', 'NM'); case MenuLabelType.english: return const Locale('en'); case MenuLabelType.chinese: return const Locale('zh'); case MenuLabelType.spanish: return const Locale('es'); } }
-
-  Future<void> requestAndroidPermissions(BuildContext context) async {
-    if (kIsWeb || !Platform.isAndroid) return; var status = await Permission.manageExternalStorage.status; if (status.isGranted) return; if (!context.mounted) return; final l10n = AppLocalizations.of(context)!;
-    final bool? proceed = await showDialog<bool>(context: context, barrierDismissible: false, builder: (context) => AlertDialog(title: Row(children: [Icon(Icons.security, color: Theme.of(context).colorScheme.primary), const SizedBox(width: 12), Expanded(child: Text(l10n.labelPermissionFileAccessTitle))]), content: Text(l10n.labelPermissionFileAccessMessage), actions: [FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.labelPermissionFileAccessButton))]));
-    if (proceed == true) { status = await Permission.manageExternalStorage.request(); if (!status.isGranted) await openAppSettings(); }
-  }
+  List<UndoAction> getLastUndoTransaction() => _undoManager.peekLastTransaction();
 }
 
 enum InitialDirectoryMode { lastUsed, fixed }

@@ -24,7 +24,7 @@ class FileListPanel extends StatefulWidget {
 class _FileListPanelState extends State<FileListPanel> {
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _verticalController = ScrollController();
-  final GlobalKey<ReorderableListState> _reorderableListKey = GlobalKey<ReorderableListState>();
+  Key _reorderableListKey = UniqueKey(); // GlobalKey から Key に変更
   final FocusNode _fileListFocusNode = FocusNode();
   final FocusNode _renameFocusNode = FocusNode();
   final TextEditingController _renameController = TextEditingController();
@@ -55,10 +55,52 @@ class _FileListPanelState extends State<FileListPanel> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _fileListFocusNode.requestFocus();
     });
+    // ESCキー等のグローバルハンドラを登録
+    HardwareKeyboard.instance.addHandler(_handleGlobalKey);
+  }
+
+  bool _handleGlobalKey(KeyEvent event) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+      final provider = context.read<DirectoryProvider>();
+      bool handled = false;
+
+      // 1. ドラッグ移動のキャンセル
+      if (_draggingIndex != null) {
+        setState(() {
+          _draggingIndex = null;
+          _reorderableListKey = UniqueKey(); // 重要: Keyを更新してWidgetを強制再生成
+        });
+        handled = true;
+      }
+      // 2. インラインリネームのキャンセル
+      if (_editingFilePath != null) {
+        setState(() { _editingFilePath = null; });
+        provider.setInlineRenaming(false);
+        handled = true;
+      }
+      // 3. 矩形選択のキャンセル
+      if (_dragStart != null) {
+        setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; });
+        handled = true;
+      }
+      // 4. 全選択解除（優先度低）
+      if (!handled && provider.currentFiles.any((f) => f.isSelected)) {
+        provider.selectAll(false);
+        handled = true;
+      }
+      // 5. 切り取り解除
+      if (!handled && provider.isCutMode) {
+        provider.clearCutState();
+        handled = true;
+      }
+      return handled;
+    }
+    return false;
   }
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleGlobalKey);
     _horizontalController.dispose();
     _verticalController.dispose();
     _fileListFocusNode.dispose();

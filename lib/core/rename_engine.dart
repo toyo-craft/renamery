@@ -32,19 +32,19 @@ class RenameEngine {
     final bool recursive = params['recursive'];
     final List<Map<String, dynamic>> results = [];
     
-    // Isolate 内でデコードを実行
     final output = systemEncoding.decode(stdoutBytes);
-    final lines = output.split('\r\n'); // Windows cmd の改行
+    final lines = output.split('\r\n');
 
     for (var line in lines) {
       if (line.isEmpty) continue;
       final fullPath = recursive ? line : p.join(rootPath, line);
+      final name = p.basename(fullPath);
       
-      // I/O を最小化するため、Isolate 内では存在確認程度に留める
-      // 型（フォルダかファイルか）は後ほど Lazy に判別するか、パス文字列から推測
       results.add({
         'path': fullPath,
-        'name': p.basename(fullPath),
+        'name': name,
+        'isDir': FileSystemEntity.isDirectorySync(fullPath), // I/O を最小化しつつ判定
+        'isHidden': name.startsWith('.'),
         'rel': recursive ? (p.dirname(fullPath).length > rootPath.length ? p.dirname(fullPath).substring(rootPath.length).replaceFirst(RegExp(r'^[\\/]+'), '') : '') : '',
       });
     }
@@ -59,10 +59,12 @@ class RenameEngine {
       final entities = Directory(rootPath).listSync(recursive: recursive, followLinks: false);
       for (final entity in entities) {
         final path = entity.path;
+        final name = p.basename(path);
         results.add({
           'path': path,
-          'name': p.basename(path),
+          'name': name,
           'isDir': entity is Directory,
+          'isHidden': name.startsWith('.'),
           'rel': recursive ? (p.dirname(path).length > rootPath.length ? p.dirname(path).substring(rootPath.length).replaceFirst(RegExp(r'^[\\/]+'), '') : '') : '',
         });
       }
