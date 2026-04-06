@@ -40,6 +40,7 @@ class _FileListPanelState extends State<FileListPanel> {
   late Map<int, double> _columnWidths;
   static const double _widthDragHandle = 32.0;
   static const double _widthCheckbox = 32.0;
+  static const double _widthSeparator = 16.0;
 
   @override
   void initState() {
@@ -54,40 +55,62 @@ class _FileListPanelState extends State<FileListPanel> {
   }
 
   bool _handleGlobalKey(KeyEvent event) {
-    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
-      final provider = context.read<DirectoryProvider>();
+    if (event is! KeyDownEvent) return false;
+    
+    // 現在のフォーカスを確認 (main ブランチの重要ロジック)
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    final isFieldFocused = primaryFocus?.context?.widget is EditableText || 
+                           _editingFilePath != null || 
+                           primaryFocus?.debugLabel?.contains('TextField') == true;
+
+    final provider = context.read<DirectoryProvider>();
+    final key = event.logicalKey;
+    final isCtrl = HardwareKeyboard.instance.isControlPressed;
+
+    // 1. ESCキー (入力中もキャンセルとして機能)
+    if (key == LogicalKeyboardKey.escape) {
       bool handled = false;
-      if (_draggingIndex != null) {
-        setState(() { _draggingIndex = null; _reorderableListKey = UniqueKey(); });
-        handled = true;
-      }
-      if (_editingFilePath != null) {
-        setState(() { _editingFilePath = null; });
-        provider.setInlineRenaming(false);
-        handled = true;
-      }
-      if (_dragStart != null) {
-        _stopAutoScroll();
-        setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; });
-        handled = true;
-      }
-      if (!handled && provider.currentFiles.any((f) => f.isSelected)) {
-        provider.selectAll(false);
-        handled = true;
-      }
-      if (!handled && provider.isCutMode) {
-        provider.clearCutState();
-        handled = true;
-      }
+      if (_draggingIndex != null) { setState(() { _draggingIndex = null; _reorderableListKey = UniqueKey(); }); handled = true; }
+      if (_editingFilePath != null) { setState(() { _editingFilePath = null; }); provider.setInlineRenaming(false); handled = true; }
+      if (_dragStart != null) { _stopAutoScroll(); setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; }); handled = true; }
+      if (!handled && provider.currentFiles.any((f) => f.isSelected)) { provider.selectAll(false); handled = true; }
+      if (!handled && provider.isCutMode) { provider.clearCutState(); handled = true; }
       return handled;
     }
+
+    // 2. テキスト入力中（リネームやパス入力等）は、他のショートカットを一切無視して標準挙動(DEL/BS/Ctrl+A)を通す
+    if (isFieldFocused) return false;
+
+    // 3. ファイル操作用ショートカット
+    if (isCtrl) {
+      if (key == LogicalKeyboardKey.keyA) { provider.selectAll(true); return true; }
+      if (key == LogicalKeyboardKey.keyD) { provider.selectAll(false); return true; }
+      if (key == LogicalKeyboardKey.keyC) { provider.copySelection(); return true; }
+      if (key == LogicalKeyboardKey.keyX) { provider.cutSelection(); return true; }
+      if (key == LogicalKeyboardKey.keyV) { provider.pasteFromClipboard(); return true; }
+    }
+
+    if (key == LogicalKeyboardKey.f2) {
+      final selected = provider.currentFiles.where((f) => f.isSelected).toList();
+      if (selected.isNotEmpty) _startEdit(selected.first.entity.path, selected.first.originalName, provider);
+      return true;
+    }
+
+    if (key == LogicalKeyboardKey.delete) {
+      if (provider.currentFiles.any((f) => f.isSelected)) {
+        final l10n = AppLocalizations.of(context)!;
+        _showDeleteConfirmDialog(context, provider, l10n);
+      }
+      return true;
+    }
+
     return false;
   }
 
   @override
   void dispose() {
-    _stopAutoScroll();
     HardwareKeyboard.instance.removeHandler(_handleGlobalKey);
+    _stopAutoScroll();
     _horizontalController.dispose();
     _verticalController.dispose();
     _fileListFocusNode.dispose();
@@ -103,19 +126,11 @@ class _FileListPanelState extends State<FileListPanel> {
       if (_dragStart == null) { _stopAutoScroll(); return; }
       final double newOffset = (_verticalController.offset + delta).clamp(0.0, _verticalController.position.maxScrollExtent);
       _verticalController.jumpTo(newOffset);
-      
-      // スクロール後の位置で選択範囲を再計算
-      if (_dragUpdate != null) {
-        final currentAbsY = _dragUpdate!.dy; // _dragUpdateはすでに絶対座標
-        _updateSelection(currentAbsY, files, provider);
-      }
+      if (_dragUpdate != null) _updateSelection(_dragUpdate!.dy, files, provider);
     });
   }
 
-  void _stopAutoScroll() {
-    _autoScrollTimer?.cancel();
-    _autoScrollTimer = null;
-  }
+  void _stopAutoScroll() { _autoScrollTimer?.cancel(); _autoScrollTimer = null; }
 
   @override
   Widget build(BuildContext context) {
@@ -124,8 +139,8 @@ class _FileListPanelState extends State<FileListPanel> {
     final files = provider.currentFiles;
     _pathController.text = provider.currentDirectory?.path ?? '';
 
-    double contentWidth = _widthDragHandle + _widthCheckbox + 16.0;
-    for (var w in _columnWidths.values) { contentWidth += w + 16.0; }
+    double totalWidth = _widthDragHandle + _widthCheckbox + _widthSeparator;
+    for (int i = 0; i < _columnWidths.length; i++) totalWidth += _columnWidths[i]! + _widthSeparator;
 
     final rowHeight = provider.touchMode ? 50.0 : 34.0;
 
@@ -135,82 +150,58 @@ class _FileListPanelState extends State<FileListPanel> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final double totalWidth = contentWidth.clamp(constraints.maxWidth, double.infinity);
-
-              return CallbackShortcuts(
-                bindings: {
-                  const SingleActivator(LogicalKeyboardKey.keyA, control: true): () => provider.selectAll(true),
-                  const SingleActivator(LogicalKeyboardKey.keyD, control: true): () => provider.selectAll(false),
-                  const SingleActivator(LogicalKeyboardKey.f2): () {
-                    final selected = files.where((f) => f.isSelected).toList();
-                    if (selected.isNotEmpty) _startEdit(selected.first.entity.path, selected.first.originalName, provider);
-                  },
-                  const SingleActivator(LogicalKeyboardKey.delete): () {
-                    if (provider.currentFiles.any((f) => f.isSelected)) _showDeleteConfirmDialog(context, provider, l10n);
-                  },
-                },
-                child: Focus(
-                  focusNode: _fileListFocusNode,
-                  child: Scrollbar(
+              final double actualWidth = totalWidth.clamp(constraints.maxWidth, double.infinity);
+              return Focus(
+                focusNode: _fileListFocusNode,
+                child: Scrollbar(
+                  controller: _horizontalController,
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
                     controller: _horizontalController,
-                    thumbVisibility: true,
-                    child: SingleChildScrollView(
-                      controller: _horizontalController,
-                      scrollDirection: Axis.horizontal,
-                      child: SizedBox(
-                        width: totalWidth,
-                        child: Column(
-                          children: [
-                            _buildHeader(context, provider, l10n),
-                            Expanded(
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () => _fileListFocusNode.requestFocus(),
-                                onSecondaryTapDown: (details) => _showBackgroundContextMenu(context, details, provider, l10n),
-                                child: Stack(
-                                  children: [
-                                    Listener(
-                                      onPointerDown: (event) {
-                                        const safeZone = _widthDragHandle + _widthCheckbox + 16.0;
-                                        if (event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone && files.isNotEmpty) {
-                                          setState(() {
-                                            _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
-                                            _dragUpdate = _dragStart;
-                                            _initialSelectionStates = files.map((f) => f.isSelected).toList();
-                                          });
-                                        }
-                                      },
-                                      onPointerMove: (event) {
-                                        if (_dragStart != null) {
-                                          final currentAbsY = event.localPosition.dy + _verticalController.offset;
-                                          setState(() { _dragUpdate = Offset(event.localPosition.dx, currentAbsY); });
-                                          
-                                          // オートスクロール判定
-                                          const scrollZone = 40.0;
-                                          if (event.localPosition.dy < scrollZone) {
-                                            _startAutoScroll(-15.0, files, provider);
-                                          } else if (event.localPosition.dy > (constraints.maxHeight - 32.0 - scrollZone)) {
-                                            _startAutoScroll(15.0, files, provider);
-                                          } else {
-                                            _stopAutoScroll();
-                                          }
-
-                                          _updateSelection(currentAbsY, files, provider);
-                                        }
-                                      },
-                                      onPointerUp: (_) {
-                                        _stopAutoScroll();
-                                        setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; });
-                                      },
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: actualWidth,
+                      child: Column(
+                        children: [
+                          _buildHeader(context, provider, l10n),
+                          Expanded(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => _fileListFocusNode.requestFocus(),
+                              onSecondaryTapDown: (details) => _showBackgroundContextMenu(context, details, provider, l10n),
+                              child: Stack(
+                                children: [
+                                  Listener(
+                                    onPointerDown: (event) {
+                                      final safeZone = _widthDragHandle + _widthCheckbox + _widthSeparator;
+                                      if (event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone && files.isNotEmpty) {
+                                        setState(() {
+                                          _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
+                                          _dragUpdate = _dragStart;
+                                          _initialSelectionStates = files.map((f) => f.isSelected).toList();
+                                        });
+                                      }
+                                    },
+                                    onPointerMove: (event) {
+                                      if (_dragStart != null) {
+                                        final currentAbsY = event.localPosition.dy + _verticalController.offset;
+                                        setState(() { _dragUpdate = Offset(event.localPosition.dx, currentAbsY); });
+                                        const scrollZone = 40.0;
+                                        if (event.localPosition.dy < scrollZone) _startAutoScroll(-15.0, files, provider);
+                                        else if (event.localPosition.dy > (constraints.maxHeight - 32.0 - scrollZone)) _startAutoScroll(15.0, files, provider);
+                                        else _stopAutoScroll();
+                                        _updateSelection(currentAbsY, files, provider);
+                                      }
+                                    },
+                                    onPointerUp: (_) { _stopAutoScroll(); setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; }); },
+                                    child: Scrollbar(
+                                      controller: _verticalController,
+                                      thumbVisibility: true,
                                       child: NotificationListener<ScrollNotification>(
                                         onNotification: (notification) {
                                           if (notification is ScrollUpdateNotification || notification is ScrollEndNotification) {
                                             final offset = _verticalController.offset;
-                                            final viewport = constraints.maxHeight;
-                                            // 表示範囲のインデックスを算出
-                                            final start = (offset / rowHeight).floor();
-                                            final end = ((offset + viewport) / rowHeight).ceil();
-                                            provider.updateVisibleRange(start, end);
+                                            provider.updateVisibleRange((offset / rowHeight).floor(), ((offset + constraints.maxHeight) / rowHeight).ceil());
                                           }
                                           return false;
                                         },
@@ -252,37 +243,17 @@ class _FileListPanelState extends State<FileListPanel> {
                                           ],
                                         ),
                                       ),
-
                                     ),
-                                    if (files.isEmpty)
-                                      Positioned(
-                                        top: 100, left: 0,
-                                        child: IgnorePointer(
-                                          child: Container(
-                                            width: constraints.maxWidth,
-                                            alignment: Alignment.center,
-                                            child: Text(l10n.labelNoFiles, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                                          ),
-                                        ),
-                                      ),
-                                    if (_dragStart != null && _dragUpdate != null)
-                                      Positioned.fill(
-                                        child: IgnorePointer(
-                                          child: CustomPaint(
-                                            painter: SelectionPainter(
-                                              start: Offset(_dragStart!.dx, _dragStart!.dy - _verticalController.offset),
-                                              update: Offset(_dragUpdate!.dx, _dragUpdate!.dy - _verticalController.offset),
-                                              color: Theme.of(context).colorScheme.primary,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                                  ),
+                                  if (files.isEmpty)
+                                    Positioned(top: 100, left: 0, child: IgnorePointer(child: Container(width: constraints.maxWidth, alignment: Alignment.center, child: Text(l10n.labelNoFiles, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))))),
+                                  if (_dragStart != null && _dragUpdate != null)
+                                    Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: SelectionPainter(start: Offset(_dragStart!.dx, _dragStart!.dy - _verticalController.offset), update: Offset(_dragUpdate!.dx, _dragUpdate!.dy - _verticalController.offset), color: Theme.of(context).colorScheme.primary)))),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -332,9 +303,7 @@ class _FileListPanelState extends State<FileListPanel> {
     final startY = _dragStart!.dy;
     int idx1 = (startY / rowH).floor();
     int idx2 = (currentAbsY / rowH).floor();
-    final minIndex = (idx1 < idx2 ? idx1 : idx2).clamp(0, files.length - 1);
-    final maxIndex = (idx1 > idx2 ? idx1 : idx2).clamp(0, files.length - 1);
-    provider.selectRange(minIndex, maxIndex, baseStates: _initialSelectionStates);
+    provider.selectRange(idx1 < idx2 ? idx1 : idx2, idx1 > idx2 ? idx1 : idx2, baseStates: _initialSelectionStates);
   }
 
   Widget _buildAddressBar(BuildContext context, DirectoryProvider provider, AppLocalizations l10n) {
@@ -360,20 +329,26 @@ class _FileListPanelState extends State<FileListPanel> {
     final selectedCount = provider.selectedFilesCount;
     final bool? allSelected = files.isEmpty ? false : (selectedCount == 0 ? false : (selectedCount == files.length ? true : null));
     return Container(
-      height: 32,
-      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      height: 32, color: Theme.of(context).colorScheme.surfaceContainerHigh,
       child: Row(
         children: [
           const SizedBox(width: _widthDragHandle),
           SizedBox(width: _widthCheckbox, child: Checkbox(value: allSelected, tristate: true, onChanged: (val) => provider.selectAll(val ?? false), visualDensity: VisualDensity.compact)),
-          const SizedBox(width: 16),
+          const SizedBox(width: _widthSeparator),
           _buildHeaderCell(context, provider, l10n.labelColName, 0),
+          const SizedBox(width: _widthSeparator),
           _buildHeaderCell(context, provider, l10n.labelColNewName, 1),
+          const SizedBox(width: _widthSeparator),
           _buildHeaderCell(context, provider, l10n.labelColSize, 2),
+          const SizedBox(width: _widthSeparator),
           _buildHeaderCell(context, provider, l10n.labelColPath, 3),
+          const SizedBox(width: _widthSeparator),
           _buildHeaderCell(context, provider, l10n.labelColType, 4),
+          const SizedBox(width: _widthSeparator),
           _buildHeaderCell(context, provider, l10n.labelColDate, 5),
+          const SizedBox(width: _widthSeparator),
           _buildHeaderCell(context, provider, l10n.labelColAttr, 6),
+          const SizedBox(width: _widthSeparator),
         ],
       ),
     );
@@ -381,12 +356,11 @@ class _FileListPanelState extends State<FileListPanel> {
 
   Widget _buildHeaderCell(BuildContext context, DirectoryProvider provider, String label, int index) {
     final isActive = provider.sortColumnIndex == index;
-    final color = isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface;
     return SizedBox(
-      width: _columnWidths[index]! + 16,
+      width: _columnWidths[index]!,
       child: Row(
         children: [
-          Expanded(child: InkWell(onTap: () => provider.sortFiles(index, isActive ? !provider.sortAscending : true), child: Row(children: [Expanded(child: Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: color), overflow: TextOverflow.ellipsis)), if (isActive) Icon(provider.sortAscending ? Icons.expand_less : Icons.expand_more, size: 14, color: color)]))),
+          Expanded(child: InkWell(onTap: () => provider.sortFiles(index, isActive ? !provider.sortAscending : true), child: Row(children: [Expanded(child: Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface), overflow: TextOverflow.ellipsis)), if (isActive) Icon(provider.sortAscending ? Icons.expand_less : Icons.expand_more, size: 14, color: Theme.of(context).colorScheme.primary)]))),
           GestureDetector(onHorizontalDragUpdate: (details) => setState(() { _columnWidths[index] = (_columnWidths[index]! + details.delta.dx).clamp(40.0, 1000.0); }), child: MouseRegion(cursor: SystemMouseCursors.resizeColumn, child: Container(width: 4, height: 20, color: Colors.grey.withOpacity(0.3)))),
         ],
       ),
@@ -462,32 +436,8 @@ class _FileListPanelState extends State<FileListPanel> {
 }
 
 class _FileRow extends StatelessWidget {
-  final int index;
-  final FileModel file;
-  final Map<int, double> columnWidths;
-  final bool isEditing;
-  final bool isDragging;
-  final bool isDraggedItem;
-  final TextEditingController renameController;
-  final FocusNode renameFocusNode;
-  final Function(String, String) onStartEdit;
-  final VoidCallback onEndEdit;
-  final Function(TapDownDetails, FileModel) onShowMenu;
-
-  const _FileRow({
-    required this.index,
-    required this.file,
-    required this.columnWidths,
-    required this.isEditing,
-    this.isDragging = false,
-    this.isDraggedItem = false,
-    required this.renameController,
-    required this.renameFocusNode,
-    required this.onStartEdit,
-    required this.onEndEdit,
-    required this.onShowMenu,
-  });
-
+  final int index; final FileModel file; final Map<int, double> columnWidths; final bool isEditing; final bool isDragging; final bool isDraggedItem; final TextEditingController renameController; final FocusNode renameFocusNode; final Function(String, String) onStartEdit; final VoidCallback onEndEdit; final Function(TapDownDetails, FileModel) onShowMenu;
+  const _FileRow({super.key, required this.index, required this.file, required this.columnWidths, required this.isEditing, this.isDragging = false, this.isDraggedItem = false, required this.renameController, required this.renameFocusNode, required this.onStartEdit, required this.onEndEdit, required this.onShowMenu});
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
@@ -500,7 +450,6 @@ class _FileRow extends StatelessWidget {
           final isDir = file.entity is io.Directory;
           final isGhost = isDragging && file.isSelected && !isDraggedItem;
           final baseStyle = TextStyle(fontSize: provider.touchMode ? 15.0 : 12.0, fontWeight: file.isSelected ? FontWeight.w600 : FontWeight.normal, color: file.isCut ? Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5) : null);
-
           return Opacity(
             opacity: isGhost ? 0.3 : 1.0,
             child: InkWell(
@@ -513,41 +462,23 @@ class _FileRow extends StatelessWidget {
                   children: [
                     SizedBox(width: 32, child: ReorderableDragStartListener(index: index, child: const Icon(Icons.drag_indicator, size: 18, color: Colors.grey))),
                     SizedBox(width: 32, child: Checkbox(value: file.isSelected, onChanged: (_) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 16),
                     _buildCell(0, isEditing 
                       ? TextField(controller: renameController, focusNode: renameFocusNode, autofocus: true, style: baseStyle, decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()), onSubmitted: (val) { provider.renameOneFile(file, val); onEndEdit(); }) 
-                      : Row(
-                          children: [
-                            GestureDetector(
-                              onDoubleTap: () {
-                                if (isDir) {
-                                  provider.setDirectory(io.Directory(file.entity.path));
-                                } else {
-                                  PlatformUtils.openFile(file.entity.path);
-                                }
-                              },
-                              child: Icon(
-                                isDir ? Icons.folder : Icons.insert_drive_file,
-                                color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary,
-                                size: iconS,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: GestureDetector(
-                                onDoubleTap: () => onStartEdit(file.entity.path, file.originalName),
-                                child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle),
-                              ),
-                            ),
-                          ],
-                        ),
-                      baseStyle),
-                    _buildCell(1, Row(children: [Expanded(child: RichText(text: RenameEngine.buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) const Icon(Icons.error_outline, color: Colors.red, size: 16)]), baseStyle),
-                    _buildCell(2, Text(file.size, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
-                    _buildCell(3, Text(file.displayRelativePath, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)), baseStyle),
-                    _buildCell(4, Text(file.fileType, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
-                    _buildCell(5, Text(file.dateModified, overflow: TextOverflow.ellipsis, style: baseStyle), baseStyle),
-                    _buildCell(6, Text(file.attributes, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)), baseStyle),
+                      : Row(children: [GestureDetector(onDoubleTap: () { if (isDir) provider.setDirectory(io.Directory(file.entity.path)); else PlatformUtils.openFile(file.entity.path); }, child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: iconS)), const SizedBox(width: 8), Expanded(child: GestureDetector(onDoubleTap: () => onStartEdit(file.entity.path, file.originalName), child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle)))]), baseStyle),
+                    const SizedBox(width: 16),
+                    _buildCell(1, Row(children: [Expanded(child: RichText(text: RenameEngine.buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) const Icon(Icons.error_outline, color: Colors.red, size: 16)])),
+                    const SizedBox(width: 16),
+                    _buildCell(2, Text(file.size, overflow: TextOverflow.ellipsis, style: baseStyle)),
+                    const SizedBox(width: 16),
+                    _buildCell(3, Text(file.displayRelativePath, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant))),
+                    const SizedBox(width: 16),
+                    _buildCell(4, Text(file.fileType, overflow: TextOverflow.ellipsis, style: baseStyle)),
+                    const SizedBox(width: 16),
+                    _buildCell(5, Text(file.dateModified, overflow: TextOverflow.ellipsis, style: baseStyle)),
+                    const SizedBox(width: 16),
+                    _buildCell(6, Text(file.attributes, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant))),
+                    const SizedBox(width: 16),
                   ],
                 ),
               ),
@@ -557,8 +488,7 @@ class _FileRow extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildCell(int colIndex, Widget content, TextStyle style) => SizedBox(width: columnWidths[colIndex]!, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8.0), child: content));
+  Widget _buildCell(int colIndex, Widget content, [TextStyle? style]) => SizedBox(width: columnWidths[colIndex]!, child: content);
 }
 
 class SelectionPainter extends CustomPainter {
