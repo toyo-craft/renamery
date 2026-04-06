@@ -358,6 +358,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelNavUp => 'Go Up';
 
   @override
+  String get labelNavHistory => 'History';
+
+  @override
+  String get labelNoHistory => 'No history';
+
+  @override
+  String get labelScanStop => 'Stop scan';
+
+  @override
   String get labelHistoryBack => 'Back (History)';
 
   @override

@@ -307,18 +307,71 @@ class _FileListPanelState extends State<FileListPanel> {
   }
 
   Widget _buildAddressBar(BuildContext context, DirectoryProvider provider, AppLocalizations l10n) {
+    final hasSelection = provider.selectedFilesCount > 0;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1), width: 0.5)),
+      ),
       child: Row(
         children: [
-          IconButton(icon: const Icon(Icons.arrow_back), onPressed: provider.canGoBack ? provider.goBack : null),
-          IconButton(icon: const Icon(Icons.arrow_forward), onPressed: provider.canGoForward ? provider.goForward : null),
-          IconButton(icon: const Icon(Icons.arrow_upward), onPressed: provider.goUp),
+          // 1. ラベル
+          Text(
+            l10n.labelFullPath,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(width: 8),
-          Expanded(child: TextField(controller: _pathController, decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10), border: OutlineInputBorder()), onSubmitted: (val) => provider.setDirectory(io.Directory(val)))),
-          const SizedBox(width: 8),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: provider.refresh),
+          // 2. アドレス入力欄
+          Expanded(
+            child: SizedBox(
+              height: 36,
+              child: TextField(
+                controller: _pathController,
+                style: const TextStyle(fontSize: 13),
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                  fillColor: Theme.of(context).colorScheme.surface,
+                  filled: true,
+                ),
+                onSubmitted: (val) {
+                  if (val.isNotEmpty) provider.setDirectory(io.Directory(val));
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          // 3. 移動ボタン (シンプルな矢印)
+          IconButton(
+            icon: const Icon(Icons.arrow_forward),
+            onPressed: () {
+              if (_pathController.text.isNotEmpty) {
+                provider.setDirectory(io.Directory(_pathController.text));
+              }
+            },
+            tooltip: l10n.labelMenuGo,
+          ),
+          const SizedBox(width: 4),
+          // 4. 全選択ボタン (楕円 / Elevated)
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              shape: const StadiumBorder(), // 楕円
+              elevation: 2,
+            ),
+            onPressed: () => provider.selectAll(!hasSelection),
+            child: Text(
+              hasSelection ? l10n.labelDeselectAll : l10n.labelSelectAll,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
         ],
       ),
     );

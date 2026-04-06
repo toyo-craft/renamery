@@ -793,6 +793,24 @@ abstract class AppLocalizations {
   /// **'一つ上のフォルダへ'**
   String get labelNavUp;
 
+  /// No description provided for @labelNavHistory.
+  ///
+  /// In ja, this message translates to:
+  /// **'履歴'**
+  String get labelNavHistory;
+
+  /// No description provided for @labelNoHistory.
+  ///
+  /// In ja, this message translates to:
+  /// **'履歴がありません'**
+  String get labelNoHistory;
+
+  /// No description provided for @labelScanStop.
+  ///
+  /// In ja, this message translates to:
+  /// **'スキャン停止'**
+  String get labelScanStop;
+
   /// No description provided for @labelHistoryBack.
   ///
   /// In ja, this message translates to:

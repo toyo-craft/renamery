@@ -356,6 +356,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelNavUp => '一つ上のフォルダへ';
 
   @override
+  String get labelNavHistory => '履歴';
+
+  @override
+  String get labelNoHistory => '履歴がありません';
+
+  @override
+  String get labelScanStop => 'スキャン停止';
+
+  @override
   String get labelHistoryBack => '履歴 (戻る)';
 
   @override

@@ -358,6 +358,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelNavUp => 'Subir';
 
   @override
+  String get labelNavHistory => '履歴';
+
+  @override
+  String get labelNoHistory => '履歴がありません';
+
+  @override
+  String get labelScanStop => 'スキャン停止';
+
+  @override
   String get labelHistoryBack => 'Atrás (Historial)';
 
   @override
