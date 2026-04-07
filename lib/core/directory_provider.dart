@@ -37,7 +37,12 @@ class DirectoryProvider extends ChangeNotifier {
   void setInlineRenaming(bool isRenaming) { if (_isInlineRenaming != isRenaming) { _isInlineRenaming = isRenaming; notifyListeners(); } }
 
   bool _isLicenseAccepted = false; bool get isLicenseAccepted => _isLicenseAccepted;
-  Future<void> acceptLicense() async { _isLicenseAccepted = true; _settings.set('isLicenseAccepted', true); notifyListeners(); }
+  Future<void> acceptLicense() async { 
+    _isLicenseAccepted = true; 
+    _settings.set('isLicenseAccepted', true); 
+    _saveState(); // 物理的な保存を実行
+    notifyListeners(); 
+  }
 
   Future<void> init() async {
     final s = _settings;

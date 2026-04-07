@@ -186,8 +186,11 @@ class _FileListPanelState extends State<FileListPanel> {
                                 children: [
                                   Listener(
                                     onPointerDown: (event) {
+                                      // タッチデバイスでの誤作動防止: マウス操作以外（タッチ）では矩形選択を開始しない
+                                      final isMouse = event.kind == PointerDeviceKind.mouse;
                                       final safeZone = _widthDragHandle + _widthCheckbox + _widthSeparator;
-                                      if (event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone && files.isNotEmpty) {
+
+                                      if (isMouse && event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone && files.isNotEmpty) {
                                         setState(() {
                                           _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
                                           _dragUpdate = _dragStart;
@@ -195,6 +198,7 @@ class _FileListPanelState extends State<FileListPanel> {
                                         });
                                       }
                                     },
+
                                     onPointerMove: (event) {
                                       if (_dragStart != null) {
                                         final currentAbsY = event.localPosition.dy + _verticalController.offset;

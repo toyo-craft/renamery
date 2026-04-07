@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:multi_split_view/multi_split_view.dart';
@@ -375,7 +376,18 @@ class _DirectoryTileState extends State<_DirectoryTile> {
       }
     }
     if (bestQA != null) return bestQA;
-    return _RouteResult(depth: p.split(canonicalTarget).length, isQuickAccess: false, winningRootPath: p.rootPrefix(canonicalTarget));
+    
+    // Android のルート考慮
+    int depth = p.split(canonicalTarget).length;
+    String winningRoot = p.rootPrefix(canonicalTarget);
+    if (!kIsWeb && Platform.isAndroid && canonicalTarget.startsWith('/storage/emulated/0')) {
+      // /storage/emulated/0 は実質的なルートなので、ここからの相対階層で算出
+      final relative = p.relative(canonicalTarget, from: '/storage/emulated/0');
+      depth = (relative == '.' ? 0 : p.split(relative).length) + 1;
+      winningRoot = '/storage/emulated/0';
+    }
+    
+    return _RouteResult(depth: depth, isQuickAccess: false, winningRootPath: winningRoot);
   }
 
   void _ensureVisibleWithRetry(int retryCount) {
