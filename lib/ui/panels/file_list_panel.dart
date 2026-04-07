@@ -57,29 +57,42 @@ class _FileListPanelState extends State<FileListPanel> {
   bool _handleGlobalKey(KeyEvent event) {
     if (event is! KeyDownEvent) return false;
     
-    // 現在のフォーカスを確認 (main ブランチの重要ロジック)
+    // [最強のガード] 現在のフォーカスが「文字入力を受け付ける状態」かを判定
     final primaryFocus = FocusManager.instance.primaryFocus;
-    final isFieldFocused = primaryFocus?.context?.widget is EditableText || 
-                           _editingFilePath != null || 
-                           primaryFocus?.debugLabel?.contains('TextField') == true;
+    bool isWriting = false;
+    
+    if (primaryFocus != null) {
+      final label = primaryFocus.debugLabel ?? '';
+      if (label.contains('EditableText') || label.contains('TextField')) {
+        isWriting = true;
+      } else {
+        primaryFocus.context?.visitAncestorElements((element) {
+          if (element.widget is EditableText) { isWriting = true; return false; }
+          return true;
+        });
+      }
+    }
 
     final provider = context.read<DirectoryProvider>();
     final key = event.logicalKey;
     final isCtrl = HardwareKeyboard.instance.isControlPressed;
 
-    // 1. ESCキー (入力中もキャンセルとして機能)
+    // 1. ESCキーの特別扱い
     if (key == LogicalKeyboardKey.escape) {
       bool handled = false;
       if (_draggingIndex != null) { setState(() { _draggingIndex = null; _reorderableListKey = UniqueKey(); }); handled = true; }
       if (_editingFilePath != null) { setState(() { _editingFilePath = null; }); provider.setInlineRenaming(false); handled = true; }
       if (_dragStart != null) { _stopAutoScroll(); setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; }); handled = true; }
+      
+      if (isWriting) return handled;
+
       if (!handled && provider.currentFiles.any((f) => f.isSelected)) { provider.selectAll(false); handled = true; }
       if (!handled && provider.isCutMode) { provider.clearCutState(); handled = true; }
       return handled;
     }
 
-    // 2. テキスト入力中（リネームやパス入力等）は、他のショートカットを一切無視して標準挙動(DEL/BS/Ctrl+A)を通す
-    if (isFieldFocused) return false;
+    // 2. [重要] 入力中は ESC 以外の全ショートカットを完全に遮断
+    if (isWriting || provider.isInlineRenaming) return false;
 
     // 3. ファイル操作用ショートカット
     if (isCtrl) {
