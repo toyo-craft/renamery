@@ -203,6 +203,7 @@ class _DirectoryTile extends StatefulWidget {
   final int depth;
   final List<String> quickAccessRoots;
   final ScrollController scrollController;
+  final bool forceExpansion; // 新設：親から「連鎖展開せよ」と命じられたか
 
   const _DirectoryTile({
     required this.directory,
@@ -214,6 +215,7 @@ class _DirectoryTile extends StatefulWidget {
     required this.depth,
     required this.quickAccessRoots,
     required this.scrollController,
+    this.forceExpansion = false,
   });
 
   @override
@@ -249,7 +251,14 @@ class _DirectoryTileState extends State<_DirectoryTile> {
   void initState() {
     super.initState();
     final provider = context.read<DirectoryProvider>();
-    _lastHandledSelectionVersion = provider.selectionVersion;
+    // main ブランチの「連鎖」と「保護」を両立させる究極のロジック:
+    // 親から「連鎖展開せよ」と言われた時だけ、ゲートを開ける。
+    // それ以外（KeyedSubtreeによる再生成など）は、現在の場所を「既読」として沈黙を守る。
+    if (widget.forceExpansion) {
+      _lastHandledSelectionVersion = -1;
+    } else {
+      _lastHandledSelectionVersion = provider.selectionVersion;
+    }
   }
 
   int _lastHandledSelectionVersion = -1;
@@ -291,12 +300,14 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     if (isSelected || isDescendant) {
       if (source == 'address_bar' || source == null) {
         final bestResult = _calculateBestRouteForPath(currentDir!.path);
-        bool isWinningRoute = (widget.isQuickAccess == bestResult.isQuickAccess && widget.contextRoot == bestResult.winningRootPath);
-        if (!isWinningRoute || widget.depth > bestResult.depth) {
-          isSelected = false; isDescendant = false;
-        }
-      } else if (provider.navigationContextRoot != null && widget.contextRoot != provider.navigationContextRoot) {
-        isSelected = false; isDescendant = false;
+        final String myNormalizedRoot = widget.contextRoot != null ? p.canonicalize(widget.contextRoot!) : '';
+        final String bestNormalizedRoot = p.canonicalize(bestResult.winningRootPath);
+        bool isWinningRoute = (widget.isQuickAccess == bestResult.isQuickAccess && myNormalizedRoot == bestNormalizedRoot);
+        if (!isWinningRoute || widget.depth > bestResult.depth) { isSelected = false; isDescendant = false; }
+      } else if (provider.navigationContextRoot != null) {
+        final String myNormalizedRoot = widget.contextRoot != null ? p.canonicalize(widget.contextRoot!) : '';
+        final String activeNormalizedRoot = p.canonicalize(provider.navigationContextRoot!);
+        if (myNormalizedRoot != activeNormalizedRoot) { isSelected = false; isDescendant = false; }
       }
     }
 
@@ -341,7 +352,10 @@ class _DirectoryTileState extends State<_DirectoryTile> {
             padding: EdgeInsets.only(left: provider.touchMode ? 16.0 : 12.0),
             child: Column(
               children: _subDirectories.where((dir) => provider.hideSystemFiles ? !p.basename(dir.path).startsWith('.') : true).map((dir) {
-                return _DirectoryTile(directory: dir, isQuickAccess: widget.isQuickAccess, contextRoot: widget.contextRoot, depth: widget.depth + 1, quickAccessRoots: widget.quickAccessRoots, scrollController: widget.scrollController);
+                // [究極の解決策]
+                // 自分が自動展開中であれば、子に対しても「お前も開く可能性があるぞ」とフラグを継承させる
+                bool childMightExpand = isDescendant || isSelected;
+                return _DirectoryTile(directory: dir, isQuickAccess: widget.isQuickAccess, contextRoot: widget.contextRoot, depth: widget.depth + 1, quickAccessRoots: widget.quickAccessRoots, scrollController: widget.scrollController, forceExpansion: childMightExpand);
               }).toList(),
             ),
           ),
