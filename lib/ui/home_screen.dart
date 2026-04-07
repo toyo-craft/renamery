@@ -342,127 +342,167 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           debugLogging: false,
           durationUntilAlertAgain: const Duration(days: 1),
         ),
-        child: Stack(
-          children: [
-          Scaffold(
-            key: _scaffoldKey,
-            appBar: HomeAppBar(
-              showDrawerMenu: !showLeftPane,
-            ),
-            drawer: !showLeftPane
-                ? Drawer(
-                    width: 300,
-                    child: SafeArea(
-                      child: Consumer<DirectoryProvider>(
-                        builder: (context, provider, child) =>
-                            NavigationPanel(key: ValueKey(provider.resetCount)),
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+
+            final provider = context.read<DirectoryProvider>();
+            
+            // 1. もし履歴があれば、まずは一つ前のディレクトリに戻る
+            if (provider.canGoBack) {
+              await provider.goBack();
+              return;
+            }
+
+            // 2. 履歴がない（ルート画面）の場合は、終了確認ダイアログを表示
+            if (!context.mounted) return;
+            
+            final bool? shouldExit = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('アプリの終了'),
+                content: const Text('ReNamery を終了しますか？'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text(l10n.labelDialogCancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('終了する'),
+                  ),
+                ],
+              ),
+            );
+
+            if (shouldExit == true) {
+              // ユーザーが明示的に終了を選択した場合のみ、アプリを閉じる
+              await SystemNavigator.pop();
+            }
+          },
+          child: Stack(
+            children: [
+              Scaffold(
+                key: _scaffoldKey,
+                appBar: HomeAppBar(
+                  showDrawerMenu: !showLeftPane,
+                ),
+                drawer: !showLeftPane
+                    ? Drawer(
+                        width: 300,
+                        child: SafeArea(
+                          child: Consumer<DirectoryProvider>(
+                            builder: (context, provider, child) =>
+                                NavigationPanel(key: ValueKey(provider.resetCount)),
+                          ),
+                        ),
+                      )
+                    : null,
+                endDrawer: !showRightPane
+                    ? const Drawer(
+                        width: 350,
+                        child: SafeArea(
+                          child: SettingsPanel(),
+                        ),
+                      )
+                    : null,
+                body: Column(
+                  children: [
+                    Consumer<DirectoryProvider>(
+                      builder: (context, provider, child) {
+                        return provider.isLoading
+                            ? const SizedBox(
+                                height: 2,
+                                child: LinearProgressIndicator(),
+                              )
+                            : const SizedBox(height: 2);
+                      },
+                    ),
+                    Expanded(
+                      child: MultiSplitViewTheme(
+                        data: MultiSplitViewThemeData(
+                          dividerThickness: 10,
+                          dividerPainter: DividerPainters.grooved1(
+                            color: Colors.grey[400]!,
+                            highlightedColor: Colors.blue,
+                          ),
+                        ),
+                        child: _buildBody(showLeftPane, showRightPane),
                       ),
                     ),
-                  )
-                : null,
-            endDrawer: !showRightPane
-                ? const Drawer(
-                    width: 350,
-                    child: SafeArea(
-                      child: SettingsPanel(),
-                    ),
-                  )
-                : null,
-            body: Column(
-              children: [
+                  ],
+                ),
+                bottomNavigationBar: isNarrow
+                    ? _buildMobileBottomAppBar(context, l10n)
+                    : _buildDesktopFooter(context, l10n),
+                floatingActionButton: _buildFAB(isNarrow, showRightPane, context, l10n),
+                floatingActionButtonLocation: isNarrow 
+                    ? FloatingActionButtonLocation.centerDocked 
+                    : FloatingActionButtonLocation.endFloat,
+              ),
+              if (isNarrow)
                 Consumer<DirectoryProvider>(
                   builder: (context, provider, child) {
-                    return provider.isLoading
-                        ? const SizedBox(
-                            height: 2,
-                            child: LinearProgressIndicator(),
-                          )
-                        : const SizedBox(height: 2);
-                  },
-                ),
-                Expanded(
-                  child: MultiSplitViewTheme(
-                    data: MultiSplitViewThemeData(
-                      dividerThickness: 10,
-                      dividerPainter: DividerPainters.grooved1(
-                        color: Colors.grey[400]!,
-                        highlightedColor: Colors.blue,
-                      ),
-                    ),
-                    child: _buildBody(showLeftPane, showRightPane),
-                  ),
-                ),
-              ],
-            ),
-            bottomNavigationBar: isNarrow
-                ? _buildMobileBottomAppBar(context, l10n)
-                : _buildDesktopFooter(context, l10n),
-            floatingActionButton: _buildFAB(isNarrow, showRightPane, context, l10n),
-            floatingActionButtonLocation: isNarrow 
-                ? FloatingActionButtonLocation.centerDocked 
-                : FloatingActionButtonLocation.endFloat,
-          ),
-          if (isNarrow)
-            Consumer<DirectoryProvider>(
-              builder: (context, provider, child) {
-                final selected = provider.currentFiles.where((f) => f.isSelected).toList();
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _triggerFloatingPreview(
-                    selected.length,
-                    selected.length == 1 ? selected.first.entity.path : ''
-                  );
-                });
+                    final selected = provider.currentFiles.where((f) => f.isSelected).toList();
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _triggerFloatingPreview(
+                        selected.length,
+                        selected.length == 1 ? selected.first.entity.path : ''
+                      );
+                    });
 
-                return Positioned(
-                  left: 16,
-                  bottom: 100, // BottomAppBarの上に来るように調整
-                  child: AnimatedOpacity(
-                    opacity: _showFloatingPreview ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 300),
-                    child: IgnorePointer(
-                      ignoring: !_showFloatingPreview,
-                      child: GestureDetector(
-                        onTap: () {
-                          if (selected.isNotEmpty) {
-                            provider.openEnlargedPreview(selected.last);
-                          }
-                        },
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
+                    return Positioned(
+                      left: 16,
+                      bottom: 100, // BottomAppBarの上に来るように調整
+                      child: AnimatedOpacity(
+                        opacity: _showFloatingPreview ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: IgnorePointer(
+                          ignoring: !_showFloatingPreview,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (selected.isNotEmpty) {
+                                provider.openEnlargedPreview(selected.last);
+                              }
+                            },
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                                  width: 2,
+                                ),
                               ),
-                            ],
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-                              width: 2,
+                              clipBehavior: Clip.antiAlias,
+                              child: PreviewWindow(
+                                file: selected.isNotEmpty ? selected.last : null,
+                              ),
                             ),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: PreviewWindow(
-                            file: selected.isNotEmpty ? selected.last : null,
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          
-          // モバイル版クイックルック
-          if (isNarrow)
-            const EnlargedPreviewOverlay(isMobile: true),
-        ],
+                    );
+                  },
+                ),
+              
+              // モバイル版クイックルック
+              if (isNarrow)
+                const EnlargedPreviewOverlay(isMobile: true),
+            ],
+          ),
+        ),
       ),
-    ),
     );
   }
 

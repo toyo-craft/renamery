@@ -41,6 +41,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
   Future<void> _loadData() async {
     final drives = await DirectoryProvider.getLogicalDrives();
     final quick = await DirectoryProvider.getQuickAccessDirectories();
+    debugPrint('[NavPanel] Drives: ${drives.map((d) => d.path).toList()}');
     if (mounted) {
       setState(() { _drives = drives; _quickAccess = quick; _loading = false; });
     }
@@ -204,7 +205,7 @@ class _DirectoryTile extends StatefulWidget {
   final int depth;
   final List<String> quickAccessRoots;
   final ScrollController scrollController;
-  final bool forceExpansion; // 新設：親から「連鎖展開せよ」と命じられたか
+  final bool forceExpansion;
 
   const _DirectoryTile({
     required this.directory,
@@ -229,17 +230,39 @@ class _DirectoryTileState extends State<_DirectoryTile> {
   bool _loaded = false;
 
   Future<void> _toggleExpand() async {
-    if (_isExpanded) { setState(() => _isExpanded = false); return; }
+    if (_isExpanded) {
+      setState(() => _isExpanded = false);
+      return;
+    }
     setState(() => _isExpanded = true);
     if (!_loaded) {
       try {
         final List<FileSystemEntity> entities = await widget.directory.list().toList();
         final List<Directory> subDirs = entities.where((e) {
-          try { return FileSystemEntity.typeSync(e.path) == FileSystemEntityType.directory; } catch (_) { return e is Directory; }
+          try {
+            return FileSystemEntity.typeSync(e.path) == FileSystemEntityType.directory;
+          } catch (_) {
+            return e is Directory;
+          }
         }).map((e) => Directory(e.path)).toList();
+        
         subDirs.sort((a, b) => p.basename(a.path).toLowerCase().compareTo(p.basename(b.path).toLowerCase()));
-        if (mounted) setState(() { _subDirectories = subDirs; _loaded = true; });
-      } catch (e) { if (mounted) setState(() => _isExpanded = false); }
+        
+        if (mounted) {
+          setState(() {
+            _subDirectories = subDirs;
+            _loaded = true;
+          });
+        }
+      } catch (e) {
+        debugPrint('[NavDebug] ERROR listing ${widget.directory.path}: $e');
+        if (mounted) {
+          setState(() {
+            _isExpanded = false;
+            _loaded = false;
+          });
+        }
+      }
     }
   }
 
@@ -251,15 +274,8 @@ class _DirectoryTileState extends State<_DirectoryTile> {
   @override
   void initState() {
     super.initState();
-    final provider = context.read<DirectoryProvider>();
-    // main ブランチの「連鎖」と「保護」を両立させる究極のロジック:
-    // 親から「連鎖展開せよ」と言われた時だけ、ゲートを開ける。
-    // それ以外（KeyedSubtreeによる再生成など）は、現在の場所を「既読」として沈黙を守る。
-    if (widget.forceExpansion) {
-      _lastHandledSelectionVersion = -1;
-    } else {
-      _lastHandledSelectionVersion = provider.selectionVersion;
-    }
+    // Android/ドロワー対策: 初回ビルド時に必ず展開判定が行われるようにバージョンをリセット状態で開始
+    _lastHandledSelectionVersion = -1;
   }
 
   int _lastHandledSelectionVersion = -1;
@@ -287,15 +303,23 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     Color iconColor = widget.customIcon != null ? Colors.blueGrey : Colors.amber;
     if (widget.directory.path.endsWith(':\\')) { icon = Icons.storage; iconColor = Colors.grey; }
 
-    bool isSelected = currentDir?.path == widget.directory.path;
+    bool isSelected = false;
     bool isDescendant = false;
+    
     if (currentDir != null) {
-      try {
-        final canC = p.canonicalize(currentDir.path);
-        final canM = p.canonicalize(widget.directory.path);
-        if (canC == canM) isSelected = true;
-        isDescendant = p.isWithin(canM, canC);
-      } catch (_) {}
+      final canC = p.canonicalize(currentDir.path);
+      final canM = p.canonicalize(widget.directory.path);
+      
+      // パス一致の判定を強化（equalsを使用）
+      isSelected = p.equals(canC, canM);
+      isDescendant = p.isWithin(canM, canC);
+      
+      // Androidのルート /storage/emulated/0 の特殊判定
+      if (!isSelected && Platform.isAndroid) {
+        if (p.equals(canM, '/storage/emulated/0') && p.equals(canC, '/storage/emulated/0')) {
+          isSelected = true;
+        }
+      }
     }
 
     if (isSelected || isDescendant) {
@@ -303,21 +327,27 @@ class _DirectoryTileState extends State<_DirectoryTile> {
         final bestResult = _calculateBestRouteForPath(currentDir!.path);
         final String myNormalizedRoot = widget.contextRoot != null ? p.canonicalize(widget.contextRoot!) : '';
         final String bestNormalizedRoot = p.canonicalize(bestResult.winningRootPath);
-        bool isWinningRoute = (widget.isQuickAccess == bestResult.isQuickAccess && myNormalizedRoot == bestNormalizedRoot);
-        if (!isWinningRoute || widget.depth > bestResult.depth) { isSelected = false; isDescendant = false; }
+        bool isWinningRoute = (widget.isQuickAccess == bestResult.isQuickAccess && p.equals(myNormalizedRoot, bestNormalizedRoot));
+        if (!isWinningRoute || widget.depth > bestResult.depth) {
+          isSelected = false; isDescendant = false;
+        }
       } else if (provider.navigationContextRoot != null) {
         final String myNormalizedRoot = widget.contextRoot != null ? p.canonicalize(widget.contextRoot!) : '';
         final String activeNormalizedRoot = p.canonicalize(provider.navigationContextRoot!);
-        if (myNormalizedRoot != activeNormalizedRoot) { isSelected = false; isDescendant = false; }
+        if (!p.equals(myNormalizedRoot, activeNormalizedRoot)) { isSelected = false; isDescendant = false; }
       }
     }
 
-    if (currentDir != null && provider.selectionVersion != _lastHandledSelectionVersion) {
+    // 自動展開のトリガー
+    if (currentDir != null && (provider.selectionVersion != _lastHandledSelectionVersion || widget.forceExpansion)) {
       bool shouldAutoExpand = isDescendant || isSelected;
+      debugPrint('[NavDebug] Tile: ${widget.directory.path} | isSelected: $isSelected | isDescendant: $isDescendant | shouldAutoExpand: $shouldAutoExpand');
+      
       if (shouldAutoExpand && !_isExpanded && !widget.isSuppressingAutoExpand) {
+        debugPrint('[NavDebug] Auto-expanding: ${widget.directory.path}');
         WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _toggleExpand(); });
       }
-      if (isSelected && source == 'address_bar') {
+      if (isSelected && (source == 'address_bar' || source == null)) {
         WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _ensureVisibleWithRetry(0); });
       }
       _lastHandledSelectionVersion = provider.selectionVersion;
@@ -353,8 +383,7 @@ class _DirectoryTileState extends State<_DirectoryTile> {
             padding: EdgeInsets.only(left: provider.touchMode ? 16.0 : 12.0),
             child: Column(
               children: _subDirectories.where((dir) => provider.hideSystemFiles ? !p.basename(dir.path).startsWith('.') : true).map((dir) {
-                // [究極の解決策]
-                // 自分が自動展開中であれば、子に対しても「お前も開く可能性があるぞ」とフラグを継承させる
+                // 子に対しても強制展開の必要性を伝える
                 bool childMightExpand = isDescendant || isSelected;
                 return _DirectoryTile(directory: dir, isQuickAccess: widget.isQuickAccess, contextRoot: widget.contextRoot, depth: widget.depth + 1, quickAccessRoots: widget.quickAccessRoots, scrollController: widget.scrollController, forceExpansion: childMightExpand);
               }).toList(),
@@ -369,24 +398,31 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     _RouteResult? bestQA;
     for (final root in widget.quickAccessRoots) {
       final canonicalRoot = p.canonicalize(root);
-      if (canonicalTarget == canonicalRoot) { bestQA = _RouteResult(depth: 1, isQuickAccess: true, winningRootPath: root); break; }
+      if (p.equals(canonicalTarget, canonicalRoot)) {
+        bestQA = _RouteResult(depth: 1, isQuickAccess: true, winningRootPath: root);
+        break;
+      }
       if (p.isWithin(canonicalRoot, canonicalTarget)) {
         final depth = p.split(p.relative(canonicalTarget, from: canonicalRoot)).length + 1;
-        if (bestQA == null || depth < bestQA.depth) bestQA = _RouteResult(depth: depth, isQuickAccess: true, winningRootPath: root);
+        if (bestQA == null || depth < bestQA.depth) {
+          bestQA = _RouteResult(depth: depth, isQuickAccess: true, winningRootPath: root);
+        }
       }
     }
     if (bestQA != null) return bestQA;
-    
-    // Android のルート考慮
-    int depth = p.split(canonicalTarget).length;
+
+    const androidRoot = '/storage/emulated/0';
     String winningRoot = p.rootPrefix(canonicalTarget);
-    if (!kIsWeb && Platform.isAndroid && canonicalTarget.startsWith('/storage/emulated/0')) {
-      // /storage/emulated/0 は実質的なルートなので、ここからの相対階層で算出
-      final relative = p.relative(canonicalTarget, from: '/storage/emulated/0');
-      depth = (relative == '.' ? 0 : p.split(relative).length) + 1;
-      winningRoot = '/storage/emulated/0';
+    int depth = p.split(canonicalTarget).length;
+
+    if (!kIsWeb && Platform.isAndroid) {
+      if (p.equals(canonicalTarget, androidRoot) || p.isWithin(androidRoot, canonicalTarget)) {
+        final relative = p.relative(canonicalTarget, from: androidRoot);
+        depth = (p.equals(relative, '.') ? 0 : p.split(relative).length) + 1;
+        winningRoot = androidRoot;
+      }
     }
-    
+
     return _RouteResult(depth: depth, isQuickAccess: false, winningRootPath: winningRoot);
   }
 

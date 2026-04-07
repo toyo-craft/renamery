@@ -254,9 +254,21 @@ class DirectoryProvider extends ChangeNotifier {
 
   Future<void> checkClipboard() async {
     try {
-      final clipboard = SystemClipboard.instance; if (clipboard == null) { _canPaste = false; notifyListeners(); return; }
-      final reader = await clipboard.read(); _canPaste = reader.canProvide(Formats.fileUri);
-    } catch (e) { debugPrint('Clipboard check failed: $e'); _canPaste = false; }
+      // Androidエミュレータ等でネイティブライブラリが読み込めない場合、
+      // SystemClipboard.instance へのアクセス自体でエラーになる可能性があるため、より慎重にチェック
+      final clipboard = SystemClipboard.instance;
+      if (clipboard == null) {
+        _canPaste = false;
+        notifyListeners();
+        return;
+      }
+      final reader = await clipboard.read();
+      _canPaste = reader.canProvide(Formats.fileUri);
+    } catch (e) {
+      // ログ出力は最小限にし、アプリのクラッシュを防ぐ
+      if (kDebugMode) print('Clipboard check failed (expected on some Android environments): $e');
+      _canPaste = false;
+    }
     notifyListeners();
   }
 
