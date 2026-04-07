@@ -342,7 +342,7 @@ class _FileListPanelState extends State<FileListPanel> {
                   filled: true,
                 ),
                 onSubmitted: (val) {
-                  if (val.isNotEmpty) provider.setDirectory(io.Directory(val));
+                  if (val.isNotEmpty) provider.setDirectory(io.Directory(val), source: 'address_bar');
                 },
               ),
             ),
@@ -353,7 +353,7 @@ class _FileListPanelState extends State<FileListPanel> {
             icon: const Icon(Icons.arrow_forward),
             onPressed: () {
               if (_pathController.text.isNotEmpty) {
-                provider.setDirectory(io.Directory(_pathController.text));
+                provider.setDirectory(io.Directory(_pathController.text), source: 'address_bar');
               }
             },
             tooltip: l10n.labelMenuGo,

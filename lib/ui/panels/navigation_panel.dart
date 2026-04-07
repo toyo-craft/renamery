@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:multi_split_view/multi_split_view.dart';
@@ -21,6 +22,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
   bool _loading = true;
 
   late final MultiSplitViewController _splitterController;
+  final ScrollController _horizontalController = ScrollController();
+  final ScrollController _verticalScrollController = ScrollController();
 
   @override
   void initState() {
@@ -37,31 +40,22 @@ class _NavigationPanelState extends State<NavigationPanel> {
   Future<void> _loadData() async {
     final drives = await DirectoryProvider.getLogicalDrives();
     final quick = await DirectoryProvider.getQuickAccessDirectories();
-
     if (mounted) {
-      setState(() {
-        _drives = drives;
-        _quickAccess = quick;
-        _loading = false;
-      });
+      setState(() { _drives = drives; _quickAccess = quick; _loading = false; });
     }
   }
-
-  final ScrollController _horizontalController = ScrollController();
 
   @override
   void dispose() {
     _horizontalController.dispose();
+    _verticalScrollController.dispose();
     _splitterController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
+    if (_loading) return const Center(child: CircularProgressIndicator());
     return MultiSplitViewTheme(
       data: MultiSplitViewThemeData(
         dividerThickness: 6,
@@ -97,38 +91,51 @@ class _NavigationPanelState extends State<NavigationPanel> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return Scrollbar(
-                  controller: _horizontalController,
-                  child: SingleChildScrollView(
+                  controller: _verticalScrollController,
+                  thumbVisibility: true,
+                  child: Scrollbar(
                     controller: _horizontalController,
-                    scrollDirection: Axis.horizontal,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                      child: IntrinsicWidth(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (_quickAccess.isNotEmpty)
-                                KeyedSubtree(
-                                  key: ValueKey('qa_${provider.navTreeResetTick}'),
-                                  child: Column(
-                                    children: _quickAccess.map((dir) => _DirectoryTile(
-                                      directory: dir,
-                                      customIcon: _getIconForPath(dir.path),
-                                      isRoot: true,
-                                      isQuickAccess: true,
-                                      contextRoot: dir.path,
-                                    )).toList(),
+                    notificationPredicate: (n) => n.depth == 1,
+                    child: SingleChildScrollView(
+                      controller: _horizontalController,
+                      scrollDirection: Axis.horizontal,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                        child: IntrinsicWidth(
+                          child: SingleChildScrollView(
+                            controller: _verticalScrollController,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (_quickAccess.isNotEmpty)
+                                  KeyedSubtree(
+                                    key: ValueKey('qa_${provider.navTreeResetTick}'),
+                                    child: Column(
+                                      children: _quickAccess.map((dir) => _DirectoryTile(
+                                        directory: dir,
+                                        customIcon: _getIconForPath(dir.path),
+                                        isRoot: true,
+                                        isQuickAccess: true,
+                                        contextRoot: dir.path,
+                                        depth: 1,
+                                        quickAccessRoots: _quickAccess.map((d) => d.path).toList(),
+                                        scrollController: _verticalScrollController,
+                                      )).toList(),
+                                    ),
                                   ),
-                                ),
-                              _buildSectionHeader(l10n.labelNavPC),
-                              ..._drives.map((dir) => _DirectoryTile(
-                                directory: dir,
-                                customIcon: Icons.computer,
-                                isRoot: true,
-                                isQuickAccess: false,
-                              )),
-                            ],
+                                _buildSectionHeader(l10n.labelNavPC),
+                                ..._drives.map((dir) => _DirectoryTile(
+                                  directory: dir,
+                                  customIcon: Icons.computer,
+                                  isRoot: true,
+                                  isQuickAccess: false,
+                                  contextRoot: dir.path,
+                                  depth: 1,
+                                  quickAccessRoots: _quickAccess.map((d) => d.path).toList(),
+                                  scrollController: _verticalScrollController,
+                                )),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -147,27 +154,12 @@ class _NavigationPanelState extends State<NavigationPanel> {
     final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<DirectoryProvider>();
     return Container(
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor, width: 0.5)),
-      ),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: Theme.of(context).dividerColor, width: 0.5))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: Text(
-              l10n.labelFilterPreview,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            child: PreviewWindow(
-              file: provider.currentFiles.where((f) => f.isSelected).length == 1
-                  ? provider.currentFiles.firstWhere((f) => f.isSelected)
-                  : null,
-              selectedFiles: provider.currentFiles.where((f) => f.isSelected).toList(),
-            ),
-          ),
+          Padding(padding: const EdgeInsets.fromLTRB(12, 8, 12, 4), child: Text(l10n.labelFilterPreview, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+          Expanded(child: PreviewWindow(file: provider.currentFiles.where((f) => f.isSelected).length == 1 ? provider.currentFiles.firstWhere((f) => f.isSelected) : null, selectedFiles: provider.currentFiles.where((f) => f.isSelected).toList())),
         ],
       ),
     );
@@ -179,24 +171,9 @@ class _NavigationPanelState extends State<NavigationPanel> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
+          Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
           if (onAction != null && actionIcon != null)
-            IconButton(
-              icon: Icon(actionIcon, size: 16),
-              onPressed: onAction,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              visualDensity: VisualDensity.compact,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              tooltip: '全て折りたたむ',
-            ),
+            IconButton(icon: Icon(actionIcon, size: 16), onPressed: onAction, padding: EdgeInsets.zero, constraints: const BoxConstraints(), visualDensity: VisualDensity.compact, color: Theme.of(context).colorScheme.onSurfaceVariant, tooltip: '全て折りたたむ'),
         ],
       ),
     );
@@ -223,6 +200,9 @@ class _DirectoryTile extends StatefulWidget {
   final bool isQuickAccess;
   final String? contextRoot;
   final bool isSuppressingAutoExpand;
+  final int depth;
+  final List<String> quickAccessRoots;
+  final ScrollController scrollController;
 
   const _DirectoryTile({
     required this.directory,
@@ -231,6 +211,9 @@ class _DirectoryTile extends StatefulWidget {
     this.isQuickAccess = false,
     this.contextRoot,
     this.isSuppressingAutoExpand = false,
+    required this.depth,
+    required this.quickAccessRoots,
+    required this.scrollController,
   });
 
   @override
@@ -243,42 +226,30 @@ class _DirectoryTileState extends State<_DirectoryTile> {
   bool _loaded = false;
 
   Future<void> _toggleExpand() async {
-    if (_isExpanded) {
-      setState(() => _isExpanded = false);
-      return;
-    }
+    if (_isExpanded) { setState(() => _isExpanded = false); return; }
     setState(() => _isExpanded = true);
     if (!_loaded) {
       try {
         final List<FileSystemEntity> entities = await widget.directory.list().toList();
-        final List<Directory> subDirs = entities.where((entity) {
-          try {
-            return FileSystemEntity.typeSync(entity.path) == FileSystemEntityType.directory;
-          } catch (_) {
-            return entity is Directory;
-          }
+        final List<Directory> subDirs = entities.where((e) {
+          try { return FileSystemEntity.typeSync(e.path) == FileSystemEntityType.directory; } catch (_) { return e is Directory; }
         }).map((e) => Directory(e.path)).toList();
         subDirs.sort((a, b) => p.basename(a.path).toLowerCase().compareTo(p.basename(b.path).toLowerCase()));
-        if (mounted) {
-          setState(() { _subDirectories = subDirs; _loaded = true; });
-        }
-      } catch (e) {
-        if (mounted) setState(() => _isExpanded = false);
-      }
+        if (mounted) setState(() { _subDirectories = subDirs; _loaded = true; });
+      } catch (e) { if (mounted) setState(() => _isExpanded = false); }
     }
   }
 
   void _onTap() {
-    String? myContextRoot = widget.contextRoot;
-    if (widget.isQuickAccess && widget.isRoot) myContextRoot = widget.directory.path;
-    context.read<DirectoryProvider>().setDirectory(widget.directory, source: widget.isQuickAccess ? 'quick_access' : 'tree', contextRoot: myContextRoot);
+    context.read<DirectoryProvider>().setDirectory(widget.directory, source: 'tree', contextRoot: widget.contextRoot);
     if (!_isExpanded) _toggleExpand();
   }
 
   @override
   void initState() {
     super.initState();
-    _lastHandledSelectionVersion = -1; 
+    final provider = context.read<DirectoryProvider>();
+    _lastHandledSelectionVersion = provider.selectionVersion;
   }
 
   int _lastHandledSelectionVersion = -1;
@@ -288,78 +259,56 @@ class _DirectoryTileState extends State<_DirectoryTile> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DirectoryProvider>();
-    if (_lastResetTick != -1 && provider.navTreeResetTick != _lastResetTick) _isExpanded = false;
+    final currentDir = provider.currentDirectory;
+    final source = provider.navigationSource;
+
+    if (_lastResetTick != -1 && provider.navTreeResetTick != _lastResetTick) {
+      _isExpanded = false; _lastHandledSelectionVersion = provider.selectionVersion;
+    }
     _lastResetTick = provider.navTreeResetTick;
     if (_loaded && provider.treeVersion != _lastTreeVersion && _lastTreeVersion != -1) {
-      _loaded = false;
-      if (_isExpanded) _toggleExpand();
+      _loaded = false; if (_isExpanded) _toggleExpand();
     }
     _lastTreeVersion = provider.treeVersion;
 
     String name = p.basename(widget.directory.path);
     if (widget.directory.path.endsWith(':\\')) name = widget.directory.path.replaceAll('\\', '');
-
     IconData icon = widget.customIcon ?? (_isExpanded ? Icons.folder_open : Icons.folder);
     Color iconColor = widget.customIcon != null ? Colors.blueGrey : Colors.amber;
     if (widget.directory.path.endsWith(':\\')) { icon = Icons.storage; iconColor = Colors.grey; }
 
-    final currentDir = provider.currentDirectory;
     bool isSelected = currentDir?.path == widget.directory.path;
+    bool isDescendant = false;
+    if (currentDir != null) {
+      try {
+        final canC = p.canonicalize(currentDir.path);
+        final canM = p.canonicalize(widget.directory.path);
+        if (canC == canM) isSelected = true;
+        isDescendant = p.isWithin(canM, canC);
+      } catch (_) {}
+    }
 
-    if (isSelected) {
-      final source = provider.navigationSource;
-      final activeContextRoot = provider.navigationContextRoot;
-      if (source == 'quick_access') {
-        String? myContextRoot = widget.contextRoot;
-        if (widget.isQuickAccess && widget.isRoot) myContextRoot = widget.directory.path;
-        if (!widget.isQuickAccess || (activeContextRoot != null && myContextRoot != activeContextRoot)) isSelected = false;
-      } else if (source == 'tree') {
-        isSelected = !widget.isQuickAccess;
+    if (isSelected || isDescendant) {
+      if (source == 'address_bar' || source == null) {
+        final bestResult = _calculateBestRouteForPath(currentDir!.path);
+        bool isWinningRoute = (widget.isQuickAccess == bestResult.isQuickAccess && widget.contextRoot == bestResult.winningRootPath);
+        if (!isWinningRoute || widget.depth > bestResult.depth) {
+          isSelected = false; isDescendant = false;
+        }
+      } else if (provider.navigationContextRoot != null && widget.contextRoot != provider.navigationContextRoot) {
+        isSelected = false; isDescendant = false;
       }
     }
 
     if (currentDir != null && provider.selectionVersion != _lastHandledSelectionVersion) {
-      bool shouldAutoExpand = false;
-      bool isDescendant = false;
-      try {
-        final String canonicalCurrent = p.canonicalize(currentDir.path);
-        final String canonicalMine = p.canonicalize(widget.directory.path);
-        isDescendant = p.isWithin(canonicalMine, canonicalCurrent);
-        if (canonicalCurrent == canonicalMine) isSelected = true;
-      } catch (_) {}
-
-      final source = provider.navigationSource;
-      final activeContextRoot = provider.navigationContextRoot;
-      String? myContextRoot = widget.contextRoot;
-      if (widget.isQuickAccess && widget.isRoot) myContextRoot = widget.directory.path;
-
-      if (source == 'quick_access') {
-        if (widget.isQuickAccess && myContextRoot == activeContextRoot && isDescendant) shouldAutoExpand = true;
-      } else if (source == 'tree') {
-        if (!widget.isQuickAccess && isDescendant) shouldAutoExpand = true;
-      } else {
-        if (isDescendant) shouldAutoExpand = true;
-      }
-      if (isSelected) shouldAutoExpand = true;
-
+      bool shouldAutoExpand = isDescendant || isSelected;
       if (shouldAutoExpand && !_isExpanded && !widget.isSuppressingAutoExpand) {
         WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _toggleExpand(); });
       }
-      _lastHandledSelectionVersion = provider.selectionVersion;
-
-      if (isSelected) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            final verticalScrollable = Scrollable.maybeOf(context, axis: Axis.vertical);
-            final renderObject = context.findRenderObject();
-            if (verticalScrollable != null && renderObject != null) {
-              verticalScrollable.position.ensureVisible(renderObject, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-            }
-          }
-        });
+      if (isSelected && source == 'address_bar') {
+        WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _ensureVisibleWithRetry(0); });
       }
-    } else if (currentDir == null) {
-      _lastHandledSelectionVersion = -1;
+      _lastHandledSelectionVersion = provider.selectionVersion;
     }
 
     return Column(
@@ -392,13 +341,48 @@ class _DirectoryTileState extends State<_DirectoryTile> {
             padding: EdgeInsets.only(left: provider.touchMode ? 16.0 : 12.0),
             child: Column(
               children: _subDirectories.where((dir) => provider.hideSystemFiles ? !p.basename(dir.path).startsWith('.') : true).map((dir) {
-                String? childContext = widget.contextRoot;
-                if (widget.isQuickAccess && widget.isRoot) childContext = widget.directory.path;
-                return _DirectoryTile(directory: dir, isQuickAccess: widget.isQuickAccess, contextRoot: childContext);
+                return _DirectoryTile(directory: dir, isQuickAccess: widget.isQuickAccess, contextRoot: widget.contextRoot, depth: widget.depth + 1, quickAccessRoots: widget.quickAccessRoots, scrollController: widget.scrollController);
               }).toList(),
             ),
           ),
       ],
     );
   }
+
+  _RouteResult _calculateBestRouteForPath(String targetPath) {
+    final canonicalTarget = p.canonicalize(targetPath);
+    _RouteResult? bestQA;
+    for (final root in widget.quickAccessRoots) {
+      final canonicalRoot = p.canonicalize(root);
+      if (canonicalTarget == canonicalRoot) { bestQA = _RouteResult(depth: 1, isQuickAccess: true, winningRootPath: root); break; }
+      if (p.isWithin(canonicalRoot, canonicalTarget)) {
+        final depth = p.split(p.relative(canonicalTarget, from: canonicalRoot)).length + 1;
+        if (bestQA == null || depth < bestQA.depth) bestQA = _RouteResult(depth: depth, isQuickAccess: true, winningRootPath: root);
+      }
+    }
+    if (bestQA != null) return bestQA;
+    return _RouteResult(depth: p.split(canonicalTarget).length, isQuickAccess: false, winningRootPath: p.rootPrefix(canonicalTarget));
+  }
+
+  void _ensureVisibleWithRetry(int retryCount) {
+    if (!mounted) return;
+    final renderObject = context.findRenderObject();
+    if (renderObject == null) {
+      if (retryCount < 5) Future.delayed(const Duration(milliseconds: 200), () => _ensureVisibleWithRetry(retryCount + 1));
+      return;
+    }
+    Future.delayed(Duration(milliseconds: retryCount == 0 ? 400 : 200), () {
+      if (!mounted) return;
+      final vs = widget.scrollController;
+      if (vs.hasClients) vs.position.ensureVisible(renderObject, duration: const Duration(milliseconds: 500), curve: Curves.easeOutCubic, alignment: 0.5);
+      if (retryCount < 2) _ensureVisibleWithRetry(retryCount + 1);
+    });
+  }
+}
+
+class _RouteResult {
+  final int depth;
+  final bool isQuickAccess;
+  final String winningRootPath;
+  _RouteResult({required this.depth, required this.isQuickAccess, required this.winningRootPath});
 }
