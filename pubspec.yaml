@@ -1,7 +1,7 @@
 name: renamery
 description: Flutterを使用したNameryファイルリネームツールの復活版。
 publish_to: 'none'
-version: 0.10.8+8
+version: 0.11.0+10
 
 environment:
   sdk: '>=3.2.0 <4.0.0'

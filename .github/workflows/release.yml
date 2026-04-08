@@ -36,13 +36,13 @@ jobs:
           flutter build windows --release
           
           # 1. ZIP版 (Portable) の作成
-          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ReNamery-${{ github.ref_name }}-windows-x64.zip
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ReNamery-${{ github.ref_name }}-win-x64.zip
           
           # 2. MSIX (Store用) の作成
           $TAG_NAME = "${{ github.ref_name }}"
           $RAW_VER = $TAG_NAME.Replace("v", "")
           $MSIX_VER = "$RAW_VER.0"
-          dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-windows-x64" --install-certificate false
+          dart run msix:create --display-name="ReNamery" --publisher-display-name="Toyo Craft Lab" --version=$MSIX_VER --output-path="." --output-name="ReNamery-${{ github.ref_name }}-win-x64" --install-certificate false
 
           # 3. MSI (Standard Installer) の作成
           heat dir build\windows\x64\runner\Release -cg AppFiles -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -template fragment -arch x64 -out AppFiles.wxs
@@ -119,7 +119,7 @@ jobs:
           "@
           $MAIN_WXS | Out-File -FilePath "main.wxs" -Encoding ascii
           candle -arch x64 main.wxs AppFiles.wxs
-          light -ext WixUIExtension -ext WixUtilExtension -b build\windows\x64\runner\Release main.wixobj AppFiles.wixobj -o ReNamery-${{ github.ref_name }}-windows-x64.msi
+          light -ext WixUIExtension -ext WixUtilExtension -b build\windows\x64\runner\Release main.wixobj AppFiles.wixobj -o ReNamery-${{ github.ref_name }}-win-x64.msi
 
       # --- Android ビルド ---
       - name: Build Android
@@ -148,9 +148,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ReNamery-${{ github.ref_name }}-windows-x64.zip
-            ReNamery-${{ github.ref_name }}-windows-x64.msi
-            ReNamery-${{ github.ref_name }}-windows-x64.msix
+            ReNamery-${{ github.ref_name }}-win-x64.zip
+            ReNamery-${{ github.ref_name }}-win-x64.msi
+            ReNamery-${{ github.ref_name }}-win-x64.msix
             ReNamery-${{ github.ref_name }}-android-universal.apk
             ReNamery-${{ github.ref_name }}-linux-x64.tar.gz
             build/debian/*.deb
