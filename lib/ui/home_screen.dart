@@ -36,7 +36,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WindowListener {
   late final MultiSplitViewController _threePaneController;
   late final MultiSplitViewController _twoPaneController;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
   // Floating Preview State
   bool _showFloatingPreview = false;
@@ -381,125 +380,122 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
               await SystemNavigator.pop();
             }
           },
-          child: Stack(
-            children: [
-              Scaffold(
-                key: _scaffoldKey,
-                appBar: HomeAppBar(
-                  showDrawerMenu: !showLeftPane,
-                ),
-                drawer: !showLeftPane
-                    ? Drawer(
-                        width: 300,
-                        child: SafeArea(
-                          child: Consumer<DirectoryProvider>(
-                            builder: (context, provider, child) =>
-                                NavigationPanel(key: ValueKey(provider.resetCount)),
-                          ),
-                        ),
-                      )
-                    : null,
-                endDrawer: !showRightPane
-                    ? const Drawer(
-                        width: 350,
-                        child: SafeArea(
-                          child: SettingsPanel(),
-                        ),
-                      )
-                    : null,
-                body: Column(
-                  children: [
-                    Consumer<DirectoryProvider>(
-                      builder: (context, provider, child) {
-                        return provider.isLoading
+          child: Consumer<DirectoryProvider>(
+            builder: (context, provider, child) {
+              return Stack(
+                children: [
+                  Scaffold(
+                    key: provider.scaffoldKey,
+                    appBar: HomeAppBar(
+                      showDrawerMenu: !showLeftPane,
+                    ),
+                    drawer: !showLeftPane
+                        ? Drawer(
+                            width: 300,
+                            child: SafeArea(
+                              child: NavigationPanel(key: ValueKey(provider.resetCount)),
+                            ),
+                          )
+                        : null,
+                    endDrawer: !showRightPane
+                        ? const Drawer(
+                            width: 350,
+                            child: SafeArea(
+                              child: SettingsPanel(),
+                            ),
+                          )
+                        : null,
+                    body: Column(
+                      children: [
+                        provider.isLoading
                             ? const SizedBox(
                                 height: 2,
                                 child: LinearProgressIndicator(),
                               )
-                            : const SizedBox(height: 2);
-                      },
-                    ),
-                    Expanded(
-                      child: MultiSplitViewTheme(
-                        data: MultiSplitViewThemeData(
-                          dividerThickness: 10,
-                          dividerPainter: DividerPainters.grooved1(
-                            color: Colors.grey[400]!,
-                            highlightedColor: Colors.blue,
+                            : const SizedBox(height: 2),
+                        Expanded(
+                          child: MultiSplitViewTheme(
+                            data: MultiSplitViewThemeData(
+                              dividerThickness: 10,
+                              dividerPainter: DividerPainters.grooved1(
+                                color: Colors.grey[400]!,
+                                highlightedColor: Colors.blue,
+                              ),
+                            ),
+                            child: _buildBody(showLeftPane, showRightPane),
                           ),
                         ),
-                        child: _buildBody(showLeftPane, showRightPane),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-                bottomNavigationBar: isNarrow
-                    ? _buildMobileBottomAppBar(context, l10n)
-                    : _buildDesktopFooter(context, l10n),
-                floatingActionButton: _buildFAB(isNarrow, showRightPane, context, l10n),
-                floatingActionButtonLocation: isNarrow 
-                    ? FloatingActionButtonLocation.centerDocked 
-                    : FloatingActionButtonLocation.endFloat,
-              ),
-              if (isNarrow)
-                Consumer<DirectoryProvider>(
-                  builder: (context, provider, child) {
-                    final selected = provider.currentFiles.where((f) => f.isSelected).toList();
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _triggerFloatingPreview(
-                        selected.length,
-                        selected.length == 1 ? selected.first.entity.path : ''
-                      );
-                    });
+                    bottomNavigationBar: isNarrow
+                        ? _buildMobileBottomAppBar(context, l10n)
+                        : _buildDesktopFooter(context, l10n),
+                    floatingActionButton: _buildFAB(isNarrow, showRightPane, context, l10n),
+                    floatingActionButtonLocation: isNarrow 
+                        ? FloatingActionButtonLocation.centerDocked 
+                        : FloatingActionButtonLocation.endFloat,
+                  ),
+                  if (isNarrow)
+                    Builder(
+                      builder: (context) {
+                        final selected = provider.currentFiles.where((f) => f.isSelected).toList();
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _triggerFloatingPreview(
+                            selected.length,
+                            selected.length == 1 ? selected.first.entity.path : ''
+                          );
+                        });
 
-                    return Positioned(
-                      left: 16,
-                      bottom: 100, // BottomAppBarの上に来るように調整
-                      child: AnimatedOpacity(
-                        opacity: _showFloatingPreview ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 300),
-                        child: IgnorePointer(
-                          ignoring: !_showFloatingPreview,
-                          child: GestureDetector(
-                            onTap: () {
-                              if (selected.isNotEmpty) {
-                                provider.openEnlargedPreview(selected.last);
-                              }
-                            },
-                            child: Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surface,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
+                        return Positioned(
+                          left: 16,
+                          bottom: 100, // BottomAppBarの上に来るように調整
+                          child: AnimatedOpacity(
+                            opacity: _showFloatingPreview ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 300),
+                            child: IgnorePointer(
+                              ignoring: !_showFloatingPreview,
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (selected.isNotEmpty) {
+                                    provider.openEnlargedPreview(selected.last);
+                                  }
+                                },
+                                child: Container(
+                                  width: 100,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.3),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                    border: Border.all(
+                                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                                      width: 2,
+                                    ),
                                   ),
-                                ],
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-                                  width: 2,
+                                  clipBehavior: Clip.antiAlias,
+                                  child: PreviewWindow(
+                                    file: selected.isNotEmpty ? selected.last : null,
+                                  ),
                                 ),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: PreviewWindow(
-                                file: selected.isNotEmpty ? selected.last : null,
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              
-              // モバイル版クイックルック
-              if (isNarrow)
-                const EnlargedPreviewOverlay(isMobile: true),
-            ],
+                        );
+                      }
+                    ),
+                  
+                  // モバイル版クイックルック
+                  if (isNarrow)
+                    const EnlargedPreviewOverlay(isMobile: true),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -507,9 +503,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   }
 
   Widget? _buildFAB(bool isNarrow, bool showRightPane, BuildContext context, AppLocalizations l10n) {
+    final provider = context.watch<DirectoryProvider>();
     if (isNarrow) {
-      final provider = context.watch<DirectoryProvider>();
-      
       // スキャン中（読み込み中）は停止ボタンとして機能させる
       if (provider.isLoading) {
         return FloatingActionButton(
@@ -525,18 +520,18 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
       return FloatingActionButton(
         onPressed: provider.canExecute ? () => _confirmAndExecute(context, provider, l10n) : null,
         backgroundColor: provider.canExecute 
-            ? Theme.of(context).colorScheme.primaryContainer 
+            ? Theme.of(context).colorScheme.primary // 案1: より鮮明なブランドカラーに変更
             : Theme.of(context).colorScheme.surfaceContainerHighest,
         foregroundColor: provider.canExecute 
-            ? Theme.of(context).colorScheme.onPrimaryContainer 
+            ? Theme.of(context).colorScheme.onPrimary 
             : Theme.of(context).colorScheme.onSurfaceVariant,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), 
-        elevation: 4,
-        child: const Icon(Symbols.play_arrow, size: 32, fill: 0),
+        elevation: provider.canExecute ? 6 : 0, // 実行可能な時だけ浮き上がらせる
+        child: const Icon(Symbols.play_arrow, size: 32, fill: 1), // FILLを1に戻す
       );
     } else if (!showRightPane) {
       return FloatingActionButton(
-        onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+        onPressed: () => provider.scaffoldKey.currentState?.openEndDrawer(),
         child: const Icon(Symbols.tune),
       );
     }
@@ -595,7 +590,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
               // Right: Rename Settings Icon
               IconButton(
                 icon: const Icon(Symbols.tune),
-                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                onPressed: () => provider.scaffoldKey.currentState?.openEndDrawer(),
                 tooltip: l10n.labelMenuRenameSettings,
               ),
             ],

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:isolate';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
@@ -70,6 +71,30 @@ class RenameEngine {
       }
     } catch (_) {}
     return results;
+  }
+
+  static void computeScanStream(Map<String, dynamic> params) async {
+    final SendPort sendPort = params['sendPort'];
+    final String rootPath = params['rootPath'];
+    final bool recursive = params['recursive'];
+
+    try {
+      final stream = Directory(rootPath).list(recursive: recursive, followLinks: false);
+      await for (final entity in stream) {
+        final path = entity.path;
+        final name = p.basename(path);
+        sendPort.send({
+          'path': path,
+          'name': name,
+          'isDir': entity is Directory,
+          'isHidden': name.startsWith('.'),
+          'rel': recursive ? (p.dirname(path).length > rootPath.length ? p.dirname(path).substring(rootPath.length).replaceFirst(RegExp(r'^[\\/]+'), '') : '') : '',
+        });
+      }
+      sendPort.send('done');
+    } catch (e) {
+      sendPort.send('error: $e');
+    }
   }
 
   static TextSpan buildDiffTextSpan(BuildContext context, String oldText, String newText, bool hasError, {TextStyle? style, RenameMode? mode, int? startNumber, int? digits}) {

@@ -79,6 +79,67 @@ class _HomeAppBarState extends State<HomeAppBar> {
           final isNarrow = constraints.maxWidth < 650;
           final isWide = constraints.maxWidth >= 1020;
           final showIconFilters = !isWide && constraints.maxWidth >= 830;
+
+          if (isNarrow) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                const SizedBox(width: 2),
+                _buildCompactIconButton(
+                  context,
+                  icon: Symbols.arrow_back,
+                  tooltip: l10n.labelNavBack,
+                  onPressed: provider.canGoBack ? () => provider.goBack() : null,
+                  onLongPress: provider.backHistory.isNotEmpty ? () => _showHistoryMenu(context, provider.backHistory, provider.jumpBack) : null,
+                ),
+                _buildCompactIconButton(
+                  context,
+                  icon: Symbols.arrow_forward,
+                  tooltip: l10n.labelNavForward,
+                  onPressed: provider.canGoForward ? () => provider.goForward() : null,
+                  onLongPress: provider.forwardHistory.isNotEmpty ? () => _showHistoryMenu(context, provider.forwardHistory, provider.jumpForward) : null,
+                ),
+                _buildCompactIconButton(
+                  context,
+                  icon: Symbols.arrow_upward,
+                  tooltip: l10n.labelNavUp,
+                  onPressed: provider.currentDirectory?.parent != null ? () => provider.goUp() : null,
+                ),
+                _buildCompactIconButton(
+                  context,
+                  icon: Symbols.undo,
+                  tooltip: l10n.labelUndo,
+                  onPressed: provider.canUndo ? () => UndoHelper.handleUndo(context, provider) : null,
+                ),
+                _buildCompactIconButton(
+                  context,
+                  icon: Symbols.content_copy,
+                  tooltip: l10n.labelCopyOptions,
+                  onPressed: () => CopyHelper.showCopyOptionsBottomSheet(context, provider),
+                ),
+                _buildCompactIconButton(
+                  context,
+                  icon: Symbols.expand_less,
+                  tooltip: l10n.labelMoveUp,
+                  onPressed: provider.canMoveUp ? () => provider.moveSelection(true) : null,
+                ),
+                _buildCompactIconButton(
+                  context,
+                  icon: Symbols.expand_more,
+                  tooltip: l10n.labelMoveDown,
+                  onPressed: provider.canMoveDown ? () => provider.moveSelection(false) : null,
+                ),
+                _buildCompactIconButton(
+                  context,
+                  icon: Symbols.refresh,
+                  tooltip: l10n.labelRefresh,
+                  onPressed: () => provider.refresh(),
+                ),
+                const SizedBox(width: 2),
+              ],
+            );
+          }
+
           return Row(
             children: [
               const SizedBox(width: 8),
@@ -144,17 +205,16 @@ class _HomeAppBarState extends State<HomeAppBar> {
               const SizedBox(
                   height: 24,
                   child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-              if (!isNarrow)
-                IconButton(
-                  icon: const Icon(Symbols.play_arrow),
-                  iconSize: iconSize,
-                  tooltip: provider.hasInvalidFilenamesSelected
-                      ? '一部のファイルにエラーがあります (クリックで詳細)'
-                      : l10n.labelExecute,
-                  onPressed: provider.canExecute
-                      ? () => _confirmAndExecute(context, provider, l10n)
-                      : null,
-                ),
+              IconButton(
+                icon: const Icon(Symbols.play_arrow),
+                iconSize: iconSize,
+                tooltip: provider.hasInvalidFilenamesSelected
+                    ? '一部のファイルにエラーがあります (クリックで詳細)'
+                    : l10n.labelExecute,
+                onPressed: provider.canExecute
+                    ? () => _confirmAndExecute(context, provider, l10n)
+                    : null,
+              ),
               if (!isNarrow)
                 TextButton.icon(
                   icon: const Icon(Symbols.undo),
@@ -179,252 +239,225 @@ class _HomeAppBarState extends State<HomeAppBar> {
                       ? () => UndoHelper.handleUndo(context, provider)
                       : null,
                 ),
-              if (!isNarrow) ...[
+              const SizedBox(
+                  height: 24,
+                  child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
+              IconButton(
+                icon: const Icon(Symbols.content_copy),
+                iconSize: iconSize,
+                tooltip: l10n.labelCopyName,
+                onPressed: provider.currentFiles.any((f) => f.isSelected)
+                    ? () => CopyHelper.handleCopy(context, provider)
+                    : null,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              PopupMenuButton<int>(
+                icon: const Icon(Symbols.arrow_drop_down),
+                enabled: provider.currentFiles.any((f) => f.isSelected) ||
+                    provider.getLastUndoTransaction().isNotEmpty,
+                onSelected: (value) async {
+                  await CopyHelper.handleCopyMenu(context, provider, value);
+                },
+                itemBuilder: (context) => _buildCopyMenuItems(provider, l10n),
+                tooltip: l10n.labelCopyOptions,
+              ),
+              const SizedBox(
+                  height: 24,
+                  child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
+              IconButton(
+                icon: const Icon(Symbols.expand_less),
+                iconSize: iconSize,
+                tooltip: l10n.labelMoveUp,
+                onPressed: provider.canMoveUp
+                    ? () => provider.moveSelection(true)
+                    : null,
+              ),
+              IconButton(
+                icon: const Icon(Symbols.expand_more),
+                iconSize: iconSize,
+                tooltip: l10n.labelMoveDown,
+                onPressed: provider.canMoveDown
+                    ? () => provider.moveSelection(false)
+                    : null,
+              ),
+              const SizedBox(
+                  height: 24,
+                  child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
+              IconButton(
+                icon: const Icon(Symbols.refresh),
+                iconSize: iconSize,
+                tooltip: l10n.labelRefresh,
+                onPressed: () => provider.refresh(),
+              ),
+              if (isWide) ...[
                 const SizedBox(
                     height: 24,
-                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-                IconButton(
-                  icon: const Icon(Symbols.content_copy),
-                  iconSize: iconSize,
-                  tooltip: l10n.labelCopyName,
-                  onPressed: provider.currentFiles.any((f) => f.isSelected)
-                      ? () => CopyHelper.handleCopy(context, provider)
-                      : null,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                PopupMenuButton<int>(
-                  icon: const Icon(Symbols.arrow_drop_down),
-                  enabled: provider.currentFiles.any((f) => f.isSelected) ||
-                      provider.getLastUndoTransaction().isNotEmpty,
-                  onSelected: (value) async {
-                    await CopyHelper.handleCopyMenu(context, provider, value);
-                  },
-                  itemBuilder: (context) => _buildCopyMenuItems(provider, l10n),
-                  tooltip: l10n.labelCopyOptions,
-                ),
-                const SizedBox(
-                    height: 24,
-                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-                IconButton(
-                  icon: const Icon(Symbols.expand_less),
-                  iconSize: iconSize,
-                  tooltip: l10n.labelMoveUp,
-                  onPressed: provider.canMoveUp
-                      ? () => provider.moveSelection(true)
-                      : null,
-                ),
-                IconButton(
-                  icon: const Icon(Symbols.expand_more),
-                  iconSize: iconSize,
-                  tooltip: l10n.labelMoveDown,
-                  onPressed: provider.canMoveDown
-                      ? () => provider.moveSelection(false)
-                      : null,
-                ),
-                const SizedBox(
-                    height: 24,
-                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-                IconButton(
-                  icon: const Icon(Symbols.refresh),
-                  iconSize: iconSize,
-                  tooltip: l10n.labelRefresh,
-                  onPressed: () => provider.refresh(),
-                ),
-                if (isWide) ...[
-                  const SizedBox(
-                      height: 24,
-                      child:
-                          VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-                  Tooltip(
-                    message: provider.showFolders
-                        ? l10n.labelFilterHideFolders
-                        : l10n.labelFilterShowFolders,
-                    child: TextButton.icon(
-                      icon: Icon(
-                        provider.showFolders
-                            ? Symbols.folder
-                            : Symbols.folder_off,
-                        size: 20,
-                        fill: 1,
-                        color: provider.showFolders
-                            ? Colors.amber[700]
-                            : Colors.grey,
-                      ),
-                      label: Text(
-                        l10n.labelSettingsFolders,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: provider.showFolders ? null : Colors.grey,
-                        ),
-                      ),
-                      onPressed: () => context
-                          .read<DirectoryProvider>()
-                          .updateFilterSettings(
-                              showFolders: !provider.showFolders),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        visualDensity: VisualDensity.compact,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Tooltip(
-                    message: provider.hideSystemFiles
-                        ? l10n.labelSettingsShowSystemFiles
-                        : l10n.labelFilterHideSystem,
-                    child: TextButton.icon(
-                      icon: Icon(
-                        Symbols.shield,
-                        size: 20,
-                        fill: provider.hideSystemFiles ? 0 : 1,
-                        color: provider.hideSystemFiles
-                            ? Theme.of(context).colorScheme.onSurfaceVariant
-                            : Theme.of(context).colorScheme.primary,
-                      ),
-                      label: Text(
-                        l10n.labelSettingsSystemFiles,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: provider.hideSystemFiles
-                              ? Theme.of(context).colorScheme.onSurfaceVariant
-                              : Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      onPressed: () => context
-                          .read<DirectoryProvider>()
-                          .updateFilterSettings(
-                              hideSystem: !provider.hideSystemFiles),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        visualDensity: VisualDensity.compact,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Tooltip(
-                    message: provider.recursiveSearch
-                        ? l10n.labelSettingsDisableRecursive
-                        : l10n.labelFilterRecursive,
-                    child: TextButton.icon(
-                      icon: Icon(
-                        Symbols.account_tree,
-                        size: 20,
-                        fill: provider.recursiveSearch ? 1 : 0,
-                        color: provider.recursiveSearch
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      label: Text(
-                        l10n.labelSettingsRecursive,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: provider.recursiveSearch
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      onPressed: () => context
-                          .read<DirectoryProvider>()
-                          .updateFilterSettings(
-                              recursive: !provider.recursiveSearch),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        visualDensity: VisualDensity.compact,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  _buildRegexSearchBar(context, provider, l10n, isNarrow ? 120 : 160),
-                ],
-                if (showIconFilters) ...[
-                  const SizedBox(
-                      height: 24,
-                      child:
-                          VerticalDivider(width: 20, indent: 4, endIndent: 4)),
-                  IconButton(
+                    child:
+                        VerticalDivider(width: 20, indent: 4, endIndent: 4)),
+                Tooltip(
+                  message: provider.showFolders
+                      ? l10n.labelFilterHideFolders
+                      : l10n.labelFilterShowFolders,
+                  child: TextButton.icon(
                     icon: Icon(
                       provider.showFolders
                           ? Symbols.folder
                           : Symbols.folder_off,
+                      size: 20,
                       fill: 1,
                       color: provider.showFolders
                           ? Colors.amber[700]
                           : Colors.grey,
                     ),
-                    iconSize: 20,
+                    label: Text(
+                      l10n.labelSettingsFolders,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: provider.showFolders ? null : Colors.grey,
+                      ),
+                    ),
                     onPressed: () => context
                         .read<DirectoryProvider>()
                         .updateFilterSettings(
                             showFolders: !provider.showFolders),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      visualDensity: VisualDensity.compact,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: provider.hideSystemFiles
+                      ? l10n.labelSettingsShowSystemFiles
+                      : l10n.labelFilterHideSystem,
+                  child: TextButton.icon(
                     icon: Icon(
                       Symbols.shield,
+                      size: 20,
                       fill: provider.hideSystemFiles ? 0 : 1,
                       color: provider.hideSystemFiles
                           ? Theme.of(context).colorScheme.onSurfaceVariant
                           : Theme.of(context).colorScheme.primary,
                     ),
-                    iconSize: 20,
+                    label: Text(
+                      l10n.labelSettingsSystemFiles,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: provider.hideSystemFiles
+                            ? Theme.of(context).colorScheme.onSurfaceVariant
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
                     onPressed: () => context
                         .read<DirectoryProvider>()
                         .updateFilterSettings(
                             hideSystem: !provider.hideSystemFiles),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      visualDensity: VisualDensity.compact,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: provider.recursiveSearch
+                      ? l10n.labelSettingsDisableRecursive
+                      : l10n.labelFilterRecursive,
+                  child: TextButton.icon(
                     icon: Icon(
                       Symbols.account_tree,
+                      size: 20,
                       fill: provider.recursiveSearch ? 1 : 0,
                       color: provider.recursiveSearch
                           ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    iconSize: 20,
+                    label: Text(
+                      l10n.labelSettingsRecursive,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: provider.recursiveSearch
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                     onPressed: () => context
                         .read<DirectoryProvider>()
                         .updateFilterSettings(
                             recursive: !provider.recursiveSearch),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      visualDensity: VisualDensity.compact,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  _buildRegexSearchBar(context, provider, l10n, 100),
-                ],
-              ],
-              if (isNarrow || (!isWide && !showIconFilters)) const Spacer(),
-              if (isNarrow) ...[
-                PopupMenuButton<String>(
-                  icon: const Icon(Symbols.more_vert),
-                  onSelected: (value) async {
-                    switch (value) {
-                      case 'copy_options':
-                        CopyHelper.showCopyOptionsBottomSheet(context, provider);
-                        break;
-                      case 'refresh':
-                        provider.refresh();
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'copy_options',
-                      child: Text('${l10n.labelCopyOptions}...'),
-                    ),
-                    PopupMenuItem(
-                      value: 'refresh',
-                      child: Text(l10n.labelRefresh),
-                    ),
-                  ],
                 ),
+                const SizedBox(width: 4),
+                _buildRegexSearchBar(context, provider, l10n, isNarrow ? 120 : 160),
+              ],
+              if (showIconFilters) ...[
+                const SizedBox(
+                    height: 24,
+                    child:
+                        VerticalDivider(width: 20, indent: 4, endIndent: 4)),
+                IconButton(
+                  icon: Icon(
+                    provider.showFolders
+                        ? Symbols.folder
+                        : Symbols.folder_off,
+                    fill: 1,
+                    color: provider.showFolders
+                        ? Colors.amber[700]
+                        : Colors.grey,
+                  ),
+                  iconSize: 20,
+                  onPressed: () => context
+                      .read<DirectoryProvider>()
+                      .updateFilterSettings(
+                          showFolders: !provider.showFolders),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(
+                    Symbols.shield,
+                    fill: provider.hideSystemFiles ? 0 : 1,
+                    color: provider.hideSystemFiles
+                        ? Theme.of(context).colorScheme.onSurfaceVariant
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                  iconSize: 20,
+                  onPressed: () => context
+                      .read<DirectoryProvider>()
+                      .updateFilterSettings(
+                          hideSystem: !provider.hideSystemFiles),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(
+                    Symbols.account_tree,
+                    fill: provider.recursiveSearch ? 1 : 0,
+                    color: provider.recursiveSearch
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  iconSize: 20,
+                  onPressed: () => context
+                      .read<DirectoryProvider>()
+                      .updateFilterSettings(
+                          recursive: !provider.recursiveSearch),
+                ),
+                const SizedBox(width: 8),
+                _buildRegexSearchBar(context, provider, l10n, 100),
               ],
               if (!isWide && !showIconFilters && !isNarrow) ...[
+                const Spacer(),
                 IconButton(
                   icon: const Icon(Symbols.search),
                   tooltip: l10n.labelFilterOptions,
@@ -451,13 +484,72 @@ class _HomeAppBarState extends State<HomeAppBar> {
     );
   }
 
+  // --- Helper Methods for Mobile Header ---
+
+  Widget _buildCompactIconButton(
+    BuildContext context, {
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback? onPressed,
+    VoidCallback? onLongPress,
+  }) {
+    final bool isEnabled = onPressed != null;
+    final color = isEnabled 
+        ? Theme.of(context).colorScheme.primary // 活性時はブランドカラー（プライマリ）
+        : Theme.of(context).disabledColor;      // 不活性時はグレー
+
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPressed,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(6.0),
+          child: Icon(
+            icon,
+            size: 24,
+            fill: 1, // 塗りつぶしスタイル
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showHistoryMenu(BuildContext context, List<String> history, Function(int) onSelected) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu<int>(
+      context: context,
+      position: position,
+      items: List.generate(history.length, (index) {
+        return PopupMenuItem(
+          value: index + 1,
+          height: 32,
+          child: Text(p.basename(history[index]), style: const TextStyle(fontSize: 12)),
+        );
+      }),
+    ).then((value) {
+      if (value != null) onSelected(value);
+    });
+  }
+
   Widget _buildRegexSearchBar(BuildContext context, DirectoryProvider provider, AppLocalizations l10n, double width) {
     final bool isRegex = provider.isFilterRegex;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       width: width,
-      height: 32, // 少し高さを広げる
+      height: 32,
       decoration: ShapeDecoration(
         color: isRegex ? colorScheme.inverseSurface : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         shape: StadiumBorder(
@@ -485,7 +577,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
           ),
           Expanded(
             child: Align(
-              alignment: const Alignment(0, -0.2), // 物理的な微調整でセンターラインを合わせる
+              alignment: const Alignment(0, -0.2),
               child: TextField(
                 controller: _filterController,
                 decoration: InputDecoration.collapsed(
