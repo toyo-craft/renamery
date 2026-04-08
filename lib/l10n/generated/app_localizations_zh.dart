@@ -201,6 +201,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelUndo => '撤销';
 
   @override
+  String get labelRedo => 'やり直し';
+
+  @override
   String get labelExecute => '执行';
 
   @override
@@ -631,6 +634,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get labelMsgUndoSuccess => '恢复成功';
+
+  @override
+  String get labelRedoTitle => '処理のやり直し';
+
+  @override
+  String labelRedoConfirm(int count) {
+    return '直前で取り消した $count 件の変更をやり直しますか？';
+  }
+
+  @override
+  String get labelMsgRedoSuccess => 'やり直しました';
+
+  @override
+  String get labelRedoBtn => 'やり直し';
 
   @override
   String get labelUndoRecoverBtn => '恢复';

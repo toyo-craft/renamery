@@ -202,6 +202,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelUndo => 'Deshacer';
 
   @override
+  String get labelRedo => 'やり直し';
+
+  @override
   String get labelExecute => 'Ejecutar';
 
   @override
@@ -637,6 +640,20 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get labelMsgUndoSuccess => 'Restaurado con éxito';
+
+  @override
+  String get labelRedoTitle => '処理のやり直し';
+
+  @override
+  String labelRedoConfirm(int count) {
+    return '直前で取り消した $count 件の変更をやり直しますか？';
+  }
+
+  @override
+  String get labelMsgRedoSuccess => 'やり直しました';
+
+  @override
+  String get labelRedoBtn => 'やり直し';
 
   @override
   String get labelUndoRecoverBtn => 'Restaurar';

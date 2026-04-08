@@ -487,6 +487,12 @@ abstract class AppLocalizations {
   /// **'戻す'**
   String get labelUndo;
 
+  /// No description provided for @labelRedo.
+  ///
+  /// In ja, this message translates to:
+  /// **'やり直し'**
+  String get labelRedo;
+
   /// No description provided for @labelExecute.
   ///
   /// In ja, this message translates to:
@@ -1314,6 +1320,30 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'復元しました'**
   String get labelMsgUndoSuccess;
+
+  /// No description provided for @labelRedoTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'処理のやり直し'**
+  String get labelRedoTitle;
+
+  /// No description provided for @labelRedoConfirm.
+  ///
+  /// In ja, this message translates to:
+  /// **'直前で取り消した {count} 件の変更をやり直しますか？'**
+  String labelRedoConfirm(int count);
+
+  /// No description provided for @labelMsgRedoSuccess.
+  ///
+  /// In ja, this message translates to:
+  /// **'やり直しました'**
+  String get labelMsgRedoSuccess;
+
+  /// No description provided for @labelRedoBtn.
+  ///
+  /// In ja, this message translates to:
+  /// **'やり直し'**
+  String get labelRedoBtn;
 
   /// No description provided for @labelUndoRecoverBtn.
   ///

@@ -202,6 +202,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelUndo => 'Undo';
 
   @override
+  String get labelRedo => 'Redo';
+
+  @override
   String get labelExecute => 'Execute';
 
   @override
@@ -636,6 +639,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelMsgUndoSuccess => 'Restored successfully';
+
+  @override
+  String get labelRedoTitle => 'Redo Operation';
+
+  @override
+  String labelRedoConfirm(int count) {
+    return 'Are you sure you want to redo the last $count undone changes?';
+  }
+
+  @override
+  String get labelMsgRedoSuccess => 'Redone successfully';
+
+  @override
+  String get labelRedoBtn => 'Redo';
 
   @override
   String get labelUndoRecoverBtn => 'Restore';
