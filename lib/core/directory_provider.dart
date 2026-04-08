@@ -583,7 +583,20 @@ class DirectoryProvider extends ChangeNotifier {
   Locale get currentLocale { switch (_menuLabelType) { case MenuLabelType.namery: return const Locale('ja', 'NM'); case MenuLabelType.english: return const Locale('en'); case MenuLabelType.chinese: return const Locale('zh'); case MenuLabelType.spanish: return const Locale('es'); default: return const Locale('ja'); } }
 
   static Future<List<Directory>> getQuickAccessDirectories() async {
-    List<Directory> qa = []; if (kIsWeb) return qa; String? home = Platform.isWindows ? Platform.environment['USERPROFILE'] : Platform.environment['HOME'];
+    List<Directory> qa = []; if (kIsWeb) return qa;
+    
+    if (Platform.isAndroid) {
+      const root = '/storage/emulated/0';
+      // Androidの標準的なフォルダをクイックアクセスとして登録
+      final folders = ['Download', 'DCIM', 'Pictures', 'Movies', 'Music', 'Documents'];
+      for (var f in folders) {
+        final d = Directory(p.join(root, f));
+        if (await d.exists()) qa.add(d);
+      }
+      return qa;
+    }
+
+    String? home = Platform.isWindows ? Platform.environment['USERPROFILE'] : Platform.environment['HOME'];
     if (home != null) { final hd = Directory(home); if (await hd.exists()) { qa.add(hd); for (var f in ['Desktop', 'Downloads', 'Documents', 'Pictures', 'Music', 'Videos']) { final d = Directory(p.join(home, f)); if (await d.exists()) qa.add(d); } final od = Directory(p.join(home, 'OneDrive')); if (await od.exists()) qa.add(od); } }
     return qa;
   }

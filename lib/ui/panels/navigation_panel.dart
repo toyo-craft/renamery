@@ -184,11 +184,11 @@ class _NavigationPanelState extends State<NavigationPanel> {
   IconData? _getIconForPath(String path) {
     final name = p.basename(path).toLowerCase();
     if (name == 'desktop') return Symbols.desktop_windows;
-    if (name == 'downloads') return Symbols.download;
+    if (name == 'downloads' || name == 'download') return Symbols.download;
     if (name == 'documents') return Symbols.description;
-    if (name == 'pictures') return Symbols.image;
+    if (name == 'pictures' || name == 'dcim') return Symbols.image;
     if (name == 'music') return Symbols.music_note;
-    if (name == 'videos') return Symbols.movie;
+    if (name == 'videos' || name == 'movies') return Symbols.movie;
     if (name == 'onedrive') return Symbols.cloud;
     if (!path.contains(p.separator)) return Symbols.home;
     return null;
