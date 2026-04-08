@@ -603,7 +603,13 @@ class DirectoryProvider extends ChangeNotifier {
 
   static Future<List<Directory>> getLogicalDrives() async {
     List<Directory> ds = []; if (kIsWeb) return ds;
-    if (Platform.isWindows) { for (var c = 'A'.codeUnitAt(0); c <= 'Z'.codeUnitAt(0); c++) { final d = Directory('${String.fromCharCode(c)}:\\\\'); if (await d.exists()) ds.add(d); } }
+    if (Platform.isWindows) {
+      for (var c = 'A'.codeUnitAt(0); c <= 'Z'.codeUnitAt(0); c++) {
+        // Windowsのドライブパスは C:\ の形式（コード上はエスケープして :\\）が正解
+        final d = Directory('${String.fromCharCode(c)}:\\');
+        if (await d.exists()) ds.add(d);
+      }
+    }
     else if (Platform.isAndroid) { final d = Directory('/storage/emulated/0'); if (await d.exists()) ds.add(d); } else ds.add(Directory('/'));
     return ds;
   }

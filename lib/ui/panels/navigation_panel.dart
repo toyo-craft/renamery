@@ -110,20 +110,17 @@ class _NavigationPanelState extends State<NavigationPanel> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (_quickAccess.isNotEmpty)
-                                  KeyedSubtree(
-                                    key: ValueKey('qa_${provider.navTreeResetTick}'),
-                                    child: Column(
-                                      children: _quickAccess.map((dir) => _DirectoryTile(
-                                        directory: dir,
-                                        customIcon: _getIconForPath(dir.path),
-                                        isRoot: true,
-                                        isQuickAccess: true,
-                                        contextRoot: dir.path,
-                                        depth: 1,
-                                        quickAccessRoots: _quickAccess.map((d) => d.path).toList(),
-                                        scrollController: _verticalScrollController,
-                                      )).toList(),
-                                    ),
+                                  Column(
+                                    children: _quickAccess.map((dir) => _DirectoryTile(
+                                      directory: dir,
+                                      customIcon: _getIconForPath(dir.path),
+                                      isRoot: true,
+                                      isQuickAccess: true,
+                                      contextRoot: dir.path,
+                                      depth: 1,
+                                      quickAccessRoots: _quickAccess.map((d) => d.path).toList(),
+                                      scrollController: _verticalScrollController,
+                                    )).toList(),
                                   ),
                                 _buildSectionHeader(l10n.labelNavPC),
                                 ..._drives.map((dir) => _DirectoryTile(
