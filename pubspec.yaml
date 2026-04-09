@@ -30,6 +30,7 @@ dependencies:
   url_launcher: ^6.3.0
   windows_single_instance: ^1.1.0
   win32: ^5.15.0
+  ffi: ^2.1.2
   material_symbols_icons: ^4.2906.0
   package_info_plus: ^8.0.0
   super_clipboard: ^0.8.4
@@ -70,6 +71,6 @@ msix_config:
   publisher_display_name: Toyo Craft Lab
   identity_name: ToyoCraftLab.ReNamery
   publisher: "CN=ToyoCraftLab"
-  msix_version: 0.10.2.0
+  msix_version: 0.11.0.0
   logo_path: assets/icon/app_icon.png
   store: true
