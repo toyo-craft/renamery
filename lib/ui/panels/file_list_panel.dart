@@ -166,61 +166,66 @@ class _FileListPanelState extends State<FileListPanel> {
               return Focus(
                 focusNode: _fileListFocusNode,
                 child: Scrollbar(
-                  controller: _horizontalController,
+                  controller: _verticalController,
                   thumbVisibility: true,
-                  child: SingleChildScrollView(
+                  notificationPredicate: (notification) => notification.metrics.axis == Axis.vertical,
+                  child: Scrollbar(
                     controller: _horizontalController,
-                    scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: actualWidth,
-                      child: Column(
-                        children: [
-                          _buildHeader(context, provider, l10n),
-                          Expanded(
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () => _fileListFocusNode.requestFocus(),
-                              onSecondaryTapDown: (details) => _showBackgroundContextMenu(context, details, provider, l10n),
-                              onLongPressStart: (details) {
-                                if (context.mounted) {
-                                  _showBackgroundContextMenu(context, TapDownDetails(globalPosition: details.globalPosition), provider, l10n);
-                                }
-                              },
-                              child: Stack(
-                                children: [
-                                  Listener(
-                                    onPointerDown: (event) {
-                                      // タッチデバイスでの誤作動防止: マウス操作以外（タッチ）では矩形選択を開始しない
-                                      final isMouse = event.kind == PointerDeviceKind.mouse;
-                                      final safeZone = _widthDragHandle + _widthCheckbox + _widthSeparator;
+                    thumbVisibility: true,
+                    notificationPredicate: (notification) => notification.metrics.axis == Axis.horizontal,
+                    child: SingleChildScrollView(
+                      controller: _horizontalController,
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: actualWidth,
+                        child: Column(
+                          children: [
+                            _buildHeader(context, provider, l10n),
+                            Expanded(
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => _fileListFocusNode.requestFocus(),
+                                onSecondaryTapDown: (details) => _showBackgroundContextMenu(context, details, provider, l10n),
+                                onLongPressStart: (details) {
+                                  if (context.mounted) {
+                                    _showBackgroundContextMenu(context, TapDownDetails(globalPosition: details.globalPosition), provider, l10n);
+                                  }
+                                },
+                                child: Stack(
+                                  children: [
+                                    Listener(
+                                      onPointerDown: (event) {
+                                        final isMouse = event.kind == PointerDeviceKind.mouse;
+                                        const safeZone = _widthDragHandle + _widthCheckbox + _widthSeparator;
 
-                                      if (isMouse && event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone && files.isNotEmpty) {
-                                        setState(() {
-                                          _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
-                                          _dragUpdate = _dragStart;
-                                          _initialSelectionStates = files.map((f) => f.isSelected).toList();
-                                        });
-                                      }
-                                    },
+                                        if (isMouse && event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone && files.isNotEmpty) {
+                                          setState(() {
+                                            _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
+                                            _dragUpdate = _dragStart;
+                                            _initialSelectionStates = files.map((f) => f.isSelected).toList();
+                                          });
+                                        }
+                                      },
 
-                                    onPointerMove: (event) {
-                                      if (_dragStart != null) {
-                                        final currentAbsY = event.localPosition.dy + _verticalController.offset;
-                                        setState(() { _dragUpdate = Offset(event.localPosition.dx, currentAbsY); });
-                                        const scrollZone = 40.0;
-                                        if (event.localPosition.dy < scrollZone) _startAutoScroll(-15.0, files, provider);
-                                        else if (event.localPosition.dy > (constraints.maxHeight - 32.0 - scrollZone)) _startAutoScroll(15.0, files, provider);
-                                        else _stopAutoScroll();
-                                        _updateSelection(currentAbsY, files, provider);
-                                      }
-                                    },
-                                    onPointerUp: (_) { _stopAutoScroll(); setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; }); },
-                                    child: Scrollbar(
-                                      controller: _verticalController,
-                                      thumbVisibility: true,
+                                      onPointerMove: (event) {
+                                        if (_dragStart != null) {
+                                          final currentAbsY = event.localPosition.dy + _verticalController.offset;
+                                          setState(() { _dragUpdate = Offset(event.localPosition.dx, currentAbsY); });
+                                          const scrollZone = 40.0;
+                                          if (event.localPosition.dy < scrollZone) {
+                                            _startAutoScroll(-15.0, files, provider);
+                                          } else if (event.localPosition.dy > (constraints.maxHeight - 32.0 - scrollZone)) {
+                                            _startAutoScroll(15.0, files, provider);
+                                          } else {
+                                            _stopAutoScroll();
+                                          }
+                                          _updateSelection(currentAbsY, files, provider);
+                                        }
+                                      },
+                                      onPointerUp: (_) { _stopAutoScroll(); setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; }); },
                                       child: NotificationListener<ScrollNotification>(
                                         onNotification: (notification) {
-                                          if (notification is ScrollUpdateNotification || notification is ScrollEndNotification) {
+                                          if (notification.metrics.axis == Axis.vertical) {
                                             final offset = _verticalController.offset;
                                             provider.updateVisibleRange((offset / rowHeight).floor(), ((offset + constraints.maxHeight) / rowHeight).ceil());
                                           }
@@ -265,16 +270,16 @@ class _FileListPanelState extends State<FileListPanel> {
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  if (files.isEmpty)
-                                    Positioned(top: 100, left: 0, child: IgnorePointer(child: Container(width: constraints.maxWidth, alignment: Alignment.center, child: Text(l10n.labelNoFiles, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))))),
-                                  if (_dragStart != null && _dragUpdate != null)
-                                    Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: SelectionPainter(start: Offset(_dragStart!.dx, _dragStart!.dy - _verticalController.offset), update: Offset(_dragUpdate!.dx, _dragUpdate!.dy - _verticalController.offset), color: Theme.of(context).colorScheme.primary)))),
-                                ],
+                                    if (files.isEmpty)
+                                      Positioned(top: 100, left: 0, child: IgnorePointer(child: Container(width: constraints.maxWidth, alignment: Alignment.center, child: Text(l10n.labelNoFiles, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))))),
+                                    if (_dragStart != null && _dragUpdate != null)
+                                      Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: SelectionPainter(start: Offset(_dragStart!.dx, _dragStart!.dy - _verticalController.offset), update: Offset(_dragUpdate!.dx, _dragUpdate!.dy - _verticalController.offset), color: Theme.of(context).colorScheme.primary)))),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
