@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../core/directory_provider.dart';
 
 import 'categories/category_add.dart';
 import 'categories/category_remove.dart';
@@ -18,6 +21,7 @@ class SettingsPanel extends StatefulWidget {
 
 class _SettingsPanelState extends State<SettingsPanel> {
   int _selectedIndex = 0;
+  bool _hideBannerSession = false; // 今回のセッションでバナーを閉じたか
 
   final List<Widget> _pages = const [
     CategoryAddText(),
@@ -31,6 +35,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final provider = context.watch<DirectoryProvider>();
 
     return SafeArea(
       child: LayoutBuilder(
@@ -39,6 +44,10 @@ class _SettingsPanelState extends State<SettingsPanel> {
 
         return Column(
           children: [
+            // アップデートバナー (案1: 最上段に差し込み)
+            if (provider.hasUpdate && !_hideBannerSession)
+              _buildUpdateBanner(context, provider),
+            
             Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,6 +151,57 @@ class _SettingsPanelState extends State<SettingsPanel> {
           ],
         );
       },
+    ),
+  );
+}
+
+Widget _buildUpdateBanner(BuildContext context, DirectoryProvider provider) {
+  final colorScheme = Theme.of(context).colorScheme;
+  return Material(
+    color: colorScheme.primaryContainer,
+    child: InkWell(
+      onTap: () => launchUrl(Uri.parse('https://github.com/toyo-craft/renamery/releases')),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Icon(Symbols.update, color: colorScheme.onPrimaryContainer, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '新しいバージョン (v${provider.latestVersion}) が利用可能です',
+                    style: TextStyle(
+                      color: colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    'タップして詳細を確認し、最新版をダウンロードしてください。',
+                    style: TextStyle(
+                      color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: Icon(Symbols.close, color: colorScheme.onPrimaryContainer, size: 18),
+              onPressed: () {
+                setState(() {
+                  _hideBannerSession = true;
+                });
+              },
+              visualDensity: VisualDensity.compact,
+              tooltip: '閉じる',
+            ),
+          ],
+        ),
+      ),
     ),
   );
 }

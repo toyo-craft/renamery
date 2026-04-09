@@ -13,6 +13,7 @@ import 'settings_service.dart';
 
 import 'package:permission_handler/permission_handler.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 enum HistoryType { find, replace, add, extension, remove, deleteTo }
 enum AppThemeType { system, light, dark, darkGray }
@@ -34,6 +35,64 @@ class DirectoryProvider extends ChangeNotifier {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   GlobalKey<ScaffoldState> get scaffoldKey => _scaffoldKey;
+
+  // アップデート情報
+  bool _hasUpdate = false;
+  String? _latestVersion;
+  bool get hasUpdate => _hasUpdate;
+  String? get latestVersion => _latestVersion;
+
+  void setUpdateInfo(bool hasUpdate, String? version) {
+    if (_hasUpdate != hasUpdate || _latestVersion != version) {
+      _hasUpdate = hasUpdate;
+      _latestVersion = version;
+      notifyListeners();
+    }
+  }
+
+  // GitHub Releases から最新バージョンをチェック
+  Future<void> checkForUpdates() async {
+    if (kIsWeb) return;
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
+
+      // GitHub API (Releases) から最新タグを取得
+      final client = HttpClient();
+      client.userAgent = 'ReNamery-App';
+      final request = await client.getUrl(Uri.parse('https://api.github.com/repos/toyo-craft/renamery/releases/latest'));
+      final response = await request.close();
+      
+      if (response.statusCode == 200) {
+        final content = await response.transform(utf8.decoder).join();
+        final json = jsonDecode(content);
+        final String latestTagName = json['tag_name'] ?? '';
+        final latestVer = latestTagName.replaceAll('v', '');
+
+        // バージョン比較
+        if (_isNewerVersion(currentVersion, latestVer)) {
+          setUpdateInfo(true, latestVer);
+        }
+      }
+      client.close();
+    } catch (e) {
+      if (kDebugMode) print('Update check failed: $e');
+    }
+  }
+
+  bool _isNewerVersion(String current, String latest) {
+    try {
+      final curParts = current.split('.').map(int.parse).toList();
+      final latParts = latest.split('.').map(int.parse).toList();
+      for (var i = 0; i < 3; i++) {
+        final cur = i < curParts.length ? curParts[i] : 0;
+        final lat = i < latParts.length ? latParts[i] : 0;
+        if (lat > cur) return true;
+        if (lat < cur) return false;
+      }
+    } catch (_) {}
+    return false;
+  }
 
   bool _canPaste = false; bool get canPaste => _canPaste;
   bool _isCutMode = false; final Set<String> _cutFilePaths = {}; bool get isCutMode => _isCutMode;
@@ -67,6 +126,7 @@ class DirectoryProvider extends ChangeNotifier {
     _appTheme = AppThemeType.values.firstWhere((e) => e.name == appThemeStr, orElse: () => AppThemeType.light);
     final seedColorVal = s.getInt('seedColor');
     if (seedColorVal != null) _seedColor = Color(seedColorVal);
+    else _seedColor = Colors.green; // デフォルト値の明示的なセット
 
     final menuLabelStr = s.getString('menuLabelType') ?? 'namery';
     _menuLabelType = MenuLabelType.values.firstWhere((e) => e.name == menuLabelStr, orElse: () => MenuLabelType.standard);
@@ -524,14 +584,10 @@ class DirectoryProvider extends ChangeNotifier {
           for (var line in lines) {
             if (line.isEmpty) continue;
             final fullPath = _recursiveSearch ? line : p.join(directory.path, line);
-            
-            // 属性取得のためのチェック
             final bool isDir = FileSystemEntity.isDirectorySync(fullPath);
             final f = FileModel(entity: isDir ? Directory(fullPath) : File(fullPath));
-            
             increment.add(f); count++;
 
-            // 動的トリガー判定
             final now = DateTime.now();
             final duration = now.difference(lastReportTime);
             final bool countTrigger = (count % 2500 == 0) && duration.inSeconds >= 3;
@@ -554,7 +610,6 @@ class DirectoryProvider extends ChangeNotifier {
         final Map<String, dynamic> params = {'sendPort': receivePort.sendPort, 'rootPath': directory.path, 'recursive': _recursiveSearch};
         Timer? updateTimer = Timer.periodic(const Duration(milliseconds: 200), (_) => notifyListeners());
         Isolate.spawn(RenameEngine.computeScanStream, params).then((isolate) { _currentIsolate = isolate; });
-        
         int count = 0; DateTime lastReportTime = DateTime.now(); DateTime lastDataTime = DateTime.now();
         Timer? stallTimer;
         stallTimer = Timer.periodic(const Duration(seconds: 1), (t) async {
@@ -574,12 +629,7 @@ class DirectoryProvider extends ChangeNotifier {
           if (msg == 'done' || msg is String && msg.startsWith('error')) { receivePort.close(); break; }
           final data = msg as Map<String, dynamic>;
           final f = FileModel(entity: data['isDir'] ? Directory(data['path']) : File(data['path']));
-          f.setDisplayRelativePath(data['rel']); 
-          
-          _allFiles.add(f); 
-          if (_shouldShowFile(f)) _currentFiles.add(f); 
-          count++;
-
+          f.setDisplayRelativePath(data['rel']); _allFiles.add(f); if (_shouldShowFile(f)) _currentFiles.add(f); count++;
           final now = DateTime.now();
           if (count % 2500 == 0 || now.difference(lastReportTime).inSeconds >= 5) {
             updateTimer?.cancel(); notifyListeners();
