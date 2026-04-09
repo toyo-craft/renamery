@@ -75,122 +75,106 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Numbering Enable Switch
-          RadioListTile<RenameMode>(
-            title: Text(l10n.labelCategoryNumbering,
-                style:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-            value: RenameMode.numbering,
-            groupValue: provider.renameMode,
-            onChanged: (val) => provider.updateRenameSettings(mode: val!),
-            contentPadding: EdgeInsets.zero,
-            dense: isCompact,
-          ),
-
-          if (provider.renameMode == RenameMode.numbering)
-            Padding(
-              padding:
-                  const EdgeInsets.only(left: 32.0, bottom: 8.0, right: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+          // 親のラジオボタンを削除し、詳細を直接表示 (案1の要素)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Text(l10n.labelStart),
-                      const SizedBox(width: 8),
-                      NumberSpinBox(
-                        value: provider.startNumber,
-                        isCompact: isCompact,
-                        width: 48,
-                        onChanged: (v) =>
-                            provider.updateRenameSettings(startNumber: v),
-                      ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        icon: Icon(
-                          provider.saveSequenceNumber
-                              ? Icons.push_pin
-                              : Icons.push_pin_outlined,
-                          color: provider.saveSequenceNumber
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        iconSize: 20,
-                        padding: const EdgeInsets.all(4),
-                        constraints: const BoxConstraints(),
-                        tooltip: l10n.labelNumSaveSequenceTooltip,
-                        onPressed: () => provider.updateRenameSettings(
-                            saveSequenceNumber: !provider.saveSequenceNumber,
-                            immediate: true),
-                      ),
-                      const Spacer(),
-                      Text(l10n.labelDigit),
-                      const SizedBox(width: 8),
-                      // Digits
-                      NumberSpinBox(
-                        value: provider.digits,
-                        min: 1,
-                        max: 10,
-                        isCompact: isCompact,
-                        width: 48,
-                        onChanged: (v) =>
-                            provider.updateRenameSettings(digits: v),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Numbering Pattern List
-                  const Divider(),
-                  _buildRadio(context, provider, l10n.labelNumStringNumber,
-                      NumberingMode.stringNumber),
-                  _buildRadio(context, provider, l10n.labelNumOriginalNumber,
-                      NumberingMode.originalNumber),
-                  _buildRadio(context, provider, l10n.labelNumNumberString,
-                      NumberingMode.numberString),
-                  _buildRadio(context, provider, l10n.labelNumNumberOriginal,
-                      NumberingMode.numberOriginal),
-                  _buildRadio(context, provider, l10n.labelNumBaseStringNumber,
-                      NumberingMode.baseStringNumber),
-                  _buildRadio(
-                      context,
-                      provider,
-                      l10n.labelNumBaseStringOriginal,
-                      NumberingMode.baseStringOriginal),
-                  _buildRadio(
-                      context,
-                      provider,
-                      l10n.labelNumRelativeStringNumber,
-                      NumberingMode.relativeStringNumber),
-                  _buildRadio(
-                      context,
-                      provider,
-                      l10n.labelNumRelativeStringOriginal,
-                      NumberingMode.relativeStringOriginal),
-                  _buildRadio(context, provider, l10n.labelNumNumberStringBase,
-                      NumberingMode.numberStringBase),
-                  _buildRadio(
-                      context,
-                      provider,
-                      l10n.labelNumNumberStringRelative,
-                      NumberingMode.numberStringRelative),
-
-                  const SizedBox(height: 16),
-                  HistoryTextField(
-                    controller: _appendController,
-                    focusNode: _appendFocus,
-                    history: provider.appendHistory,
-                    hintText: l10n.labelStringInput,
+                  Text(l10n.labelStart),
+                  const SizedBox(width: 8),
+                  NumberSpinBox(
+                    value: provider.startNumber,
                     isCompact: isCompact,
-                    onChanged: (val) =>
-                        provider.updateRenameSettings(appendText: val),
-                    onSubmitted: (val, _) =>
-                        provider.addHistory(HistoryType.add, val),
+                    width: 48,
+                    onChanged: (v) =>
+                        provider.updateRenameSettings(startNumber: v),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(
+                      provider.saveSequenceNumber
+                          ? Icons.push_pin
+                          : Icons.push_pin_outlined,
+                      color: provider.saveSequenceNumber
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    iconSize: 20,
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(),
+                    tooltip: l10n.labelNumSaveSequenceTooltip,
+                    onPressed: () => provider.updateRenameSettings(
+                        saveSequenceNumber: !provider.saveSequenceNumber,
+                        immediate: true),
+                  ),
+                  const Spacer(),
+                  Text(l10n.labelDigit),
+                  const SizedBox(width: 8),
+                  // Digits
+                  NumberSpinBox(
+                    value: provider.digits,
+                    min: 1,
+                    max: 10,
+                    isCompact: isCompact,
+                    width: 48,
+                    onChanged: (v) =>
+                        provider.updateRenameSettings(digits: v),
                   ),
                 ],
               ),
-            ),
+
+              const SizedBox(height: 16),
+
+              // Numbering Pattern List
+              const Divider(),
+              _buildRadio(context, provider, l10n.labelNumStringNumber,
+                  NumberingMode.stringNumber),
+              _buildRadio(context, provider, l10n.labelNumOriginalNumber,
+                  NumberingMode.originalNumber),
+              _buildRadio(context, provider, l10n.labelNumNumberString,
+                  NumberingMode.numberString),
+              _buildRadio(context, provider, l10n.labelNumNumberOriginal,
+                  NumberingMode.numberOriginal),
+              _buildRadio(context, provider, l10n.labelNumBaseStringNumber,
+                  NumberingMode.baseStringNumber),
+              _buildRadio(
+                  context,
+                  provider,
+                  l10n.labelNumBaseStringOriginal,
+                  NumberingMode.baseStringOriginal),
+              _buildRadio(
+                  context,
+                  provider,
+                  l10n.labelNumRelativeStringNumber,
+                  NumberingMode.relativeStringNumber),
+              _buildRadio(
+                  context,
+                  provider,
+                  l10n.labelNumRelativeStringOriginal,
+                  NumberingMode.relativeStringOriginal),
+              _buildRadio(context, provider, l10n.labelNumNumberStringBase,
+                  NumberingMode.numberStringBase),
+              _buildRadio(
+                  context,
+                  provider,
+                  l10n.labelNumNumberStringRelative,
+                  NumberingMode.numberStringRelative),
+
+              const SizedBox(height: 16),
+              HistoryTextField(
+                controller: _appendController,
+                focusNode: _appendFocus,
+                history: provider.appendHistory,
+                hintText: l10n.labelStringInput,
+                isCompact: isCompact,
+                onChanged: (val) =>
+                    provider.updateRenameSettings(appendText: val),
+                onSubmitted: (val, _) =>
+                    provider.addHistory(HistoryType.add, val),
+              ),
+            ],
+          ),
         ],
       ),
     );

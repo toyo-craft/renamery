@@ -4,6 +4,7 @@ import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/directory_provider.dart';
+import '../../core/rename_engine.dart'; // 追加
 
 import 'categories/category_add.dart';
 import 'categories/category_remove.dart';
@@ -58,6 +59,16 @@ class _SettingsPanelState extends State<SettingsPanel> {
                       setState(() {
                         _selectedIndex = index;
                       });
+                      // タブ選択時に自動でリネームモードを切り替える (案2の要素)
+                      final provider = context.read<DirectoryProvider>();
+                      switch (index) {
+                        case 0: provider.updateRenameSettings(mode: RenameMode.append); break;
+                        case 1: provider.updateRenameSettings(mode: RenameMode.deleteStart); break;
+                        case 2: provider.updateRenameSettings(mode: RenameMode.replace); break;
+                        case 3: provider.updateRenameSettings(mode: RenameMode.numbering); break;
+                        case 4: provider.updateRenameSettings(mode: RenameMode.extension); break;
+                        case 5: provider.updateRenameSettings(mode: RenameMode.changeTimestamp); break;
+                      }
                     },
                     labelType: isCompact
                         ? NavigationRailLabelType.none
