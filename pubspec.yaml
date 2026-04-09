@@ -1,7 +1,7 @@
 name: renamery
 description: Flutterを使用したNameryファイルリネームツールの復活版。
 publish_to: 'none'
-version: 0.11.0+10
+version: 0.11.1+11
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -71,6 +71,6 @@ msix_config:
   publisher_display_name: Toyo Craft Lab
   identity_name: ToyoCraftLab.ReNamery
   publisher: "CN=ToyoCraftLab"
-  msix_version: 0.11.0.0
+  msix_version: 0.11.1.0
   logo_path: assets/icon/app_icon.png
   store: true
