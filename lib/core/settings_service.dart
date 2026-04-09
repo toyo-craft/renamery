@@ -14,6 +14,8 @@ class SettingsService {
   SettingsService._internal();
 
   Map<String, dynamic> _settings = {};
+  bool _isSaving = false;
+  bool _needsSaveAgain = false;
 
   Future<void> loadSettings() async {
     try {
@@ -21,21 +23,31 @@ class SettingsService {
       if (await file.exists()) {
         final content = await file.readAsString();
         _settings = json.decode(content);
+        if (kDebugMode) print('Settings loaded from: ${file.path}');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading settings: $e');
-      }
+      if (kDebugMode) print('Error loading settings: $e');
     }
   }
 
   Future<void> saveSettings() async {
+    if (_isSaving) {
+      _needsSaveAgain = true;
+      return;
+    }
+
+    _isSaving = true;
     try {
       final file = await _getSettingsFile();
       await file.writeAsString(json.encode(_settings));
+      if (kDebugMode) print('Settings saved to: ${file.path}');
     } catch (e) {
-      if (kDebugMode) {
-        print('Error saving settings: $e');
+      if (kDebugMode) print('Error saving settings: $e');
+    } finally {
+      _isSaving = false;
+      if (_needsSaveAgain) {
+        _needsSaveAgain = false;
+        saveSettings();
       }
     }
   }
@@ -44,17 +56,24 @@ class SettingsService {
     final String directoryPath;
 
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-      // モバイル環境: アプリ専用のドキュメントディレクトリを使用
       final dir = await getApplicationDocumentsDirectory();
       directoryPath = dir.path;
-    } else {
-      // デスクトップ環境: ポータブルモード (実行ファイル横)
+    } else if (!kIsWeb && Platform.isWindows) {
+      // Windows: Program Files への書き込み制限を避けるため AppData を優先
+      // ただし、実行ファイルと同じ場所に settings.json が既にある場合はポータブルモードとして維持
       final exePath = Platform.resolvedExecutable;
-      if (kDebugMode && !exePath.toLowerCase().endsWith('renamery.exe')) {
-        directoryPath = Directory.current.path;
+      final exeDir = p.dirname(exePath);
+      final portableFile = File(p.join(exeDir, 'settings.json'));
+      
+      if (await portableFile.exists()) {
+        directoryPath = exeDir;
       } else {
-        directoryPath = p.dirname(exePath);
+        final appDataDir = await getApplicationSupportDirectory();
+        directoryPath = appDataDir.path;
       }
+    } else {
+      final dir = await getApplicationSupportDirectory();
+      directoryPath = dir.path;
     }
 
     final path = p.join(directoryPath, 'settings.json');
@@ -65,16 +84,12 @@ class SettingsService {
     return file;
   }
 
-  // Generic Getters/Setters
   dynamic get(String key) => _settings[key];
 
-  void set(String key, dynamic value) {
+  void set(String key, dynamic value, {bool saveImmediate = true}) {
     _settings[key] = value;
-    saveSettings(); // Auto-save on set
+    if (saveImmediate) saveSettings();
   }
-
-  // Typed Getters (Safe)
-  T? getValue<T>(String key) => _settings[key] as T?;
 
   int? getInt(String key) {
     final val = _settings[key];
@@ -89,22 +104,17 @@ class SettingsService {
   }
 
   bool? getBool(String key) => _settings[key] as bool?;
-
   String? getString(String key) => _settings[key] as String?;
 
   List<String> getStringList(String key) {
     final val = _settings[key];
-    if (val is List) {
-      return val.map((e) => e.toString()).toList();
-    }
+    if (val is List) return val.map((e) => e.toString()).toList();
     return [];
   }
 
   List<T>? getList<T>(String key) {
     final val = _settings[key];
-    if (val is List) {
-      return val.cast<T>();
-    }
+    if (val is List) return val.cast<T>();
     return null;
   }
 }

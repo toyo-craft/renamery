@@ -198,29 +198,52 @@ class DirectoryProvider extends ChangeNotifier {
 
   void _saveState() {
     final s = SettingsService();
-    if (_currentDirectory != null) s.set('lastDirectory', _currentDirectory!.path);
-    s.set('filterText', _filterText); s.set('hideSystemFiles', _hideSystemFiles);
-    s.set('recursiveSearch', _recursiveSearch); s.set('showPreview', _showPreview);
-    s.set('showFolders', _showFolders); s.set('saveSequenceNumber', _saveSequenceNumber);
-    s.set('isCompactMode', _isCompactMode); s.set('touchMode', _touchMode);
-    s.set('enableBetaFeatures', _enableBetaFeatures); s.set('appTheme', _appTheme.name);
-    s.set('menuLabelType', _menuLabelType.name); s.set('seedColor', _seedColor.toARGB32());
-    s.set('navHistory', _navHistory); s.set('navIndex', _navIndex);
-    s.set('renameMode', _renameMode.index); s.set('numberingMode', _numberingMode.index);
-    if (_findText != null) s.set('findText', _findText);
-    if (_replaceText != null) s.set('replaceText', _replaceText);
-    if (_appendText != null) s.set('appendText', _appendText);
-    if (_deleteToText != null) s.set('deleteToText', _deleteToText);
-    s.set('startNumber', _startNumber); s.set('digits', _digits);
-    s.set('extensionToLowerCase', _extensionToLowerCase); s.set('useRegex', _useRegex);
-    s.set('sortColumnIndex', _sortColumnIndex); s.set('sortAscending', _sortAscending);
-    s.set('listRenameText', _listRenameText); s.set('extensionChangeText', _extensionChangeText);
-    s.set('extensionAddText', _extensionAddText); s.set('dateFormat', _dateFormat);
-    s.set('datePosition', _datePosition.index); s.set('validationType', _validationType.index);
-    s.set('initialDirectoryMode', _initialDirectoryMode.index); s.set('fixedInitialDirectory', _fixedInitialDirectory);
-    s.set('etcTimestamp', _etcTimestamp); s.set('etcAttribReadOnly', _etcAttribReadOnly);
-    s.set('etcAttribHidden', _etcAttribHidden); s.set('etcAttribArchive', _etcAttribArchive);
-    s.set('etcAttribSystem', _etcAttribSystem);
+    // 多数の設定を一度に保存するため、個別の自動保存を抑制し、最後に一括保存する
+    if (_currentDirectory != null) s.set('lastDirectory', _currentDirectory!.path, saveImmediate: false);
+    s.set('filterText', _filterText, saveImmediate: false);
+    s.set('hideSystemFiles', _hideSystemFiles, saveImmediate: false);
+    s.set('recursiveSearch', _recursiveSearch, saveImmediate: false);
+    s.set('showPreview', _showPreview, saveImmediate: false);
+    s.set('showFolders', _showFolders, saveImmediate: false);
+    s.set('saveSequenceNumber', _saveSequenceNumber, saveImmediate: false);
+    s.set('isCompactMode', _isCompactMode, saveImmediate: false);
+    s.set('touchMode', _touchMode, saveImmediate: false);
+    s.set('enableBetaFeatures', _enableBetaFeatures, saveImmediate: false);
+    s.set('appTheme', _appTheme.name, saveImmediate: false);
+    s.set('menuLabelType', _menuLabelType.name, saveImmediate: false);
+    s.set('seedColor', _seedColor.toARGB32(), saveImmediate: false);
+    s.set('navHistory', _navHistory, saveImmediate: false);
+    s.set('navIndex', _navIndex, saveImmediate: false);
+    s.set('renameMode', _renameMode.index, saveImmediate: false);
+    s.set('numberingMode', _numberingMode.index, saveImmediate: false);
+    s.set('isLicenseAccepted', _isLicenseAccepted, saveImmediate: false); // 明示的に保存対象に追加
+
+    if (_findText != null) s.set('findText', _findText, saveImmediate: false);
+    if (_replaceText != null) s.set('replaceText', _replaceText, saveImmediate: false);
+    if (_appendText != null) s.set('appendText', _appendText, saveImmediate: false);
+    if (_deleteToText != null) s.set('deleteToText', _deleteToText, saveImmediate: false);
+    
+    s.set('startNumber', _startNumber, saveImmediate: false);
+    s.set('digits', _digits, saveImmediate: false);
+    s.set('extensionToLowerCase', _extensionToLowerCase, saveImmediate: false);
+    s.set('useRegex', _useRegex, saveImmediate: false);
+    s.set('sortColumnIndex', _sortColumnIndex, saveImmediate: false);
+    s.set('sortAscending', _sortAscending, saveImmediate: false);
+    s.set('listRenameText', _listRenameText, saveImmediate: false);
+    s.set('extensionChangeText', _extensionChangeText, saveImmediate: false);
+    s.set('extensionAddText', _extensionAddText, saveImmediate: false);
+    s.set('dateFormat', _dateFormat, saveImmediate: false);
+    s.set('datePosition', _datePosition.index, saveImmediate: false);
+    s.set('validationType', _validationType.index, saveImmediate: false);
+    s.set('initialDirectoryMode', _initialDirectoryMode.index, saveImmediate: false);
+    s.set('fixedInitialDirectory', _fixedInitialDirectory, saveImmediate: false);
+    s.set('etcTimestamp', _etcTimestamp, saveImmediate: false);
+    s.set('etcAttribReadOnly', _etcAttribReadOnly, saveImmediate: false);
+    s.set('etcAttribHidden', _etcAttribHidden, saveImmediate: false);
+    s.set('etcAttribArchive', _etcAttribArchive, saveImmediate: false);
+    s.set('etcAttribSystem', _etcAttribSystem, saveImmediate: false);
+
+    s.saveSettings(); // 最後に一括で書き込み
   }
 
   RenameMode _renameMode = RenameMode.numbering; NumberingMode _numberingMode = NumberingMode.stringNumber;
