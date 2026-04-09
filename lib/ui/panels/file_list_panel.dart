@@ -56,7 +56,6 @@ class _FileListPanelState extends State<FileListPanel> {
   bool _handleGlobalKey(KeyEvent event) {
     if (event is! KeyDownEvent) return false;
     
-    // [最強のガード] 現在のフォーカスが「文字入力を受け付ける状態」かを判定
     final primaryFocus = FocusManager.instance.primaryFocus;
     bool isWriting = false;
     
@@ -76,24 +75,19 @@ class _FileListPanelState extends State<FileListPanel> {
     final key = event.logicalKey;
     final isCtrl = HardwareKeyboard.instance.isControlPressed;
 
-    // 1. ESCキーの特別扱い
     if (key == LogicalKeyboardKey.escape) {
       bool handled = false;
       if (_draggingIndex != null) { setState(() { _draggingIndex = null; _reorderableListKey = UniqueKey(); }); handled = true; }
       if (_editingFilePath != null) { setState(() { _editingFilePath = null; }); provider.setInlineRenaming(false); handled = true; }
       if (_dragStart != null) { _stopAutoScroll(); setState(() { _dragStart = null; _dragUpdate = null; _initialSelectionStates = null; }); handled = true; }
-      
       if (isWriting) return handled;
-
       if (!handled && provider.currentFiles.any((f) => f.isSelected)) { provider.selectAll(false); handled = true; }
       if (!handled && provider.isCutMode) { provider.clearCutState(); handled = true; }
       return handled;
     }
 
-    // 2. [重要] 入力中は ESC 以外の全ショートカットを完全に遮断
     if (isWriting || provider.isInlineRenaming) return false;
 
-    // 3. ファイル操作用ショートカット
     if (isCtrl) {
       if (key == LogicalKeyboardKey.keyA) { provider.selectAll(true); return true; }
       if (key == LogicalKeyboardKey.keyD) { provider.selectAll(false); return true; }
@@ -197,7 +191,6 @@ class _FileListPanelState extends State<FileListPanel> {
                                       onPointerDown: (event) {
                                         final isMouse = event.kind == PointerDeviceKind.mouse;
                                         const safeZone = _widthDragHandle + _widthCheckbox + _widthSeparator;
-
                                         if (isMouse && event.buttons == kPrimaryButton && !provider.isInlineRenaming && event.localPosition.dx > safeZone && files.isNotEmpty) {
                                           setState(() {
                                             _dragStart = Offset(event.localPosition.dx, event.localPosition.dy + _verticalController.offset);
@@ -206,19 +199,14 @@ class _FileListPanelState extends State<FileListPanel> {
                                           });
                                         }
                                       },
-
                                       onPointerMove: (event) {
                                         if (_dragStart != null) {
                                           final currentAbsY = event.localPosition.dy + _verticalController.offset;
                                           setState(() { _dragUpdate = Offset(event.localPosition.dx, currentAbsY); });
                                           const scrollZone = 40.0;
-                                          if (event.localPosition.dy < scrollZone) {
-                                            _startAutoScroll(-15.0, files, provider);
-                                          } else if (event.localPosition.dy > (constraints.maxHeight - 32.0 - scrollZone)) {
-                                            _startAutoScroll(15.0, files, provider);
-                                          } else {
-                                            _stopAutoScroll();
-                                          }
+                                          if (event.localPosition.dy < scrollZone) _startAutoScroll(-15.0, files, provider);
+                                          else if (event.localPosition.dy > (constraints.maxHeight - 32.0 - scrollZone)) _startAutoScroll(15.0, files, provider);
+                                          else _stopAutoScroll();
                                           _updateSelection(currentAbsY, files, provider);
                                         }
                                       },
@@ -231,42 +219,34 @@ class _FileListPanelState extends State<FileListPanel> {
                                           }
                                           return false;
                                         },
-                                        child: ListView(
-                                          controller: _verticalController,
-                                          padding: EdgeInsets.zero,
+                                        child: ReorderableListView.builder(
+                                          key: _reorderableListKey,
+                                          scrollController: _verticalController,
+                                          itemCount: files.length,
+                                          itemExtent: rowHeight,
+                                          onReorder: provider.reorderFiles,
+                                          onReorderStart: (index) => setState(() => _draggingIndex = index),
+                                          onReorderEnd: (_) => setState(() => _draggingIndex = null),
+                                          buildDefaultDragHandles: false,
                                           physics: const AlwaysScrollableScrollPhysics(),
-                                          children: [
-                                            if (files.isNotEmpty)
-                                              SizedBox(
-                                                height: files.length * rowHeight,
-                                                child: ReorderableListView.builder(
-                                                  key: _reorderableListKey,
-                                                  itemCount: files.length,
-                                                  onReorder: provider.reorderFiles,
-                                                  onReorderStart: (index) => setState(() => _draggingIndex = index),
-                                                  onReorderEnd: (_) => setState(() => _draggingIndex = null),
-                                                  buildDefaultDragHandles: false,
-                                                  proxyDecorator: (child, index, animation) => _buildProxyDecorator(child, index, animation, provider, rowHeight),
-                                                  itemBuilder: (itemContext, index) => RepaintBoundary(
-                                                    key: ValueKey(files[index].entity.path),
-                                                    child: _FileRow(
-                                                      index: index,
-                                                      file: files[index],
-                                                      columnWidths: _columnWidths,
-                                                      isEditing: _editingFilePath == files[index].entity.path,
-                                                      isDragging: _draggingIndex != null,
-                                                      isDraggedItem: _draggingIndex == index,
-                                                      renameController: _renameController,
-                                                      renameFocusNode: _renameFocusNode,
-                                                      onStartEdit: (path, name) => _startEdit(path, name, provider),
-                                                      onEndEdit: () => setState(() { _editingFilePath = null; provider.setInlineRenaming(false); }),
-                                                      onShowMenu: (details, file) => _showRowContextMenu(context, details, file, provider, l10n),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            const SizedBox(height: 500),
-                                          ],
+                                          padding: const EdgeInsets.only(bottom: 100),
+                                          proxyDecorator: (child, index, animation) => _buildProxyDecorator(child, index, animation, provider, rowHeight),
+                                          itemBuilder: (itemContext, index) => RepaintBoundary(
+                                            key: ValueKey(files[index].entity.path),
+                                            child: _FileRow(
+                                              index: index,
+                                              file: files[index],
+                                              columnWidths: _columnWidths,
+                                              isEditing: _editingFilePath == files[index].entity.path,
+                                              isDragging: _draggingIndex != null,
+                                              isDraggedItem: _draggingIndex == index,
+                                              renameController: _renameController,
+                                              renameFocusNode: _renameFocusNode,
+                                              onStartEdit: (path, name) => _startEdit(path, name, provider),
+                                              onEndEdit: () => setState(() { _editingFilePath = null; provider.setInlineRenaming(false); }),
+                                              onShowMenu: (details, file) => _showRowContextMenu(context, details, file, provider, l10n),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -334,70 +314,18 @@ class _FileListPanelState extends State<FileListPanel> {
 
   Widget _buildAddressBar(BuildContext context, DirectoryProvider provider, AppLocalizations l10n) {
     final hasSelection = provider.selectedFilesCount > 0;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1), width: 0.5)),
-      ),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerLow, border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1), width: 0.5))),
       child: Row(
         children: [
-          // 1. ラベル
-          Text(
-            l10n.labelFullPath,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+          Text(l10n.labelFullPath, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(width: 8),
-          // 2. アドレス入力欄
-          Expanded(
-            child: SizedBox(
-              height: 36,
-              child: TextField(
-                controller: _pathController,
-                style: const TextStyle(fontSize: 13),
-                decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                  fillColor: Theme.of(context).colorScheme.surface,
-                  filled: true,
-                ),
-                onSubmitted: (val) {
-                  if (val.isNotEmpty) provider.setDirectory(io.Directory(val), source: 'address_bar');
-                },
-              ),
-            ),
-          ),
+          Expanded(child: SizedBox(height: 36, child: TextField(controller: _pathController, style: const TextStyle(fontSize: 13), decoration: InputDecoration(isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none), fillColor: Theme.of(context).colorScheme.surface, filled: true), onSubmitted: (val) { if (val.isNotEmpty) provider.setDirectory(io.Directory(val), source: 'address_bar'); }))),
           const SizedBox(width: 4),
-          // 3. 移動ボタン (シンプルな矢印)
-          IconButton(
-            icon: const Icon(Icons.arrow_forward),
-            onPressed: () {
-              if (_pathController.text.isNotEmpty) {
-                provider.setDirectory(io.Directory(_pathController.text), source: 'address_bar');
-              }
-            },
-            tooltip: l10n.labelMenuGo,
-          ),
+          IconButton(icon: const Icon(Icons.arrow_forward), onPressed: () { if (_pathController.text.isNotEmpty) { provider.setDirectory(io.Directory(_pathController.text), source: 'address_bar'); } }, tooltip: l10n.labelMenuGo),
           const SizedBox(width: 4),
-          // 4. 全選択ボタン (楕円 / Elevated)
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              shape: const StadiumBorder(), // 楕円
-              elevation: 2,
-            ),
-            onPressed: () => provider.selectAll(!hasSelection),
-            child: Text(
-              hasSelection ? l10n.labelDeselectAll : l10n.labelSelectAll,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-          ),
+          ElevatedButton(style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 20), shape: const StadiumBorder(), elevation: 2), onPressed: () => provider.selectAll(!hasSelection), child: Text(hasSelection ? l10n.labelDeselectAll : l10n.labelSelectAll, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
         ],
       ),
     );
@@ -449,91 +377,27 @@ class _FileListPanelState extends State<FileListPanel> {
   Future<void> _showRowContextMenu(BuildContext context, TapDownDetails details, FileModel file, DirectoryProvider provider, AppLocalizations l10n) async {
     if (!context.mounted) return;
     if (!file.isSelected) provider.toggleSelection(file);
-    
-    // マイクロタスクに遅延させることで、OS側のイベント処理（右クリック等）との競合を避ける
     scheduleMicrotask(() async {
       if (!context.mounted) return;
-      
       final RenderBox? overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
       if (overlay == null) return;
-      
-      final RelativeRect position = RelativeRect.fromRect(
-        details.globalPosition & const Size(40, 40),
-        Offset.zero & overlay.size,
-      );
-
-      final result = await showMenu<String>(
-        context: context,
-        position: position,
-        items: [
-          PopupMenuItem(value: 'up_folder', child: Text(l10n.labelCtxUpOneFolder)),
-          const PopupMenuDivider(),
-          PopupMenuItem(value: 'copy', child: Text(l10n.labelCtxCopyItems)),
-          PopupMenuItem(value: 'cut', child: Text(l10n.labelCtxCutItems)),
-          const PopupMenuDivider(),
-          PopupMenuItem(value: 'rename', child: Text(l10n.labelCtxRenameGeneral)),
-          PopupMenuItem(value: 'batch_rename', child: Text(l10n.labelCtxBatchRename)),
-          const PopupMenuDivider(),
-          PopupMenuItem(value: 'top', child: Text(l10n.labelCtxMoveToTop)),
-          PopupMenuItem(value: 'bottom', child: Text(l10n.labelCtxMoveToBottom)),
-          PopupMenuItem(value: 'delete', child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(l10n.labelCtxDeleteItems, style: const TextStyle(color: Colors.red)), const Icon(Icons.delete, color: Colors.red, size: 20)])),
-          const PopupMenuDivider(),
-          PopupMenuItem(value: 'properties', child: Text(l10n.labelCtxProperties)),
-        ],
-      );
+      final RelativeRect position = RelativeRect.fromRect(details.globalPosition & const Size(40, 40), Offset.zero & overlay.size);
+      final result = await showMenu<String>(context: context, position: position, items: [PopupMenuItem(value: 'up_folder', child: Text(l10n.labelCtxUpOneFolder)), const PopupMenuDivider(), PopupMenuItem(value: 'copy', child: Text(l10n.labelCtxCopyItems)), PopupMenuItem(value: 'cut', child: Text(l10n.labelCtxCutItems)), const PopupMenuDivider(), PopupMenuItem(value: 'rename', child: Text(l10n.labelCtxRenameGeneral)), PopupMenuItem(value: 'batch_rename', child: Text(l10n.labelCtxBatchRename)), const PopupMenuDivider(), PopupMenuItem(value: 'top', child: Text(l10n.labelCtxMoveToTop)), PopupMenuItem(value: 'bottom', child: Text(l10n.labelCtxMoveToBottom)), PopupMenuItem(value: 'delete', child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(l10n.labelCtxDeleteItems, style: const TextStyle(color: Colors.red)), const Icon(Icons.delete, color: Colors.red, size: 20)])), const PopupMenuDivider(), PopupMenuItem(value: 'properties', child: Text(l10n.labelCtxProperties))]);
       if (result == null || !context.mounted) return;
-      switch (result) {
-        case 'copy': await provider.copySelection(); break;
-        case 'cut': await provider.cutSelection(); break;
-        case 'rename': _startEdit(file.entity.path, file.originalName, provider); break;
-        case 'batch_rename': await provider.executeRename(); break;
-        case 'top': provider.moveSelectedToTop(); break;
-        case 'bottom': provider.moveSelectedToBottom(); break;
-        case 'delete': _showDeleteConfirmDialog(context, provider, l10n); break;
-        case 'properties': PlatformUtils.showPropertiesDialog(context, file); break;
-        case 'up_folder': await provider.goUp(); break;
-      }
+      switch (result) { case 'copy': await provider.copySelection(); break; case 'cut': await provider.cutSelection(); break; case 'rename': _startEdit(file.entity.path, file.originalName, provider); break; case 'batch_rename': await provider.executeRename(); break; case 'top': provider.moveSelectedToTop(); break; case 'bottom': provider.moveSelectedToBottom(); break; case 'delete': _showDeleteConfirmDialog(context, provider, l10n); break; case 'properties': PlatformUtils.showPropertiesDialog(context, file); break; case 'up_folder': await provider.goUp(); break; }
     });
   }
 
   Future<void> _showBackgroundContextMenu(BuildContext context, TapDownDetails details, DirectoryProvider provider, AppLocalizations l10n) async {
     if (!context.mounted) return;
-    
     scheduleMicrotask(() async {
       if (!context.mounted) return;
-      
       final RenderBox? overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
       if (overlay == null) return;
-      
-      final RelativeRect position = RelativeRect.fromRect(
-        details.globalPosition & const Size(40, 40),
-        Offset.zero & overlay.size,
-      );
-
-      final result = await showMenu<String>(
-        context: context,
-        position: position,
-        items: [
-          PopupMenuItem(value: 'up_folder', child: Text(l10n.labelCtxUpOneFolder)),
-          const PopupMenuDivider(),
-          PopupMenuItem(value: 'new_folder', child: Text(l10n.labelCtxCreateFolder)),
-          PopupMenuItem(value: 'paste', enabled: provider.canPaste, child: Text(l10n.labelCtxPasteItems)),
-          const PopupMenuDivider(),
-          PopupMenuItem(value: 'select_all', child: Text(l10n.labelSelectAll)),
-          PopupMenuItem(value: 'deselect_all', child: Text(l10n.labelDeselectAll)),
-          const PopupMenuDivider(),
-          PopupMenuItem(value: 'refresh', child: Text(l10n.labelCtxRefresh)),
-        ],
-      );
+      final RelativeRect position = RelativeRect.fromRect(details.globalPosition & const Size(40, 40), Offset.zero & overlay.size);
+      final result = await showMenu<String>(context: context, position: position, items: [PopupMenuItem(value: 'up_folder', child: Text(l10n.labelCtxUpOneFolder)), const PopupMenuDivider(), PopupMenuItem(value: 'new_folder', child: Text(l10n.labelCtxCreateFolder)), PopupMenuItem(value: 'paste', enabled: provider.canPaste, child: Text(l10n.labelCtxPasteItems)), const PopupMenuDivider(), PopupMenuItem(value: 'select_all', child: Text(l10n.labelSelectAll)), PopupMenuItem(value: 'deselect_all', child: Text(l10n.labelDeselectAll)), const PopupMenuDivider(), PopupMenuItem(value: 'refresh', child: Text(l10n.labelCtxRefresh))]);
       if (result == null || !context.mounted) return;
-      switch (result) {
-        case 'new_folder': await provider.createNewFolder(); break;
-        case 'paste': await provider.pasteFromClipboard(); break;
-        case 'select_all': provider.selectAll(true); break;
-        case 'deselect_all': provider.selectAll(false); break;
-        case 'refresh': await provider.refresh(); break;
-        case 'up_folder': await provider.goUp(); break;
-      }
+      switch (result) { case 'new_folder': await provider.createNewFolder(); break; case 'paste': await provider.pasteFromClipboard(); break; case 'select_all': provider.selectAll(true); break; case 'deselect_all': provider.selectAll(false); break; case 'refresh': await provider.refresh(); break; case 'up_folder': await provider.goUp(); break; }
     });
   }
 
@@ -562,12 +426,9 @@ class _FileRow extends StatelessWidget {
             opacity: isGhost ? 0.3 : 1.0,
             child: InkWell(
               onTap: () => provider.toggleSelection(file),
-              onSecondaryTapDown: (details) {
-                if (context.mounted) onShowMenu(details, file);
-              },
+              onSecondaryTapDown: (details) { if (context.mounted) onShowMenu(details, file); },
               onLongPress: () {
                 if (!context.mounted) return;
-                // モバイル向けの長押し対応: 中心位置にメニューを表示
                 final RenderBox? box = context.findRenderObject() as RenderBox?;
                 if (box == null || !box.hasSize) return;
                 final Offset position = box.localToGlobal(Offset(box.size.width / 2, box.size.height / 2));

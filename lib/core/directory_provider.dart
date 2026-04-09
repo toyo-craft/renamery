@@ -25,14 +25,13 @@ class DirectoryProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isInlineRenaming = false;
   bool _enableBetaFeatures = false;
-  final int _treeVersion = 0;
+  int _treeVersion = 0;
   final UndoManager _undoManager = UndoManager();
   final SettingsService _settings = SettingsService();
   StreamSubscription? _scanSubscription;
   Process? _currentProcess; 
   Isolate? _currentIsolate;
 
-  // 大量ファイル検出時のダイアログ表示用
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   GlobalKey<ScaffoldState> get scaffoldKey => _scaffoldKey;
 
@@ -133,9 +132,8 @@ class DirectoryProvider extends ChangeNotifier {
       if (lastDir != null) targetDir = Directory(lastDir);
     }
 
-    if (targetDir != null && await targetDir.exists()) {
-      await setDirectory(targetDir);
-    } else if (_currentDirectory != null) await _applyFilters();
+    if (targetDir != null && await targetDir.exists()) await setDirectory(targetDir);
+    else if (_currentDirectory != null) await _applyFilters();
   }
 
   void _saveState() {
@@ -278,11 +276,7 @@ class DirectoryProvider extends ChangeNotifier {
 
   Future<void> copySelection() async {
     final targets = _currentFiles.where((f) => f.isSelected).toList(); if (targets.isEmpty) return;
-    _isCutMode = false; _cutFilePaths.clear(); for (var f in _allFiles) {
-      f.setCut(false, notify: false);
-    } for (var f in _allFiles) {
-      f.notifyIfChanged();
-    }
+    _isCutMode = false; _cutFilePaths.clear(); for (var f in _allFiles) f.setCut(false, notify: false); for (var f in _allFiles) f.notifyIfChanged();
     final cb = SystemClipboard.instance; if (cb != null) {
       final items = targets.map((f) { final item = DataWriterItem(); item.add(Formats.fileUri(f.entity.uri)); return item; }).toList();
       await cb.write(items);
@@ -293,11 +287,7 @@ class DirectoryProvider extends ChangeNotifier {
   Future<void> cutSelection() async {
     final targets = _currentFiles.where((f) => f.isSelected).toList(); if (targets.isEmpty) return;
     _isCutMode = true; _cutFilePaths.clear(); _cutFilePaths.addAll(targets.map((f) => f.entity.path));
-    for (var f in _allFiles) {
-      f.setCut(_cutFilePaths.contains(f.entity.path), notify: false);
-    } for (var f in _allFiles) {
-      f.notifyIfChanged();
-    }
+    for (var f in _allFiles) f.setCut(_cutFilePaths.contains(f.entity.path), notify: false); for (var f in _allFiles) f.notifyIfChanged();
     final cb = SystemClipboard.instance; if (cb != null) {
       final items = targets.map((f) { final item = DataWriterItem(); item.add(Formats.fileUri(f.entity.uri)); return item; }).toList();
       await cb.write(items);
@@ -305,11 +295,7 @@ class DirectoryProvider extends ChangeNotifier {
     await checkClipboard(); notifyListeners();
   }
 
-  void clearCutState() { _isCutMode = false; _cutFilePaths.clear(); for (var f in _allFiles) {
-    f.setCut(false, notify: false);
-  } for (var f in _allFiles) {
-    f.notifyIfChanged();
-  } notifyListeners(); }
+  void clearCutState() { _isCutMode = false; _cutFilePaths.clear(); for (var f in _allFiles) f.setCut(false, notify: false); for (var f in _allFiles) f.notifyIfChanged(); notifyListeners(); }
 
   Future<void> pasteFromClipboard() async {
     if (_currentDirectory == null) return;
@@ -325,11 +311,7 @@ class DirectoryProvider extends ChangeNotifier {
             final destP = _getUniquePath(p.join(_currentDirectory!.path, name));
             final ent = FileSystemEntity.typeSync(srcP) == FileSystemEntityType.file ? File(srcP) : Directory(srcP);
             if (_isCutMode) { await ent.rename(destP); transaction.add(UndoAction(srcP, destP, type: UndoType.rename)); }
-            else { if (ent is File) {
-              await ent.copy(destP);
-            } else {
-              await _copyDirectory(ent as Directory, Directory(destP));
-            } transaction.add(UndoAction(srcP, destP, type: UndoType.copy)); }
+            else { if (ent is File) await ent.copy(destP); else await _copyDirectory(ent as Directory, Directory(destP)); transaction.add(UndoAction(srcP, destP, type: UndoType.copy)); }
           } catch (e) { if (kDebugMode) print('Paste error: $e'); }
         }
       }
@@ -348,9 +330,7 @@ class DirectoryProvider extends ChangeNotifier {
     await destination.create(recursive: true);
     await for (var entity in source.list(recursive: false)) {
       final newP = p.join(destination.path, p.basename(entity.path));
-      if (entity is Directory) {
-        await _copyDirectory(entity, Directory(newP));
-      } else if (entity is File) await entity.copy(newP);
+      if (entity is Directory) await _copyDirectory(entity, Directory(newP)); else if (entity is File) await entity.copy(newP);
     }
   }
 
@@ -392,11 +372,7 @@ class DirectoryProvider extends ChangeNotifier {
     final input = {'files': _allFiles.map((f) => {'originalName': f.originalName, 'isDirectory': f.entity is Directory, 'isHidden': f.originalName.startsWith('.')}).toList(), 'filterText': _filterText, 'isFilterRegex': _isFilterRegex, 'hideSystemFiles': _hideSystemFiles, 'showFolders': _showFolders};
     final visibility = await compute(_computeFilter, input); if (currentVersion != _filterVersion) return;
     final List<FileModel> filtered = []; for (int i = 0; i < _allFiles.length; i++) { if (visibility[i]) filtered.add(_allFiles[i]); }
-    _currentFiles = filtered; for (var f in _allFiles) {
-      f.setCut(_cutFilePaths.contains(f.entity.path), notify: false);
-    } for (var f in _allFiles) {
-      f.notifyIfChanged();
-    }
+    _currentFiles = filtered; for (var f in _allFiles) f.setCut(_cutFilePaths.contains(f.entity.path), notify: false); for (var f in _allFiles) f.notifyIfChanged();
     sortFiles(_sortColumnIndex, _sortAscending); notifyListeners();
   }
 
@@ -406,9 +382,7 @@ class DirectoryProvider extends ChangeNotifier {
     return files.map((f) {
       final String originalName = f['originalName']; final bool isDirectory = f['isDirectory']; final bool isHidden = f['isHidden'];
       if (hideSystemFiles && isHidden) return false; if (!showFolders && isDirectory) return false;
-      if (filterText.isNotEmpty) { if (isFilterRegex) { if (regex == null) return true; return regex.hasMatch(originalName); } else {
-        return originalName.toLowerCase().contains(filterText.toLowerCase());
-      } }
+      if (filterText.isNotEmpty) { if (isFilterRegex) { if (regex == null) return true; return regex.hasMatch(originalName); } else return originalName.toLowerCase().contains(filterText.toLowerCase()); }
       return true;
     }).toList();
   }
@@ -418,9 +392,7 @@ class DirectoryProvider extends ChangeNotifier {
     if (!_showFolders && file.entity is Directory) return false;
     if (_filterText.isNotEmpty) {
       if (_isFilterRegex) { try { return RegExp(_filterText, caseSensitive: false, unicode: true).hasMatch(file.originalName); } catch (_) { return true; } }
-      else {
-        return file.originalName.toLowerCase().contains(_filterText.toLowerCase());
-      }
+      else return file.originalName.toLowerCase().contains(_filterText.toLowerCase());
     }
     return true;
   }
@@ -438,16 +410,10 @@ class DirectoryProvider extends ChangeNotifier {
     if (listText != null) _listRenameText = listText; if (extensionChangeText != null) _extensionChangeText = extensionChangeText;
     if (extensionAddText != null) _extensionAddText = extensionAddText; if (saveSequenceNumber != null) _saveSequenceNumber = saveSequenceNumber;
     if (mode != null) {
-      if (isSubMode(mode)) {
-        _lastSubMode = mode;
-      } else if (isMainMode(mode)) _lastMainMode = mode; else if (isExtraMode(mode)) _lastExtraMode = mode; else if (isEtcMode(mode)) _lastEtcMode = mode;
+      if (isSubMode(mode)) _lastSubMode = mode; else if (isMainMode(mode)) _lastMainMode = mode; else if (isExtraMode(mode)) _lastExtraMode = mode; else if (isEtcMode(mode)) _lastEtcMode = mode;
       if (mode == RenameMode.append || mode == RenameMode.prepend || mode == RenameMode.insert || mode == RenameMode.numbering) _lastStringMode = mode;
     }
-    _previewTimer?.cancel(); if (immediate) {
-      _updatePreviews();
-    } else {
-      _previewTimer = Timer(const Duration(milliseconds: 200), () => _updatePreviews());
-    }
+    _previewTimer?.cancel(); if (immediate) _updatePreviews(); else _previewTimer = Timer(const Duration(milliseconds: 200), () => _updatePreviews());
     _saveState(); notifyListeners();
   }
 
@@ -472,7 +438,7 @@ class DirectoryProvider extends ChangeNotifier {
     _isProcessingPreview = true; _needsRetryPreview = false;
     try {
       final currentVersion = ++_previewVersion;
-      const buffer = 20;
+      final buffer = 20;
       final start = (_visibleStartIndex - buffer).clamp(0, _currentFiles.length);
       final end = (_visibleEndIndex + buffer).clamp(0, _currentFiles.length);
       List<FileModel> targets = [];
@@ -481,9 +447,7 @@ class DirectoryProvider extends ChangeNotifier {
         if (i >= start && i < end) { if (f.isSelected) targets.add(f); }
         else { f.setNewName(f.originalName, notify: false); f.setValidationError(null, notify: false); }
       }
-      if (targets.isEmpty) { for (var f in _currentFiles) {
-        f.notifyIfChanged();
-      } notifyListeners(); return; }
+      if (targets.isEmpty) { for (var f in _currentFiles) f.notifyIfChanged(); notifyListeners(); return; }
       String? curFind = (_renameMode == RenameMode.deleteFrontTo || _renameMode == RenameMode.deleteBackTo) ? _deleteToText : _findText;
       String? curReplace = (_renameMode == RenameMode.extension) ? _extensionChangeText : (_renameMode == RenameMode.extensionAdd ? _extensionAddText : _replaceText);
       String? baseDir = _currentDirectory != null ? p.basename(_currentDirectory!.path) : null;
@@ -493,42 +457,25 @@ class DirectoryProvider extends ChangeNotifier {
       for (int i = 0; i < targets.length; i++) { final f = targets[i]; final res = results[i]; f.setNewName(res['newName']!, notify: false); f.setValidationError(res['error'], notify: false); }
       _hasValidationError = false; final nameCounts = <String, int>{};
       for (var f in _currentFiles) { if (f.validationErrorMessage != null && f.validationErrorMessage != 'ファイル名が重複しています') _hasValidationError = true; final fullPathKey = p.join(f.parentPath, f.newName).toLowerCase(); nameCounts[fullPathKey] = (nameCounts[fullPathKey] ?? 0) + 1; }
-      for (var f in targets) { if (f.validationErrorMessage == null || f.validationErrorMessage == 'ファイル名が重複しています') { final fullPathKey = p.join(f.parentPath, f.newName).toLowerCase(); if ((nameCounts[fullPathKey] ?? 0) > 1) { f.setValidationError('ファイル名が重複しています', notify: false); _hasValidationError = true; } else {
-        f.setValidationError(null, notify: false);
-      } } }
-      for (var f in _currentFiles) {
-        f.notifyIfChanged();
-      } notifyListeners();
+      for (var f in targets) { if (f.validationErrorMessage == null || f.validationErrorMessage == 'ファイル名が重複しています') { final fullPathKey = p.join(f.parentPath, f.newName).toLowerCase(); if ((nameCounts[fullPathKey] ?? 0) > 1) { f.setValidationError('ファイル名が重複しています', notify: false); _hasValidationError = true; } else f.setValidationError(null, notify: false); } }
+      for (var f in _currentFiles) f.notifyIfChanged(); notifyListeners();
     } finally { _isProcessingPreview = false; if (_needsRetryPreview) { _needsRetryPreview = false; _updatePreviews(); } }
   }
 
   bool _hasValidationError = false; bool get hasValidationError => _hasValidationError;
   int _sortColumnIndex = 0; bool _sortAscending = true; int get sortColumnIndex => _sortColumnIndex; bool get sortAscending => _sortAscending;
   void toggleSelection(FileModel file) { file.isSelected = !file.isSelected; _updatePreviewsDebounced(); }
-  void _updatePreviewsDebounced({bool immediate = false}) { _previewTimer?.cancel(); if (immediate) {
-    _updatePreviews();
-  } else {
-    _previewTimer = Timer(const Duration(milliseconds: 50), () => _updatePreviews());
-  } }
+  void _updatePreviewsDebounced({bool immediate = false}) { _previewTimer?.cancel(); if (immediate) _updatePreviews(); else _previewTimer = Timer(const Duration(milliseconds: 50), () => _updatePreviews()); }
 
-  void selectAll(bool select) { for (var f in _currentFiles) {
-    f.setSelected(select, notify: false);
-  } for (var f in _currentFiles) {
-    f.notifyIfChanged();
-  } _updatePreviews(); notifyListeners(); }
+  void selectAll(bool select) { for (var f in _currentFiles) f.setSelected(select, notify: false); for (var f in _currentFiles) f.notifyIfChanged(); _updatePreviews(); notifyListeners(); }
   void selectRange(int start, int end, {bool exclusive = true, List<bool>? baseStates}) {
     final minIdx = start < end ? start : end; final maxIdx = start > end ? start : end;
     for (int i = 0; i < _currentFiles.length; i++) {
       final isInside = i >= minIdx && i <= maxIdx;
-      if (baseStates != null && i < baseStates.length) {
-        _currentFiles[i].setSelected(isInside ? !baseStates[i] : baseStates[i], notify: false);
-      } else { if (isInside) {
-        _currentFiles[i].setSelected(true, notify: false);
-      } else if (exclusive) _currentFiles[i].setSelected(false, notify: false); }
+      if (baseStates != null && i < baseStates.length) _currentFiles[i].setSelected(isInside ? !baseStates[i] : baseStates[i], notify: false);
+      else { if (isInside) _currentFiles[i].setSelected(true, notify: false); else if (exclusive) _currentFiles[i].setSelected(false, notify: false); }
     }
-    for (var f in _currentFiles) {
-      f.notifyIfChanged();
-    } _updatePreviews(); notifyListeners(); }
+    for (var f in _currentFiles) f.notifyIfChanged(); _updatePreviews(); notifyListeners(); }
 
   void sortFiles(int columnIndex, bool ascending) {
     _sortColumnIndex = columnIndex; _sortAscending = ascending;
@@ -567,21 +514,36 @@ class DirectoryProvider extends ChangeNotifier {
       if (!kIsWeb && Platform.isWindows) {
         _currentProcess = await Process.start('cmd', ['/c', 'dir', '/b', _recursiveSearch ? '/s' : '', '/a'], workingDirectory: directory.path);
         final List<int> leftover = []; int count = 0; bool shouldStop = false;
+        DateTime lastReportTime = DateTime.now(); DateTime lastDataTime = DateTime.now();
+
         _scanSubscription = _currentProcess!.stdout.listen((bytes) async {
-          if (shouldStop) return; leftover.addAll(bytes);
+          if (shouldStop) return; lastDataTime = DateTime.now(); leftover.addAll(bytes);
           final String output = systemEncoding.decode(leftover); final lines = output.split('\r\n');
           if (lines.length < 2) return; leftover.clear(); leftover.addAll(systemEncoding.encode(lines.removeLast()));
           final List<FileModel> increment = [];
           for (var line in lines) {
             if (line.isEmpty) continue;
             final fullPath = _recursiveSearch ? line : p.join(directory.path, line);
-            increment.add(FileModel(entity: File(fullPath)));
-            count++;
-            if (count % 2500 == 0) {
+            
+            // 属性取得のためのチェック
+            final bool isDir = FileSystemEntity.isDirectorySync(fullPath);
+            final f = FileModel(entity: isDir ? Directory(fullPath) : File(fullPath));
+            
+            increment.add(f); count++;
+
+            // 動的トリガー判定
+            final now = DateTime.now();
+            final duration = now.difference(lastReportTime);
+            final bool countTrigger = (count % 2500 == 0) && duration.inSeconds >= 3;
+            final bool timeTrigger = duration.inSeconds >= 5;
+            final bool stallTrigger = now.difference(lastDataTime).inSeconds >= 2;
+
+            if (countTrigger || timeTrigger || stallTrigger) {
               _scanSubscription?.pause();
-              final result = await _showLimitDialog(count);
+              final result = await _showLimitDialog(count, reason: countTrigger ? 'count' : (timeTrigger ? 'time' : 'stall'));
               if (result == 'stop') { shouldStop = true; _currentProcess?.kill(); break; }
               else if (result == 'cancel') { await cancelScan(); return; }
+              lastReportTime = DateTime.now(); lastDataTime = DateTime.now();
               _scanSubscription?.resume();
             }
           }
@@ -592,76 +554,73 @@ class DirectoryProvider extends ChangeNotifier {
         final Map<String, dynamic> params = {'sendPort': receivePort.sendPort, 'rootPath': directory.path, 'recursive': _recursiveSearch};
         Timer? updateTimer = Timer.periodic(const Duration(milliseconds: 200), (_) => notifyListeners());
         Isolate.spawn(RenameEngine.computeScanStream, params).then((isolate) { _currentIsolate = isolate; });
-        int count = 0;
+        
+        int count = 0; DateTime lastReportTime = DateTime.now(); DateTime lastDataTime = DateTime.now();
+        Timer? stallTimer;
+        stallTimer = Timer.periodic(const Duration(seconds: 1), (t) async {
+          if (!_isLoading) { t.cancel(); return; }
+          final now = DateTime.now();
+          if (now.difference(lastDataTime).inSeconds >= 2) {
+            t.cancel();
+            final result = await _showLimitDialog(count, reason: 'stall');
+            if (result == 'stop') { _currentIsolate?.kill(); receivePort.close(); }
+            else if (result == 'cancel') { await cancelScan(); receivePort.close(); }
+            else { lastDataTime = DateTime.now(); if (_isLoading) stallTimer = Timer.periodic(const Duration(seconds: 1), (t2) { if (!_isLoading) t2.cancel(); }); }
+          }
+        });
+
         await for (final msg in receivePort) {
+          lastDataTime = DateTime.now();
           if (msg == 'done' || msg is String && msg.startsWith('error')) { receivePort.close(); break; }
           final data = msg as Map<String, dynamic>;
           final f = FileModel(entity: data['isDir'] ? Directory(data['path']) : File(data['path']));
-          f.setDisplayRelativePath(data['rel']); _allFiles.add(f); if (_shouldShowFile(f)) _currentFiles.add(f); count++;
-          if (count % 2500 == 0) {
+          f.setDisplayRelativePath(data['rel']); 
+          
+          _allFiles.add(f); 
+          if (_shouldShowFile(f)) _currentFiles.add(f); 
+          count++;
+
+          final now = DateTime.now();
+          if (count % 2500 == 0 || now.difference(lastReportTime).inSeconds >= 5) {
             updateTimer?.cancel(); notifyListeners();
-            final result = await _showLimitDialog(count);
+            final result = await _showLimitDialog(count, reason: count % 2500 == 0 ? 'count' : 'time');
             if (result == 'stop') { _currentIsolate?.kill(); receivePort.close(); break; }
             else if (result == 'cancel') { await cancelScan(); receivePort.close(); return; }
+            lastReportTime = DateTime.now();
             updateTimer = Timer.periodic(const Duration(milliseconds: 200), (_) => notifyListeners());
           }
         }
-        updateTimer?.cancel(); _isLoading = false; _currentIsolate = null; notifyListeners();
+        stallTimer?.cancel(); updateTimer?.cancel(); _isLoading = false; _currentIsolate = null; notifyListeners();
       }
     } catch (e) { _isLoading = false; _currentProcess = null; notifyListeners(); }
   }
 
   void _applyFiltersSync() { _currentFiles = _allFiles.where((f) => _shouldShowFile(f)).toList(); }
 
-  Future<String> _showLimitDialog(int currentCount) async {
+  Future<String> _showLimitDialog(int currentCount, {String reason = 'count'}) async {
     final Completer<String> completer = Completer();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final context = _scaffoldKey.currentContext;
       if (context == null) { completer.complete('continue'); return; }
-      final l10n = AppLocalizations.of(context)!;
-      final result = await showDialog<String>(
-        context: context, barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Text('大量のファイルを検出'),
-          content: Text('$currentCount 件のファイルが見つかりました。\nスキャンを続行しますか？'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, 'cancel'), child: const Text('中止 (クリア)')),
-            TextButton(onPressed: () => Navigator.pop(context, 'stop'), child: const Text('ここで止めて表示')),
-            FilledButton(onPressed: () => Navigator.pop(context, 'continue'), child: const Text('続行する')),
-          ],
-        ),
-      );
+      String message = '$currentCount 件のファイルが見つかりました。\nスキャンを続行しますか？';
+      if (reason == 'time') message = 'スキャン開始から5秒が経過しました（現在 $currentCount 件）。\nこのまま続行しますか？';
+      if (reason == 'stall') message = '応答が一時的に途絶えています。スキャンを続行しますか？';
+      final result = await showDialog<String>(context: context, barrierDismissible: false, builder: (context) => AlertDialog(title: const Text('スキャンの確認'), content: Text(message), actions: [TextButton(onPressed: () => Navigator.pop(context, 'cancel'), child: const Text('中止 (クリア)')), TextButton(onPressed: () => Navigator.pop(context, 'stop'), child: const Text('ここで止めて表示')), FilledButton(onPressed: () => Navigator.pop(context, 'continue'), child: const Text('続行する'))]));
       completer.complete(result ?? 'continue');
     });
     return completer.future;
   }
 
-  void _processBytesIncremental(List<int> bytes, String rootPath) {
-    try {
-      final String partial = systemEncoding.decode(bytes); final lines = partial.split('\r\n'); if (lines.length < 2) return;
-      final List<FileModel> increment = [];
-      for (int i = 0; i < lines.length - 1; i++) {
-        final line = lines[i]; if (line.isEmpty) continue;
-        increment.add(FileModel(entity: File(_recursiveSearch ? line : p.join(rootPath, line))));
-      }
-      final Set<String> existingPaths = _allFiles.map((f) => f.entity.path).toSet();
-      for (var f in increment) { if (!existingPaths.contains(f.entity.path)) { _allFiles.add(f); if (_shouldShowFile(f)) _currentFiles.add(f); } }
-      notifyListeners();
-    } catch (_) {}
-  }
-
   int _navTreeResetTick = 0; int get navTreeResetTick => _navTreeResetTick;
   void resetNavTree() { _navTreeResetTick++; notifyListeners(); }
-  Future<void> cancelScan() async { await _scanSubscription?.cancel(); _scanSubscription = null; _currentProcess?.kill(); _currentProcess = null; _isLoading = false; notifyListeners(); }
+  Future<void> cancelScan() async { await _scanSubscription?.cancel(); _scanSubscription = null; _currentProcess?.kill(); _currentProcess = null; _currentIsolate?.kill(); _currentIsolate = null; _isLoading = false; notifyListeners(); }
 
   Future<void> _loadAttributes(Directory dir) async {
     try {
       final res = await Process.run('attrib', ['*', '/D'], workingDirectory: dir.path, stdoutEncoding: systemEncoding);
       if (res.exitCode == 0) {
         final lines = (res.stdout as String).split('\n'); final Map<String, String> attrMap = {};
-        for (var line in lines) {
-          line = line.trim(); if (line.length > 21) { final ap = line.substring(0, 20).toUpperCase(); final pp = line.substring(20).trim(); final fp = p.isAbsolute(pp) ? p.canonicalize(pp) : p.canonicalize(p.join(dir.path, pp)); attrMap[fp] = ap; }
-        }
+        for (var line in lines) { line = line.trim(); if (line.length > 21) { final ap = line.substring(0, 20).toUpperCase(); final pp = line.substring(20).trim(); final fp = p.isAbsolute(pp) ? p.canonicalize(pp) : p.canonicalize(p.join(dir.path, pp)); attrMap[fp] = ap; } }
         for (var f in _currentFiles) { final np = p.canonicalize(f.entity.path); if (attrMap.containsKey(np)) { final a = attrMap[np]!; f.setAttributes(readOnly: a.contains('R'), hidden: a.contains('H'), system: a.contains('S'), archive: a.contains('A')); } }
       }
     } catch (_) {}
@@ -674,18 +633,12 @@ class DirectoryProvider extends ChangeNotifier {
     return renamed.length;
   }
 
-  Future<void> renameOneFile(FileModel file, String newName) async {
-    if (file.originalName == newName || newName.isEmpty) return; _isLoading = true; notifyListeners();
-    try { final oldP = file.entity.path; final newP = p.join(file.parentPath, newName); await file.entity.rename(newP); _undoManager.addTransaction([UndoAction(oldP, newP, type: UndoType.rename)]); if (_currentDirectory != null) await setDirectory(_currentDirectory!); } catch (_) { _isLoading = false; notifyListeners(); }
-  }
-
+  Future<void> renameOneFile(FileModel file, String newName) async { if (file.originalName == newName || newName.isEmpty) return; _isLoading = true; notifyListeners(); try { final oldP = file.entity.path; final newP = p.join(file.parentPath, newName); await file.entity.rename(newP); _undoManager.addTransaction([UndoAction(oldP, newP, type: UndoType.rename)]); if (_currentDirectory != null) await setDirectory(_currentDirectory!); } catch (_) { _isLoading = false; notifyListeners(); } }
   Future<Map<String, dynamic>> undo() async { if (!_undoManager.canUndo) return {'count': 0, 'errors': []}; _isLoading = true; notifyListeners(); final r = await _undoManager.undoLastTransaction(); if (_currentDirectory != null) await setDirectory(_currentDirectory!); return r; }
   Future<int> deleteSelectedFiles() async {
     final t = _currentFiles.where((f) => f.isSelected).toList(); if (t.isEmpty) return 0; int count = 0; _isLoading = true; notifyListeners();
     for (var f in t) { try { if (!kIsWeb && Platform.isWindows) { final isDir = f.entity is Directory; final ps = f.entity.path.replaceAll("'", "''"); final script = "Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::Delete${isDir ? 'Directory' : 'File'}('$ps', 'OnlyErrorDialogs', 'SendToRecycleBin')"; final res = await Process.run('powershell', ['-Command', script]); if (res.exitCode == 0) count++; } else { await f.entity.delete(recursive: true); count++; } } catch (_) {} }
-    if (count > 0 && _currentDirectory != null) {
-      await setDirectory(_currentDirectory!);
-    } else { _isLoading = false; notifyListeners(); }
+    if (count > 0 && _currentDirectory != null) await setDirectory(_currentDirectory!); else { _isLoading = false; notifyListeners(); }
     return count;
   }
 
@@ -694,12 +647,7 @@ class DirectoryProvider extends ChangeNotifier {
 
   static Future<List<Directory>> getQuickAccessDirectories() async {
     List<Directory> qa = []; if (kIsWeb) return qa;
-    if (Platform.isAndroid) {
-      const root = '/storage/emulated/0';
-      final folders = ['Download', 'DCIM', 'Pictures', 'Movies', 'Music', 'Documents'];
-      for (var f in folders) { final d = Directory(p.join(root, f)); if (await d.exists()) qa.add(d); }
-      return qa;
-    }
+    if (Platform.isAndroid) { const root = '/storage/emulated/0'; final folders = ['Download', 'DCIM', 'Pictures', 'Movies', 'Music', 'Documents']; for (var f in folders) { final d = Directory(p.join(root, f)); if (await d.exists()) qa.add(d); } return qa; }
     String? home = Platform.isWindows ? Platform.environment['USERPROFILE'] : Platform.environment['HOME'];
     if (home != null) { final hd = Directory(home); if (await hd.exists()) { qa.add(hd); for (var f in ['Desktop', 'Downloads', 'Documents', 'Pictures', 'Music', 'Videos']) { final d = Directory(p.join(home, f)); if (await d.exists()) qa.add(d); } final od = Directory(p.join(home, 'OneDrive')); if (await od.exists()) qa.add(od); } }
     return qa;
