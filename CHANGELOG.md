@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.3] - 2026-04-09
+
+### 修正
+- **Androidビルドエラーの修正**
+    - Android Gradle Plugin (AGP) と Kotlin のバージョンを環境に合わせて調整（AGP 8.3.2, Kotlin 1.9.22）。
+    - Gradle Wrapper を推奨バージョンの 8.13 に更新。
+
 ## [0.11.2] - 2026-04-09
 
 ### 改善

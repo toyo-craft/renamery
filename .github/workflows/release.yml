@@ -129,7 +129,8 @@ jobs:
           $inputs = @("y") * 10
           $inputs | flutter doctor --android-licenses
           flutter build apk --release
-          mv build/app/outputs/flutter-apk/app-release.apk ReNamery-${{ github.ref_name }}-android-universal.apk
+          # ファイル名が app-release.apk または app-release-unsigned.apk の可能性があるためワイルドカードで対応
+          mv build/app/outputs/flutter-apk/*.apk ReNamery-${{ github.ref_name }}-android-universal.apk
 
       # --- Linux ビルド ---
       - name: Build Linux and Debian Package

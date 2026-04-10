@@ -1,4 +1,4 @@
-package com.example.renamery
+package com.toyocraft.renamery
 
 import android.content.Intent
 import android.net.Uri

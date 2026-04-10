@@ -48,7 +48,12 @@ android {
     buildTypes {
         release {
             // key.properties がある場合は release 署名を使用、ない場合は debug 署名を使用
-            signingConfig = if (keystorePropertiesFile.exists()) {
+            // GitHub Actions 等の環境でもビルド自体は通るようにする
+            val isReleaseKeyAvailable = keystorePropertiesFile.exists() && 
+                                        keystoreProperties.containsKey("storeFile") &&
+                                        rootProject.projectDir.resolve(keystoreProperties["storeFile"] as String).exists()
+
+            signingConfig = if (isReleaseKeyAvailable) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
