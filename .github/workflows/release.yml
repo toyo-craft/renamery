@@ -29,7 +29,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.27.4'
+          # 特定の古いバージョンに固執せず、パッケージの要求を満たす最新版を使用
+          flutter-version: 'any'
 
       - name: Validate Version
         run: dart scripts/release_validator.dart --validate-version
