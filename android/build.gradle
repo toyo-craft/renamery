@@ -5,7 +5,7 @@ allprojects {
     }
 }
 
-rootProject.layout.buildDirectory.value(rootProject.projectDir.resolve("../build"))
+rootProject.layout.buildDirectory.value(new File(projectDir, "../build"))
 
 subprojects {
     project.layout.buildDirectory.value(rootProject.layout.buildDirectory.dir(project.name))
