@@ -1,7 +1,8 @@
 plugins {
     id "com.android.application"
-    id "org.jetbrains.kotlin.android"
-    id "dev.flutter.flutter-plugin-loader"
+    id "kotlin-android"
+    // settings.gradle の loader と連携して機能する正しい ID を指定
+    id "dev.flutter.flutter-gradle-plugin"
 }
 
 def keystoreProperties = new Properties()
