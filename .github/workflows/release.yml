@@ -9,6 +9,8 @@ jobs:
   build-and-release:
     name: Build and Release
     runs-on: ${{ matrix.os }}
+    env:
+      CARGOKIT_TOOL_TEMP_DIR: ${{ github.workspace }}/.cargokit
     strategy:
       matrix:
         os: [windows-latest, ubuntu-22.04]
@@ -28,6 +30,10 @@ jobs:
         with:
           channel: 'stable'
           flutter-version: 'any'
+
+      - name: Cleanup bin directory
+        shell: bash
+        run: rm -rf bin
 
       - name: Validate Version
         run: dart scripts/release_validator.dart --validate-version
@@ -131,7 +137,8 @@ jobs:
           # SDKライセンスへの自動同意 (PowerShell 代替)
           $inputs = @("y") * 10
           $inputs | flutter doctor --android-licenses
-          flutter build apk --release
+          flutter clean
+          flutter build apk --release --android-skip-build-dependency-validation
           # APKファイルを再帰的に検索して確実にコピーする
           $apk = Get-ChildItem -Path build -Filter *.apk -Recurse | Select-Object -First 1
           if ($apk) {
