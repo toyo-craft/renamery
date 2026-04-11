@@ -1,13 +1,13 @@
 import 'dart:io';
 
-/// 単一ファイルに集約してCI環境でのインポートエラーを回避
+/// 名前を renamery_release_tool.dart に変更して他プラグイン(cargokit等)との競合を回避
 void main(List<String> args) {
-  print('--- ReNamery Build Tool (Unified) ---');
+  print('--- ReNamery Release Tool (Unified) ---');
   
   if (args.contains('--validate-version')) {
     _validateVersion();
   } else {
-    print('Usage: dart bin/build_tool_runner.dart [--validate-version]');
+    print('Usage: dart bin/renamery_release_tool.dart [--validate-version]');
   }
 }
 

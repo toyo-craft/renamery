@@ -29,6 +29,9 @@ jobs:
           channel: 'stable'
           flutter-version: '3.38.7'
 
+      - name: Validate Version
+        run: dart bin/renamery_release_tool.dart --validate-version
+
       # --- Windows ビルド ---
       - name: Build Windows
         if: matrix.os == 'windows-latest'
