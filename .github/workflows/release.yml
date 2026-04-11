@@ -40,7 +40,7 @@ jobs:
       - name: Build Windows
         if: matrix.os == 'windows-latest'
         run: |
-          flutter build windows --release
+          flutter build windows --release --android-skip-build-dependency-validation
           
           # 1. ZIP版 (Portable) の作成
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ReNamery-${{ github.ref_name }}-win-x64.zip

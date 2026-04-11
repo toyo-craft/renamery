@@ -47,14 +47,11 @@ android {
 
     buildTypes {
         release {
-            // CI環境 (GitHub Actions) かどうかを判定
-            val isCI = System.getenv("GITHUB_ACTIONS") == "true"
-            
+            // key.properties がある場合は release 署名を使用、ない場合は debug 署名を使用
             val isReleaseKeyAvailable = keystorePropertiesFile.exists() && 
                                         keystoreProperties.containsKey("storeFile") &&
                                         rootProject.projectDir.resolve(keystoreProperties["storeFile"] as String).exists()
 
-            // CI環境かつキーがない場合は、エラーを防ぐため debug 署名を強制
             signingConfig = if (isReleaseKeyAvailable) {
                 signingConfigs.getByName("release")
             } else {
