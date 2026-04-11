@@ -4,8 +4,7 @@ import java.io.FileInputStream
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // Use the older but stable plugin loader method for this project structure
-    id("dev.flutter.flutter-plugin-loader")
+    id("dev.flutter.flutter-gradle-plugin")
 }
 
 val keystoreProperties = Properties()
