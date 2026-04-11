@@ -3,8 +3,7 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
-    // 使用している settings.gradle.kts の定義に合わせて ID を戻す
+    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-plugin-loader")
 }
 
