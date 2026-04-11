@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.toyocraft.renamery" // パッケージ名を正規のものに変更
+    namespace = "com.toyocraft.renamery"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -38,7 +38,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.toyocraft.renamery" // ここも一致させる
+        applicationId = "com.toyocraft.renamery"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -47,18 +47,20 @@ android {
 
     buildTypes {
         release {
-            // key.properties がある場合は release 署名を使用、ない場合は debug 署名を使用
-            // GitHub Actions 等の環境でもビルド自体は通るようにする
+            // CI環境 (GitHub Actions) かどうかを判定
+            val isCI = System.getenv("GITHUB_ACTIONS") == "true"
+            
             val isReleaseKeyAvailable = keystorePropertiesFile.exists() && 
                                         keystoreProperties.containsKey("storeFile") &&
                                         rootProject.projectDir.resolve(keystoreProperties["storeFile"] as String).exists()
 
+            // CI環境かつキーがない場合は、エラーを防ぐため debug 署名を強制
             signingConfig = if (isReleaseKeyAvailable) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
             }
-
+            
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

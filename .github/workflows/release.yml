@@ -128,6 +128,7 @@ jobs:
           # SDKライセンスへの自動同意 (PowerShell 代替)
           $inputs = @("y") * 10
           $inputs | flutter doctor --android-licenses
+          flutter clean
           flutter build apk --release
           # APKファイルを再帰的に検索して確実にコピーする
           $apk = Get-ChildItem -Path build -Filter *.apk -Recurse | Select-Object -First 1
