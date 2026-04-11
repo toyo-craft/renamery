@@ -1,13 +1,14 @@
 import 'dart:io';
 
-/// 名前を renamery_release_tool.dart に変更して他プラグイン(cargokit等)との競合を回避
+/// 独自のリリース検証スクリプト
+/// bin/ ディレクトリを避け、プラグイン(Cargokit等)との競合を完全に排除
 void main(List<String> args) {
-  print('--- ReNamery Release Tool (Unified) ---');
+  print('--- ReNamery Release Validator (Unified) ---');
   
   if (args.contains('--validate-version')) {
     _validateVersion();
   } else {
-    print('Usage: dart bin/renamery_release_tool.dart [--validate-version]');
+    print('Usage: dart scripts/release_validator.dart [--validate-version]');
   }
 }
 
