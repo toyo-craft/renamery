@@ -9,8 +9,6 @@ jobs:
   build-and-release:
     name: Build and Release
     runs-on: ${{ matrix.os }}
-    env:
-      CARGOKIT_TOOL_TEMP_DIR: ${{ github.workspace }}/.cargokit
     strategy:
       matrix:
         os: [windows-latest, ubuntu-22.04]
@@ -29,7 +27,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # 特定の古いバージョンに固執せず、パッケージの要求を満たす最新版を使用
           flutter-version: 'any'
 
       - name: Validate Version
@@ -134,8 +131,7 @@ jobs:
           # SDKライセンスへの自動同意 (PowerShell 代替)
           $inputs = @("y") * 10
           $inputs | flutter doctor --android-licenses
-          flutter clean
-          flutter build apk --release --android-skip-build-dependency-validation
+          flutter build apk --release
           # APKファイルを再帰的に検索して確実にコピーする
           $apk = Get-ChildItem -Path build -Filter *.apk -Recurse | Select-Object -First 1
           if ($apk) {
