@@ -668,7 +668,35 @@ class DirectoryProvider extends ChangeNotifier {
     } catch (e) { _isLoading = false; _currentProcess = null; notifyListeners(); }
   }
 
-  void _applyFiltersSync() { _currentFiles = _allFiles.where((f) => _shouldShowFile(f)).toList(); }
+  void _applyFiltersSync() {
+    _currentFiles = _allFiles.where((f) => _shouldShowFile(f)).toList();
+    // 現在のソート設定（デフォルトは名前順・フォルダ優先）を適用
+    _currentFiles.sort((a, b) {
+      final isDirA = a.entity is Directory;
+      final isDirB = b.entity is Directory;
+      if (isDirA && !isDirB) return -1;
+      if (!isDirA && isDirB) return 1;
+      
+      int cmp = 0;
+      switch (_sortColumnIndex) {
+        case 0: cmp = a.originalName.toLowerCase().compareTo(b.originalName.toLowerCase()); break;
+        case 1: cmp = a.newName.toLowerCase().compareTo(b.newName.toLowerCase()); break;
+        case 2:
+          if (a.entity is File && b.entity is File) {
+            int sA = 0; int sB = 0;
+            try { sA = (a.entity as File).lengthSync(); } catch (_) {}
+            try { sB = (b.entity as File).lengthSync(); } catch (_) {}
+            cmp = sA.compareTo(sB);
+          }
+          break;
+        case 3: cmp = a.relativePath.compareTo(b.relativePath); break;
+        case 4: cmp = a.fileType.compareTo(b.fileType); break;
+        case 5: try { cmp = a.entity.statSync().modified.compareTo(b.entity.statSync().modified); } catch (e) { cmp = 0; } break;
+        case 6: cmp = a.attributes.compareTo(b.attributes); break;
+      }
+      return _sortAscending ? cmp : -cmp;
+    });
+  }
 
   Future<String> _showLimitDialog(int currentCount, {String reason = 'count'}) async {
     final Completer<String> completer = Completer();
