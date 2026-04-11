@@ -129,8 +129,15 @@ jobs:
           $inputs = @("y") * 10
           $inputs | flutter doctor --android-licenses
           flutter build apk --release
-          # ファイル名が app-release.apk または app-release-unsigned.apk の可能性があるためワイルドカードで対応
-          mv build/app/outputs/flutter-apk/*.apk ReNamery-${{ github.ref_name }}-android-universal.apk
+          # APKファイルを再帰的に検索して確実にコピーする
+          $apk = Get-ChildItem -Path build -Filter *.apk -Recurse | Select-Object -First 1
+          if ($apk) {
+            Copy-Item -Path $apk.FullName -Destination ReNamery-${{ github.ref_name }}-android-universal.apk
+            Write-Host "Found APK at $($apk.FullName) and copied to ReNamery-${{ github.ref_name }}-android-universal.apk"
+          } else {
+            Write-Error "No APK file found in build directory."
+            exit 1
+          }
 
       # --- Linux ビルド ---
       - name: Build Linux and Debian Package
