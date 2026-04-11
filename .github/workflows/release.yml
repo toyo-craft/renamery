@@ -30,9 +30,7 @@ jobs:
           flutter-version: '3.38.7'
 
       - name: Cleanup bin directory
-        run: |
-          if (Test-Path bin) { Remove-Item -Recurse -Force bin }
-          Write-Host "Bin directory cleaned."
+        run: rm -rf bin
 
       - name: Validate Version
         run: dart scripts/release_validator.dart --validate-version
