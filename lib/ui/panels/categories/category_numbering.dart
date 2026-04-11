@@ -75,13 +75,28 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 親のラジオボタンを削除し、詳細を直接表示 (案1の要素)
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // 1. 文字列入力を最上段へ (UX改善: 最も重要な項目を最初に)
+              HistoryTextField(
+                controller: _appendController,
+                focusNode: _appendFocus,
+                history: provider.appendHistory,
+                hintText: l10n.labelStringInput,
+                isCompact: isCompact,
+                onChanged: (val) =>
+                    provider.updateRenameSettings(appendText: val),
+                onSubmitted: (val, _) =>
+                    provider.addHistory(HistoryType.add, val),
+              ),
+
+              const SizedBox(height: 12),
+
+              // 2. 連番の詳細設定（開始番号・桁数）を文字列の直下へ
               Row(
                 children: [
-                  Text(l10n.labelStart),
+                  Text(l10n.labelStart, style: const TextStyle(fontSize: 12)),
                   const SizedBox(width: 8),
                   NumberSpinBox(
                     value: provider.startNumber,
@@ -100,7 +115,7 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
                           ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    iconSize: 20,
+                    iconSize: 18,
                     padding: const EdgeInsets.all(4),
                     constraints: const BoxConstraints(),
                     tooltip: l10n.labelNumSaveSequenceTooltip,
@@ -109,9 +124,8 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
                         immediate: true),
                   ),
                   const Spacer(),
-                  Text(l10n.labelDigit),
+                  Text(l10n.labelDigit, style: const TextStyle(fontSize: 12)),
                   const SizedBox(width: 8),
-                  // Digits
                   NumberSpinBox(
                     value: provider.digits,
                     min: 1,
@@ -126,8 +140,9 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
 
               const SizedBox(height: 16),
 
-              // Numbering Pattern List
+              // 3. 挿入パターンの選択（最後に決定する構成）
               const Divider(),
+              const SizedBox(height: 4),
               _buildRadio(context, provider, l10n.labelNumStringNumber,
                   NumberingMode.stringNumber),
               _buildRadio(context, provider, l10n.labelNumOriginalNumber,
@@ -160,19 +175,6 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
                   provider,
                   l10n.labelNumNumberStringRelative,
                   NumberingMode.numberStringRelative),
-
-              const SizedBox(height: 16),
-              HistoryTextField(
-                controller: _appendController,
-                focusNode: _appendFocus,
-                history: provider.appendHistory,
-                hintText: l10n.labelStringInput,
-                isCompact: isCompact,
-                onChanged: (val) =>
-                    provider.updateRenameSettings(appendText: val),
-                onSubmitted: (val, _) =>
-                    provider.addHistory(HistoryType.add, val),
-              ),
             ],
           ),
         ],

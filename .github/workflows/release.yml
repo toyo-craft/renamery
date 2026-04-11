@@ -9,6 +9,8 @@ jobs:
   build-and-release:
     name: Build and Release
     runs-on: ${{ matrix.os }}
+    env:
+      CARGOKIT_TOOL_TEMP_DIR: ${{ github.workspace }}/.cargokit
     strategy:
       matrix:
         os: [windows-latest, ubuntu-22.04]
