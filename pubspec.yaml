@@ -34,7 +34,7 @@ dependencies:
   material_symbols_icons: ^4.2906.0
   package_info_plus: ^8.0.0
   super_clipboard: ^0.9.1
-  flutter_svg: ^2.2.4
+  flutter_svg: ^2.0.10+1
   printing: ^5.14.3
   archive: ^4.0.9
   permission_handler: ^11.3.1
