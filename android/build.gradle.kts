@@ -5,14 +5,11 @@ allprojects {
     }
 }
 
-val newBuildDir: Directory =
-    rootProject.layout.projectDirectory
-        .dir("../build")
-
-rootProject.layout.buildDirectory.set(newBuildDir)
+// 複雑な Directory 型の操作を避け、推奨される単純なパス設定に変更
+rootProject.layout.buildDirectory.set(file("../build"))
 
 subprojects {
-    project.layout.buildDirectory.set(newBuildDir.dir(project.name))
+    project.layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.name))
 }
 
 subprojects {
