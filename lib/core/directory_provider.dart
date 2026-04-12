@@ -1,4 +1,4 @@
-import 'dart:io' as io;
+import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
@@ -662,13 +662,15 @@ class DirectoryProvider extends ChangeNotifier {
           for (var line in lines) {
             if (line.isEmpty) continue;
             final fullPath = _recursiveSearch ? line : p.join(directory.path, line);
-            final bool isDir = io.FileSystemEntity.isDirectorySync(fullPath);
-            final f = FileModel(entity: isDir ? io.Directory(fullPath) : io.File(fullPath));
+            final bool isDir = FileSystemEntity.isDirectorySync(fullPath);
+            final f = FileModel(entity: isDir ? Directory(fullPath) : File(fullPath));
 
             // 相対パスの計算を追加
             if (_recursiveSearch) {
-              final rel = p.relative(fullPath, from: directory.path);
-              f.setDisplayRelativePath(rel);
+              // フォルダパスのみを抽出（ファイル名を除去）して相対パスを計算
+              final parentDir = p.dirname(fullPath);
+              final rel = p.relative(parentDir, from: directory.path);
+              f.setDisplayRelativePath(rel == '.' ? '' : rel);
             }
 
             increment.add(f); count++;
