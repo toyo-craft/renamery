@@ -567,7 +567,7 @@ class _FileRow extends StatelessWidget {
                     const SizedBox(width: 16),
                     _buildCell(2, Text(file.size, overflow: TextOverflow.ellipsis, style: baseStyle)),
                     const SizedBox(width: 16),
-                    _buildCell(3, Text(file.displayRelativePath, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant))),
+                    _buildCell(3, Text(file.displayRelativePath.isEmpty ? '.' : file.displayRelativePath, overflow: TextOverflow.ellipsis, style: baseStyle.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant))),
                     const SizedBox(width: 16),
                     _buildCell(4, Text(file.fileType, overflow: TextOverflow.ellipsis, style: baseStyle)),
                     const SizedBox(width: 16),
