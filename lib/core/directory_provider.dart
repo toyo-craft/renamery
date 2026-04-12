@@ -662,8 +662,15 @@ class DirectoryProvider extends ChangeNotifier {
           for (var line in lines) {
             if (line.isEmpty) continue;
             final fullPath = _recursiveSearch ? line : p.join(directory.path, line);
-            final bool isDir = FileSystemEntity.isDirectorySync(fullPath);
-            final f = FileModel(entity: isDir ? Directory(fullPath) : File(fullPath));
+            final bool isDir = io.FileSystemEntity.isDirectorySync(fullPath);
+            final f = FileModel(entity: isDir ? io.Directory(fullPath) : io.File(fullPath));
+
+            // 相対パスの計算を追加
+            if (_recursiveSearch) {
+              final rel = p.relative(fullPath, from: directory.path);
+              f.setDisplayRelativePath(rel);
+            }
+
             increment.add(f); count++;
 
             final now = DateTime.now();
