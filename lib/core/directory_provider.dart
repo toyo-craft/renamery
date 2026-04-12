@@ -652,14 +652,24 @@ class DirectoryProvider extends ChangeNotifier {
           if (msg == 'done' || msg is String && msg.startsWith('error')) { receivePort.close(); break; }
           final data = msg as Map<String, dynamic>;
           final f = FileModel(entity: data['isDir'] ? Directory(data['path']) : File(data['path']));
-          f.setDisplayRelativePath(data['rel']); _allFiles.add(f); if (_shouldShowFile(f)) _currentFiles.add(f); count++;
+          f.setDisplayRelativePath(data['rel']); 
+          
+          _allFiles.add(f); 
+          count++;
+          
           final now = DateTime.now();
-          if (count % 2500 == 0 || now.difference(lastReportTime).inSeconds >= 5) {
-            updateTimer?.cancel(); notifyListeners();
-            final result = await _showLimitDialog(count, reason: count % 2500 == 0 ? 'count' : 'time');
-            if (result == 'stop') { _currentIsolate?.kill(); receivePort.close(); break; }
-            else if (result == 'cancel') { await cancelScan(); receivePort.close(); return; }
-            lastReportTime = DateTime.now();
+          // 画面更新タイミング
+          if (count % 2500 == 0 || now.difference(lastReportTime).inSeconds >= 5 || count % 100 == 0) {
+            _applyFiltersSync(); // ここでソートを適用
+            updateTimer?.cancel();
+            notifyListeners();
+            
+            if (count % 2500 == 0 || now.difference(lastReportTime).inSeconds >= 5) {
+              final result = await _showLimitDialog(count, reason: count % 2500 == 0 ? 'count' : 'time');
+              if (result == 'stop') { _currentIsolate?.kill(); receivePort.close(); break; }
+              else if (result == 'cancel') { await cancelScan(); receivePort.close(); return; }
+              lastReportTime = DateTime.now();
+            }
             updateTimer = Timer.periodic(const Duration(milliseconds: 200), (_) => notifyListeners());
           }
         }
