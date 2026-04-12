@@ -198,7 +198,7 @@ class _DirectoryTile extends StatefulWidget {
   final bool isRoot;
   final bool isQuickAccess;
   final String? contextRoot;
-  final bool isSuppressingAutoExpand;
+  final bool isSuppressingAutoExpand = false;
   final int depth;
   final List<String> quickAccessRoots;
   final ScrollController scrollController;
@@ -210,7 +210,6 @@ class _DirectoryTile extends StatefulWidget {
     this.isRoot = false,
     this.isQuickAccess = false,
     this.contextRoot,
-    this.isSuppressingAutoExpand = false,
     required this.depth,
     required this.quickAccessRoots,
     required this.scrollController,
