@@ -210,7 +210,7 @@ class _DirectoryTile extends StatefulWidget {
     this.isRoot = false,
     this.isQuickAccess = false,
     this.contextRoot,
-    this.isSuppressingAutoExpand = false, // 追加
+    this.isSuppressingAutoExpand = false,
     required this.depth,
     required this.quickAccessRoots,
     required this.scrollController,
