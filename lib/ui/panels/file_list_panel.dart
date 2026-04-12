@@ -315,22 +315,131 @@ class _FileListPanelState extends State<FileListPanel> {
     provider.selectRange(idx1 < idx2 ? idx1 : idx2, idx1 > idx2 ? idx1 : idx2, baseStates: _initialSelectionStates);
   }
 
+  bool _isPathEditing = false;
+
   Widget _buildAddressBar(BuildContext context, DirectoryProvider provider, AppLocalizations l10n) {
     final hasSelection = provider.selectedFilesCount > 0;
+    final currentPath = provider.currentDirectory?.path ?? '';
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerLow, border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1), width: 0.5))),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        border: Border(
+          bottom: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+      ),
       child: Row(
         children: [
-          Text(l10n.labelFullPath, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          // パス表示・編集エリア
+          Expanded(
+            child: Container(
+              height: 36,
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: colorScheme.outlineVariant),
+              ),
+              child: InkWell(
+                onTap: _isPathEditing ? null : () => setState(() => _isPathEditing = true),
+                child: _isPathEditing
+                    ? TextField(
+                        controller: _pathController,
+                        autofocus: true,
+                        style: const TextStyle(fontSize: 13),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          border: InputBorder.none,
+                        ),
+                        onSubmitted: (val) {
+                          if (val.isNotEmpty) {
+                            provider.setDirectory(io.Directory(val), source: 'address_bar');
+                          }
+                          setState(() => _isPathEditing = false);
+                        },
+                        onTapOutside: (_) => setState(() => _isPathEditing = false),
+                      )
+                    : _buildBreadcrumbs(context, provider, currentPath),
+              ),
+            ),
+          ),
           const SizedBox(width: 8),
-          Expanded(child: SizedBox(height: 36, child: TextField(controller: _pathController, style: const TextStyle(fontSize: 13), decoration: InputDecoration(isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none), fillColor: Theme.of(context).colorScheme.surface, filled: true), onSubmitted: (val) { if (val.isNotEmpty) provider.setDirectory(io.Directory(val), source: 'address_bar'); }))),
-          const SizedBox(width: 4),
-          IconButton(icon: const Icon(Icons.arrow_forward), onPressed: () { if (_pathController.text.isNotEmpty) { provider.setDirectory(io.Directory(_pathController.text), source: 'address_bar'); } }, tooltip: l10n.labelMenuGo),
-          const SizedBox(width: 4),
-          ElevatedButton(style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 20), shape: const StadiumBorder(), elevation: 2), onPressed: () => provider.selectAll(!hasSelection), child: Text(hasSelection ? l10n.labelDeselectAll : l10n.labelSelectAll, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+          // 実行・選択解除などのアクション
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+              backgroundColor: hasSelection ? colorScheme.primary : colorScheme.surfaceContainerHigh,
+              foregroundColor: hasSelection ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+            ),
+            onPressed: () => provider.selectAll(!hasSelection),
+            child: Text(
+              hasSelection ? l10n.labelDeselectAll : l10n.labelSelectAll,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBreadcrumbs(BuildContext context, DirectoryProvider provider, String path) {
+    if (path.isEmpty) return const SizedBox.shrink();
+    
+    // Windowsのドライブレター対応
+    final isWindows = !kIsWeb && io.Platform.isWindows;
+    final List<String> segments = p.split(path);
+    final List<Widget> items = [];
+
+    String cumulativePath = '';
+    for (int i = 0; i < segments.length; i++) {
+      final segment = segments[i];
+      
+      // パスの結合
+      if (i == 0 && isWindows && segment.contains(':')) {
+        cumulativePath = segment + p.separator;
+      } else {
+        cumulativePath = p.join(cumulativePath, segment);
+      }
+
+      final targetPath = cumulativePath;
+      final isLast = i == segments.length - 1;
+
+      items.add(
+        InkWell(
+          onTap: () => provider.setDirectory(io.Directory(targetPath)),
+          borderRadius: BorderRadius.circular(4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Text(
+              segment.isEmpty && !isWindows ? '/' : segment,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
+                color: isLast ? Theme.of(context).colorScheme.primary : null,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      if (!isLast) {
+        items.add(
+          Icon(Icons.chevron_right, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
+        );
+      }
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(children: items),
     );
   }
 
