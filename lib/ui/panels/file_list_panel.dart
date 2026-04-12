@@ -146,7 +146,9 @@ class _FileListPanelState extends State<FileListPanel> {
     _pathController.text = provider.currentDirectory?.path ?? '';
 
     double totalWidth = _widthDragHandle + _widthCheckbox + _widthSeparator;
-    for (int i = 0; i < _columnWidths.length; i++) totalWidth += _columnWidths[i]! + _widthSeparator;
+    for (int i = 0; i < _columnWidths.length; i++) {
+      totalWidth += _columnWidths[i]! + _widthSeparator;
+    }
 
     final rowHeight = provider.touchMode ? 50.0 : 34.0;
 
@@ -204,8 +206,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                           final currentAbsY = event.localPosition.dy + _verticalController.offset;
                                           setState(() { _dragUpdate = Offset(event.localPosition.dx, currentAbsY); });
                                           const scrollZone = 40.0;
-                                          if (event.localPosition.dy < scrollZone) _startAutoScroll(-15.0, files, provider);
-                                          else if (event.localPosition.dy > (constraints.maxHeight - 32.0 - scrollZone)) _startAutoScroll(15.0, files, provider);
+                                          if (event.localPosition.dy < scrollZone) {
+                                            _startAutoScroll(-15.0, files, provider);
+                                          } else if (event.localPosition.dy > (constraints.maxHeight - 32.0 - scrollZone)) _startAutoScroll(15.0, files, provider);
                                           else _stopAutoScroll();
                                           _updateSelection(currentAbsY, files, provider);
                                         }
@@ -409,7 +412,7 @@ class _FileListPanelState extends State<FileListPanel> {
 
 class _FileRow extends StatelessWidget {
   final int index; final FileModel file; final Map<int, double> columnWidths; final bool isEditing; final bool isDragging; final bool isDraggedItem; final TextEditingController renameController; final FocusNode renameFocusNode; final Function(String, String) onStartEdit; final VoidCallback onEndEdit; final Function(TapDownDetails, FileModel) onShowMenu;
-  const _FileRow({super.key, required this.index, required this.file, required this.columnWidths, required this.isEditing, this.isDragging = false, this.isDraggedItem = false, required this.renameController, required this.renameFocusNode, required this.onStartEdit, required this.onEndEdit, required this.onShowMenu});
+  const _FileRow({required this.index, required this.file, required this.columnWidths, required this.isEditing, this.isDragging = false, this.isDraggedItem = false, required this.renameController, required this.renameFocusNode, required this.onStartEdit, required this.onEndEdit, required this.onShowMenu});
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
@@ -444,7 +447,11 @@ class _FileRow extends StatelessWidget {
                     const SizedBox(width: 16),
                     _buildCell(0, isEditing 
                       ? TextField(controller: renameController, focusNode: renameFocusNode, autofocus: true, style: baseStyle, decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()), onSubmitted: (val) { provider.renameOneFile(file, val); onEndEdit(); }) 
-                      : Row(children: [GestureDetector(onDoubleTap: () { if (isDir) provider.setDirectory(io.Directory(file.entity.path)); else PlatformUtils.openFile(file.entity.path); }, child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: iconS)), const SizedBox(width: 8), Expanded(child: GestureDetector(onDoubleTap: () => onStartEdit(file.entity.path, file.originalName), child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle)))]), baseStyle),
+                      : Row(children: [GestureDetector(onDoubleTap: () { if (isDir) {
+                        provider.setDirectory(io.Directory(file.entity.path));
+                      } else {
+                        PlatformUtils.openFile(file.entity.path);
+                      } }, child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: iconS)), const SizedBox(width: 8), Expanded(child: GestureDetector(onDoubleTap: () => onStartEdit(file.entity.path, file.originalName), child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle)))]), baseStyle),
                     const SizedBox(width: 16),
                     _buildCell(1, Row(children: [Expanded(child: RichText(text: RenameEngine.buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) const Icon(Icons.error_outline, color: Colors.red, size: 16)])),
                     const SizedBox(width: 16),
