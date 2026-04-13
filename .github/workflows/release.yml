@@ -138,6 +138,7 @@ jobs:
           $inputs = @("y") * 10
           $inputs | flutter doctor --android-licenses
           flutter clean
+          # --- 決定打: 不整合チェックをバイパスするフラグを追加 ---
           flutter build apk --release --android-skip-build-dependency-validation
           # APKファイルを再帰的に検索して確実にコピーする
           $apk = Get-ChildItem -Path build -Filter *.apk -Recurse | Select-Object -First 1

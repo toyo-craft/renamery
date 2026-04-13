@@ -4,8 +4,8 @@ import java.io.FileInputStream
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // settings.gradle.kts の定義に合わせて ID を統一。plugin-loader 形式を使用
-    id("dev.flutter.flutter-plugin-loader")
+    // 最新の標準形式である dev.flutter.flutter-gradle-plugin を使用
+    id("dev.flutter.flutter-gradle-plugin")
 }
 
 val keystoreProperties = Properties()
