@@ -4,7 +4,7 @@ import java.io.FileInputStream
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // 最新の標準形式である dev.flutter.flutter-gradle-plugin を使用
+    // 最新の標準形式である dev.flutter.flutter-gradle-plugin に統一
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -47,6 +47,7 @@ android {
 
     buildTypes {
         release {
+            // key.properties がある場合は release 署名を使用、ない場合は debug 署名を使用
             val isReleaseKeyAvailable = keystorePropertiesFile.exists() && 
                                         keystoreProperties.containsKey("storeFile") &&
                                         rootProject.projectDir.resolve(keystoreProperties["storeFile"] as String).exists()
