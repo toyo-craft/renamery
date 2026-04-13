@@ -5,7 +5,7 @@ plugins {
 }
 
 def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.projectDir.resolve('key.properties')
+def keystorePropertiesFile = new File(rootProject.projectDir, "key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
@@ -45,7 +45,7 @@ android {
         release {
             def isReleaseKeyAvailable = keystorePropertiesFile.exists() && 
                                         keystoreProperties.containsKey('storeFile') &&
-                                        rootProject.projectDir.resolve(keystoreProperties['storeFile']).exists()
+                                        new File(rootProject.projectDir, keystoreProperties['storeFile'] ?: "").exists()
 
             signingConfig = isReleaseKeyAvailable ? signingConfigs.release : signingConfigs.debug
             
