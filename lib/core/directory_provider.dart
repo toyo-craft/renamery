@@ -619,7 +619,22 @@ class DirectoryProvider extends ChangeNotifier {
     _sortColumnIndex = columnIndex; _sortAscending = ascending;
     _currentFiles.sort((a, b) {
       final isDirA = a.entity is Directory; final isDirB = b.entity is Directory; if (isDirA && !isDirB) return -1; if (!isDirA && isDirB) return 1; int cmp = 0;
-      switch (columnIndex) { case 0: cmp = a.originalName.toLowerCase().compareTo(b.originalName.toLowerCase()); break; case 1: cmp = a.newName.toLowerCase().compareTo(b.newName.toLowerCase()); break; case 2: if (a.entity is File && b.entity is File) { int sA = 0; int sB = 0; try { sA = (a.entity as File).lengthSync(); } catch (_) {} try { sB = (b.entity as File).lengthSync(); } catch (_) {} cmp = sA.compareTo(sB); } break; case 3: cmp = a.relativePath.compareTo(b.relativePath); break; case 4: cmp = a.fileType.compareTo(b.fileType); break; case 5: try { cmp = a.entity.statSync().modified.compareTo(b.entity.statSync().modified); } catch (e) { cmp = 0; } break; case 6: cmp = a.attributes.compareTo(b.attributes); break; }
+      switch (columnIndex) {
+        case 0: cmp = a.originalName.toLowerCase().compareTo(b.originalName.toLowerCase()); break;
+        case 1: cmp = a.newName.toLowerCase().compareTo(b.newName.toLowerCase()); break;
+        case 2:
+          if (a.entity is File && b.entity is File) {
+            int sA = 0; int sB = 0;
+            try { sA = (a.entity as File).lengthSync(); } catch (_) {}
+            try { sB = (b.entity as File).lengthSync(); } catch (_) {}
+            cmp = sA.compareTo(sB);
+          }
+          break;
+        case 3: cmp = a.displayRelativePath.toLowerCase().compareTo(b.displayRelativePath.toLowerCase()); break;
+        case 4: cmp = a.fileType.toLowerCase().compareTo(b.fileType.toLowerCase()); break;
+        case 5: try { cmp = a.entity.statSync().modified.compareTo(b.entity.statSync().modified); } catch (e) { cmp = 0; } break;
+        case 6: cmp = a.attributes.compareTo(b.attributes); break;
+      }
       return ascending ? cmp : -cmp;
     });
     _updatePreviews(); _saveState(); notifyListeners();
