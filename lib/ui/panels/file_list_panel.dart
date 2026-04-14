@@ -31,6 +31,7 @@ class _FileListPanelState extends State<FileListPanel> {
   final TextEditingController _pathController = TextEditingController();
 
   String? _editingFilePath;
+  int? _lastSelectedIndex; // 範囲選択の起点（アンカー）
   Offset? _dragStart;
   Offset? _dragUpdate;
   List<bool>? _initialSelectionStates;
@@ -248,6 +249,24 @@ class _FileListPanelState extends State<FileListPanel> {
                                               renameFocusNode: _renameFocusNode,
                                               onStartEdit: (path, name) => _startEdit(path, name, provider),
                                               onEndEdit: () => setState(() { _editingFilePath = null; provider.setInlineRenaming(false); }),
+                                              onTap: (idx) {
+                                                final isShift = HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftLeft) || 
+                                                                HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftRight);
+                                                
+                                                if (isShift && _lastSelectedIndex != null) {
+                                                  // Shift範囲選択（トグル）
+                                                  provider.selectRange(
+                                                    _lastSelectedIndex!, 
+                                                    idx, 
+                                                    exclusive: false, 
+                                                    baseStates: provider.currentFiles.map((f) => f.isSelected).toList()
+                                                  );
+                                                } else {
+                                                  // 通常のトグル選択
+                                                  provider.toggleSelection(files[idx]);
+                                                  _lastSelectedIndex = idx;
+                                                }
+                                              },
                                               onShowMenu: (details, file) => _showRowContextMenu(context, details, file, provider, l10n),
                                             ),
                                           ),
@@ -521,8 +540,8 @@ class _FileListPanelState extends State<FileListPanel> {
 }
 
 class _FileRow extends StatelessWidget {
-  final int index; final FileModel file; final Map<int, double> columnWidths; final bool isEditing; final bool isDragging; final bool isDraggedItem; final TextEditingController renameController; final FocusNode renameFocusNode; final Function(String, String) onStartEdit; final VoidCallback onEndEdit; final Function(TapDownDetails, FileModel) onShowMenu;
-  const _FileRow({required this.index, required this.file, required this.columnWidths, required this.isEditing, this.isDragging = false, this.isDraggedItem = false, required this.renameController, required this.renameFocusNode, required this.onStartEdit, required this.onEndEdit, required this.onShowMenu});
+  final int index; final FileModel file; final Map<int, double> columnWidths; final bool isEditing; final bool isDragging; final bool isDraggedItem; final TextEditingController renameController; final FocusNode renameFocusNode; final Function(String, String) onStartEdit; final VoidCallback onEndEdit; final Function(int) onTap; final Function(TapDownDetails, FileModel) onShowMenu;
+  const _FileRow({required this.index, required this.file, required this.columnWidths, required this.isEditing, this.isDragging = false, this.isDraggedItem = false, required this.renameController, required this.renameFocusNode, required this.onStartEdit, required this.onEndEdit, required this.onTap, required this.onShowMenu});
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
@@ -538,7 +557,7 @@ class _FileRow extends StatelessWidget {
           return Opacity(
             opacity: isGhost ? 0.3 : 1.0,
             child: InkWell(
-              onTap: () => provider.toggleSelection(file),
+              onTap: () => onTap(index),
               onSecondaryTapDown: (details) { if (context.mounted) onShowMenu(details, file); },
               onLongPress: () {
                 if (!context.mounted) return;
