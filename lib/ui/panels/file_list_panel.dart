@@ -555,13 +555,53 @@ class _FileRow extends StatelessWidget {
                     SizedBox(width: 32, child: ReorderableDragStartListener(index: index, child: const Icon(Icons.drag_indicator, size: 18, color: Colors.grey))),
                     SizedBox(width: 32, child: Checkbox(value: file.isSelected, onChanged: (_) => provider.toggleSelection(file), visualDensity: VisualDensity.compact)),
                     const SizedBox(width: 16),
-                    _buildCell(0, isEditing 
-                      ? TextField(controller: renameController, focusNode: renameFocusNode, autofocus: true, style: baseStyle, decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.all(4), border: OutlineInputBorder()), onSubmitted: (val) { provider.renameOneFile(file, val); onEndEdit(); }) 
-                      : Row(children: [GestureDetector(onDoubleTap: () { if (isDir) {
-                        provider.setDirectory(io.Directory(file.entity.path));
-                      } else {
-                        PlatformUtils.openFile(file.entity.path);
-                      } }, child: Icon(isDir ? Icons.folder : Icons.insert_drive_file, color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, size: iconS)), const SizedBox(width: 8), Expanded(child: GestureDetector(onDoubleTap: () => onStartEdit(file.entity.path, file.originalName), child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle)))]), baseStyle),
+                    _buildCell(0, Row(
+                      children: [
+                        // アイコンは編集状態に関わらず常に表示
+                        GestureDetector(
+                          onDoubleTap: () { 
+                            if (isDir) {
+                              provider.setDirectory(io.Directory(file.entity.path));
+                            } else {
+                              PlatformUtils.openFile(file.entity.path);
+                            } 
+                          }, 
+                          child: Icon(
+                            isDir ? Icons.folder : Icons.insert_drive_file, 
+                            color: isDir ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.secondary, 
+                            size: iconS
+                          )
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: isEditing 
+                            ? TextField(
+                                controller: renameController, 
+                                focusNode: renameFocusNode, 
+                                autofocus: true, 
+                                style: baseStyle, 
+                                decoration: const InputDecoration(
+                                  isDense: true, 
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 8), 
+                                  border: OutlineInputBorder(),
+                                  fillColor: Colors.transparent,
+                                ), 
+                                onSubmitted: (val) { 
+                                  provider.renameOneFile(file, val); 
+                                  onEndEdit(); 
+                                },
+                                // 入力欄以外をクリックした際に編集状態を解除（ESCキー同様）
+                                onTapOutside: (event) {
+                                  onEndEdit();
+                                },
+                              ) 
+                            : GestureDetector(
+                                onDoubleTap: () => onStartEdit(file.entity.path, file.originalName), 
+                                child: Text(file.originalName, overflow: TextOverflow.ellipsis, style: baseStyle)
+                              )
+                        ),
+                      ],
+                    ), baseStyle),
                     const SizedBox(width: 16),
                     _buildCell(1, Row(children: [Expanded(child: RichText(text: RenameEngine.buildDiffTextSpan(context, file.originalName, file.newName, file.hasValidationError, style: baseStyle, mode: provider.renameMode, startNumber: provider.startNumber, digits: provider.digits), overflow: TextOverflow.ellipsis)), if (file.hasValidationError) const Icon(Icons.error_outline, color: Colors.red, size: 16)])),
                     const SizedBox(width: 16),
