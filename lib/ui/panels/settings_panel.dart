@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:io';
 import '../../core/directory_provider.dart';
 import '../../core/rename_engine.dart'; // 追加
 
@@ -169,39 +171,47 @@ class _SettingsPanelState extends State<SettingsPanel> {
 Widget _buildUpdateBanner(BuildContext context, DirectoryProvider provider) {
   final colorScheme = Theme.of(context).colorScheme;
   return Material(
-    color: colorScheme.primaryContainer,
+    elevation: 2,
+    color: colorScheme.secondaryContainer,
     child: InkWell(
-      onTap: () => launchUrl(Uri.parse('https://github.com/toyo-craft/renamery/releases')),
+      onTap: () => _launchExternalUrl('https://github.com/toyo-craft/renamery/releases'),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: colorScheme.outlineVariant),
+          ),
+        ),
         child: Row(
           children: [
-            Icon(Symbols.update, color: colorScheme.onPrimaryContainer, size: 20),
-            const SizedBox(width: 12),
+            Icon(Symbols.info, color: colorScheme.onSecondaryContainer, size: 24),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '新しいバージョン (v${provider.latestVersion}) が利用可能です',
+                    'アップデートが利用可能です (v${provider.latestVersion})',
                     style: TextStyle(
-                      color: colorScheme.onPrimaryContainer,
+                      color: colorScheme.onSecondaryContainer,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13,
+                      fontSize: 14,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
-                    'タップして詳細を確認し、最新版をダウンロードしてください。',
+                    'ここをタップして最新版をダウンロードしてください。',
                     style: TextStyle(
-                      color: colorScheme.onPrimaryContainer.withOpacity(0.8),
-                      fontSize: 11,
+                      color: colorScheme.onSecondaryContainer.withOpacity(0.9),
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 8),
             IconButton(
-              icon: Icon(Symbols.close, color: colorScheme.onPrimaryContainer, size: 18),
+              icon: Icon(Symbols.close, color: colorScheme.onSecondaryContainer, size: 20),
               onPressed: () {
                 setState(() {
                   _hideBannerSession = true;
@@ -215,5 +225,25 @@ Widget _buildUpdateBanner(BuildContext context, DirectoryProvider provider) {
       ),
     ),
   );
+}
+
+Future<void> _launchExternalUrl(String url) async {
+  try {
+    if (Platform.isAndroid) {
+      const channel = MethodChannel('jp.toyocraft.renamery/launcher');
+      await channel.invokeMethod('launchUrl', {'url': url});
+    } else {
+      final Uri uri = Uri.parse(url);
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        debugPrint('Could not launch $url');
+      }
+    }
+  } catch (e) {
+    debugPrint('Error launching URL: $e');
+    try {
+      final Uri uri = Uri.parse(url);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
 }
 }

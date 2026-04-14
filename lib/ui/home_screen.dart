@@ -123,7 +123,10 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
               behavior: SnackBarBehavior.floating,
               action: SnackBarAction(
                 label: '設定を見る',
-                onPressed: () => provider.scaffoldKey.currentState?.openEndDrawer(),
+                onPressed: () {
+                  // 設定ドロワーを開く
+                  provider.scaffoldKey.currentState?.openEndDrawer();
+                },
               ),
               duration: const Duration(seconds: 10),
             ),
