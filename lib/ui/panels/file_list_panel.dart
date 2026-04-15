@@ -34,6 +34,7 @@ class _FileListPanelState extends State<FileListPanel> {
   int? _lastSelectedIndex; // 範囲選択の起点（アンカー）
   Offset? _dragStart;
   Offset? _dragUpdate;
+  bool _isRubberBandActive = false; // しきい値を超えたかどうかのフラグ
   List<bool>? _initialSelectionStates;
   int? _draggingIndex;
   Timer? _autoScrollTimer;
@@ -182,7 +183,7 @@ class _FileListPanelState extends State<FileListPanel> {
                             Expanded(
                               child: GestureDetector(
                                 behavior: HitTestBehavior.opaque,
-                                onTap: () => _fileListFocusNode.requestFocus(),
+                                // onTap: () => _fileListFocusNode.requestFocus(), // 干渉を防ぐため削除（Row側で実施）
                                 onSecondaryTapDown: (details) => _showBackgroundContextMenu(context, details, provider, l10n),
                                 onLongPressStart: (details) {
                                   if (context.mounted) {
@@ -250,6 +251,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                               onStartEdit: (path, name) => _startEdit(path, name, provider),
                                               onEndEdit: () => setState(() { _editingFilePath = null; provider.setInlineRenaming(false); }),
                                               onTap: (idx) {
+                                                // 行タップ時にフォーカスを要求（重複タップ問題の解決への第一歩）
+                                                _fileListFocusNode.requestFocus();
+
                                                 final isShift = HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftLeft) || 
                                                                 HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftRight);
                                                 
@@ -328,6 +332,7 @@ class _FileListPanelState extends State<FileListPanel> {
 
   void _updateSelection(double currentAbsY, List<FileModel> files, DirectoryProvider provider) {
     if (_dragStart == null || _initialSelectionStates == null || files.isEmpty) return;
+    debugPrint('DEBUG: Rubber-band selection update triggered');
     final rowH = provider.touchMode ? 50.0 : 34.0;
     final startY = _dragStart!.dy;
     int idx1 = (startY / rowH).floor();
