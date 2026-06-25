@@ -354,13 +354,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelNavUp => '向上';
 
   @override
-  String get labelNavHistory => '履歴';
+  String get labelNavHistory => '历史记录';
 
   @override
-  String get labelNoHistory => '履歴がありません';
+  String get labelNoHistory => '无历史记录';
 
   @override
-  String get labelScanStop => 'スキャン停止';
+  String get labelScanStop => '停止扫描';
 
   @override
   String get labelHistoryBack => '后退 (历史)';

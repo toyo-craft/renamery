@@ -240,6 +240,9 @@
   "labelDialogClose": "Cerrar",
   "labelSearchHint": "Buscar por nombre de archivo...",
   "labelRegexSearchHint": "Buscar con Regex...",
+  "labelNavHistory": "Historial",
+  "labelNoHistory": "Sin historial",
+  "labelScanStop": "Detener escaneo",
   "labelPermissionFileAccessTitle": "Configuración de permisos de acceso a archivos",
   "labelPermissionFileAccessMessage": "Para renombrar archivos con esta aplicación, debe permitir el \"Acceso a todos los archivos\" en la configuración del sistema Android.\n\nBusque \"ReNamery\" en la siguiente pantalla y active el interruptor.",
   "labelPermissionFileAccessButton": "Ir a Ajustes"

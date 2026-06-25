@@ -57,6 +57,7 @@ namery_docs/
 docs/
 
 # Multimedia Originals
+.picasa.ini
 .picasaoriginals/
 
 # Specific old binary to exclude

@@ -313,6 +313,9 @@
   "labelDialogClose": "关闭",
   "labelSearchHint": "按文件名搜索...",
   "labelRegexSearchHint": "正则表达式搜索...",
+  "labelNavHistory": "历史记录",
+  "labelNoHistory": "无历史记录",
+  "labelScanStop": "停止扫描",
   "labelPermissionFileAccessTitle": "文件访问权限设置",
   "labelPermissionFileAccessMessage": "为了在本应用中重命名文件，您需要在 Android 系统设置中允许“所有文件访问权限”。\n\n请在接下来的页面中找到“ReNamery”并打开开关。",
   "labelPermissionFileAccessButton": "前往设置"

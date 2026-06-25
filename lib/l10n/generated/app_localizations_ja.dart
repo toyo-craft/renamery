@@ -1126,6 +1126,15 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelNavUp => '上へ';
 
   @override
+  String get labelNavHistory => '履歴';
+
+  @override
+  String get labelNoHistory => '履歴なし';
+
+  @override
+  String get labelScanStop => 'スキャン停止';
+
+  @override
   String get labelHistoryBack => '履歴戻る';
 
   @override
@@ -1524,4 +1533,14 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
 
   @override
   String get labelRegexSearchHint => '正規表現で検索...';
+
+  @override
+  String get labelPermissionFileAccessTitle => 'ファイルアクセス権限';
+
+  @override
+  String get labelPermissionFileAccessMessage =>
+      'このアプリでファイル名を変更するには、Android の設定で「すべてのファイルへのアクセス」を許可してください。\n\n次の画面で「ReNamery」を見つけて、スイッチを ON にしてください。';
+
+  @override
+  String get labelPermissionFileAccessButton => '設定を開く';
 }

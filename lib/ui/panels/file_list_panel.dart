@@ -34,7 +34,7 @@ class _FileListPanelState extends State<FileListPanel> {
   int? _lastSelectedIndex; // 範囲選択の起点（アンカー）
   Offset? _dragStart;
   Offset? _dragUpdate;
-  bool _isRubberBandActive = false; // しきい値を超えたかどうかのフラグ
+  final bool _isRubberBandActive = false; // しきい値を超えたかどうかのフラグ
   List<bool>? _initialSelectionStates;
   int? _draggingIndex;
   Timer? _autoScrollTimer;
