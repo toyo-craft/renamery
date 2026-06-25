@@ -1,10 +1,10 @@
 ---
-description: バージョンをバンプする（SemVer準拠）
+description: バージョンをバンプしてリリース準備を行う（SemVer準拠）
 ---
 
-# バージョンバンプ ワークフロー
+# バージョンバンプ / リリース ワークフロー
 
-## バージョニングルール（Semantic Versioning）
+## バージョニングルール
 
 | レベル | 形式例 | 条件 | 判断者 |
 |---|---|---|---|
@@ -12,39 +12,38 @@ description: バージョンをバンプする（SemVer準拠）
 | **MINOR** | `0.1.1` → `0.2.0` | 新機能追加、UX改善、設定追加 | AIエージェントが自動判断 |
 | **MAJOR** | `0.2.0` → `1.0.0` | 大規模刷新、互換性のない変更 | ユーザーの明示的な指示のみ |
 
-## 使い方
+## `リリースしてください` の処理
 
-### スクリプトで実行
-// turbo-all
+ユーザーが `リリースしてください` と明示した場合のみ、リリースコミット、タグ作成、push を行う。
 
-1. PATCHバンプ（バグ修正・微調整後）:
-```powershell
-.\scripts\bump_version.ps1 -Level patch
-```
+1. 変更内容から SemVer のバンプ種別を判断する。曖昧な場合は確認する。
+2. `pubspec.yaml` の `version:` を更新する。
+3. `CHANGELOG.md` の最新エントリを同じバージョンに更新する。
+4. 外部ホームページファイルの `<span id="renamery-version">` を `vX.X.X` に更新する。
+5. `dart scripts/release_validator.dart --validate-version` を実行する。
+6. 可能な範囲で `flutter analyze`、対象テスト、対象ビルドを実行する。
+7. `git status`、`git diff`、`git log --oneline -10` を確認する。
+8. 意図したファイルのみをコミットする。
+9. `v<version>` 形式のタグを作成する。
+10. ブランチとタグを push する。
 
-2. MINORバンプ（新機能・UX改善後）:
-```powershell
-.\scripts\bump_version.ps1 -Level minor
-```
+## ホームページ更新
 
-3. MAJORバンプ（ユーザーからの明示的な指示があった場合のみ）:
-```powershell
-.\scripts\bump_version.ps1 -Level major
-```
+- 対象ファイル: `C:\Users\s.kodatai\OneDrive - 株式会社セラフ\source\toyo-craft\apps.html`
+- 対象要素: `id="renamery-version"` を持つ `<span>`
+- 更新値: `pubspec.yaml` のバージョンを `vX.X.X` 形式にした値
+- UTF-8 を維持し、文字化けを避ける。
 
-## スクリプトが更新するファイル
-- `pubspec.yaml` の `version:` 行
-- `pubspec.yaml` の `msix_version:` 行
-- `CHANGELOG.md` に新エントリを追加
+## GitHub Actions
 
-## バージョン表示の仕組み
-- アプリ内のバージョン表示は `package_info_plus` で `pubspec.yaml` から動的に取得
-- ハードコードされたバージョン文字列は存在しない
+- 通常のブランチ push だけではリリースされない。
+- `.github/workflows/release.yml` は `v*` タグの push で起動する。
+- `pubspec.yaml`、`CHANGELOG.md`、タグ名は同一バージョンにそろえる。
 
-## リリース時の手順
-1. コード変更を完了
-2. `.\scripts\bump_version.ps1 -Level <patch|minor|major>` を実行
-3. `CHANGELOG.md` に変更内容を記載
-4. `flutter build windows --release` でビルド
-5. `git commit -am "v<version>"` でコミット
-6. `git tag v<version>` でタグ付け
+## Windows成果物命名
+
+Windows版のリリースファイル名は、OS識別子を `windows` ではなく `win` とする。
+
+- `ReNamery-vX.X.X-win-x64.msi`
+- `ReNamery-vX.X.X-win-x64.msix`
+- `ReNamery-vX.X.X-win-x64.zip`
