@@ -31,6 +31,14 @@ When the user says `リリースしてください` or otherwise explicitly requ
 - `.github/workflows/release.yml` starts on `push` tags matching `v*`.
 - The workflow builds Windows, Android, and Linux artifacts and uploads them to GitHub Releases.
 
+## Release Notes After Failed Releases
+
+- If a previous `v*` tag was pushed but GitHub Actions failed before publishing usable artifacts, do not assume users saw that version.
+- The next successful release entry in `CHANGELOG.md` must include the user-facing changes accumulated since the last successful release, not only the technical fix that made CI pass.
+- Keep the wording approachable: describe what users can do better or what became more stable, then mention technical details only when they help explain the fix.
+- Avoid release notes that only say things like dependency updates, CI fixes, or build corrections when those changes are required to deliver earlier user-facing improvements.
+- When creating GitHub Release notes, use the same principle: summarize the visible improvements from the last successful release through the current successful release.
+
 ## Windows Release Artifact Naming
 
 Windows release artifact names must use `win`, not `windows`.
