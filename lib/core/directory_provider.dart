@@ -1260,228 +1260,14 @@ class DirectoryProvider extends ChangeNotifier {
 
     try {
       if (!kIsWeb && Platform.isWindows) {
-        final process = await Process.start(
-                'cmd', ['/c', 'dir', '/b', _recursiveSearch ? '/s' : '', '/a'],
-                workingDirectory: directory.path)
-            .timeout(const Duration(seconds: 3));
-        if (scanGeneration != _scanGeneration) {
-          process.kill();
-          return;
+        await _scanWindowsFast(directory, scanGeneration);
+      } else if (!kIsWeb && Platform.isLinux) {
+        final scanned = await _scanLinuxFindFast(directory, scanGeneration);
+        if (!scanned && scanGeneration == _scanGeneration) {
+          await _scanWithIsolateBatched(directory, scanGeneration);
         }
-        _currentProcess = process;
-        process.stderr.listen((_) {}, onError: (_) {});
-        final List<int> leftover = [];
-        int count = 0;
-        bool shouldStop = false;
-        DateTime lastReportTime = DateTime.now();
-        DateTime lastDataTime = DateTime.now();
-        bool waitingForStallDecision = false;
-        Timer? stallTimer;
-        stallTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-          if (scanGeneration != _scanGeneration || !_isLoading) {
-            timer.cancel();
-            return;
-          }
-          if (waitingForStallDecision) return;
-          final now = DateTime.now();
-          if (now.difference(lastDataTime).inSeconds >= 5) {
-            waitingForStallDecision = true;
-            final result = await _showLimitDialog(count, reason: 'stall');
-            if (scanGeneration != _scanGeneration) {
-              timer.cancel();
-              return;
-            }
-            if (result == 'stop') {
-              shouldStop = true;
-              _currentProcess?.kill();
-            } else if (result == 'cancel') {
-              await cancelScan();
-            } else {
-              lastDataTime = DateTime.now();
-              waitingForStallDecision = false;
-            }
-          }
-        });
-
-        _scanSubscription = process.stdout.listen((bytes) async {
-          if (scanGeneration != _scanGeneration || shouldStop) return;
-          lastDataTime = DateTime.now();
-          leftover.addAll(bytes);
-          final String output = systemEncoding.decode(leftover);
-          final lines = output.split('\r\n');
-          if (lines.length < 2) return;
-          leftover.clear();
-          leftover.addAll(systemEncoding.encode(lines.removeLast()));
-          final List<FileModel> increment = [];
-          for (var line in lines) {
-            if (line.isEmpty) continue;
-            final fullPath =
-                _recursiveSearch ? line : p.join(directory.path, line);
-            final bool isDir = FileSystemEntity.isDirectorySync(fullPath);
-            final f =
-                FileModel(entity: isDir ? Directory(fullPath) : File(fullPath));
-
-            // 相対パスの計算を追加
-            if (_recursiveSearch) {
-              // フォルダパスのみを抽出（ファイル名を除去）して相対パスを計算
-              final parentDir = p.dirname(fullPath);
-              final rel = p.relative(parentDir, from: directory.path);
-              f.setDisplayRelativePath(rel == '.' ? '' : rel);
-            }
-
-            increment.add(f);
-            count++;
-
-            final now = DateTime.now();
-            final duration = now.difference(lastReportTime);
-            final bool countTrigger =
-                (count % 2500 == 0) && duration.inSeconds >= 3;
-            final bool timeTrigger = duration.inSeconds >= 5;
-            final bool stallTrigger =
-                now.difference(lastDataTime).inSeconds >= 2;
-
-            if (countTrigger || timeTrigger || stallTrigger) {
-              _scanSubscription?.pause();
-              final result = await _showLimitDialog(count,
-                  reason: countTrigger
-                      ? 'count'
-                      : (timeTrigger ? 'time' : 'stall'));
-              if (scanGeneration != _scanGeneration) return;
-              if (result == 'stop') {
-                shouldStop = true;
-                _currentProcess?.kill();
-                break;
-              } else if (result == 'cancel') {
-                await cancelScan();
-                return;
-              }
-              lastReportTime = DateTime.now();
-              lastDataTime = DateTime.now();
-              _scanSubscription?.resume();
-            }
-          }
-          if (scanGeneration != _scanGeneration) return;
-          _allFiles.addAll(increment);
-          _applyFiltersSync();
-          notifyListeners();
-        }, onDone: () async {
-          stallTimer?.cancel();
-          if (scanGeneration != _scanGeneration) return;
-          _isLoading = false;
-          _currentProcess = null;
-          _scanSubscription = null;
-          await _applyFilters();
-          notifyListeners();
-        }, onError: (_) {
-          stallTimer?.cancel();
-          if (scanGeneration != _scanGeneration) return;
-          _isLoading = false;
-          _currentProcess = null;
-          _scanSubscription = null;
-          notifyListeners();
-        });
       } else {
-        final receivePort = ReceivePort();
-        _currentReceivePort = receivePort;
-        final Map<String, dynamic> params = {
-          'sendPort': receivePort.sendPort,
-          'rootPath': directory.path,
-          'recursive': _recursiveSearch
-        };
-        Timer? updateTimer = Timer.periodic(
-            const Duration(milliseconds: 200), (_) => notifyListeners());
-        Isolate.spawn(RenameEngine.computeScanStream, params).then((isolate) {
-          if (scanGeneration != _scanGeneration) {
-            isolate.kill(priority: Isolate.immediate);
-            return;
-          }
-          _currentIsolate = isolate;
-        });
-        int count = 0;
-        DateTime lastReportTime = DateTime.now();
-        DateTime lastDataTime = DateTime.now();
-        Timer? stallTimer;
-        stallTimer = Timer.periodic(const Duration(seconds: 1), (t) async {
-          if (scanGeneration != _scanGeneration || !_isLoading) {
-            t.cancel();
-            return;
-          }
-          final now = DateTime.now();
-          if (now.difference(lastDataTime).inSeconds >= 2) {
-            t.cancel();
-            final result = await _showLimitDialog(count, reason: 'stall');
-            if (scanGeneration != _scanGeneration) return;
-            if (result == 'stop') {
-              _currentIsolate?.kill();
-              receivePort.close();
-            } else if (result == 'cancel') {
-              await cancelScan();
-              receivePort.close();
-            } else {
-              lastDataTime = DateTime.now();
-              if (_isLoading)
-                stallTimer = Timer.periodic(const Duration(seconds: 1), (t2) {
-                  if (!_isLoading) t2.cancel();
-                });
-            }
-          }
-        });
-
-        await for (final msg in receivePort) {
-          if (scanGeneration != _scanGeneration) {
-            receivePort.close();
-            break;
-          }
-          lastDataTime = DateTime.now();
-          if (msg == 'done' || msg is String && msg.startsWith('error')) {
-            receivePort.close();
-            break;
-          }
-          final data = msg as Map<String, dynamic>;
-          final f = FileModel(
-              entity:
-                  data['isDir'] ? Directory(data['path']) : File(data['path']));
-          f.setDisplayRelativePath(data['rel']);
-
-          _allFiles.add(f);
-          count++;
-
-          final now = DateTime.now();
-          // 画面更新タイミング
-          if (count % 2500 == 0 ||
-              now.difference(lastReportTime).inSeconds >= 5 ||
-              count % 100 == 0) {
-            _applyFiltersSync(); // ここでソートを適用
-            updateTimer?.cancel();
-            notifyListeners();
-
-            if (count % 2500 == 0 ||
-                now.difference(lastReportTime).inSeconds >= 5) {
-              final result = await _showLimitDialog(count,
-                  reason: count % 2500 == 0 ? 'count' : 'time');
-              if (scanGeneration != _scanGeneration) return;
-              if (result == 'stop') {
-                _currentIsolate?.kill();
-                receivePort.close();
-                break;
-              } else if (result == 'cancel') {
-                await cancelScan();
-                receivePort.close();
-                return;
-              }
-              lastReportTime = DateTime.now();
-            }
-            updateTimer = Timer.periodic(
-                const Duration(milliseconds: 200), (_) => notifyListeners());
-          }
-        }
-        stallTimer?.cancel();
-        updateTimer?.cancel();
-        if (_currentReceivePort == receivePort) _currentReceivePort = null;
-        if (scanGeneration != _scanGeneration) return;
-        _isLoading = false;
-        _currentIsolate = null;
-        notifyListeners();
+        await _scanWithIsolateBatched(directory, scanGeneration);
       }
     } catch (e) {
       if (scanGeneration == _scanGeneration) {
@@ -1493,62 +1279,504 @@ class DirectoryProvider extends ChangeNotifier {
     }
   }
 
-  void _applyFiltersSync() {
-    _currentFiles = _allFiles.where((f) => _shouldShowFile(f)).toList();
-    // 現在のソート設定（デフォルトは名前順・フォルダ優先）を適用
-    _currentFiles.sort((a, b) {
-      final isDirA = a.entity is Directory;
-      final isDirB = b.entity is Directory;
-      if (isDirA && !isDirB) return -1;
-      if (!isDirA && isDirB) return 1;
+  Future<void> _scanWithIsolateBatched(
+      Directory directory, int scanGeneration) async {
+    const promptCount = 2500;
+    const promptInterval = Duration(seconds: 5);
 
-      int cmp = 0;
-      switch (_sortColumnIndex) {
-        case 0:
-          cmp = a.originalName
-              .toLowerCase()
-              .compareTo(b.originalName.toLowerCase());
-          break;
-        case 1:
-          cmp = a.newName.toLowerCase().compareTo(b.newName.toLowerCase());
-          break;
-        case 2:
-          if (a.entity is File && b.entity is File) {
-            int sA = 0;
-            int sB = 0;
-            try {
-              sA = (a.entity as File).lengthSync();
-            } catch (_) {}
-            try {
-              sB = (b.entity as File).lengthSync();
-            } catch (_) {}
-            cmp = sA.compareTo(sB);
-          }
-          break;
-        case 3:
-          cmp = a.displayRelativePath
-              .toLowerCase()
-              .compareTo(b.displayRelativePath.toLowerCase());
-          break;
-        case 4:
-          cmp = a.fileType.toLowerCase().compareTo(b.fileType.toLowerCase());
-          break;
-        case 5:
-          try {
-            cmp = a.entity
-                .statSync()
-                .modified
-                .compareTo(b.entity.statSync().modified);
-          } catch (e) {
-            cmp = 0;
-          }
-          break;
-        case 6:
-          cmp = a.attributes.compareTo(b.attributes);
-          break;
+    final receivePort = ReceivePort();
+    _currentReceivePort = receivePort;
+    final params = {
+      'sendPort': receivePort.sendPort,
+      'rootPath': directory.path,
+      'recursive': _recursiveSearch,
+      'batchSize': 512,
+      'batchIntervalMs': 150,
+    };
+    Isolate.spawn(RenameEngine.computeScanStream, params).then((isolate) {
+      if (scanGeneration != _scanGeneration) {
+        isolate.kill(priority: Isolate.immediate);
+        return;
       }
-      return _sortAscending ? cmp : -cmp;
+      _currentIsolate = isolate;
     });
+
+    var count = 0;
+    var lastReportTime = DateTime.now();
+    var lastDataTime = DateTime.now();
+    var shouldStop = false;
+    var waitingForDecision = false;
+    Timer? stallTimer;
+
+    Future<String?> maybeAskToContinue(String reason) async {
+      if (waitingForDecision || scanGeneration != _scanGeneration) return null;
+      waitingForDecision = true;
+      final result = await _showLimitDialog(count, reason: reason);
+      waitingForDecision = false;
+      if (scanGeneration != _scanGeneration) return null;
+      if (result == 'stop') {
+        shouldStop = true;
+        _currentIsolate?.kill(priority: Isolate.immediate);
+        receivePort.close();
+      } else if (result == 'cancel') {
+        await cancelScan();
+        receivePort.close();
+      } else {
+        lastDataTime = DateTime.now();
+        lastReportTime = DateTime.now();
+      }
+      return result;
+    }
+
+    stallTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (scanGeneration != _scanGeneration || !_isLoading) {
+        timer.cancel();
+        return;
+      }
+      if (DateTime.now().difference(lastDataTime).inSeconds >= 5) {
+        await maybeAskToContinue('stall');
+      }
+    });
+
+    try {
+      await for (final msg in receivePort) {
+        if (scanGeneration != _scanGeneration || shouldStop) {
+          receivePort.close();
+          break;
+        }
+        lastDataTime = DateTime.now();
+        if (msg == 'done' || msg is String && msg.startsWith('error')) {
+          receivePort.close();
+          break;
+        }
+
+        final entries = msg is List ? msg : [msg];
+        for (final entry in entries) {
+          final data = entry as Map<String, dynamic>;
+          final file = FileModel(
+              entity:
+                  data['isDir'] ? Directory(data['path']) : File(data['path']));
+          file.setDisplayRelativePath(data['rel']);
+          _allFiles.add(file);
+          if (_shouldShowFile(file)) _currentFiles.add(file);
+          count++;
+        }
+        notifyListeners();
+
+        final now = DateTime.now();
+        final countTrigger = count % promptCount == 0 &&
+            now.difference(lastReportTime) >= const Duration(seconds: 3);
+        final timeTrigger = now.difference(lastReportTime) >= promptInterval;
+        if (countTrigger || timeTrigger) {
+          final result =
+              await maybeAskToContinue(countTrigger ? 'count' : 'time');
+          if (result == 'stop' || result == 'cancel') return;
+        }
+      }
+    } finally {
+      stallTimer.cancel();
+    }
+
+    if (_currentReceivePort == receivePort) _currentReceivePort = null;
+    if (scanGeneration != _scanGeneration) return;
+    _isLoading = false;
+    _currentIsolate = null;
+    await _applyFilters();
+    notifyListeners();
+  }
+
+  Future<bool> _scanLinuxFindFast(
+      Directory directory, int scanGeneration) async {
+    const flushCount = 768;
+    const flushInterval = Duration(milliseconds: 180);
+    const promptCount = 2500;
+    const promptInterval = Duration(seconds: 5);
+
+    final pending = <FileModel>[];
+    var count = 0;
+    var lastFlushTime = DateTime.now();
+    var lastReportTime = DateTime.now();
+    var lastDataTime = DateTime.now();
+    var shouldStop = false;
+    var waitingForDecision = false;
+    Timer? stallTimer;
+
+    void flush({bool force = false}) {
+      if (scanGeneration != _scanGeneration || pending.isEmpty) return;
+      final now = DateTime.now();
+      if (!force &&
+          pending.length < flushCount &&
+          now.difference(lastFlushTime) < flushInterval) {
+        return;
+      }
+      for (final file in pending) {
+        _allFiles.add(file);
+        if (_shouldShowFile(file)) _currentFiles.add(file);
+      }
+      pending.clear();
+      lastFlushTime = now;
+      notifyListeners();
+    }
+
+    Future<String?> maybeAskToContinue(String reason) async {
+      if (waitingForDecision || scanGeneration != _scanGeneration) return null;
+      waitingForDecision = true;
+      flush(force: true);
+      final result = await _showLimitDialog(count, reason: reason);
+      waitingForDecision = false;
+      if (scanGeneration != _scanGeneration) return null;
+      if (result == 'stop') {
+        shouldStop = true;
+        _currentProcess?.kill();
+      } else if (result == 'cancel') {
+        await cancelScan();
+      } else {
+        lastDataTime = DateTime.now();
+        lastReportTime = DateTime.now();
+      }
+      return result;
+    }
+
+    stallTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (scanGeneration != _scanGeneration || !_isLoading) {
+        timer.cancel();
+        return;
+      }
+      if (DateTime.now().difference(lastDataTime).inSeconds >= 5) {
+        await maybeAskToContinue('stall');
+      }
+    });
+
+    try {
+      final dirsStarted = await _scanLinuxFindEntries(
+        directory: directory,
+        scanGeneration: scanGeneration,
+        directories: true,
+        onEntry: (file) async {
+          if (shouldStop || scanGeneration != _scanGeneration) return;
+          pending.add(file);
+          count++;
+          lastDataTime = DateTime.now();
+          flush();
+          final now = DateTime.now();
+          final countTrigger = count % promptCount == 0 &&
+              now.difference(lastReportTime) >= const Duration(seconds: 3);
+          final timeTrigger = now.difference(lastReportTime) >= promptInterval;
+          if (countTrigger || timeTrigger) {
+            final result =
+                await maybeAskToContinue(countTrigger ? 'count' : 'time');
+            if (result == 'stop' || result == 'cancel') return;
+          }
+        },
+      );
+      if (!dirsStarted) return false;
+
+      if (!shouldStop && scanGeneration == _scanGeneration) {
+        final filesStarted = await _scanLinuxFindEntries(
+          directory: directory,
+          scanGeneration: scanGeneration,
+          directories: false,
+          onEntry: (file) async {
+            if (shouldStop || scanGeneration != _scanGeneration) return;
+            pending.add(file);
+            count++;
+            lastDataTime = DateTime.now();
+            flush();
+            final now = DateTime.now();
+            final countTrigger = count % promptCount == 0 &&
+                now.difference(lastReportTime) >= const Duration(seconds: 3);
+            final timeTrigger =
+                now.difference(lastReportTime) >= promptInterval;
+            if (countTrigger || timeTrigger) {
+              final result =
+                  await maybeAskToContinue(countTrigger ? 'count' : 'time');
+              if (result == 'stop' || result == 'cancel') return;
+            }
+          },
+        );
+        if (!filesStarted) return false;
+      }
+    } catch (_) {
+      return false;
+    } finally {
+      stallTimer.cancel();
+    }
+
+    if (scanGeneration != _scanGeneration) return true;
+    flush(force: true);
+    _isLoading = false;
+    _currentProcess = null;
+    await _applyFilters();
+    notifyListeners();
+    return true;
+  }
+
+  Future<bool> _scanLinuxFindEntries({
+    required Directory directory,
+    required int scanGeneration,
+    required bool directories,
+    required Future<void> Function(FileModel file) onEntry,
+  }) async {
+    final args = <String>[
+      '.',
+      '-mindepth',
+      '1',
+      if (!_recursiveSearch) ...['-maxdepth', '1'],
+      if (directories) ...['-type', 'd'] else ...['!', '-type', 'd'],
+      '-print0',
+    ];
+
+    Process process;
+    try {
+      process =
+          await Process.start('find', args, workingDirectory: directory.path)
+              .timeout(const Duration(seconds: 3));
+    } catch (_) {
+      return false;
+    }
+    if (scanGeneration != _scanGeneration) {
+      process.kill();
+      return true;
+    }
+
+    _currentProcess = process;
+    process.stderr.listen((_) {}, onError: (_) {});
+    final leftover = <int>[];
+
+    await for (final bytes in process.stdout) {
+      if (scanGeneration != _scanGeneration) {
+        process.kill();
+        return true;
+      }
+      leftover.addAll(bytes);
+      final output = utf8.decode(leftover, allowMalformed: true);
+      final parts = output.split('\x00');
+      if (parts.length < 2) continue;
+      leftover.clear();
+      leftover.addAll(utf8.encode(parts.removeLast()));
+      for (final part in parts) {
+        if (part.isEmpty || scanGeneration != _scanGeneration) continue;
+        final relative = part.startsWith('./') ? part.substring(2) : part;
+        final fullPath = p.join(directory.path, relative);
+        final file = FileModel(
+            entity: directories ? Directory(fullPath) : File(fullPath));
+        if (_recursiveSearch) {
+          final rel = p.relative(p.dirname(fullPath), from: directory.path);
+          file.setDisplayRelativePath(rel == '.' ? '' : rel);
+        }
+        await onEntry(file);
+      }
+    }
+
+    await process.exitCode;
+    if (scanGeneration != _scanGeneration) return true;
+    if (leftover.isNotEmpty) {
+      final tail = utf8.decode(leftover, allowMalformed: true).trim();
+      if (tail.isNotEmpty) {
+        final relative = tail.startsWith('./') ? tail.substring(2) : tail;
+        final fullPath = p.join(directory.path, relative);
+        final file = FileModel(
+            entity: directories ? Directory(fullPath) : File(fullPath));
+        if (_recursiveSearch) {
+          final rel = p.relative(p.dirname(fullPath), from: directory.path);
+          file.setDisplayRelativePath(rel == '.' ? '' : rel);
+        }
+        await onEntry(file);
+      }
+    }
+    if (scanGeneration == _scanGeneration) _currentProcess = null;
+    return true;
+  }
+
+  Future<void> _scanWindowsFast(Directory directory, int scanGeneration) async {
+    const flushCount = 768;
+    const flushInterval = Duration(milliseconds: 180);
+    const promptCount = 2500;
+    const promptInterval = Duration(seconds: 5);
+
+    final pending = <FileModel>[];
+    int count = 0;
+    var lastFlushTime = DateTime.now();
+    var lastReportTime = DateTime.now();
+    var lastDataTime = DateTime.now();
+    var shouldStop = false;
+    var waitingForDecision = false;
+    Timer? stallTimer;
+
+    void flush({bool force = false}) {
+      if (scanGeneration != _scanGeneration || pending.isEmpty) return;
+      final now = DateTime.now();
+      if (!force &&
+          pending.length < flushCount &&
+          now.difference(lastFlushTime) < flushInterval) {
+        return;
+      }
+      for (final file in pending) {
+        _allFiles.add(file);
+        if (_shouldShowFile(file)) _currentFiles.add(file);
+      }
+      pending.clear();
+      lastFlushTime = now;
+      notifyListeners();
+    }
+
+    Future<String?> maybeAskToContinue(String reason) async {
+      if (waitingForDecision || scanGeneration != _scanGeneration) return null;
+      waitingForDecision = true;
+      flush(force: true);
+      final result = await _showLimitDialog(count, reason: reason);
+      waitingForDecision = false;
+      if (scanGeneration != _scanGeneration) return null;
+      if (result == 'stop') {
+        shouldStop = true;
+        _currentProcess?.kill();
+      } else if (result == 'cancel') {
+        await cancelScan();
+      } else {
+        lastDataTime = DateTime.now();
+        lastReportTime = DateTime.now();
+      }
+      return result;
+    }
+
+    stallTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (scanGeneration != _scanGeneration || !_isLoading) {
+        timer.cancel();
+        return;
+      }
+      if (DateTime.now().difference(lastDataTime).inSeconds >= 5) {
+        await maybeAskToContinue('stall');
+      }
+    });
+
+    try {
+      await _scanWindowsEntries(
+        directory: directory,
+        scanGeneration: scanGeneration,
+        directories: true,
+        onEntry: (file) async {
+          if (shouldStop || scanGeneration != _scanGeneration) return;
+          pending.add(file);
+          count++;
+          lastDataTime = DateTime.now();
+          flush();
+          final now = DateTime.now();
+          final countTrigger = count % promptCount == 0 &&
+              now.difference(lastReportTime) >= const Duration(seconds: 3);
+          final timeTrigger = now.difference(lastReportTime) >= promptInterval;
+          if (countTrigger || timeTrigger) {
+            final result =
+                await maybeAskToContinue(countTrigger ? 'count' : 'time');
+            if (result == 'stop' || result == 'cancel') return;
+          }
+        },
+      );
+      if (!shouldStop && scanGeneration == _scanGeneration) {
+        await _scanWindowsEntries(
+          directory: directory,
+          scanGeneration: scanGeneration,
+          directories: false,
+          onEntry: (file) async {
+            if (shouldStop || scanGeneration != _scanGeneration) return;
+            pending.add(file);
+            count++;
+            lastDataTime = DateTime.now();
+            flush();
+            final now = DateTime.now();
+            final countTrigger = count % promptCount == 0 &&
+                now.difference(lastReportTime) >= const Duration(seconds: 3);
+            final timeTrigger =
+                now.difference(lastReportTime) >= promptInterval;
+            if (countTrigger || timeTrigger) {
+              final result =
+                  await maybeAskToContinue(countTrigger ? 'count' : 'time');
+              if (result == 'stop' || result == 'cancel') return;
+            }
+          },
+        );
+      }
+    } finally {
+      stallTimer.cancel();
+    }
+
+    if (scanGeneration != _scanGeneration) return;
+    flush(force: true);
+    _isLoading = false;
+    _currentProcess = null;
+    _scanSubscription = null;
+    await _applyFilters();
+    notifyListeners();
+  }
+
+  Future<void> _scanWindowsEntries({
+    required Directory directory,
+    required int scanGeneration,
+    required bool directories,
+    required Future<void> Function(FileModel file) onEntry,
+  }) async {
+    final process = await Process.start(
+      'cmd',
+      [
+        '/c',
+        'dir',
+        '/b',
+        if (_recursiveSearch) '/s',
+        directories ? '/a:d' : '/a:-d'
+      ],
+      workingDirectory: directory.path,
+    ).timeout(const Duration(seconds: 3));
+    if (scanGeneration != _scanGeneration) {
+      process.kill();
+      return;
+    }
+
+    _currentProcess = process;
+    process.stderr.listen((_) {}, onError: (_) {});
+    final leftover = <int>[];
+
+    await for (final bytes in process.stdout) {
+      if (scanGeneration != _scanGeneration) {
+        process.kill();
+        return;
+      }
+      leftover.addAll(bytes);
+      final output = systemEncoding.decode(leftover);
+      final lines = output.split('\r\n');
+      if (lines.length < 2) continue;
+      leftover.clear();
+      leftover.addAll(systemEncoding.encode(lines.removeLast()));
+      for (final line in lines) {
+        if (line.isEmpty || scanGeneration != _scanGeneration) continue;
+        final fullPath = _recursiveSearch ? line : p.join(directory.path, line);
+        final file = FileModel(
+            entity: directories ? Directory(fullPath) : File(fullPath));
+        if (_recursiveSearch) {
+          final rel = p.relative(p.dirname(fullPath), from: directory.path);
+          file.setDisplayRelativePath(rel == '.' ? '' : rel);
+        }
+        await onEntry(file);
+      }
+    }
+
+    await process.exitCode;
+    if (scanGeneration != _scanGeneration) return;
+    if (leftover.isNotEmpty) {
+      final tail = systemEncoding.decode(leftover).trim();
+      if (tail.isNotEmpty) {
+        final fullPath = _recursiveSearch ? tail : p.join(directory.path, tail);
+        final file = FileModel(
+            entity: directories ? Directory(fullPath) : File(fullPath));
+        if (_recursiveSearch) {
+          final rel = p.relative(p.dirname(fullPath), from: directory.path);
+          file.setDisplayRelativePath(rel == '.' ? '' : rel);
+        }
+        await onEntry(file);
+      }
+    }
+    if (scanGeneration == _scanGeneration) {
+      _scanSubscription = null;
+      _currentProcess = null;
+    }
   }
 
   Future<String> _showLimitDialog(int currentCount,
@@ -1615,39 +1843,6 @@ class DirectoryProvider extends ChangeNotifier {
         await subscription.cancel().timeout(const Duration(milliseconds: 500));
       } catch (_) {}
     }
-  }
-
-  Future<void> _loadAttributes(Directory dir) async {
-    try {
-      final res = await Process.run('attrib', ['*', '/D'],
-          workingDirectory: dir.path, stdoutEncoding: systemEncoding);
-      if (res.exitCode == 0) {
-        final lines = (res.stdout as String).split('\n');
-        final Map<String, String> attrMap = {};
-        for (var line in lines) {
-          line = line.trim();
-          if (line.length > 21) {
-            final ap = line.substring(0, 20).toUpperCase();
-            final pp = line.substring(20).trim();
-            final fp = p.isAbsolute(pp)
-                ? p.canonicalize(pp)
-                : p.canonicalize(p.join(dir.path, pp));
-            attrMap[fp] = ap;
-          }
-        }
-        for (var f in _currentFiles) {
-          final np = p.canonicalize(f.entity.path);
-          if (attrMap.containsKey(np)) {
-            final a = attrMap[np]!;
-            f.setAttributes(
-                readOnly: a.contains('R'),
-                hidden: a.contains('H'),
-                system: a.contains('S'),
-                archive: a.contains('A'));
-          }
-        }
-      }
-    } catch (_) {}
   }
 
   Future<int> executeRename() async {
