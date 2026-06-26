@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.13.1] - 2026-06-26
+
+### 修正
+- **Linuxリリースビルドの互換性修正**
+    - `material_symbols_icons` を 4.2951.0 へ更新し、最新Flutter環境で `IconData` が final class になったことによるビルドエラーを解消。
+
 ## [0.13.0] - 2026-06-26
 
 ### 改善
