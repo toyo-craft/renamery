@@ -43,7 +43,24 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           flutter build windows --release
-          
+
+          # Include documentation files at the root of Windows release artifacts.
+          $WINDOWS_RELEASE_DIR = "build\windows\x64\runner\Release"
+          $DOC_FILES = @(
+            "README.md",
+            "Readme.txt",
+            "README_ja.md",
+            "user_manual.md",
+            "user_manual_en.md"
+          )
+          foreach ($DOC_FILE in $DOC_FILES) {
+            if (-not (Test-Path -LiteralPath $DOC_FILE)) {
+              Write-Error "Required Windows release document not found: $DOC_FILE"
+              exit 1
+            }
+            Copy-Item -LiteralPath $DOC_FILE -Destination $WINDOWS_RELEASE_DIR -Force
+          }
+
           # 1. ZIP版 (Portable) の作成
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ReNamery-${{ github.ref_name }}-win-x64.zip
           

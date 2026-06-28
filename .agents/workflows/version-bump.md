@@ -37,7 +37,7 @@ description: バージョンをバンプしてリリース準備を行う（SemV
 
 ## ホームページ更新
 
-- 対象ファイル: `C:\Users\s.kodatai\OneDrive - 株式会社セラフ\source\toyo-craft\apps.html`
+- 対象ファイル: このリポジトリ外にあるローカルの外部ホームページファイル
 - 対象要素: `id="renamery-version"` を持つ `<span>`
 - 更新値: `pubspec.yaml` のバージョンを `vX.X.X` 形式にした値
 - UTF-8 を維持し、文字化けを避ける。

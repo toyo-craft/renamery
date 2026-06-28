@@ -1,11 +1,19 @@
 # 機密情報 (Secrets)
 .env
+.env.*
+*.key
 *.jks
 *.keystore
 *.p12
 *.pfx
 *.pem
+*.crt
+*.cer
+key.properties
+local.properties
 signing.properties
+google-services.json
+GoogleService-Info.plist
 
 # OS Cache
 Thumbs.db

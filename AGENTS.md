@@ -51,7 +51,7 @@ Windows release artifact names must use `win`, not `windows`.
 
 When handling `リリースしてください`, also update the external homepage file.
 
-- File path: `C:\Users\s.kodatai\OneDrive - 株式会社セラフ\source\toyo-craft\apps.html`
+- File path: local external homepage file, outside this repository.
 - Target element: the `<span>` with `id="renamery-version"`
 - Update value: the latest version from `pubspec.yaml` formatted as `vX.X.X`
 - Preserve UTF-8 encoding to avoid mojibake.
