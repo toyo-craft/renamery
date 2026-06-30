@@ -318,5 +318,9 @@
   "labelScanStop": "停止扫描",
   "labelPermissionFileAccessTitle": "文件访问权限设置",
   "labelPermissionFileAccessMessage": "为了在本应用中重命名文件，您需要在 Android 系统设置中允许“所有文件访问权限”。\n\n请在接下来的页面中找到“ReNamery”并打开开关。",
-  "labelPermissionFileAccessButton": "前往设置"
+  "labelPermissionFileAccessButton": "前往设置",
+  "labelLicenseAgreementTitle": "软件许可协议",
+  "labelLicenseAgreementMessage": "要使用本软件，您必须同意以下许可条款。",
+  "labelLicenseDeclineExit": "不同意（退出应用）",
+  "labelLicenseAcceptStart": "同意并开始使用"
 }

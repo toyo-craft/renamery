@@ -11,7 +11,7 @@ class LicenseAgreementDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     // BSD 3-Clause License Text
     const licenseText = '''
 Copyright (c) 2026, Toyo Craft Lab
@@ -46,16 +46,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     return PopScope(
       canPop: false, // ダイアログを閉じられないようにする
       child: AlertDialog(
-        title: const Text('ソフトウェア利用規約'),
+        title: Text(l10n.labelLicenseAgreementTitle),
         content: SizedBox(
           width: 600,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '本ソフトウェアを利用するには、以下のライセンス条項に同意する必要があります。',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              Text(
+                l10n.labelLicenseAgreementMessage,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               Container(
@@ -88,14 +88,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
               backgroundColor: Theme.of(context).colorScheme.errorContainer,
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('同意しない（アプリを終了する）'),
+            child: Text(l10n.labelLicenseDeclineExit),
           ),
           TextButton(
             onPressed: () {
               context.read<DirectoryProvider>().acceptLicense();
               Navigator.of(context).pop();
             },
-            child: const Text('同意して利用を開始する'),
+            child: Text(l10n.labelLicenseAcceptStart),
           ),
         ],
       ),

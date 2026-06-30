@@ -785,4 +785,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get labelPermissionFileAccessButton => 'Ir a Ajustes';
+
+  @override
+  String get labelLicenseAgreementTitle => 'Acuerdo de licencia de software';
+
+  @override
+  String get labelLicenseAgreementMessage =>
+      'Para usar este software, debe aceptar los siguientes términos de licencia.';
+
+  @override
+  String get labelLicenseDeclineExit => 'No aceptar y salir de la app';
+
+  @override
+  String get labelLicenseAcceptStart => 'Aceptar y empezar a usar';
 }

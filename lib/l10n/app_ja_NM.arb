@@ -244,5 +244,9 @@
   "labelScanStop": "スキャン停止",
   "labelPermissionFileAccessTitle": "ファイルアクセス権限",
   "labelPermissionFileAccessMessage": "このアプリでファイル名を変更するには、Android の設定で「すべてのファイルへのアクセス」を許可してください。\n\n次の画面で「ReNamery」を見つけて、スイッチを ON にしてください。",
-  "labelPermissionFileAccessButton": "設定を開く"
+  "labelPermissionFileAccessButton": "設定を開く",
+  "labelLicenseAgreementTitle": "利用規約",
+  "labelLicenseAgreementMessage": "利用するには、以下のライセンス条項への同意が必要です。",
+  "labelLicenseDeclineExit": "同意しない（終了）",
+  "labelLicenseAcceptStart": "同意して開始"
 }

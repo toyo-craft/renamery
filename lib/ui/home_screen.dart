@@ -21,7 +21,7 @@ import 'helpers/undo_helper.dart';
 import 'helpers/filter_dialog_helper.dart';
 import 'dart:io';
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'widgets/license_agreement_dialog.dart';
 
@@ -35,7 +35,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WindowListener {
   late final MultiSplitViewController _threePaneController;
   late final MultiSplitViewController _twoPaneController;
-  
+
   // Floating Preview State
   bool _showFloatingPreview = false;
   Timer? _previewTimer;
@@ -49,14 +49,15 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
       }
       return;
     }
-    
-    if (currentCount != _lastSelectedCount || currentPath != _lastSelectedPath) {
+
+    if (currentCount != _lastSelectedCount ||
+        currentPath != _lastSelectedPath) {
       _lastSelectedCount = currentCount;
       _lastSelectedPath = currentPath;
-      
+
       _previewTimer?.cancel();
       setState(() => _showFloatingPreview = true);
-      
+
       _previewTimer = Timer(const Duration(milliseconds: 1500), () {
         if (mounted) {
           setState(() => _showFloatingPreview = false);
@@ -98,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     // 初期チェックフロー (ライセンス同意 -> Android権限 -> アップデートチェック)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = context.read<DirectoryProvider>();
-      
+
       // 1. ライセンス同意のチェック
       if (!provider.isLicenseAccepted) {
         await showDialog(
@@ -107,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           builder: (context) => const LicenseAgreementDialog(),
         );
       }
-      
+
       // 2. Android 権限のチェック
       if (mounted) {
         await provider.requestAndroidPermissions(context);
@@ -197,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
   String _getSelectionDetails(List<FileModel> selected, AppLocalizations l10n) {
     if (selected.isEmpty) return '';
-    
+
     int images = 0;
     int pdfs = 0;
     int videos = 0;
@@ -209,15 +210,18 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
     for (final f in selected) {
       final ext = p.extension(f.entity.path).toLowerCase();
-      if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.ico', '.svg'].contains(ext)) {
+      if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.ico', '.svg']
+          .contains(ext)) {
         images++;
       } else if (ext == '.pdf') {
         pdfs++;
-      } else if (['.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv'].contains(ext)) {
+      } else if (['.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv']
+          .contains(ext)) {
         videos++;
       } else if (['.mp3', '.wav', '.m4a', '.flac', '.ogg'].contains(ext)) {
         audios++;
-      } else if (['.docx', '.xlsx', '.pptx', '.txt', '.md', '.csv', '.html'].contains(ext)) {
+      } else if (['.docx', '.xlsx', '.pptx', '.txt', '.md', '.csv', '.html']
+          .contains(ext)) {
         docs++;
       } else if (['.zip', '.7z', '.rar', '.tar', '.gz'].contains(ext)) {
         archives++;
@@ -360,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           if (didPop) return;
 
           final provider = context.read<DirectoryProvider>();
-          
+
           // 1. もし履歴があれば、まずは一つ前のディレクトリに戻る
           if (provider.canGoBack) {
             await provider.goBack();
@@ -369,7 +373,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
           // 2. 履歴がない（ルート画面）の場合は、終了確認ダイアログを表示
           if (!context.mounted) return;
-          
+
           final bool? shouldExit = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
@@ -406,7 +410,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                       ? Drawer(
                           width: 300,
                           child: SafeArea(
-                            child: NavigationPanel(key: ValueKey(provider.resetCount)),
+                            child: NavigationPanel(
+                                key: ValueKey(provider.resetCount)),
                           ),
                         )
                       : null,
@@ -426,7 +431,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                               child: LinearProgressIndicator(),
                             )
                           : const SizedBox(height: 2),
-                      Expanded(                        child: MultiSplitViewTheme(
+                      Expanded(
+                        child: MultiSplitViewTheme(
                           data: MultiSplitViewThemeData(
                             dividerThickness: 10,
                             dividerPainter: DividerPainters.grooved1(
@@ -442,69 +448,74 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                   bottomNavigationBar: isNarrow
                       ? _buildMobileBottomAppBar(context, l10n)
                       : _buildDesktopFooter(context, l10n),
-                  floatingActionButton: _buildFAB(isNarrow, showRightPane, context, l10n),
-                  floatingActionButtonLocation: isNarrow 
-                      ? FloatingActionButtonLocation.centerDocked 
+                  floatingActionButton:
+                      _buildFAB(isNarrow, showRightPane, context, l10n),
+                  floatingActionButtonLocation: isNarrow
+                      ? FloatingActionButtonLocation.centerDocked
                       : FloatingActionButtonLocation.endFloat,
                 ),
                 if (isNarrow)
-                  Builder(
-                    builder: (context) {
-                      final selected = provider.currentFiles.where((f) => f.isSelected).toList();
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        _triggerFloatingPreview(
+                  Builder(builder: (context) {
+                    final selected = provider.currentFiles
+                        .where((f) => f.isSelected)
+                        .toList();
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _triggerFloatingPreview(
                           selected.length,
-                          selected.length == 1 ? selected.first.entity.path : ''
-                        );
-                      });
+                          selected.length == 1
+                              ? selected.first.entity.path
+                              : '');
+                    });
 
-                      return Positioned(
-                        left: 16,
-                        bottom: 100, // BottomAppBarの上に来るように調整
-                        child: AnimatedOpacity(
-                          opacity: _showFloatingPreview ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 300),
-                          child: IgnorePointer(
-                            ignoring: !_showFloatingPreview,
-                            child: GestureDetector(
-                              onTap: () {
-                                if (selected.isNotEmpty) {
-                                  provider.openEnlargedPreview(selected.last);
-                                }
-                              },
-                              child: Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.3),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                  border: Border.all(
-                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-                                    width: 2,
+                    return Positioned(
+                      left: 16,
+                      bottom: 100, // BottomAppBarの上に来るように調整
+                      child: AnimatedOpacity(
+                        opacity: _showFloatingPreview ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: IgnorePointer(
+                          ignoring: !_showFloatingPreview,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (selected.isNotEmpty) {
+                                provider.openEnlargedPreview(selected.last);
+                              }
+                            },
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
                                   ),
+                                ],
+                                border: Border.all(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.8),
+                                  width: 2,
                                 ),
-                                clipBehavior: Clip.antiAlias,
-                                child: PreviewWindow(
-                                  file: selected.isNotEmpty ? selected.last : null,
-                                ),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: PreviewWindow(
+                                file:
+                                    selected.isNotEmpty ? selected.last : null,
                               ),
                             ),
                           ),
                         ),
-                      );
-                    }
-                  ),
-                
+                      ),
+                    );
+                  }),
+
                 // モバイル版クイックルック
-                if (isNarrow)
-                  const EnlargedPreviewOverlay(isMobile: true),
+                if (isNarrow) const EnlargedPreviewOverlay(isMobile: true),
               ],
             );
           },
@@ -513,7 +524,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     );
   }
 
-  Widget? _buildFAB(bool isNarrow, bool showRightPane, BuildContext context, AppLocalizations l10n) {
+  Widget? _buildFAB(bool isNarrow, bool showRightPane, BuildContext context,
+      AppLocalizations l10n) {
     final provider = context.watch<DirectoryProvider>();
     if (isNarrow) {
       // スキャン中（読み込み中）は停止ボタンとして機能させる
@@ -522,21 +534,24 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           onPressed: () => provider.cancelScan(),
           backgroundColor: Theme.of(context).colorScheme.errorContainer,
           foregroundColor: Theme.of(context).colorScheme.error,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 4,
           child: const Icon(Symbols.stop_circle, size: 32, fill: 0),
         );
       }
 
       return FloatingActionButton(
-        onPressed: provider.canExecute ? () => _confirmAndExecute(context, provider, l10n) : null,
-        backgroundColor: provider.canExecute 
+        onPressed: provider.canExecute
+            ? () => _confirmAndExecute(context, provider, l10n)
+            : null,
+        backgroundColor: provider.canExecute
             ? Theme.of(context).colorScheme.primary // 案1: より鮮明なブランドカラーに変更
             : Theme.of(context).colorScheme.surfaceContainerHighest,
-        foregroundColor: provider.canExecute 
-            ? Theme.of(context).colorScheme.onPrimary 
+        foregroundColor: provider.canExecute
+            ? Theme.of(context).colorScheme.onPrimary
             : Theme.of(context).colorScheme.onSurfaceVariant,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), 
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: provider.canExecute ? 6 : 0, // 実行可能な時だけ浮き上がらせる
         child: const Icon(Symbols.play_arrow, size: 32, fill: 1), // FILLを1に戻す
       );
@@ -558,17 +573,22 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         builder: (context, provider, child) {
           final total = provider.allFilesCount;
           final current = provider.currentFiles.length;
-          final selected = provider.currentFiles.where((f) => f.isSelected).length;
+          final selected =
+              provider.currentFiles.where((f) => f.isSelected).length;
 
           String countText = current != total
               ? l10n.labelStatusDisplayCount(current, total, selected)
               : l10n.labelStatusTotalCount(total, selected);
-          
+
           if (selected > 0) {
-            countText += _getSelectionDetails(provider.currentFiles.where((f) => f.isSelected).toList(), l10n);
+            countText += _getSelectionDetails(
+                provider.currentFiles.where((f) => f.isSelected).toList(),
+                l10n);
           }
 
-          String statusText = provider.isLoading ? l10n.labelStatusProcessing : l10n.labelStatusReady;
+          String statusText = provider.isLoading
+              ? l10n.labelStatusProcessing
+              : l10n.labelStatusReady;
 
           return Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -579,7 +599,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                 onPressed: () => FilterDialogHelper.showFilterPopup(context),
                 tooltip: l10n.labelFilterOptions,
               ),
-              
+
               Expanded(
                 child: Align(
                   alignment: Alignment.bottomCenter, // 最下部中央へ
@@ -597,11 +617,12 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                   ),
                 ),
               ),
-              
+
               // Right: Rename Settings Icon
               IconButton(
                 icon: const Icon(Symbols.tune),
-                onPressed: () => provider.scaffoldKey.currentState?.openEndDrawer(),
+                onPressed: () =>
+                    provider.scaffoldKey.currentState?.openEndDrawer(),
                 tooltip: l10n.labelMenuRenameSettings,
               ),
             ],
@@ -629,17 +650,22 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
           builder: (context, provider, child) {
             final total = provider.allFilesCount;
             final current = provider.currentFiles.length;
-            final selected = provider.currentFiles.where((f) => f.isSelected).length;
+            final selected =
+                provider.currentFiles.where((f) => f.isSelected).length;
 
             String countText = current != total
                 ? l10n.labelStatusDisplayCount(current, total, selected)
                 : l10n.labelStatusTotalCount(total, selected);
-            
+
             if (selected > 0) {
-              countText += _getSelectionDetails(provider.currentFiles.where((f) => f.isSelected).toList(), l10n);
+              countText += _getSelectionDetails(
+                  provider.currentFiles.where((f) => f.isSelected).toList(),
+                  l10n);
             }
 
-            String statusText = provider.isLoading ? l10n.labelStatusProcessing : l10n.labelStatusReady;
+            String statusText = provider.isLoading
+                ? l10n.labelStatusProcessing
+                : l10n.labelStatusReady;
             final canExecute = provider.canExecute;
 
             return Row(
@@ -651,7 +677,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                     children: [
                       Text(
                         countText,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -671,28 +698,39 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                   child: provider.isLoading
                       ? FilledButton.icon(
                           style: FilledButton.styleFrom(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                            foregroundColor: Theme.of(context).colorScheme.error,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.errorContainer,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.error,
                           ),
                           onPressed: () => provider.cancelScan(),
                           icon: const Icon(Symbols.stop_circle, size: 24),
                           label: const Text(
                             'スキャン中止',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                         )
                       : FilledButton.icon(
                           style: FilledButton.styleFrom(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onPrimary,
                           ),
-                          onPressed: canExecute ? () => _confirmAndExecute(context, provider, l10n) : null,
+                          onPressed: canExecute
+                              ? () =>
+                                  _confirmAndExecute(context, provider, l10n)
+                              : null,
                           icon: const Icon(Symbols.play_arrow, size: 24),
                           label: Text(
                             l10n.labelGoRenamery,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                         ),
                 ),

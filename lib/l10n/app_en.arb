@@ -318,5 +318,9 @@
   "labelRegexSearchHint": "Search with Regex...",
   "labelPermissionFileAccessTitle": "File Access Permission",
   "labelPermissionFileAccessMessage": "To rename files with this app, you must allow \"All Files Access\" in Android system settings.\n\nPlease find \"ReNamery\" in the next screen and turn the switch ON.",
-  "labelPermissionFileAccessButton": "Go to Settings"
+  "labelPermissionFileAccessButton": "Go to Settings",
+  "labelLicenseAgreementTitle": "Software License Agreement",
+  "labelLicenseAgreementMessage": "To use this software, you must agree to the following license terms.",
+  "labelLicenseDeclineExit": "Decline and exit the app",
+  "labelLicenseAcceptStart": "Agree and start using"
 }

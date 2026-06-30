@@ -771,4 +771,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get labelPermissionFileAccessButton => '前往设置';
+
+  @override
+  String get labelLicenseAgreementTitle => '软件许可协议';
+
+  @override
+  String get labelLicenseAgreementMessage => '要使用本软件，您必须同意以下许可条款。';
+
+  @override
+  String get labelLicenseDeclineExit => '不同意（退出应用）';
+
+  @override
+  String get labelLicenseAcceptStart => '同意并开始使用';
 }

@@ -149,10 +149,17 @@ class DirectoryProvider extends ChangeNotifier {
       _seedColor = Colors.green; // デフォルト値の明示的なセット
     }
 
-    final menuLabelStr = s.getString('menuLabelType') ?? 'namery';
-    _menuLabelType = MenuLabelType.values.firstWhere(
+    final menuLabelStr = s.getString('menuLabelType');
+    if (menuLabelStr == null) {
+      _menuLabelType = defaultMenuLabelTypeForLocale(
+        WidgetsBinding.instance.platformDispatcher.locale,
+      );
+    } else {
+      _menuLabelType = MenuLabelType.values.firstWhere(
         (e) => e.name == menuLabelStr,
-        orElse: () => MenuLabelType.standard);
+        orElse: () => MenuLabelType.english,
+      );
+    }
 
     _navHistory = s.getList<String>('navHistory') ?? [];
     _navIndex = s.getInt('navIndex') ?? -1;
@@ -704,6 +711,21 @@ class DirectoryProvider extends ChangeNotifier {
     _menuLabelType = type;
     _saveState();
     notifyListeners();
+  }
+
+  static MenuLabelType defaultMenuLabelTypeForLocale(Locale locale) {
+    switch (locale.languageCode.toLowerCase()) {
+      case 'ja':
+        return MenuLabelType.standard;
+      case 'en':
+        return MenuLabelType.english;
+      case 'zh':
+        return MenuLabelType.chinese;
+      case 'es':
+        return MenuLabelType.spanish;
+      default:
+        return MenuLabelType.english;
+    }
   }
 
   void setSeedColor(Color color) {

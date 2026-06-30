@@ -89,45 +89,62 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   context,
                   icon: Symbols.arrow_back,
                   tooltip: l10n.labelNavBack,
-                  onPressed: provider.canGoBack ? () => provider.goBack() : null,
-                  onLongPress: provider.backHistory.isNotEmpty ? () => _showHistoryMenu(context, provider.backHistory, provider.jumpBack) : null,
+                  onPressed:
+                      provider.canGoBack ? () => provider.goBack() : null,
+                  onLongPress: provider.backHistory.isNotEmpty
+                      ? () => _showHistoryMenu(
+                          context, provider.backHistory, provider.jumpBack)
+                      : null,
                 ),
                 _buildCompactIconButton(
                   context,
                   icon: Symbols.arrow_forward,
                   tooltip: l10n.labelNavForward,
-                  onPressed: provider.canGoForward ? () => provider.goForward() : null,
-                  onLongPress: provider.forwardHistory.isNotEmpty ? () => _showHistoryMenu(context, provider.forwardHistory, provider.jumpForward) : null,
+                  onPressed:
+                      provider.canGoForward ? () => provider.goForward() : null,
+                  onLongPress: provider.forwardHistory.isNotEmpty
+                      ? () => _showHistoryMenu(context, provider.forwardHistory,
+                          provider.jumpForward)
+                      : null,
                 ),
                 _buildCompactIconButton(
                   context,
                   icon: Symbols.arrow_upward,
                   tooltip: l10n.labelNavUp,
-                  onPressed: provider.currentDirectory?.parent != null ? () => provider.goUp() : null,
+                  onPressed: provider.currentDirectory?.parent != null
+                      ? () => provider.goUp()
+                      : null,
                 ),
                 _buildCompactIconButton(
                   context,
                   icon: Symbols.undo,
                   tooltip: l10n.labelUndo,
-                  onPressed: provider.canUndo ? () => UndoHelper.handleUndo(context, provider) : null,
+                  onPressed: provider.canUndo
+                      ? () => UndoHelper.handleUndo(context, provider)
+                      : null,
                 ),
                 _buildCompactIconButton(
                   context,
                   icon: Symbols.content_copy,
                   tooltip: l10n.labelCopyOptions,
-                  onPressed: () => CopyHelper.showCopyOptionsBottomSheet(context, provider),
+                  onPressed: () =>
+                      CopyHelper.showCopyOptionsBottomSheet(context, provider),
                 ),
                 _buildCompactIconButton(
                   context,
                   icon: Symbols.expand_less,
                   tooltip: l10n.labelMoveUp,
-                  onPressed: provider.canMoveUp ? () => provider.moveSelection(true) : null,
+                  onPressed: provider.canMoveUp
+                      ? () => provider.moveSelection(true)
+                      : null,
                 ),
                 _buildCompactIconButton(
                   context,
                   icon: Symbols.expand_more,
                   tooltip: l10n.labelMoveDown,
-                  onPressed: provider.canMoveDown ? () => provider.moveSelection(false) : null,
+                  onPressed: provider.canMoveDown
+                      ? () => provider.moveSelection(false)
+                      : null,
                 ),
                 _buildCompactIconButton(
                   context,
@@ -293,8 +310,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
               if (isWide) ...[
                 const SizedBox(
                     height: 24,
-                    child:
-                        VerticalDivider(width: 20, indent: 4, endIndent: 4)),
+                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
                 Tooltip(
                   message: provider.showFolders
                       ? l10n.labelFilterHideFolders
@@ -400,28 +416,24 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                _buildRegexSearchBar(context, provider, l10n, isNarrow ? 120 : 160),
+                _buildRegexSearchBar(
+                    context, provider, l10n, isNarrow ? 120 : 160),
               ],
               if (showIconFilters) ...[
                 const SizedBox(
                     height: 24,
-                    child:
-                        VerticalDivider(width: 20, indent: 4, endIndent: 4)),
+                    child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
                 IconButton(
                   icon: Icon(
-                    provider.showFolders
-                        ? Symbols.folder
-                        : Symbols.folder_off,
+                    provider.showFolders ? Symbols.folder : Symbols.folder_off,
                     fill: 1,
-                    color: provider.showFolders
-                        ? Colors.amber[700]
-                        : Colors.grey,
+                    color:
+                        provider.showFolders ? Colors.amber[700] : Colors.grey,
                   ),
                   iconSize: 20,
                   onPressed: () => context
                       .read<DirectoryProvider>()
-                      .updateFilterSettings(
-                          showFolders: !provider.showFolders),
+                      .updateFilterSettings(showFolders: !provider.showFolders),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
@@ -446,7 +458,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                     color: provider.recursiveSearch
                         ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  ),
                   iconSize: 20,
                   onPressed: () => context
                       .read<DirectoryProvider>()
@@ -494,9 +506,9 @@ class _HomeAppBarState extends State<HomeAppBar> {
     VoidCallback? onLongPress,
   }) {
     final bool isEnabled = onPressed != null;
-    final color = isEnabled 
+    final color = isEnabled
         ? Theme.of(context).colorScheme.primary // 活性時はブランドカラー（プライマリ）
-        : Theme.of(context).disabledColor;      // 不活性時はグレー
+        : Theme.of(context).disabledColor; // 不活性時はグレー
 
     return Tooltip(
       message: tooltip,
@@ -517,13 +529,16 @@ class _HomeAppBarState extends State<HomeAppBar> {
     );
   }
 
-  void _showHistoryMenu(BuildContext context, List<String> history, Function(int) onSelected) {
+  void _showHistoryMenu(
+      BuildContext context, List<String> history, Function(int) onSelected) {
     final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
         button.localToGlobal(Offset.zero, ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero),
+            ancestor: overlay),
       ),
       Offset.zero & overlay.size,
     );
@@ -535,7 +550,8 @@ class _HomeAppBarState extends State<HomeAppBar> {
         return PopupMenuItem(
           value: index + 1,
           height: 32,
-          child: Text(p.basename(history[index]), style: const TextStyle(fontSize: 12)),
+          child: Text(p.basename(history[index]),
+              style: const TextStyle(fontSize: 12)),
         );
       }),
     ).then((value) {
@@ -543,7 +559,8 @@ class _HomeAppBarState extends State<HomeAppBar> {
     });
   }
 
-  Widget _buildRegexSearchBar(BuildContext context, DirectoryProvider provider, AppLocalizations l10n, double width) {
+  Widget _buildRegexSearchBar(BuildContext context, DirectoryProvider provider,
+      AppLocalizations l10n, double width) {
     final bool isRegex = provider.isFilterRegex;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -551,9 +568,13 @@ class _HomeAppBarState extends State<HomeAppBar> {
       width: width,
       height: 32,
       decoration: ShapeDecoration(
-        color: isRegex ? colorScheme.inverseSurface : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: isRegex
+            ? colorScheme.inverseSurface
+            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         shape: StadiumBorder(
-          side: isRegex ? BorderSide(color: colorScheme.primary, width: 1) : BorderSide.none,
+          side: isRegex
+              ? BorderSide(color: colorScheme.primary, width: 1)
+              : BorderSide.none,
         ),
       ),
       child: Row(
@@ -562,10 +583,12 @@ class _HomeAppBarState extends State<HomeAppBar> {
           Center(
             child: IconButton(
               icon: Icon(
-                Symbols.regular_expression, 
+                Symbols.regular_expression,
                 size: 16,
                 fill: isRegex ? 1 : 0,
-                color: isRegex ? colorScheme.onInverseSurface : colorScheme.onSurfaceVariant,
+                color: isRegex
+                    ? colorScheme.onInverseSurface
+                    : colorScheme.onSurfaceVariant,
               ),
               onPressed: () {
                 provider.updateFilterSettings(isRegex: !isRegex);
@@ -581,24 +604,32 @@ class _HomeAppBarState extends State<HomeAppBar> {
               child: TextField(
                 controller: _filterController,
                 decoration: InputDecoration.collapsed(
-                  hintText: isRegex ? l10n.labelRegexSearchHint : l10n.labelSearchHint,
+                  hintText: isRegex
+                      ? l10n.labelRegexSearchHint
+                      : l10n.labelSearchHint,
                   hintStyle: TextStyle(
-                    fontSize: 11, 
-                    color: isRegex ? colorScheme.onInverseSurface.withValues(alpha: 0.6) : Colors.grey
-                  ),
+                      fontSize: 11,
+                      color: isRegex
+                          ? colorScheme.onInverseSurface.withValues(alpha: 0.6)
+                          : Colors.grey),
                 ),
                 style: TextStyle(
                   fontSize: 12,
-                  color: isRegex ? colorScheme.onInverseSurface : colorScheme.onSurface,
+                  color: isRegex
+                      ? colorScheme.onInverseSurface
+                      : colorScheme.onSurface,
                 ),
-                onChanged: (value) => provider.updateFilterSettings(isSpecific: value.isNotEmpty, filter: value),
+                onChanged: (value) => provider.updateFilterSettings(
+                    isSpecific: value.isNotEmpty, filter: value),
               ),
             ),
           ),
           if (provider.isFilterSpecific)
             Center(
               child: IconButton(
-                icon: Icon(Symbols.close, size: 14, color: isRegex ? colorScheme.onInverseSurface : null),
+                icon: Icon(Symbols.close,
+                    size: 14,
+                    color: isRegex ? colorScheme.onInverseSurface : null),
                 onPressed: () {
                   _filterController.clear();
                   provider.updateFilterSettings(isSpecific: false, filter: '');
@@ -615,7 +646,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
 
   Future<void> _confirmAndExecute(BuildContext context,
       DirectoryProvider provider, AppLocalizations l10n) async {
-    final executedCount = await provider.executeRename();
+    await provider.executeRename();
   }
 
   List<PopupMenuEntry<int>> _buildCopyMenuItems(

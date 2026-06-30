@@ -1572,6 +1572,30 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'設定画面へ進む'**
   String get labelPermissionFileAccessButton;
+
+  /// No description provided for @labelLicenseAgreementTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'ソフトウェア利用規約'**
+  String get labelLicenseAgreementTitle;
+
+  /// No description provided for @labelLicenseAgreementMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'本ソフトウェアを利用するには、以下のライセンス条項に同意する必要があります。'**
+  String get labelLicenseAgreementMessage;
+
+  /// No description provided for @labelLicenseDeclineExit.
+  ///
+  /// In ja, this message translates to:
+  /// **'同意しない（アプリを終了する）'**
+  String get labelLicenseDeclineExit;
+
+  /// No description provided for @labelLicenseAcceptStart.
+  ///
+  /// In ja, this message translates to:
+  /// **'同意して利用を開始する'**
+  String get labelLicenseAcceptStart;
 }
 
 class _AppLocalizationsDelegate

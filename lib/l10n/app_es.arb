@@ -245,5 +245,9 @@
   "labelScanStop": "Detener escaneo",
   "labelPermissionFileAccessTitle": "Configuración de permisos de acceso a archivos",
   "labelPermissionFileAccessMessage": "Para renombrar archivos con esta aplicación, debe permitir el \"Acceso a todos los archivos\" en la configuración del sistema Android.\n\nBusque \"ReNamery\" en la siguiente pantalla y active el interruptor.",
-  "labelPermissionFileAccessButton": "Ir a Ajustes"
+  "labelPermissionFileAccessButton": "Ir a Ajustes",
+  "labelLicenseAgreementTitle": "Acuerdo de licencia de software",
+  "labelLicenseAgreementMessage": "Para usar este software, debe aceptar los siguientes términos de licencia.",
+  "labelLicenseDeclineExit": "No aceptar y salir de la app",
+  "labelLicenseAcceptStart": "Aceptar y empezar a usar"
 }

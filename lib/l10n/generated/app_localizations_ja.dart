@@ -774,6 +774,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get labelPermissionFileAccessButton => '設定画面へ進む';
+
+  @override
+  String get labelLicenseAgreementTitle => 'ソフトウェア利用規約';
+
+  @override
+  String get labelLicenseAgreementMessage =>
+      '本ソフトウェアを利用するには、以下のライセンス条項に同意する必要があります。';
+
+  @override
+  String get labelLicenseDeclineExit => '同意しない（アプリを終了する）';
+
+  @override
+  String get labelLicenseAcceptStart => '同意して利用を開始する';
 }
 
 /// The translations for Japanese (`ja_NM`).
@@ -1543,4 +1556,16 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
 
   @override
   String get labelPermissionFileAccessButton => '設定を開く';
+
+  @override
+  String get labelLicenseAgreementTitle => '利用規約';
+
+  @override
+  String get labelLicenseAgreementMessage => '利用するには、以下のライセンス条項への同意が必要です。';
+
+  @override
+  String get labelLicenseDeclineExit => '同意しない（終了）';
+
+  @override
+  String get labelLicenseAcceptStart => '同意して開始';
 }

@@ -62,7 +62,9 @@ final_crash_log.txt
 # Documentation & Manuals
 namery_manuals/
 namery_docs/
-docs/
+docs/*
+!docs/unit_test_plan/
+!docs/unit_test_plan/**
 
 # Multimedia Originals
 .picasa.ini
