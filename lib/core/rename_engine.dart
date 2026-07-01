@@ -182,8 +182,9 @@ class RenameEngine {
         color: hasError
             ? Theme.of(context).colorScheme.error
             : style?.color ?? Theme.of(context).colorScheme.onSurface);
-    if (oldText == newText || hasError)
+    if (oldText == newText || hasError) {
       return TextSpan(text: newText, style: baseTextStyle);
+    }
 
     if (mode == RenameMode.deleteStart ||
         mode == RenameMode.deleteEnd ||
@@ -351,16 +352,18 @@ class RenameEngine {
 
       switch (mode) {
         case RenameMode.deleteStart:
-          if (digits > 0)
+          if (digits > 0) {
             newBaseName = digits >= newBaseName.length
                 ? ''
                 : newBaseName.substring(digits);
+          }
           break;
         case RenameMode.deleteEnd:
-          if (digits > 0)
+          if (digits > 0) {
             newBaseName = digits >= newBaseName.length
                 ? ''
                 : newBaseName.substring(0, newBaseName.length - digits);
+          }
           break;
         case RenameMode.deleteFrom:
           int startIdx = startNumber - 1;
@@ -372,8 +375,9 @@ class RenameEngine {
         case RenameMode.deleteFrontTo:
           if (findText != null && findText.isNotEmpty) {
             int idx = newBaseName.indexOf(findText);
-            if (idx != -1)
+            if (idx != -1) {
               newBaseName = newBaseName.substring(idx + findText.length);
+            }
           }
           break;
         case RenameMode.deleteBackTo:
@@ -398,8 +402,9 @@ class RenameEngine {
                   return replacement.replaceAllMapped(RegExp(r'(?:\$|\\)(\d+)'),
                       (m) {
                     int groupIdx = int.parse(m.group(1)!);
-                    if (groupIdx <= match.groupCount)
+                    if (groupIdx <= match.groupCount) {
                       return match.group(groupIdx) ?? '';
+                    }
                     return m.group(0)!;
                   });
                 });
@@ -416,9 +421,10 @@ class RenameEngine {
           if (appendText != null) newBaseName = '$appendText$originalBaseName';
           break;
         case RenameMode.extension:
-          if (replaceText != null && replaceText.isNotEmpty)
+          if (replaceText != null && replaceText.isNotEmpty) {
             extension =
                 replaceText.startsWith('.') ? replaceText : '.$replaceText';
+          }
           break;
         case RenameMode.upper:
           newBaseName = newBaseName.toUpperCase();
@@ -427,9 +433,10 @@ class RenameEngine {
           newBaseName = newBaseName.toLowerCase();
           break;
         case RenameMode.capitalize:
-          if (newBaseName.isNotEmpty)
+          if (newBaseName.isNotEmpty) {
             newBaseName = newBaseName[0].toUpperCase() +
                 newBaseName.substring(1).toLowerCase();
+          }
           break;
         case RenameMode.listRename:
           if (renameMap.containsKey(originalName)) {
@@ -455,9 +462,10 @@ class RenameEngine {
           newBaseName = newBaseName.toLowerCase();
           break;
         case CaseConversion.capitalize:
-          if (newBaseName.isNotEmpty)
+          if (newBaseName.isNotEmpty) {
             newBaseName = newBaseName[0].toUpperCase() +
                 newBaseName.substring(1).toLowerCase();
+          }
           break;
         case CaseConversion.none:
           break;
@@ -470,9 +478,10 @@ class RenameEngine {
           extension = '';
           break;
         case RenameMode.extensionAdd:
-          if (replaceText != null && replaceText.isNotEmpty)
+          if (replaceText != null && replaceText.isNotEmpty) {
             extension +=
                 replaceText.startsWith('.') ? replaceText : '.$replaceText';
+          }
           break;
         case RenameMode.extensionUpper:
           extension = extension.toUpperCase();
@@ -485,8 +494,9 @@ class RenameEngine {
               .replaceAllMapped(RegExp(r'([ \-_]+|^)([a-zA-Z0-9]+)'), (match) {
             String separator = match.group(1) ?? '';
             String word = match.group(2) ?? '';
-            if (word.isNotEmpty)
+            if (word.isNotEmpty) {
               word = word[0].toUpperCase() + word.substring(1).toLowerCase();
+            }
             return '$separator$word';
           });
           break;

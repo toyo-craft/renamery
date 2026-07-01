@@ -1,8 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+
+import 'settings_store_stub.dart'
+    if (dart.library.io) 'settings_store_io.dart'
+    if (dart.library.html) 'settings_store_web.dart' as settings_store;
 
 class SettingsService {
   static final SettingsService _instance = SettingsService._internal();
@@ -19,11 +20,9 @@ class SettingsService {
 
   Future<void> loadSettings() async {
     try {
-      final file = await _getSettingsFile();
-      if (await file.exists()) {
-        final content = await file.readAsString();
+      final content = await settings_store.readSettingsJson();
+      if (content != null) {
         _settings = json.decode(content);
-        if (kDebugMode) print('Settings loaded from: ${file.path}');
       }
     } catch (e) {
       if (kDebugMode) print('Error loading settings: $e');
@@ -38,9 +37,7 @@ class SettingsService {
 
     _isSaving = true;
     try {
-      final file = await _getSettingsFile();
-      await file.writeAsString(json.encode(_settings));
-      if (kDebugMode) print('Settings saved to: ${file.path}');
+      await settings_store.writeSettingsJson(json.encode(_settings));
     } catch (e) {
       if (kDebugMode) print('Error saving settings: $e');
     } finally {
@@ -50,38 +47,6 @@ class SettingsService {
         saveSettings();
       }
     }
-  }
-
-  Future<File> _getSettingsFile() async {
-    final String directoryPath;
-
-    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-      final dir = await getApplicationDocumentsDirectory();
-      directoryPath = dir.path;
-    } else if (!kIsWeb && Platform.isWindows) {
-      // Windows: Program Files への書き込み制限を避けるため AppData を優先
-      // ただし、実行ファイルと同じ場所に settings.json が既にある場合はポータブルモードとして維持
-      final exePath = Platform.resolvedExecutable;
-      final exeDir = p.dirname(exePath);
-      final portableFile = File(p.join(exeDir, 'settings.json'));
-      
-      if (await portableFile.exists()) {
-        directoryPath = exeDir;
-      } else {
-        final appDataDir = await getApplicationSupportDirectory();
-        directoryPath = appDataDir.path;
-      }
-    } else {
-      final dir = await getApplicationSupportDirectory();
-      directoryPath = dir.path;
-    }
-
-    final path = p.join(directoryPath, 'settings.json');
-    final file = File(path);
-    if (!await file.parent.exists()) {
-      await file.parent.create(recursive: true);
-    }
-    return file;
   }
 
   dynamic get(String key) => _settings[key];

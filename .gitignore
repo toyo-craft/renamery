@@ -39,6 +39,11 @@ desktop.ini
 .pub-cache/
 .pub/
 
+# Node / Playwright
+node_modules/
+playwright-report/
+test-results/
+
 # Local Scripts & Executables
 *.bat
 *.ps1
@@ -63,6 +68,7 @@ final_crash_log.txt
 namery_manuals/
 namery_docs/
 docs/*
+!docs/integration_test_plan_web.md
 !docs/unit_test_plan/
 !docs/unit_test_plan/**
 

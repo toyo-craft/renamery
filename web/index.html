@@ -18,21 +18,217 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="ReNamery Web - browser-based local folder rename support.">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="renamery">
+  <meta name="apple-mobile-web-app-title" content="ReNamery">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>renamery</title>
+  <title>ReNamery</title>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    (() => {
+      const dbName = 'renamery-web-fs';
+      const storeName = 'directories';
+
+      const requestToPromise = (request) => new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      const openDb = () => new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains(storeName)) {
+            db.createObjectStore(storeName, { keyPath: 'id' });
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      const isSupported = () => Boolean(
+        window.isSecureContext &&
+        window.showDirectoryPicker &&
+        window.indexedDB
+      );
+
+      const safeUuid = () => {
+        if (window.crypto && window.crypto.randomUUID) {
+          return window.crypto.randomUUID();
+        }
+        return `dir-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      };
+
+      const withPermission = async (record) => {
+        let permission = 'prompt';
+        try {
+          permission = await record.handle.queryPermission({ mode: 'readwrite' });
+        } catch (_) {}
+        return {
+          id: record.id,
+          name: record.name,
+          handle: record.handle,
+          permission,
+          lastUsedAt: record.lastUsedAt || 0,
+        };
+      };
+
+      const getRecords = async () => {
+        if (!isSupported()) return [];
+        const db = await openDb();
+        const transaction = db.transaction(storeName, 'readonly');
+        const records = await requestToPromise(transaction.objectStore(storeName).getAll());
+        db.close();
+        return records || [];
+      };
+
+      const putRecord = async (record) => {
+        const db = await openDb();
+        const transaction = db.transaction(storeName, 'readwrite');
+        await requestToPromise(transaction.objectStore(storeName).put(record));
+        db.close();
+      };
+
+      const saveDirectoryHandle = async (handle) => {
+        const records = await getRecords();
+        let existing = null;
+        for (const record of records) {
+          try {
+            if (await record.handle.isSameEntry(handle)) {
+              existing = record;
+              break;
+            }
+          } catch (_) {}
+        }
+        const record = {
+          id: existing ? existing.id : safeUuid(),
+          name: handle.name,
+          handle,
+          lastUsedAt: Date.now(),
+        };
+        await putRecord(record);
+        return withPermission(record);
+      };
+
+      const pickDirectory = async () => {
+        if (!isSupported()) {
+          throw new Error('File System Access API is not supported.');
+        }
+        const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        return saveDirectoryHandle(handle);
+      };
+
+      const listSavedDirectories = async () => {
+        const records = await getRecords();
+        const result = [];
+        for (const record of records) {
+          result.push(await withPermission(record));
+        }
+        result.sort((a, b) => (b.lastUsedAt || 0) - (a.lastUsedAt || 0));
+        return result;
+      };
+
+      const requestDirectoryPermission = async (handle) => {
+        const options = { mode: 'readwrite' };
+        let permission = await handle.queryPermission(options);
+        if (permission !== 'granted') {
+          permission = await handle.requestPermission(options);
+        }
+        return permission;
+      };
+
+      const ensureDirectoryPermission = async (handle) => {
+        const permission = await requestDirectoryPermission(handle);
+        if (permission !== 'granted') {
+          throw new Error('Directory permission was not granted.');
+        }
+      };
+
+      const listDirectory = async (handle, relativePath = '') => {
+        await ensureDirectoryPermission(handle);
+        const result = [];
+        for await (const [name, child] of handle.entries()) {
+          let size = null;
+          let lastModified = null;
+          if (child.kind === 'file') {
+            try {
+              const file = await child.getFile();
+              size = file.size;
+              lastModified = file.lastModified;
+            } catch (_) {}
+          }
+          result.push({
+            name,
+            kind: child.kind,
+            handle: child,
+            parentHandle: handle,
+            relativePath: relativePath ? `${relativePath}/${name}` : name,
+            size,
+            lastModified,
+          });
+        }
+        result.sort((a, b) => {
+          if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
+          return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+        });
+        return result;
+      };
+
+      const assertNewNameAvailable = async (parentHandle, newName) => {
+        try {
+          await parentHandle.getFileHandle(newName);
+          throw new Error(`A file named "${newName}" already exists.`);
+        } catch (error) {
+          if (error && error.name === 'NotFoundError') return;
+          throw error;
+        }
+      };
+
+      const renameFile = async (parentHandle, oldName, newName) => {
+        await ensureDirectoryPermission(parentHandle);
+        if (!newName || newName.includes('/') || newName.includes('\\')) {
+          throw new Error('Invalid file name.');
+        }
+        if (oldName === newName) return;
+        await assertNewNameAvailable(parentHandle, newName);
+
+        const sourceHandle = await parentHandle.getFileHandle(oldName);
+        if (typeof sourceHandle.move === 'function') {
+          try {
+            await sourceHandle.move(newName);
+            return;
+          } catch (_) {
+            // Fall through to copy-and-delete. Browser support for move() is uneven.
+          }
+        }
+
+        const file = await sourceHandle.getFile();
+        const targetHandle = await parentHandle.getFileHandle(newName, { create: true });
+        const writable = await targetHandle.createWritable();
+        await writable.write(file);
+        await writable.close();
+        await parentHandle.removeEntry(oldName);
+      };
+
+      window.renameryFs = {
+        isSupported,
+        pickDirectory,
+        listSavedDirectories,
+        requestDirectoryPermission,
+        listDirectory,
+        renameFile,
+      };
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

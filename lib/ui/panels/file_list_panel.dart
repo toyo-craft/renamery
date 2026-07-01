@@ -150,9 +150,10 @@ class _FileListPanelState extends State<FileListPanel> {
     if (key == LogicalKeyboardKey.f2) {
       final selected =
           provider.currentFiles.where((f) => f.isSelected).toList();
-      if (selected.isNotEmpty)
+      if (selected.isNotEmpty) {
         _startEdit(
             selected.first.entity.path, selected.first.originalName, provider);
+      }
       return true;
     }
 
@@ -192,8 +193,9 @@ class _FileListPanelState extends State<FileListPanel> {
       final double newOffset = (_verticalController.offset + delta)
           .clamp(0.0, _verticalController.position.maxScrollExtent);
       _verticalController.jumpTo(newOffset);
-      if (_dragUpdate != null)
+      if (_dragUpdate != null) {
         _updateSelection(_dragUpdate!.dy, files, provider);
+      }
     });
   }
 
@@ -570,8 +572,9 @@ class _FileListPanelState extends State<FileListPanel> {
 
   void _updateSelection(
       double currentAbsY, List<FileModel> files, DirectoryProvider provider) {
-    if (_dragStart == null || _initialSelectionStates == null || files.isEmpty)
+    if (_dragStart == null || _initialSelectionStates == null || files.isEmpty) {
       return;
+    }
     debugPrint('DEBUG: Rubber-band selection update triggered');
     final rowH = provider.touchMode ? 50.0 : 34.0;
     final startY = _dragStart!.dy;

@@ -1,59 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'ui/home_screen.dart';
-import 'core/directory_provider.dart';
+import 'ui/home_screen_platform.dart';
+import 'core/directory_provider_platform.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 
-import 'package:window_manager/window_manager.dart';
 import 'core/settings_service.dart';
-
-import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
-
-import 'package:windows_single_instance/windows_single_instance.dart';
+import 'utils/app_platform.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (!kIsWeb && Platform.isWindows) {
-    await WindowsSingleInstance.ensureSingleInstance(
-        args, "ToyoCraftLab.ReNamery.SingleInstance",
-        onSecondWindow: (args) async {
-      await windowManager.show();
-      await windowManager.focus();
-    });
-  }
-
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-    await windowManager.ensureInitialized();
-  }
+  await AppPlatform.ensureSingleInstance(args);
+  await AppPlatform.ensureWindowInitialized();
   await SettingsService().loadSettings(); // Load settings early
-
-  // Restore Window State
-  final width = SettingsService().getDouble('windowWidth') ?? 1024.0;
-  final height = SettingsService().getDouble('windowHeight') ?? 768.0;
-  final x = SettingsService().getDouble('windowX');
-  final y = SettingsService().getDouble('windowY');
-
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-    WindowOptions windowOptions = WindowOptions(
-      size: Size(width, height),
-      center: x == null || y == null, // Center if no position saved
-      backgroundColor: Colors.transparent,
-      skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.normal,
-      title: 'ReNamery',
-    );
-
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
-      if (x != null && y != null) {
-        await windowManager.setPosition(Offset(x, y));
-      }
-    });
-  }
+  await AppPlatform.restoreWindowState();
 
   runApp(
     MultiProvider(
@@ -105,16 +66,10 @@ class ReNameryApp extends StatelessWidget {
                     Brightness.dark);
         final currentScheme = isDarkMode ? targetDarkScheme : lightScheme;
 
-        // Synchronize Windows title bar color with theme
-        if (!kIsWeb && Platform.isWindows) {
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            // Set the window brightness to ensure title bar text color is correct
-            await windowManager
-                .setBrightness(isDarkMode ? Brightness.dark : Brightness.light);
-            // Set the window background/title bar color
-            await windowManager.setBackgroundColor(currentScheme.surface);
-          });
-        }
+        AppPlatform.syncWindowAppearance(
+          isDarkMode: isDarkMode,
+          surface: currentScheme.surface,
+        );
 
         return MaterialApp(
           title: 'ReNamery',

@@ -394,8 +394,9 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     _lastTreeVersion = provider.treeVersion;
 
     String name = p.basename(widget.directory.path);
-    if (widget.directory.path.endsWith(':\\'))
+    if (widget.directory.path.endsWith(':\\')) {
       name = widget.directory.path.replaceAll('\\', '');
+    }
     IconData icon =
         widget.customIcon ?? (_isExpanded ? Icons.folder_open : Icons.folder);
     Color iconColor =
@@ -621,19 +622,21 @@ class _DirectoryTileState extends State<_DirectoryTile> {
     if (!mounted) return;
     final renderObject = context.findRenderObject();
     if (renderObject == null) {
-      if (retryCount < 5)
+      if (retryCount < 5) {
         Future.delayed(const Duration(milliseconds: 200),
             () => _ensureVisibleWithRetry(retryCount + 1));
+      }
       return;
     }
     Future.delayed(Duration(milliseconds: retryCount == 0 ? 400 : 200), () {
       if (!mounted) return;
       final vs = widget.scrollController;
-      if (vs.hasClients)
+      if (vs.hasClients) {
         vs.position.ensureVisible(renderObject,
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeOutCubic,
             alignment: 0.5);
+      }
       if (retryCount < 2) _ensureVisibleWithRetry(retryCount + 1);
     });
   }

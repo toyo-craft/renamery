@@ -163,15 +163,18 @@ class DirectoryProvider extends ChangeNotifier {
 
     _navHistory = s.getList<String>('navHistory') ?? [];
     _navIndex = s.getInt('navIndex') ?? -1;
-    if (_navIndex >= _navHistory.length)
+    if (_navIndex >= _navHistory.length) {
       _navIndex = _navHistory.isNotEmpty ? _navHistory.length - 1 : -1;
+    }
 
     final rModeIndex = s.getInt('renameMode');
-    if (rModeIndex != null && rModeIndex < RenameMode.values.length)
+    if (rModeIndex != null && rModeIndex < RenameMode.values.length) {
       _renameMode = RenameMode.values[rModeIndex];
+    }
     final nModeIndex = s.getInt('numberingMode');
-    if (nModeIndex != null && nModeIndex < NumberingMode.values.length)
+    if (nModeIndex != null && nModeIndex < NumberingMode.values.length) {
       _numberingMode = NumberingMode.values[nModeIndex];
+    }
 
     _findText = '';
     _replaceText = '';
@@ -189,17 +192,20 @@ class DirectoryProvider extends ChangeNotifier {
 
     _dateFormat = s.getString('dateFormat') ?? 'yyyymmdd_';
     final dPosIndex = s.getInt('datePosition');
-    if (dPosIndex != null && dPosIndex < DatePosition.values.length)
+    if (dPosIndex != null && dPosIndex < DatePosition.values.length) {
       _datePosition = DatePosition.values[dPosIndex];
+    }
 
     final vTypeIndex = s.getInt('validationType');
-    if (vTypeIndex != null && vTypeIndex < ValidationType.values.length)
+    if (vTypeIndex != null && vTypeIndex < ValidationType.values.length) {
       _validationType = ValidationType.values[vTypeIndex];
+    }
 
     final initModeIndex = s.getInt('initialDirectoryMode');
     if (initModeIndex != null &&
-        initModeIndex < InitialDirectoryMode.values.length)
+        initModeIndex < InitialDirectoryMode.values.length) {
       _initialDirectoryMode = InitialDirectoryMode.values[initModeIndex];
+    }
     _fixedInitialDirectory = s.getString('fixedInitialDirectory') ?? '';
 
     _etcTimestamp = s.getString('etcTimestamp') ?? '';
@@ -243,8 +249,9 @@ class DirectoryProvider extends ChangeNotifier {
   void _saveState() {
     final s = SettingsService();
     // 多数の設定を一度に保存するため、個別の自動保存を抑制し、最後に一括保存する
-    if (_currentDirectory != null)
+    if (_currentDirectory != null) {
       s.set('lastDirectory', _currentDirectory!.path, saveImmediate: false);
+    }
     s.set('filterText', _filterText, saveImmediate: false);
     s.set('hideSystemFiles', _hideSystemFiles, saveImmediate: false);
     s.set('recursiveSearch', _recursiveSearch, saveImmediate: false);
@@ -265,12 +272,15 @@ class DirectoryProvider extends ChangeNotifier {
         saveImmediate: false); // 明示的に保存対象に追加
 
     if (_findText != null) s.set('findText', _findText, saveImmediate: false);
-    if (_replaceText != null)
+    if (_replaceText != null) {
       s.set('replaceText', _replaceText, saveImmediate: false);
-    if (_appendText != null)
+    }
+    if (_appendText != null) {
       s.set('appendText', _appendText, saveImmediate: false);
-    if (_deleteToText != null)
+    }
+    if (_deleteToText != null) {
       s.set('deleteToText', _deleteToText, saveImmediate: false);
+    }
 
     s.set('startNumber', _startNumber, saveImmediate: false);
     s.set('digits', _digits, saveImmediate: false);
@@ -647,8 +657,9 @@ class DirectoryProvider extends ChangeNotifier {
     int counter = 2;
     while (true) {
       final newPath = p.join(dir, '$name ($counter)$ext');
-      if (!File(newPath).existsSync() && !Directory(newPath).existsSync())
+      if (!File(newPath).existsSync() && !Directory(newPath).existsSync()) {
         return newPath;
+      }
       counter++;
     }
   }
@@ -859,8 +870,9 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   bool _shouldShowFile(FileModel file) {
-    if (_hideSystemFiles && p.basename(file.originalName).startsWith('.'))
+    if (_hideSystemFiles && p.basename(file.originalName).startsWith('.')) {
       return false;
+    }
     if (!_showFolders && file.entity is Directory) return false;
     if (_filterText.isNotEmpty) {
       if (_isFilterRegex) {
@@ -913,18 +925,23 @@ class DirectoryProvider extends ChangeNotifier {
     if (mode != null) _renameMode = mode;
     if (numberingMode != null) _numberingMode = numberingMode;
     if (find != null || findText != null) _findText = find ?? findText;
-    if (replace != null || replaceText != null)
+    if (replace != null || replaceText != null) {
       _replaceText = replace ?? replaceText;
-    if (append != null || appendText != null)
+    }
+    if (append != null || appendText != null) {
       _appendText = append ?? appendText;
-    if (deleteTo != null || deleteToText != null)
+    }
+    if (deleteTo != null || deleteToText != null) {
       _deleteToText = deleteTo ?? deleteToText;
-    if (start != null || startNumber != null)
+    }
+    if (start != null || startNumber != null) {
       _startNumber = (start ?? startNumber)!;
+    }
     if (insertIndex != null) _insertIndex = insertIndex;
     if (digit != null || digits != null) _digits = (digit ?? digits)!;
-    if (extensionToLowerCase != null)
+    if (extensionToLowerCase != null) {
       _extensionToLowerCase = extensionToLowerCase;
+    }
     if (useRegex != null) _useRegex = useRegex;
     if (dateFormat != null) _dateFormat = dateFormat;
     if (datePosition != null) _datePosition = datePosition;
@@ -949,7 +966,9 @@ class DirectoryProvider extends ChangeNotifier {
       if (mode == RenameMode.append ||
           mode == RenameMode.prepend ||
           mode == RenameMode.insert ||
-          mode == RenameMode.numbering) _lastStringMode = mode;
+          mode == RenameMode.numbering) {
+        _lastStringMode = mode;
+      }
     }
     _previewTimer?.cancel();
     if (immediate) {
@@ -1060,8 +1079,9 @@ class DirectoryProvider extends ChangeNotifier {
       final nameCounts = <String, int>{};
       for (var f in _currentFiles) {
         if (f.validationErrorMessage != null &&
-            f.validationErrorMessage != 'ファイル名が重複しています')
+            f.validationErrorMessage != 'ファイル名が重複しています') {
           _hasValidationError = true;
+        }
         final fullPathKey = p.join(f.parentPath, f.newName).toLowerCase();
         nameCounts[fullPathKey] = (nameCounts[fullPathKey] ?? 0) + 1;
       }
@@ -1246,8 +1266,9 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
-    if (_currentDirectory != null)
+    if (_currentDirectory != null) {
       await setDirectory(_currentDirectory!, addToHistory: false);
+    }
   }
 
   Future<void> _navigateInternal(Directory dir) async =>
@@ -1265,8 +1286,9 @@ class DirectoryProvider extends ChangeNotifier {
     if (addToHistory &&
         (_currentDirectory == null ||
             _currentDirectory!.path != directory.path)) {
-      if (_navIndex < _navHistory.length - 1)
+      if (_navIndex < _navHistory.length - 1) {
         _navHistory = _navHistory.sublist(0, _navIndex + 1);
+      }
       _navHistory.remove(directory.path);
       _navHistory.add(directory.path);
       if (_navHistory.length > 20) _navHistory.removeAt(0);
@@ -1811,8 +1833,9 @@ class DirectoryProvider extends ChangeNotifier {
         return;
       }
       String message = '$currentCount 件のファイルが見つかりました。\nスキャンを続行しますか？';
-      if (reason == 'time')
+      if (reason == 'time') {
         message = 'スキャン開始から5秒が経過しました（現在 $currentCount 件）。\nこのまま続行しますか？';
+      }
       if (reason == 'stall') message = '応答が一時的に途絶えています。スキャンを続行しますか？';
       final result = await showDialog<String>(
           context: context,
@@ -1876,7 +1899,9 @@ class DirectoryProvider extends ChangeNotifier {
     List<UndoAction> transaction = [];
     for (var file in t) {
       if (file.validationErrorMessage != null ||
-          file.originalName == file.newName) continue;
+          file.originalName == file.newName) {
+        continue;
+      }
       try {
         final oldP = file.entity.path;
         final newP = p.join(file.parentPath, file.newName);
@@ -1989,13 +2014,15 @@ class DirectoryProvider extends ChangeNotifier {
       {Duration timeout = const Duration(seconds: 2)}) async {
     try {
       return await directory.exists().timeout(timeout, onTimeout: () {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('Directory probe timed out: ${directory.path}');
+        }
         return false;
       });
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('Directory probe failed: ${directory.path} ($e)');
+      }
       return false;
     }
   }
@@ -2148,7 +2175,9 @@ class DirectoryProvider extends ChangeNotifier {
     for (int i = 0; i < _currentFiles.length; i++) {
       if (_currentFiles[i].isSelected &&
           i > 0 &&
-          !_currentFiles[i - 1].isSelected) return true;
+          !_currentFiles[i - 1].isSelected) {
+        return true;
+      }
     }
     return false;
   }
@@ -2158,7 +2187,9 @@ class DirectoryProvider extends ChangeNotifier {
     for (int i = 0; i < _currentFiles.length; i++) {
       if (_currentFiles[i].isSelected &&
           i < _currentFiles.length - 1 &&
-          !_currentFiles[i + 1].isSelected) return true;
+          !_currentFiles[i + 1].isSelected) {
+        return true;
+      }
     }
     return false;
   }
