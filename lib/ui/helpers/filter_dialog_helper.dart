@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import '../../core/directory_provider.dart';
+import '../../core/directory_provider_platform.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 class FilterDialogHelper {
@@ -34,7 +34,7 @@ class FilterDialogHelper {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                       child: Text(
-                        l10n.labelFilterOptions, 
+                        l10n.labelFilterOptions,
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -46,9 +46,15 @@ class FilterDialogHelper {
                       child: Container(
                         height: 48,
                         decoration: ShapeDecoration(
-                          color: isRegex ? colorScheme.inverseSurface : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                          color: isRegex
+                              ? colorScheme.inverseSurface
+                              : colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.5),
                           shape: StadiumBorder(
-                            side: isRegex ? BorderSide(color: colorScheme.primary, width: 1) : BorderSide.none,
+                            side: isRegex
+                                ? BorderSide(
+                                    color: colorScheme.primary, width: 1)
+                                : BorderSide.none,
                           ),
                         ),
                         child: Row(
@@ -57,13 +63,16 @@ class FilterDialogHelper {
                             Center(
                               child: IconButton(
                                 icon: Icon(
-                                  Symbols.regular_expression, 
+                                  Symbols.regular_expression,
                                   size: 24,
                                   fill: isRegex ? 1 : 0,
-                                  color: isRegex ? colorScheme.onInverseSurface : colorScheme.onSurfaceVariant,
+                                  color: isRegex
+                                      ? colorScheme.onInverseSurface
+                                      : colorScheme.onSurfaceVariant,
                                 ),
                                 onPressed: () {
-                                  provider.updateFilterSettings(isRegex: !isRegex);
+                                  provider.updateFilterSettings(
+                                      isRegex: !isRegex);
                                 },
                                 tooltip: l10n.labelRegex,
                               ),
@@ -74,17 +83,24 @@ class FilterDialogHelper {
                                 child: TextField(
                                   controller: filterCtrl,
                                   decoration: InputDecoration.collapsed(
-                                    hintText: isRegex ? l10n.labelRegexSearchHint : l10n.labelSearchHint,
+                                    hintText: isRegex
+                                        ? l10n.labelRegexSearchHint
+                                        : l10n.labelSearchHint,
                                     hintStyle: TextStyle(
-                                      color: isRegex ? colorScheme.onInverseSurface.withValues(alpha: 0.6) : null
-                                    ),
+                                        color: isRegex
+                                            ? colorScheme.onInverseSurface
+                                                .withValues(alpha: 0.6)
+                                            : null),
                                   ),
                                   style: TextStyle(
-                                    color: isRegex ? colorScheme.onInverseSurface : null,
+                                    color: isRegex
+                                        ? colorScheme.onInverseSurface
+                                        : null,
                                   ),
                                   onChanged: (val) {
                                     provider.updateFilterSettings(
-                                        isSpecific: val.isNotEmpty, filter: val);
+                                        isSpecific: val.isNotEmpty,
+                                        filter: val);
                                   },
                                 ),
                               ),
@@ -93,9 +109,11 @@ class FilterDialogHelper {
                               Center(
                                 child: IconButton(
                                   icon: Icon(
-                                    Symbols.close, 
+                                    Symbols.close,
                                     size: 20,
-                                    color: isRegex ? colorScheme.onInverseSurface : null,
+                                    color: isRegex
+                                        ? colorScheme.onInverseSurface
+                                        : null,
                                   ),
                                   onPressed: () {
                                     filterCtrl.clear();

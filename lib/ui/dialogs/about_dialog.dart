@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle, MethodChannel;
 import 'package:renamery/l10n/generated/app_localizations.dart';
@@ -297,7 +298,7 @@ class AboutAppDialog extends StatelessWidget {
 
   Future<void> _launchUrl(String url) async {
     try {
-      if (Platform.isAndroid) {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         const channel = MethodChannel('jp.toyocraft.renamery/launcher');
         await channel.invokeMethod('launchUrl', {'url': url});
       } else {

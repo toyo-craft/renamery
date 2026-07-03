@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/directory_provider.dart';
+import '../../core/directory_provider_platform.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 
 class FilterSettingsPanel extends StatefulWidget {
@@ -294,7 +294,7 @@ class _FilterSettingsPanelState extends State<FilterSettingsPanel> {
     }
 
     final file = selected.first;
-    final path = file.entity.path;
+    final path = file.path;
     final ext = path.split('.').last.toLowerCase();
     final hasExt = path.contains('.');
 

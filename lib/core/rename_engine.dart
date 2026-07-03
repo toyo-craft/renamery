@@ -6,57 +6,9 @@ import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'file_model.dart';
+import 'rename_options.dart';
 
-enum RenameMode {
-  replace,
-  append,
-  prepend,
-  numbering,
-  extension,
-  upper,
-  lower,
-  capitalize,
-  insert,
-  deleteStart,
-  deleteEnd,
-  deleteFrom,
-  deleteFrontTo,
-  deleteBackTo,
-  extensionRemove,
-  extensionAdd,
-  extensionUpper,
-  extensionLower,
-  formatProperCase,
-  listRename,
-  appendDate,
-  convHalfToFull,
-  convFullToHalf,
-  convFullKataToHira,
-  convHiraToFullKata,
-  convFullAlphaToHalfAlpha,
-  convNumToHalf,
-  changeTimestamp,
-  changeAttributes,
-}
-
-enum DatePosition { front, back }
-
-enum NumberingMode {
-  stringNumber,
-  originalNumber,
-  numberString,
-  numberOriginal,
-  baseStringNumber,
-  baseStringOriginal,
-  relativeStringNumber,
-  relativeStringOriginal,
-  numberStringBase,
-  numberStringRelative,
-}
-
-enum CaseConversion { none, upper, lower, capitalize }
-
-enum ValidationType { auto, windows, mac, linux, ios, android }
+export 'rename_options.dart';
 
 class RenameEngine {
   /// 究極の高速化: バイト列から直接パッキングする Isolate 関数

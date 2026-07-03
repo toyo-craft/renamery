@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/directory_provider.dart';
+import '../../core/directory_provider_platform.dart';
 import '../helpers/undo_helper.dart';
 import '../helpers/copy_helper.dart';
 import 'package:path/path.dart' as p;

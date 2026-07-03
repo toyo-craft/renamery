@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/directory_provider.dart';
-import '../../../../core/rename_engine.dart';
+import '../../../../core/directory_provider_platform.dart';
+import '../../../../core/rename_options.dart';
 import 'package:renamery/ui/widgets/number_spin_box.dart';
 import 'package:renamery/ui/widgets/history_text_field.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
@@ -132,8 +132,7 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
                     max: 10,
                     isCompact: isCompact,
                     width: 48,
-                    onChanged: (v) =>
-                        provider.updateRenameSettings(digits: v),
+                    onChanged: (v) => provider.updateRenameSettings(digits: v),
                   ),
                 ],
               ),
@@ -153,15 +152,9 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
                   NumberingMode.numberOriginal),
               _buildRadio(context, provider, l10n.labelNumBaseStringNumber,
                   NumberingMode.baseStringNumber),
-              _buildRadio(
-                  context,
-                  provider,
-                  l10n.labelNumBaseStringOriginal,
+              _buildRadio(context, provider, l10n.labelNumBaseStringOriginal,
                   NumberingMode.baseStringOriginal),
-              _buildRadio(
-                  context,
-                  provider,
-                  l10n.labelNumRelativeStringNumber,
+              _buildRadio(context, provider, l10n.labelNumRelativeStringNumber,
                   NumberingMode.relativeStringNumber),
               _buildRadio(
                   context,
@@ -170,10 +163,7 @@ class _CategoryNumberingState extends State<CategoryNumbering> {
                   NumberingMode.relativeStringOriginal),
               _buildRadio(context, provider, l10n.labelNumNumberStringBase,
                   NumberingMode.numberStringBase),
-              _buildRadio(
-                  context,
-                  provider,
-                  l10n.labelNumNumberStringRelative,
+              _buildRadio(context, provider, l10n.labelNumNumberStringRelative,
                   NumberingMode.numberStringRelative),
             ],
           ),

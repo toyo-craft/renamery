@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../core/file_model.dart';
-import 'dart:io';
 
 // Custom Dialog for Web/Linux/Android fallback
 void showCustomPropertiesDialog(BuildContext context, FileModel fileModel) {
@@ -15,8 +14,8 @@ void showCustomPropertiesDialog(BuildContext context, FileModel fileModel) {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildPropertyRow(
-                  '種類', fileModel.entity is Directory ? 'ファイル フォルダ' : 'ファイル'),
-              _buildPropertyRow('場所', fileModel.entity.parent.path),
+                  '種類', fileModel.isDirectory ? 'ファイル フォルダ' : 'ファイル'),
+              _buildPropertyRow('場所', fileModel.parentPath),
               _buildPropertyRow('サイズ', fileModel.size),
               const Divider(),
               _buildPropertyRow('更新日時', fileModel.dateModified),

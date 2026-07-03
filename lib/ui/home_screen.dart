@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:flutter/services.dart';
-import 'package:window_manager/window_manager.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:path/path.dart' as p;
 
-import '../../core/directory_provider.dart';
+import '../../core/directory_provider_platform.dart';
 import '../../core/file_model.dart';
 import '../../core/settings_service.dart';
 import 'panels/navigation_panel.dart';
@@ -19,9 +18,7 @@ import 'widgets/enlarged_preview_overlay.dart';
 
 import 'helpers/undo_helper.dart';
 import 'helpers/filter_dialog_helper.dart';
-import 'dart:io';
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'widgets/license_agreement_dialog.dart';
 
@@ -32,7 +29,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WindowListener {
+class _HomeScreenState extends State<HomeScreen> {
   late final MultiSplitViewController _threePaneController;
   late final MultiSplitViewController _twoPaneController;
 
@@ -69,10 +66,6 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
   @override
   void initState() {
     super.initState();
-    if (!kIsWeb &&
-        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      windowManager.addListener(this);
-    }
 
     _threePaneController = MultiSplitViewController(
       areas: [
@@ -139,33 +132,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
 
   @override
   void dispose() {
-    if (!kIsWeb &&
-        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      windowManager.removeListener(this);
-    }
     _previewTimer?.cancel();
     super.dispose();
-  }
-
-  @override
-  void onWindowResize() {
-    _saveWindowState();
-  }
-
-  @override
-  void onWindowMove() {
-    _saveWindowState();
-  }
-
-  Future<void> _saveWindowState() async {
-    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) return;
-    final size = await windowManager.getSize();
-    final pos = await windowManager.getPosition();
-    final s = SettingsService();
-    s.set('windowWidth', size.width);
-    s.set('windowHeight', size.height);
-    s.set('windowX', pos.dx);
-    s.set('windowY', pos.dy);
   }
 
   void _loadSplitState() {
@@ -209,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
     int others = 0;
 
     for (final f in selected) {
-      final ext = p.extension(f.entity.path).toLowerCase();
+      final ext = p.extension(f.path).toLowerCase();
       if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.ico', '.svg']
           .contains(ext)) {
         images++;
@@ -460,11 +428,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
                         .where((f) => f.isSelected)
                         .toList();
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _triggerFloatingPreview(
-                          selected.length,
-                          selected.length == 1
-                              ? selected.first.entity.path
-                              : '');
+                      _triggerFloatingPreview(selected.length,
+                          selected.length == 1 ? selected.first.path : '');
                     });
 
                     return Positioned(

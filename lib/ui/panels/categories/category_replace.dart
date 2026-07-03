@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/directory_provider.dart';
-import '../../../../core/rename_engine.dart';
+import '../../../../core/directory_provider_platform.dart';
+import '../../../../core/rename_options.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import '../../widgets/history_text_field.dart';
 

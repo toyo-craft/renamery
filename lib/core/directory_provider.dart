@@ -1276,6 +1276,12 @@ class DirectoryProvider extends ChangeNotifier {
 
   int _selectionVersion = 0;
   int get selectionVersion => _selectionVersion;
+  Future<void> setDirectoryPath(String path,
+      {bool addToHistory = true, String? source, String? contextRoot}) async {
+    await setDirectory(Directory(path),
+        addToHistory: addToHistory, source: source, contextRoot: contextRoot);
+  }
+
   Future<void> setDirectory(Directory directory,
       {bool addToHistory = true, String? source, String? contextRoot}) async {
     _navigationSource = source;

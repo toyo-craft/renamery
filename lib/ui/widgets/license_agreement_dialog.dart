@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:renamery/core/directory_provider.dart';
+import 'package:renamery/core/directory_provider_platform.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 
 class LicenseAgreementDialog extends StatelessWidget {
@@ -78,11 +77,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         actions: [
           FilledButton(
             onPressed: () {
-              if (Platform.isAndroid || Platform.isIOS) {
-                SystemNavigator.pop();
-              } else {
-                exit(0);
-              }
+              SystemNavigator.pop();
             },
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.errorContainer,

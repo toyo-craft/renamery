@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import '../../core/directory_provider.dart';
+import '../../core/directory_provider_platform.dart';
 import '../helpers/undo_helper.dart';
 import '../helpers/copy_helper.dart';
 import '../helpers/filter_dialog_helper.dart';

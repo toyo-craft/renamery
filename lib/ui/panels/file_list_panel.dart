@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:io' as io;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,9 +8,9 @@ import 'package:provider/provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:path/path.dart' as p;
 
-import '../../core/directory_provider.dart';
+import '../../core/directory_provider_platform.dart';
 import '../../core/file_model.dart';
-import '../../core/rename_engine.dart';
+import '../../core/rename_diff_text.dart';
 import '../../utils/platform_utils.dart';
 
 class FileListPanel extends StatefulWidget {
@@ -151,8 +151,7 @@ class _FileListPanelState extends State<FileListPanel> {
       final selected =
           provider.currentFiles.where((f) => f.isSelected).toList();
       if (selected.isNotEmpty) {
-        _startEdit(
-            selected.first.entity.path, selected.first.originalName, provider);
+        _startEdit(selected.first.path, selected.first.originalName, provider);
       }
       return true;
     }
@@ -367,14 +366,13 @@ class _FileListPanelState extends State<FileListPanel> {
                                                       rowHeight),
                                           itemBuilder: (itemContext, index) =>
                                               RepaintBoundary(
-                                            key: ValueKey(
-                                                files[index].entity.path),
+                                            key: ValueKey(files[index].path),
                                             child: _FileRow(
                                               index: index,
                                               file: files[index],
                                               columnWidths: _columnWidths,
                                               isEditing: _editingFilePath ==
-                                                  files[index].entity.path,
+                                                  files[index].path,
                                               isDragging:
                                                   _draggingIndex != null,
                                               isDraggedItem:
@@ -572,7 +570,9 @@ class _FileListPanelState extends State<FileListPanel> {
 
   void _updateSelection(
       double currentAbsY, List<FileModel> files, DirectoryProvider provider) {
-    if (_dragStart == null || _initialSelectionStates == null || files.isEmpty) {
+    if (_dragStart == null ||
+        _initialSelectionStates == null ||
+        files.isEmpty) {
       return;
     }
     debugPrint('DEBUG: Rubber-band selection update triggered');
@@ -631,7 +631,7 @@ class _FileListPanelState extends State<FileListPanel> {
                         ),
                         onSubmitted: (val) {
                           if (val.isNotEmpty) {
-                            provider.setDirectory(io.Directory(val),
+                            provider.setDirectoryPath(val,
                                 source: 'address_bar');
                           }
                           setState(() => _isPathEditing = false);
@@ -674,7 +674,7 @@ class _FileListPanelState extends State<FileListPanel> {
     if (path.isEmpty) return const SizedBox.shrink();
 
     // Windowsのドライブレター対応
-    final isWindows = !kIsWeb && io.Platform.isWindows;
+    final isWindows = defaultTargetPlatform == TargetPlatform.windows;
     final List<String> segments = p.split(path);
     final List<Widget> items = [];
 
@@ -694,7 +694,7 @@ class _FileListPanelState extends State<FileListPanel> {
 
       items.add(
         InkWell(
-          onTap: () => provider.setDirectory(io.Directory(targetPath)),
+          onTap: () => provider.setDirectoryPath(targetPath),
           borderRadius: BorderRadius.circular(4),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -864,7 +864,7 @@ class _FileListPanelState extends State<FileListPanel> {
           await provider.cutSelection();
           break;
         case 'rename':
-          _startEdit(file.entity.path, file.originalName, provider);
+          _startEdit(file.path, file.originalName, provider);
           break;
         case 'batch_rename':
           await provider.executeRename();
@@ -999,7 +999,7 @@ class _FileRow extends StatelessWidget {
           final provider = context.read<DirectoryProvider>();
           final rowH = provider.touchMode ? 50.0 : 34.0;
           final iconS = provider.touchMode ? 28.0 : 18.0;
-          final isDir = file.entity is io.Directory;
+          final isDir = file.isDirectory;
           final isGhost = isDragging && file.isSelected && !isDraggedItem;
           final baseStyle = TextStyle(
               fontSize: provider.touchMode ? 15.0 : 12.0,
@@ -1067,10 +1067,9 @@ class _FileRow extends StatelessWidget {
                             GestureDetector(
                                 onDoubleTap: () {
                                   if (isDir) {
-                                    provider.setDirectory(
-                                        io.Directory(file.entity.path));
+                                    provider.setDirectoryPath(file.path);
                                   } else {
-                                    PlatformUtils.openFile(file.entity.path);
+                                    PlatformUtils.openFile(file.path);
                                   }
                                 },
                                 child: Icon(
@@ -1109,8 +1108,7 @@ class _FileRow extends StatelessWidget {
                                       )
                                     : GestureDetector(
                                         onDoubleTap: () => onStartEdit(
-                                            file.entity.path,
-                                            file.originalName),
+                                            file.path, file.originalName),
                                         child: Text(file.originalName,
                                             overflow: TextOverflow.ellipsis,
                                             style: baseStyle))),
@@ -1123,7 +1121,7 @@ class _FileRow extends StatelessWidget {
                         Row(children: [
                           Expanded(
                               child: RichText(
-                                  text: RenameEngine.buildDiffTextSpan(
+                                  text: RenameDiffText.build(
                                       context,
                                       file.originalName,
                                       file.newName,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For Clipboard
 import 'package:material_symbols_icons/symbols.dart';
-import '../../core/directory_provider.dart';
+import '../../core/directory_provider_platform.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 
 class CopyHelper {
@@ -71,7 +71,7 @@ class CopyHelper {
     } else if (value == 3) {
       // Full List
       text = target.map((f) {
-        return f.entity.path;
+        return f.path;
       }).join('\n');
       message = l10n.labelMsgCopyFullPathsSuccess(target.length);
     }
@@ -86,9 +86,10 @@ class CopyHelper {
   }
 
   // モバイル版：コピー形式を選択するボトムシートを表示
-  static void showCopyOptionsBottomSheet(BuildContext context, DirectoryProvider provider) {
+  static void showCopyOptionsBottomSheet(
+      BuildContext context, DirectoryProvider provider) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
@@ -101,7 +102,8 @@ class CopyHelper {
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
                   l10n.labelCopyOptions,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
               const Divider(height: 1),
@@ -149,7 +151,10 @@ class CopyHelper {
     );
   }
 
-  static Widget _buildBottomSheetItem(BuildContext context, {required IconData icon, required String title, required VoidCallback onTap}) {
+  static Widget _buildBottomSheetItem(BuildContext context,
+      {required IconData icon,
+      required String title,
+      required VoidCallback onTap}) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title, style: const TextStyle(fontSize: 14)),

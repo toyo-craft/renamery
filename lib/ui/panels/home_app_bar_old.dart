@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/directory_provider.dart';
+import '../../core/directory_provider_platform.dart';
 import '../settings_screen.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import '../helpers/undo_helper.dart';
