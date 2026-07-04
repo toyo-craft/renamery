@@ -11,4 +11,6 @@ class AppPlatform {
     required bool isDarkMode,
     required Color surface,
   }) {}
+
+  static Future<bool> exitApplication() async => false;
 }

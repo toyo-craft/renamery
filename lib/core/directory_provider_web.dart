@@ -74,7 +74,7 @@ class DirectoryProvider extends ChangeNotifier {
   bool _isCutMode = false;
   bool _canPaste = false;
   bool _enableBetaFeatures = false;
-  bool _isLicenseAccepted = true;
+  bool _isLicenseAccepted = false;
   bool _hasUpdate = false;
   String? _latestVersion;
   String? _errorMessage;
@@ -324,7 +324,7 @@ class DirectoryProvider extends ChangeNotifier {
     _isCompactMode = _settings.getBool('isCompactMode') ?? true;
     _touchMode = _settings.getBool('touchMode') ?? false;
     _enableBetaFeatures = _settings.getBool('enableBetaFeatures') ?? false;
-    _isLicenseAccepted = _settings.getBool('isLicenseAccepted') ?? true;
+    _isLicenseAccepted = _settings.getBool('isLicenseAccepted') ?? false;
     _filterText = _settings.getString('filterText') ?? '';
     _isFilterSpecific = _filterText.isNotEmpty;
     _hideSystemFiles = _settings.getBool('hideSystemFiles') ?? false;

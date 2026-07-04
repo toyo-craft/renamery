@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 
@@ -62,5 +63,14 @@ class AppPlatform {
       );
       await windowManager.setBackgroundColor(surface);
     });
+  }
+
+  static Future<bool> exitApplication() async {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      await windowManager.close();
+      return true;
+    }
+    await SystemNavigator.pop();
+    return true;
   }
 }

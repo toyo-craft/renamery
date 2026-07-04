@@ -162,7 +162,7 @@ async function installRenameryFsMock(
   }, options);
 }
 
-async function openApp(page: Page) {
+async function openApp(page: Page, options: { acceptLicense?: boolean } = {}) {
   await page.goto('/');
   await page.locator('flt-glass-pane').waitFor({ state: 'attached' });
 
@@ -172,6 +172,13 @@ async function openApp(page: Page) {
       const placeholder = document.querySelector('flt-semantics-placeholder');
       if (placeholder instanceof HTMLElement) placeholder.click();
     });
+  }
+
+  if (options.acceptLicense === false) return;
+
+  const acceptLicense = page.getByRole('button', { name: '同意して利用を開始する' });
+  if (await acceptLicense.isVisible().catch(() => false)) {
+    await acceptLicense.click();
   }
 }
 
@@ -191,6 +198,25 @@ async function openMockDirectory(page: Page) {
 }
 
 test.describe('ReNamery Web MVP', () => {
+  test('requires license agreement on first launch', async ({ page }) => {
+    await installRenameryFsMock(page);
+    await openApp(page, { acceptLicense: false });
+
+    await expect(page.getByText('ソフトウェア利用規約')).toBeVisible();
+    await expect(page.getByRole('button', { name: '同意して利用を開始する' })).toBeVisible();
+  });
+
+  test('explains that declining cannot close the browser tab', async ({ page }) => {
+    await installRenameryFsMock(page);
+    await openApp(page, { acceptLicense: false });
+
+    await page.getByRole('button', { name: '同意しない（アプリを終了する）' }).click();
+
+    await expect(page.getByText('アプリを終了できません')).toBeVisible();
+    await page.getByRole('button', { name: '閉じる' }).click();
+    await expect(page.getByText('ソフトウェア利用規約')).toBeVisible();
+  });
+
   test('shows the initial folder selection prompt', async ({ page }) => {
     await installRenameryFsMock(page);
     await openApp(page);
@@ -251,7 +277,7 @@ test.describe('ReNamery Web MVP', () => {
     await openApp(page);
     await openMockDirectory(page);
 
-    await entryRow(page, 'old-file.txt').getByRole('checkbox').click();
+    await entryRow(page, 'old-file.txt').click();
     await page.keyboard.press('F2');
     await page.keyboard.press('Control+A');
     await page.keyboard.type('manual-new.txt');
@@ -271,7 +297,7 @@ test.describe('ReNamery Web MVP', () => {
     await openApp(page);
     await openMockDirectory(page);
 
-    await entryRow(page, 'sub-folder').getByRole('checkbox').click();
+    await entryRow(page, 'sub-folder').click();
     await page.keyboard.press('F2');
     await page.keyboard.press('Control+A');
     await page.keyboard.type('renamed-folder');
@@ -289,7 +315,7 @@ test.describe('ReNamery Web MVP', () => {
     await openApp(page);
     await openMockDirectory(page);
 
-    await entryRow(page, 'old-file.txt').getByRole('checkbox').click();
+    await entryRow(page, 'old-file.txt').click();
     await page.keyboard.press('F2');
     await page.keyboard.press('Control+A');
     await page.keyboard.type('manual-new.txt');

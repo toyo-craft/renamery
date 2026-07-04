@@ -8,6 +8,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Web DirectoryProvider', () {
+    test('license is not accepted by default for first launch', () async {
+      final provider = DirectoryProvider(fileSystem: FakeWebFileSystemClient());
+
+      await provider.init();
+
+      expect(provider.isLicenseAccepted, false);
+    });
+
     test('unsupported browser reports an error without changing directory',
         () async {
       final fs = FakeWebFileSystemClient(isSupported: false);

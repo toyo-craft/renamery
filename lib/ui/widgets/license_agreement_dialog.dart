@@ -1,8 +1,8 @@
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:renamery/core/directory_provider_platform.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import 'package:renamery/utils/app_platform.dart';
 
 class LicenseAgreementDialog extends StatelessWidget {
   const LicenseAgreementDialog({super.key});
@@ -76,8 +76,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         ),
         actions: [
           FilledButton(
-            onPressed: () {
-              SystemNavigator.pop();
+            onPressed: () async {
+              final didRequestExit = await AppPlatform.exitApplication();
+              if (didRequestExit || !context.mounted) return;
+              await showDialog<void>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('アプリを終了できません'),
+                  content: const Text(
+                    'ブラウザではアプリ側からタブを閉じられません。利用しない場合は、このタブを閉じてください。',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.labelDialogClose),
+                    ),
+                  ],
+                ),
+              );
             },
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.errorContainer,

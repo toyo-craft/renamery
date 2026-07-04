@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import '../../core/directory_provider_platform.dart';
 import '../../core/file_model.dart';
 import '../../core/settings_service.dart';
+import '../../utils/app_platform.dart';
 import 'panels/navigation_panel.dart';
 import 'panels/file_list_panel.dart';
 import 'panels/settings_panel.dart';
@@ -362,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           if (shouldExit == true) {
             // ユーザーが明示的に終了を選択した場合のみ、アプリを閉じる
-            await SystemNavigator.pop();
+            await AppPlatform.exitApplication();
           }
         },
         child: Consumer<DirectoryProvider>(
