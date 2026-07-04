@@ -22,6 +22,7 @@ class _UnsupportedWebFileSystemClient implements WebFileSystemClient {
   Future<List<WebFileEntry>> listDirectory(
     Object directoryHandle,
     String relativePath,
+    bool recursive,
   ) async =>
       const [];
 

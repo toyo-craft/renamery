@@ -11,6 +11,7 @@ abstract class WebFileSystemClient {
   Future<List<WebFileEntry>> listDirectory(
     Object directoryHandle,
     String relativePath,
+    bool recursive,
   );
   Future<void> renameFile({
     required Object parentHandle,

@@ -373,6 +373,7 @@ class DirectoryProvider extends ChangeNotifier {
 
   Directory? get currentDirectory => _currentDirectory;
   List<FileModel> get currentFiles => _currentFiles;
+  List<FileModel> get directoryEntries => _allFiles;
   int get allFilesCount => _allFiles.length;
   bool get isLoading => _isLoading;
   bool get canUndo => _undoManager.canUndo;
@@ -1276,6 +1277,47 @@ class DirectoryProvider extends ChangeNotifier {
 
   int _selectionVersion = 0;
   int get selectionVersion => _selectionVersion;
+  bool get supportsDirectPathInput => true;
+  bool get hasUsableDirectory => _currentDirectory != null;
+
+  List<String> get breadcrumbLabels {
+    final path = _currentDirectory?.path ?? '';
+    if (path.isEmpty) return const [];
+    return p
+        .split(path)
+        .map(
+            (segment) => segment.isEmpty && !Platform.isWindows ? '/' : segment)
+        .toList(growable: false);
+  }
+
+  Future<void> openDirectory(FileModel file) async {
+    if (!file.isDirectory) return;
+    await setDirectoryPath(file.path);
+  }
+
+  Future<void> pickLocalDirectory() async {}
+
+  Future<void> openBreadcrumb(int index) async {
+    final path = _currentDirectory?.path ?? '';
+    if (path.isEmpty) return;
+
+    final segments = p.split(path);
+    if (index < 0 || index >= segments.length) return;
+
+    String targetPath = '';
+    for (var i = 0; i <= index; i++) {
+      final segment = segments[i];
+      if (i == 0 && Platform.isWindows && segment.contains(':')) {
+        targetPath =
+            segment.endsWith(p.separator) ? segment : segment + p.separator;
+      } else {
+        targetPath = p.join(targetPath, segment);
+      }
+    }
+
+    if (targetPath.isNotEmpty) await setDirectoryPath(targetPath);
+  }
+
   Future<void> setDirectoryPath(String path,
       {bool addToHistory = true, String? source, String? contextRoot}) async {
     await setDirectory(Directory(path),

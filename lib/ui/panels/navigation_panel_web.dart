@@ -65,7 +65,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
   Widget _buildTreeSection() {
     final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<DirectoryProvider>();
-    final folders = provider.currentFiles
+    final folders = provider.directoryEntries
         .where((file) => file.isDirectory)
         .toList(growable: false);
 

@@ -63,6 +63,115 @@ void main() {
 
       expect(_selection(provider), [false, false, true, true]);
     });
+
+    testWidgets('small pointer jitter on a row does not clear selection',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1600, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: provider,
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SizedBox.expand(child: FileListPanel()),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rowY = tester.getCenter(find.text('02.txt')).dy;
+      final gesture = await tester.startGesture(Offset(700, rowY));
+      await gesture.moveBy(const Offset(8, 2));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(_selection(provider), [false, true, false, false]);
+    });
+
+    testWidgets('clicking a file name toggles selection', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1600, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: provider,
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SizedBox.expand(child: FileListPanel()),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('02.txt'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsNothing);
+      expect(_selection(provider), [false, true, false, false]);
+    });
+
+    testWidgets('double-clicking a file name starts inline rename',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1600, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: provider,
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SizedBox.expand(child: FileListPanel()),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('02.txt'));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.text('02.txt'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('double-clicking name column whitespace does not start rename',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1600, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: provider,
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SizedBox.expand(child: FileListPanel()),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rowY = tester.getCenter(find.text('02.txt')).dy;
+      await tester.tapAt(Offset(360, rowY));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tapAt(Offset(360, rowY));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsNothing);
+      expect(_selection(provider), [false, false, false, false]);
+    });
   });
 }
 

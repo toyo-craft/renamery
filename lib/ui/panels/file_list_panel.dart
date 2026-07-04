@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
-import 'package:path/path.dart' as p;
 
 import '../../core/directory_provider_platform.dart';
 import '../../core/file_model.dart';
@@ -31,6 +28,12 @@ class _FileListPanelState extends State<FileListPanel> {
 
   String? _editingFilePath;
   int? _lastSelectedIndex; // 範囲選択の起点（アンカー）
+  String? _lastPrimaryTapKey;
+  DateTime? _lastPrimaryTapAt;
+  bool _suppressNextRowTap = false;
+  int? _pendingNameTapIndex;
+  VoidCallback? _pendingDoubleClickAction;
+  Offset? _dragPendingStart;
   Offset? _dragStart;
   Offset? _dragUpdate;
   List<bool>? _initialSelectionStates;
@@ -41,6 +44,8 @@ class _FileListPanelState extends State<FileListPanel> {
   static const double _widthDragHandle = 32.0;
   static const double _widthCheckbox = 32.0;
   static const double _widthSeparator = 16.0;
+  static const double _dragSelectStartThreshold = 24.0;
+  static const Duration _doubleClickInterval = Duration(milliseconds: 450);
 
   @override
   void initState() {
@@ -101,9 +106,10 @@ class _FileListPanelState extends State<FileListPanel> {
         provider.setInlineRenaming(false);
         handled = true;
       }
-      if (_dragStart != null) {
+      if (_dragStart != null || _dragPendingStart != null) {
         _stopAutoScroll();
         setState(() {
+          _dragPendingStart = null;
           _dragStart = null;
           _dragUpdate = null;
           _initialSelectionStates = null;
@@ -216,6 +222,12 @@ class _FileListPanelState extends State<FileListPanel> {
     }
 
     final rowHeight = provider.touchMode ? 50.0 : 34.0;
+    final showWebEmptyPrompt =
+        !provider.supportsDirectPathInput && !provider.hasUsableDirectory;
+
+    if (showWebEmptyPrompt) {
+      return _buildWebEmptyPrompt(context, provider);
+    }
 
     return Column(
       children: [
@@ -277,27 +289,40 @@ class _FileListPanelState extends State<FileListPanel> {
                                             !provider.isInlineRenaming &&
                                             event.localPosition.dx > safeZone &&
                                             files.isNotEmpty) {
-                                          setState(() {
-                                            _dragStart = Offset(
-                                                event.localPosition.dx,
-                                                event.localPosition.dy +
-                                                    _verticalController.offset);
-                                            _dragUpdate = _dragStart;
-                                            _initialSelectionStates = files
-                                                .map((f) => f.isSelected)
-                                                .toList();
-                                          });
+                                          _dragPendingStart = Offset(
+                                              event.localPosition.dx,
+                                              event.localPosition.dy +
+                                                  _verticalController.offset);
+                                          _dragStart = null;
+                                          _dragUpdate = null;
+                                          _initialSelectionStates = files
+                                              .map((f) => f.isSelected)
+                                              .toList();
                                         }
                                       },
                                       onPointerMove: (event) {
-                                        if (_dragStart != null) {
+                                        if (_dragPendingStart != null ||
+                                            _dragStart != null) {
                                           final currentAbsY =
                                               event.localPosition.dy +
                                                   _verticalController.offset;
+                                          final currentPosition = Offset(
+                                              event.localPosition.dx,
+                                              currentAbsY);
+                                          if (_dragStart == null) {
+                                            final pendingStart =
+                                                _dragPendingStart;
+                                            if (pendingStart == null ||
+                                                (currentPosition - pendingStart)
+                                                        .distance <
+                                                    _dragSelectStartThreshold) {
+                                              return;
+                                            }
+                                            _dragStart = pendingStart;
+                                            _dragPendingStart = null;
+                                          }
                                           setState(() {
-                                            _dragUpdate = Offset(
-                                                event.localPosition.dx,
-                                                currentAbsY);
+                                            _dragUpdate = currentPosition;
                                           });
                                           const scrollZone = 40.0;
                                           if (event.localPosition.dy <
@@ -318,11 +343,32 @@ class _FileListPanelState extends State<FileListPanel> {
                                       },
                                       onPointerUp: (_) {
                                         _stopAutoScroll();
-                                        setState(() {
+                                        final pendingDoubleClickAction =
+                                            _pendingDoubleClickAction;
+                                        _pendingDoubleClickAction = null;
+                                        if (_dragStart != null ||
+                                            _dragUpdate != null) {
+                                          setState(() {
+                                            _dragPendingStart = null;
+                                            _dragStart = null;
+                                            _dragUpdate = null;
+                                            _initialSelectionStates = null;
+                                          });
+                                        } else {
+                                          _dragPendingStart = null;
                                           _dragStart = null;
                                           _dragUpdate = null;
                                           _initialSelectionStates = null;
-                                        });
+                                        }
+                                        if (pendingDoubleClickAction != null) {
+                                          pendingDoubleClickAction.call();
+                                          WidgetsBinding.instance
+                                              .addPostFrameCallback((_) {
+                                            if (mounted) {
+                                              _suppressNextRowTap = false;
+                                            }
+                                          });
+                                        }
                                       },
                                       child: NotificationListener<
                                           ScrollNotification>(
@@ -383,12 +429,22 @@ class _FileListPanelState extends State<FileListPanel> {
                                               onStartEdit: (path, name) =>
                                                   _startEdit(
                                                       path, name, provider),
+                                              onQueueDoubleClick:
+                                                  _queueDoubleClickAction,
                                               onEndEdit: () => setState(() {
                                                 _editingFilePath = null;
                                                 provider
                                                     .setInlineRenaming(false);
                                               }),
                                               onTap: (idx) {
+                                                final isNameTap =
+                                                    _pendingNameTapIndex == idx;
+                                                _pendingNameTapIndex = null;
+                                                if (!isNameTap &&
+                                                    _suppressNextRowTap) {
+                                                  _suppressNextRowTap = false;
+                                                  return;
+                                                }
                                                 // 行タップ時にフォーカスを要求（重複タップ問題の解決への第一歩）
                                                 _fileListFocusNode
                                                     .requestFocus();
@@ -423,6 +479,9 @@ class _FileListPanelState extends State<FileListPanel> {
                                                       files[idx]);
                                                   _lastSelectedIndex = idx;
                                                 }
+                                              },
+                                              onNameTap: (idx) {
+                                                _pendingNameTapIndex = idx;
                                               },
                                               onShowMenu: (details, file) =>
                                                   _showRowContextMenu(
@@ -487,6 +546,52 @@ class _FileListPanelState extends State<FileListPanel> {
     );
   }
 
+  Widget _buildWebEmptyPrompt(
+      BuildContext context, DirectoryProvider provider) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: Card(
+          elevation: 0,
+          color: colorScheme.surfaceContainerLow,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.folder_open,
+                  size: 64,
+                  color: colorScheme.primary,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Web版では、最初にローカルフォルダを選択してください。',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Windows版と同じ画面構成で操作しますが、ブラウザ制約により明示選択したフォルダ配下だけを扱います。',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed:
+                      provider.isLoading ? null : provider.pickLocalDirectory,
+                  icon: const Icon(Icons.add),
+                  label: const Text('フォルダを選択'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _startEdit(String path, String name, DirectoryProvider provider) {
     setState(() {
       _editingFilePath = path;
@@ -496,6 +601,29 @@ class _FileListPanelState extends State<FileListPanel> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _renameFocusNode.requestFocus();
     });
+  }
+
+  bool _queueDoubleClickAction(String key, VoidCallback action) {
+    final now = DateTime.now();
+    final isDoubleClick = _lastPrimaryTapKey == key &&
+        _lastPrimaryTapAt != null &&
+        now.difference(_lastPrimaryTapAt!) <= _doubleClickInterval;
+
+    _lastPrimaryTapKey = key;
+    _lastPrimaryTapAt = now;
+
+    if (!isDoubleClick) return false;
+
+    _lastPrimaryTapKey = null;
+    _lastPrimaryTapAt = null;
+    _dragPendingStart = null;
+    _dragStart = null;
+    _dragUpdate = null;
+    _initialSelectionStates = null;
+    _pendingNameTapIndex = null;
+    _suppressNextRowTap = true;
+    _pendingDoubleClickAction = action;
+    return true;
   }
 
   Widget _buildProxyDecorator(Widget child, int index,
@@ -589,8 +717,8 @@ class _FileListPanelState extends State<FileListPanel> {
   Widget _buildAddressBar(
       BuildContext context, DirectoryProvider provider, AppLocalizations l10n) {
     final hasSelection = provider.selectedFilesCount > 0;
-    final currentPath = provider.currentDirectory?.path ?? '';
     final colorScheme = Theme.of(context).colorScheme;
+    final supportsDirectPathInput = provider.supportsDirectPathInput;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -615,10 +743,10 @@ class _FileListPanelState extends State<FileListPanel> {
                 border: Border.all(color: colorScheme.outlineVariant),
               ),
               child: InkWell(
-                onTap: _isPathEditing
+                onTap: !supportsDirectPathInput || _isPathEditing
                     ? null
                     : () => setState(() => _isPathEditing = true),
-                child: _isPathEditing
+                child: _isPathEditing && supportsDirectPathInput
                     ? TextField(
                         controller: _pathController,
                         autofocus: true,
@@ -639,7 +767,7 @@ class _FileListPanelState extends State<FileListPanel> {
                         onTapOutside: (_) =>
                             setState(() => _isPathEditing = false),
                       )
-                    : _buildBreadcrumbs(context, provider, currentPath),
+                    : _buildBreadcrumbs(context, provider),
               ),
             ),
           ),
@@ -669,37 +797,24 @@ class _FileListPanelState extends State<FileListPanel> {
     );
   }
 
-  Widget _buildBreadcrumbs(
-      BuildContext context, DirectoryProvider provider, String path) {
-    if (path.isEmpty) return const SizedBox.shrink();
+  Widget _buildBreadcrumbs(BuildContext context, DirectoryProvider provider) {
+    final labels = provider.breadcrumbLabels;
+    if (labels.isEmpty) return const SizedBox.shrink();
 
-    // Windowsのドライブレター対応
-    final isWindows = defaultTargetPlatform == TargetPlatform.windows;
-    final List<String> segments = p.split(path);
     final List<Widget> items = [];
 
-    String cumulativePath = '';
-    for (int i = 0; i < segments.length; i++) {
-      final segment = segments[i];
-
-      // パスの結合
-      if (i == 0 && isWindows && segment.contains(':')) {
-        cumulativePath = segment + p.separator;
-      } else {
-        cumulativePath = p.join(cumulativePath, segment);
-      }
-
-      final targetPath = cumulativePath;
-      final isLast = i == segments.length - 1;
+    for (var i = 0; i < labels.length; i++) {
+      final label = labels[i];
+      final isLast = i == labels.length - 1;
 
       items.add(
         InkWell(
-          onTap: () => provider.setDirectoryPath(targetPath),
+          onTap: () => provider.openBreadcrumb(i),
           borderRadius: BorderRadius.circular(4),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             child: Text(
-              segment.isEmpty && !isWindows ? '/' : segment,
+              label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
@@ -974,8 +1089,10 @@ class _FileRow extends StatelessWidget {
   final TextEditingController renameController;
   final FocusNode renameFocusNode;
   final Function(String, String) onStartEdit;
+  final bool Function(String, VoidCallback) onQueueDoubleClick;
   final VoidCallback onEndEdit;
   final Function(int) onTap;
+  final Function(int) onNameTap;
   final Function(TapDownDetails, FileModel) onShowMenu;
   const _FileRow(
       {required this.index,
@@ -987,8 +1104,10 @@ class _FileRow extends StatelessWidget {
       required this.renameController,
       required this.renameFocusNode,
       required this.onStartEdit,
+      required this.onQueueDoubleClick,
       required this.onEndEdit,
       required this.onTap,
+      required this.onNameTap,
       required this.onShowMenu});
   @override
   Widget build(BuildContext context) {
@@ -1065,9 +1184,20 @@ class _FileRow extends StatelessWidget {
                           children: [
                             // アイコンは編集状態に関わらず常に表示
                             GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTapDown: (_) => onQueueDoubleClick(
+                                      'icon:${file.path}',
+                                      () {
+                                        if (isDir) {
+                                          provider.openDirectory(file);
+                                        } else {
+                                          PlatformUtils.openFile(file.path);
+                                        }
+                                      },
+                                    ),
                                 onDoubleTap: () {
                                   if (isDir) {
-                                    provider.setDirectoryPath(file.path);
+                                    provider.openDirectory(file);
                                   } else {
                                     PlatformUtils.openFile(file.path);
                                   }
@@ -1106,12 +1236,25 @@ class _FileRow extends StatelessWidget {
                                           onEndEdit();
                                         },
                                       )
-                                    : GestureDetector(
-                                        onDoubleTap: () => onStartEdit(
-                                            file.path, file.originalName),
-                                        child: Text(file.originalName,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: baseStyle))),
+                                    : Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Listener(
+                                            behavior:
+                                                HitTestBehavior.translucent,
+                                            onPointerDown: (_) {
+                                              final isDoubleClick =
+                                                  onQueueDoubleClick(
+                                                'name:${file.path}',
+                                                () => onStartEdit(file.path,
+                                                    file.originalName),
+                                              );
+                                              if (!isDoubleClick) {
+                                                onNameTap(index);
+                                              }
+                                            },
+                                            child: Text(file.originalName,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: baseStyle)))),
                           ],
                         ),
                         baseStyle),

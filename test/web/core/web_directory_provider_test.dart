@@ -124,6 +124,8 @@ void main() {
         'Child',
       ]);
       expect(provider.currentFiles.map((entry) => entry.name), ['inside.txt']);
+      expect(provider.currentFiles.single.parentPath, 'Root/Child');
+      expect(provider.currentFiles.single.displayRelativePath, '');
     });
 
     test('opening breadcrumb returns to parent directory', () async {
@@ -148,6 +150,43 @@ void main() {
         'Root',
       ]);
       expect(provider.currentFiles.map((entry) => entry.name), ['Child']);
+    });
+
+    test('recursive search includes files in child directories', () async {
+      final root = FakeHandle('root');
+      final child = FakeHandle('child');
+      final fs = FakeWebFileSystemClient()
+        ..pickResult = savedDirectory('1', 'Root', root)
+        ..entries[root] = [
+          directoryEntry(name: 'Child', handle: child, parent: root),
+          fileEntry(name: 'root.txt', parent: root),
+        ]
+        ..entries[child] = [
+          fileEntry(name: 'inside.txt', parent: child),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      await provider.pickLocalDirectory();
+      expect(provider.currentFiles.map((entry) => entry.name), [
+        'Child',
+        'root.txt',
+      ]);
+
+      await provider.updateFilterSettings(recursive: true);
+
+      expect(provider.currentFiles.map((entry) => entry.name), [
+        'Child',
+        'inside.txt',
+        'root.txt',
+      ]);
+      final inside = provider.currentFiles[1];
+      expect(inside.parentPath, 'Root/Child');
+      expect(inside.displayRelativePath, 'Child');
+      expect(provider.directoryEntries.map((entry) => entry.name), [
+        'Child',
+        'root.txt',
+      ]);
     });
 
     test('selection toggles and selectAll update selected count', () async {
@@ -195,6 +234,29 @@ void main() {
 
       expect(provider.currentFiles[0].newName, 'old-folder');
       expect(provider.currentFiles[1].newName, 'new-file.txt');
+    });
+
+    test('folder visibility filter does not hide navigation directory entries',
+        () async {
+      final root = FakeHandle('root');
+      final folder = FakeHandle('folder');
+      final fs = FakeWebFileSystemClient()
+        ..pickResult = savedDirectory('1', 'Root', root)
+        ..entries[root] = [
+          directoryEntry(name: 'Folder', handle: folder, parent: root),
+          fileEntry(name: 'file.txt', parent: root),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      await provider.pickLocalDirectory();
+      provider.updateFilterSettings(showFolders: false);
+
+      expect(provider.currentFiles.map((entry) => entry.name), ['file.txt']);
+      expect(
+        provider.directoryEntries.where((entry) => entry.isDirectory),
+        hasLength(1),
+      );
     });
 
     test('numbering preview keeps extensions and skips directories', () async {
@@ -271,7 +333,7 @@ void main() {
       expect(provider.canExecute, false);
     });
 
-    test('directory rename is explicitly blocked in MVP', () async {
+    test('directory rename is supported', () async {
       final root = FakeHandle('root');
       final folder = FakeHandle('folder');
       final fs = FakeWebFileSystemClient()
@@ -287,11 +349,23 @@ void main() {
       provider.toggleSelection(folderEntry);
       provider.setNewName(folderEntry, 'Renamed');
 
-      expect(folderEntry.errorMessage, contains('後続対応'));
-      expect(provider.canExecute, false);
+      expect(folderEntry.errorMessage, isNull);
+      expect(provider.canExecute, true);
+
+      final count = await provider.executeRename();
+
+      expect(count, 1);
+      expect(fs.renameCalls, [
+        const RenameCall(
+          parentId: 'root',
+          oldName: 'Folder',
+          newName: 'Renamed',
+        ),
+      ]);
+      expect(provider.currentFiles.map((entry) => entry.name), ['Renamed']);
     });
 
-    test('canExecute requires a selected changed valid file', () async {
+    test('canExecute requires a selected changed valid entry', () async {
       final root = FakeHandle('root');
       final fs = FakeWebFileSystemClient()
         ..pickResult = savedDirectory('1', 'Root', root)
@@ -314,7 +388,8 @@ void main() {
       expect(provider.canExecute, false);
     });
 
-    test('executeRename calls renameFile for selected changed valid files only',
+    test(
+        'executeRename calls renameFile for selected changed valid entries only',
         () async {
       final root = FakeHandle('root');
       final folder = FakeHandle('folder');
@@ -337,12 +412,18 @@ void main() {
       provider.toggleSelection(folderEntry);
       provider.toggleSelection(changedFile);
       provider.toggleSelection(unchangedFile);
+      provider.setNewName(folderEntry, 'Renamed');
       provider.setNewName(changedFile, 'new.txt');
 
       final count = await provider.executeRename();
 
-      expect(count, 1);
+      expect(count, 2);
       expect(fs.renameCalls, [
+        const RenameCall(
+          parentId: 'root',
+          oldName: 'Folder',
+          newName: 'Renamed',
+        ),
         const RenameCall(
           parentId: 'root',
           oldName: 'old.txt',
@@ -350,10 +431,93 @@ void main() {
         ),
       ]);
       expect(provider.currentFiles.map((entry) => entry.name), [
-        'Folder',
+        'Renamed',
         'new.txt',
         'unchanged.txt',
       ]);
+      expect(provider.canUndo, true);
+    });
+
+    test('renameOneFile calls renameFile immediately', () async {
+      final root = FakeHandle('root');
+      final fs = FakeWebFileSystemClient()
+        ..pickResult = savedDirectory('1', 'Root', root)
+        ..entries[root] = [
+          fileEntry(name: 'old.txt', parent: root),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      await provider.pickLocalDirectory();
+      await provider.renameOneFile(provider.currentFiles.single, 'new.txt');
+
+      expect(fs.renameCalls, [
+        const RenameCall(
+          parentId: 'root',
+          oldName: 'old.txt',
+          newName: 'new.txt',
+        ),
+      ]);
+      expect(provider.currentFiles.map((entry) => entry.name), ['new.txt']);
+      expect(provider.canUndo, true);
+    });
+
+    test('renameOneFile calls renameFile immediately for a directory',
+        () async {
+      final root = FakeHandle('root');
+      final folder = FakeHandle('folder');
+      final fs = FakeWebFileSystemClient()
+        ..pickResult = savedDirectory('1', 'Root', root)
+        ..entries[root] = [
+          directoryEntry(name: 'Folder', handle: folder, parent: root),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      await provider.pickLocalDirectory();
+      await provider.renameOneFile(provider.currentFiles.single, 'Renamed');
+
+      expect(fs.renameCalls, [
+        const RenameCall(
+          parentId: 'root',
+          oldName: 'Folder',
+          newName: 'Renamed',
+        ),
+      ]);
+      expect(provider.currentFiles.map((entry) => entry.name), ['Renamed']);
+      expect(provider.canUndo, true);
+    });
+
+    test('undo reverts the last inline rename', () async {
+      final root = FakeHandle('root');
+      final fs = FakeWebFileSystemClient()
+        ..pickResult = savedDirectory('1', 'Root', root)
+        ..entries[root] = [
+          fileEntry(name: 'old.txt', parent: root),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      await provider.pickLocalDirectory();
+      await provider.renameOneFile(provider.currentFiles.single, 'new.txt');
+      final result = await provider.undo();
+
+      expect(result['count'], 1);
+      expect(result['errors'], isEmpty);
+      expect(fs.renameCalls, [
+        const RenameCall(
+          parentId: 'root',
+          oldName: 'old.txt',
+          newName: 'new.txt',
+        ),
+        const RenameCall(
+          parentId: 'root',
+          oldName: 'new.txt',
+          newName: 'old.txt',
+        ),
+      ]);
+      expect(provider.currentFiles.map((entry) => entry.name), ['old.txt']);
+      expect(provider.canUndo, false);
     });
 
     test('executeRename does not run when selected entries include errors',
@@ -482,8 +646,41 @@ class FakeWebFileSystemClient implements WebFileSystemClient {
   Future<List<WebFileEntry>> listDirectory(
     Object directoryHandle,
     String relativePath,
+    bool recursive,
   ) async {
-    return List<WebFileEntry>.from(entries[directoryHandle] ?? const []);
+    final direct = (entries[directoryHandle] ?? const [])
+        .map((entry) => _withRelativeBase(entry, relativePath))
+        .toList();
+    if (!recursive) return direct;
+
+    final result = <WebFileEntry>[];
+    for (final entry in direct) {
+      result.add(entry);
+      if (entry.isDirectory) {
+        final children = await listDirectory(
+          entry.handle,
+          entry.relativePath,
+          true,
+        );
+        result.addAll(children);
+      }
+    }
+    return result;
+  }
+
+  WebFileEntry _withRelativeBase(WebFileEntry entry, String base) {
+    final relativePath = base.isEmpty || entry.relativePath.startsWith('$base/')
+        ? entry.relativePath
+        : '$base/${entry.relativePath}';
+    return WebFileEntry(
+      name: entry.name,
+      relativePath: relativePath,
+      kind: entry.kind,
+      handle: entry.handle,
+      parentHandle: entry.parentHandle,
+      size: entry.size,
+      lastModified: entry.lastModified,
+    );
   }
 
   @override

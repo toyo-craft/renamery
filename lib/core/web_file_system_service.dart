@@ -29,8 +29,9 @@ class WebFileSystemService implements WebFileSystemClient {
   Future<List<WebFileEntry>> listDirectory(
     Object directoryHandle,
     String relativePath,
+    bool recursive,
   ) =>
-      _delegate.listDirectory(directoryHandle, relativePath);
+      _delegate.listDirectory(directoryHandle, relativePath, recursive);
 
   @override
   Future<void> renameFile({

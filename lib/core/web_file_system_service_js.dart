@@ -38,10 +38,13 @@ class _JsWebFileSystemClient implements WebFileSystemClient {
   Future<List<WebFileEntry>> listDirectory(
     Object directoryHandle,
     String relativePath,
+    bool recursive,
   ) async {
-    final result =
-        await _bridgeListDirectory(directoryHandle as JSObject, relativePath)
-            .toDart;
+    final result = await _bridgeListDirectory(
+      directoryHandle as JSObject,
+      relativePath,
+      recursive,
+    ).toDart;
     return result.toDart.map(_entryFromJs).toList();
   }
 
@@ -122,6 +125,7 @@ external JSPromise<JSString> _bridgeRequestDirectoryPermission(JSObject handle);
 external JSPromise<JSArray<_JsFileEntry>> _bridgeListDirectory(
   JSObject handle,
   String relativePath,
+  bool recursive,
 );
 
 @JS('renameryFs.renameFile')

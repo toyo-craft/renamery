@@ -153,43 +153,91 @@
         }
       };
 
-      const listDirectory = async (handle, relativePath = '') => {
+      const listDirectory = async (handle, relativePath = '', recursive = false) => {
         await ensureDirectoryPermission(handle);
         const result = [];
-        for await (const [name, child] of handle.entries()) {
-          let size = null;
-          let lastModified = null;
-          if (child.kind === 'file') {
-            try {
-              const file = await child.getFile();
-              size = file.size;
-              lastModified = file.lastModified;
-            } catch (_) {}
+
+        const appendEntries = async (parentHandle, parentRelativePath) => {
+          const children = [];
+          for await (const [name, child] of parentHandle.entries()) {
+            children.push({ name, child });
           }
-          result.push({
-            name,
-            kind: child.kind,
-            handle: child,
-            parentHandle: handle,
-            relativePath: relativePath ? `${relativePath}/${name}` : name,
-            size,
-            lastModified,
+          children.sort((a, b) => {
+            if (a.child.kind !== b.child.kind) return a.child.kind === 'directory' ? -1 : 1;
+            return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
           });
-        }
-        result.sort((a, b) => {
-          if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
-          return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
-        });
+
+          for (const { name, child } of children) {
+            let size = null;
+            let lastModified = null;
+            if (child.kind === 'file') {
+              try {
+                const file = await child.getFile();
+                size = file.size;
+                lastModified = file.lastModified;
+              } catch (_) {}
+            }
+            const childRelativePath = parentRelativePath ? `${parentRelativePath}/${name}` : name;
+            result.push({
+              name,
+              kind: child.kind,
+              handle: child,
+              parentHandle,
+              relativePath: childRelativePath,
+              size,
+              lastModified,
+            });
+            if (recursive && child.kind === 'directory') {
+              await appendEntries(child, childRelativePath);
+            }
+          }
+        };
+
+        await appendEntries(handle, relativePath);
         return result;
       };
+
+      const isNotFoundError = (error) => error && error.name === 'NotFoundError';
+      const isTypeMismatchError = (error) => error && error.name === 'TypeMismatchError';
 
       const assertNewNameAvailable = async (parentHandle, newName) => {
         try {
           await parentHandle.getFileHandle(newName);
-          throw new Error(`A file named "${newName}" already exists.`);
+          throw new Error(`An item named "${newName}" already exists.`);
         } catch (error) {
-          if (error && error.name === 'NotFoundError') return;
+          if (isTypeMismatchError(error)) {
+            throw new Error(`An item named "${newName}" already exists.`);
+          }
+          if (!isNotFoundError(error)) throw error;
+        }
+        try {
+          await parentHandle.getDirectoryHandle(newName);
+          throw new Error(`An item named "${newName}" already exists.`);
+        } catch (error) {
+          if (isTypeMismatchError(error)) {
+            throw new Error(`An item named "${newName}" already exists.`);
+          }
+          if (isNotFoundError(error)) return;
           throw error;
+        }
+      };
+
+      const copyFile = async (sourceHandle, targetDirectoryHandle, targetName) => {
+        const file = await sourceHandle.getFile();
+        const targetHandle = await targetDirectoryHandle.getFileHandle(targetName, { create: true });
+        const writable = await targetHandle.createWritable();
+        await writable.write(file);
+        await writable.close();
+      };
+
+      const copyDirectory = async (sourceHandle, targetHandle) => {
+        for await (const [name, child] of sourceHandle.entries()) {
+          if (child.kind === 'file') {
+            await copyFile(child, targetHandle, name);
+          } else if (child.kind === 'directory') {
+            const childTarget = await targetHandle.getDirectoryHandle(name, { create: true });
+            await copyDirectory(child, childTarget);
+          }
         }
       };
 
@@ -201,7 +249,24 @@
         if (oldName === newName) return;
         await assertNewNameAvailable(parentHandle, newName);
 
-        const sourceHandle = await parentHandle.getFileHandle(oldName);
+        try {
+          const sourceHandle = await parentHandle.getFileHandle(oldName);
+          if (typeof sourceHandle.move === 'function') {
+            try {
+              await sourceHandle.move(newName);
+              return;
+            } catch (_) {
+              // Fall through to copy-and-delete. Browser support for move() is uneven.
+            }
+          }
+          await copyFile(sourceHandle, parentHandle, newName);
+          await parentHandle.removeEntry(oldName);
+          return;
+        } catch (error) {
+          if (!isNotFoundError(error) && !isTypeMismatchError(error)) throw error;
+        }
+
+        const sourceHandle = await parentHandle.getDirectoryHandle(oldName);
         if (typeof sourceHandle.move === 'function') {
           try {
             await sourceHandle.move(newName);
@@ -210,13 +275,9 @@
             // Fall through to copy-and-delete. Browser support for move() is uneven.
           }
         }
-
-        const file = await sourceHandle.getFile();
-        const targetHandle = await parentHandle.getFileHandle(newName, { create: true });
-        const writable = await targetHandle.createWritable();
-        await writable.write(file);
-        await writable.close();
-        await parentHandle.removeEntry(oldName);
+        const targetHandle = await parentHandle.getDirectoryHandle(newName, { create: true });
+        await copyDirectory(sourceHandle, targetHandle);
+        await parentHandle.removeEntry(oldName, { recursive: true });
       };
 
       window.renameryFs = {

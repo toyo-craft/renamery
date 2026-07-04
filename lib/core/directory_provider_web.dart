@@ -29,23 +29,25 @@ class WebDirectory {
 
   WebDirectory? get parent {
     if (path.isEmpty) return null;
-    final parentPath = p.dirname(path);
+    final parentPath = p.posix.dirname(path);
     if (parentPath == path || parentPath == '.') return null;
     return WebDirectory(
-      name: p.basename(parentPath),
+      name: p.posix.basename(parentPath),
       path: parentPath,
-      relativePath:
-          p.dirname(relativePath) == '.' ? '' : p.dirname(relativePath),
+      relativePath: p.posix.dirname(relativePath) == '.'
+          ? ''
+          : p.posix.dirname(relativePath),
       handle: null,
     );
   }
 }
 
 class WebUndoAction {
-  WebUndoAction(this.oldPath, this.newPath);
+  WebUndoAction(this.oldPath, this.newPath, {this.parentHandle});
 
   final String oldPath;
   final String newPath;
+  final Object? parentHandle;
 }
 
 class DirectoryProvider extends ChangeNotifier {
@@ -64,6 +66,7 @@ class DirectoryProvider extends ChangeNotifier {
   WebDirectory? _currentDirectory;
   List<FileModel> _currentFiles = [];
   List<FileModel> _allFiles = [];
+  List<FileModel> _directoryEntries = [];
   List<WebSavedDirectory> _savedDirectories = [];
   final List<WebDirectory> _breadcrumbs = [];
   bool _isLoading = false;
@@ -146,6 +149,7 @@ class DirectoryProvider extends ChangeNotifier {
 
   WebDirectory? get currentDirectory => _currentDirectory;
   List<FileModel> get currentFiles => _currentFiles;
+  List<FileModel> get directoryEntries => _directoryEntries;
   int get allFilesCount => _allFiles.length;
   bool get isLoading => _isLoading;
   bool get isInlineRenaming => _isInlineRenaming;
@@ -157,8 +161,12 @@ class DirectoryProvider extends ChangeNotifier {
   String? get latestVersion => _latestVersion;
   String? get errorMessage => _errorMessage;
   bool get isWebFileSystemSupported => _fs.isSupported;
+  bool get supportsDirectPathInput => false;
+  bool get hasUsableDirectory => _currentDirectory?.handle != null;
   List<WebSavedDirectory> get savedDirectories => _savedDirectories;
   List<WebDirectory> get breadcrumbs => List.unmodifiable(_breadcrumbs);
+  List<String> get breadcrumbLabels =>
+      _breadcrumbs.map((breadcrumb) => breadcrumb.name).toList(growable: false);
 
   int get resetCount => _resetCount;
   int get selectionVersion => _selectionVersion;
@@ -454,13 +462,14 @@ class DirectoryProvider extends ChangeNotifier {
     _currentDirectory = path.isEmpty
         ? null
         : WebDirectory(
-            name: p.basename(path),
+            name: p.posix.basename(path),
             path: path,
             relativePath: path,
             handle: null,
           );
     _allFiles = [];
     _currentFiles = [];
+    _directoryEntries = [];
     if (addToHistory && path.isNotEmpty) {
       if (_navIndex < _navHistory.length - 1) {
         _navHistory.removeRange(_navIndex + 1, _navHistory.length);
@@ -526,14 +535,29 @@ class DirectoryProvider extends ChangeNotifier {
     final entries = await _fs.listDirectory(
       directory.handle!,
       directory.relativePath,
+      _recursiveSearch,
     );
+    _directoryEntries = _recursiveSearch
+        ? (await _fs.listDirectory(
+            directory.handle!,
+            directory.relativePath,
+            false,
+          ))
+            .map(_toFileModel)
+            .toList()
+        : [];
     _allFiles = entries.map(_toFileModel).toList();
+    if (!_recursiveSearch) _directoryEntries = _allFiles;
     _applyFilters();
     _errorMessage = null;
   }
 
   FileModel _toFileModel(WebFileEntry entry) {
-    final parent = _currentDirectory?.path ?? '';
+    final baseParent = _currentDirectory?.path ?? '';
+    final displayRelativeParent = _relativeParentFromCurrentDirectory(entry);
+    final parent = displayRelativeParent.isEmpty
+        ? baseParent
+        : p.posix.join(baseParent, displayRelativeParent);
     final file = FileModel(
       originalName: entry.name,
       parentPath: parent,
@@ -543,10 +567,21 @@ class DirectoryProvider extends ChangeNotifier {
       handle: entry.handle,
       parentHandle: entry.parentHandle,
     )..setRelativePath(entry.relativePath);
-    file.setDisplayRelativePath(
-      p.dirname(entry.relativePath) == '.' ? '' : p.dirname(entry.relativePath),
-    );
+    file.setDisplayRelativePath(displayRelativeParent);
     return file;
+  }
+
+  String _relativeParentFromCurrentDirectory(WebFileEntry entry) {
+    final currentRelativePath = _currentDirectory?.relativePath ?? '';
+    final entryParentPath = p.posix.dirname(entry.relativePath);
+    if (entryParentPath == '.') return '';
+    if (currentRelativePath.isEmpty) return entryParentPath;
+    if (entryParentPath == currentRelativePath) return '';
+    final prefix = '$currentRelativePath/';
+    if (entryParentPath.startsWith(prefix)) {
+      return entryParentPath.substring(prefix.length);
+    }
+    return entryParentPath;
   }
 
   Future<void> _guarded(Future<void> Function() action) async {
@@ -637,7 +672,7 @@ class DirectoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateFilterSettings({
+  Future<void> updateFilterSettings({
     String? filter,
     bool? hideSystem,
     bool? recursive,
@@ -645,7 +680,7 @@ class DirectoryProvider extends ChangeNotifier {
     bool? showFolders,
     bool? isSpecific,
     bool? isRegex,
-  }) {
+  }) async {
     if (isSpecific != null) {
       _isFilterSpecific = isSpecific;
       if (!isSpecific) _filterText = '';
@@ -654,11 +689,20 @@ class DirectoryProvider extends ChangeNotifier {
       _filterText = filter;
       _isFilterSpecific = filter.isNotEmpty;
     }
+    var shouldReload = false;
     if (hideSystem != null) _hideSystemFiles = hideSystem;
-    if (recursive != null) _recursiveSearch = recursive;
+    if (recursive != null && recursive != _recursiveSearch) {
+      _recursiveSearch = recursive;
+      shouldReload = _currentDirectory?.handle != null;
+    }
     if (preview != null) _showPreview = preview;
     if (showFolders != null) _showFolders = showFolders;
     if (isRegex != null) _isFilterRegex = isRegex;
+    if (shouldReload) {
+      _saveState();
+      await _guarded(_listCurrentDirectory);
+      return;
+    }
     _applyFilters();
     _saveState();
     notifyListeners();
@@ -804,7 +848,7 @@ class DirectoryProvider extends ChangeNotifier {
         continue;
       }
       var name = file.originalName;
-      final ext = p.extension(name);
+      final ext = p.posix.extension(name);
       final stem =
           ext.isEmpty ? name : name.substring(0, name.length - ext.length);
       switch (_renameMode) {
@@ -874,7 +918,7 @@ class DirectoryProvider extends ChangeNotifier {
     var number = startNumber;
     for (final entry in _targetEntries(selectedOnly)) {
       if (!entry.isFile) continue;
-      final ext = p.extension(entry.originalName);
+      final ext = p.posix.extension(entry.originalName);
       final padded = number.toString().padLeft(digits.clamp(1, 12), '0');
       setNewName(entry, '$baseName$padded$ext');
       number++;
@@ -896,9 +940,6 @@ class DirectoryProvider extends ChangeNotifier {
   String? _validateNewName(FileModel entry, String newName) {
     final trimmed = newName.trim();
     if (trimmed.isEmpty) return 'ファイル名を入力してください。';
-    if (entry.isDirectory && trimmed != entry.originalName) {
-      return 'Web版のフォルダーリネームは後続対応です。';
-    }
     if (RegExp(r'[\\/:*?"<>|]').hasMatch(trimmed)) {
       return 'ファイル名に使用できない文字が含まれています: / \\ : * ? " < > |';
     }
@@ -909,7 +950,7 @@ class DirectoryProvider extends ChangeNotifier {
               other.parentPath == entry.parentPath &&
               other.originalName.toLowerCase() == trimmed.toLowerCase(),
         )) {
-      return '同じ名前のファイルが既にあります。';
+      return '同じ名前の項目が既にあります。';
     }
     return null;
   }
@@ -1072,25 +1113,40 @@ class DirectoryProvider extends ChangeNotifier {
     if (selected.any((entry) => entry.validationErrorMessage != null)) {
       return 0;
     }
-    final targets = selected
-        .where((entry) => entry.isFile && entry.originalName != entry.newName)
-        .toList();
+    final targets =
+        selected.where((entry) => entry.originalName != entry.newName).toList();
     if (targets.isEmpty) return 0;
 
     var count = 0;
+    final undoActions = <WebUndoAction>[];
     await _guarded(() async {
       for (final entry in targets) {
         try {
+          final parentHandle = entry.parentHandle;
+          if (parentHandle == null) {
+            entry.markError('項目へのアクセス情報が失われています。フォルダを選択し直してください。');
+            continue;
+          }
           await _fs.renameFile(
-            parentHandle: entry.parentHandle!,
+            parentHandle: parentHandle,
             oldName: entry.originalName,
             newName: entry.newName,
           );
+          undoActions.add(WebUndoAction(
+            entry.path,
+            p.posix.join(entry.parentPath, entry.newName),
+            parentHandle: parentHandle,
+          ));
           entry.markRenamed();
           count++;
         } catch (e) {
           entry.markError(e.toString());
         }
+      }
+      if (undoActions.isNotEmpty) {
+        _lastUndoTransaction
+          ..clear()
+          ..addAll(undoActions);
       }
       await _listCurrentDirectory();
     });
@@ -1098,12 +1154,69 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   Future<void> renameOneFile(FileModel file, String newName) async {
-    setNewName(file, newName);
-    notifyListeners();
+    final trimmed = newName.trim();
+    if (file.originalName == trimmed || trimmed.isEmpty) return;
+
+    setNewName(file, trimmed);
+    if (file.validationErrorMessage != null) return;
+
+    final parentHandle = file.parentHandle;
+    if (parentHandle == null) {
+      file.markError('ファイルへのアクセス情報が失われています。フォルダを選択し直してください。');
+      notifyListeners();
+      return;
+    }
+
+    await _guarded(() async {
+      await _fs.renameFile(
+        parentHandle: parentHandle,
+        oldName: file.originalName,
+        newName: trimmed,
+      );
+      _lastUndoTransaction
+        ..clear()
+        ..add(WebUndoAction(
+          file.path,
+          p.posix.join(file.parentPath, trimmed),
+          parentHandle: parentHandle,
+        ));
+      await _listCurrentDirectory();
+    });
   }
 
-  Future<Map<String, dynamic>> undo() async =>
-      {'count': 0, 'errors': <String>[]};
+  Future<Map<String, dynamic>> undo() async {
+    if (_lastUndoTransaction.isEmpty) return {'count': 0, 'errors': []};
+
+    var count = 0;
+    final errors = <String>[];
+    final actions = List<WebUndoAction>.from(_lastUndoTransaction.reversed);
+
+    await _guarded(() async {
+      for (final action in actions) {
+        final parentHandle = action.parentHandle;
+        final oldName = p.posix.basename(action.oldPath);
+        final newName = p.posix.basename(action.newPath);
+        if (parentHandle == null) {
+          errors.add('$newName: フォルダへのアクセス情報が失われています。');
+          continue;
+        }
+        try {
+          await _fs.renameFile(
+            parentHandle: parentHandle,
+            oldName: newName,
+            newName: oldName,
+          );
+          count++;
+        } catch (e) {
+          errors.add('$newName: $e');
+        }
+      }
+      if (count > 0) _lastUndoTransaction.clear();
+      await _listCurrentDirectory();
+    });
+
+    return {'count': count, 'errors': errors};
+  }
 
   void clearInputHistory() {
     _findHistory = [];

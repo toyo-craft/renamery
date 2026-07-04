@@ -12,6 +12,9 @@ async function installRenameryFsMock(
   options: RenameryFsMockOptions = {},
 ) {
   await page.addInitScript((mockOptions: RenameryFsMockOptions) => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+
     const supported = mockOptions.supported ?? true;
     let permission = mockOptions.permission ?? 'granted';
     const now = Date.now();
@@ -102,10 +105,19 @@ async function installRenameryFsMock(
         return [directoryRecord()];
       },
       requestDirectoryPermission: async () => permission,
-      listDirectory: async (handle: { id: string }) => {
+      listDirectory: async (
+        handle: { id: string },
+        _relativePath = '',
+        recursive = false,
+      ) => {
         if (!supported) return [];
         if (permission !== 'granted') throw new Error('Directory permission was not granted.');
-        return entriesFor(handle).map(cloneEntry);
+        const direct = entriesFor(handle).map(cloneEntry);
+        if (!recursive) return direct;
+        return direct.flatMap((entry) => {
+          if (entry.kind !== 'directory') return [entry];
+          return [entry, ...entriesFor(entry.handle).map(cloneEntry)];
+        });
       },
       renameFile: async (
         parentHandle: { id: string },
@@ -115,15 +127,28 @@ async function installRenameryFsMock(
         if (permission !== 'granted') throw new Error('Directory permission was not granted.');
         const entries = entriesFor(parentHandle);
         if (entries.some((entry) => entry.name.toLowerCase() === newName.toLowerCase())) {
-          throw new Error(`A file named "${newName}" already exists.`);
+          throw new Error(`An item named "${newName}" already exists.`);
         }
         const entry = entries.find((item) => item.name === oldName);
-        if (!entry || entry.kind !== 'file') throw new Error(`Missing file: ${oldName}`);
+        if (!entry) throw new Error(`Missing entry: ${oldName}`);
+        const oldRelativePath = entry.relativePath;
         entry.name = newName;
         entry.relativePath = parentHandle.id === 'sub-folder'
           ? `sub-folder/${newName}`
           : newName;
-        entry.handle = { id: `file:${newName}`, kind: 'file', name: newName };
+        if (entry.kind === 'file') {
+          entry.handle = { id: `file:${newName}`, kind: 'file', name: newName };
+        } else {
+          entry.handle = { ...entry.handle, name: newName };
+          const childPrefix = `${oldRelativePath}/`;
+          const nextPrefix = `${entry.relativePath}/`;
+          for (const child of entriesFor(entry.handle)) {
+            if (child.relativePath.startsWith(childPrefix)) {
+              child.relativePath = `${nextPrefix}${child.relativePath.slice(childPrefix.length)}`;
+            }
+            child.parentHandle = entry.handle;
+          }
+        }
       },
     };
 
@@ -156,16 +181,8 @@ function escapeRegExp(value: string) {
 
 function entryRow(page: Page, name: string) {
   return page.getByRole('group', {
-    name: new RegExp(`(^|\\s)${escapeRegExp(name)}(\\s|$)`),
+    name: new RegExp(`^${escapeRegExp(name)}(\\s|$)`),
   });
-}
-
-async function fillTextBox(page: Page, name: string, value: string) {
-  const textBox = page.getByRole('textbox', { name });
-  await textBox.click();
-  await page.keyboard.press('Control+A');
-  await page.keyboard.type(value);
-  await expect(textBox).toHaveValue(value);
 }
 
 async function openMockDirectory(page: Page) {
@@ -174,6 +191,13 @@ async function openMockDirectory(page: Page) {
 }
 
 test.describe('ReNamery Web MVP', () => {
+  test('shows the initial folder selection prompt', async ({ page }) => {
+    await installRenameryFsMock(page);
+    await openApp(page);
+
+    await expect(page.getByRole('button', { name: 'フォルダを選択', exact: true })).toBeVisible();
+  });
+
   test('shows unsupported browser guidance', async ({ page }) => {
     await installRenameryFsMock(page, { supported: false });
     await openApp(page);
@@ -191,45 +215,86 @@ test.describe('ReNamery Web MVP', () => {
     await expect(entryRow(page, 'sub-folder')).toBeVisible();
     await expect(entryRow(page, 'duplicate.txt')).toBeVisible();
 
-    await page.getByRole('button', { name: '開く' }).click();
+    await page.getByRole('button', { name: 'sub-folder フォルダ' }).click();
     await expect(entryRow(page, 'child-old.txt')).toBeVisible();
 
     await page.getByRole('button', { name: 'Root', exact: true }).click();
     await expect(entryRow(page, 'old-file.txt')).toBeVisible();
   });
 
-  test('previews and executes a file rename', async ({ page }) => {
+  test('selects and clears all listed entries', async ({ page }) => {
     await installRenameryFsMock(page);
     await openApp(page);
     await openMockDirectory(page);
 
-    await entryRow(page, 'old-file.txt').getByRole('checkbox').click();
-    await expect(page.getByRole('group', { name: /選択中: 1 件/ })).toBeVisible();
+    await page.getByRole('button', { name: 'すべて選択' }).click();
+    await expect(page.getByRole('button', { name: '選択解除' })).toBeVisible();
 
-    await fillTextBox(page, '検索文字列', 'old');
-    await fillTextBox(page, '置換後文字列', 'new');
-    await page.getByRole('button', { name: '選択中に適用' }).first().click();
-
-    await expect(entryRow(page, 'new-file.txt')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'ファイルリネームを実行' })).toBeEnabled();
-
-    await page.getByRole('button', { name: 'ファイルリネームを実行' }).click();
-    await expect(entryRow(page, 'new-file.txt')).toBeVisible();
-    await expect(entryRow(page, 'old-file.txt')).toHaveCount(0);
+    await page.getByRole('button', { name: '選択解除' }).click();
+    await expect(page.getByRole('button', { name: 'すべて選択' })).toBeVisible();
   });
 
-  test('blocks execution when preview creates a duplicate name', async ({ page }) => {
+  test('shows child directory files when recursive search is enabled', async ({ page }) => {
+    await installRenameryFsMock(page);
+    await openApp(page);
+    await openMockDirectory(page);
+
+    await expect(entryRow(page, 'child-old.txt')).toHaveCount(0);
+    await page.getByRole('button', { name: '下位フォルダ' }).click();
+
+    await expect(entryRow(page, 'child-old.txt')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'sub-folder フォルダ' })).toBeVisible();
+  });
+
+  test('renames a file from inline edit', async ({ page }) => {
     await installRenameryFsMock(page);
     await openApp(page);
     await openMockDirectory(page);
 
     await entryRow(page, 'old-file.txt').getByRole('checkbox').click();
-    await fillTextBox(page, '検索文字列', 'old-file');
-    await fillTextBox(page, '置換後文字列', 'duplicate');
-    await page.getByRole('button', { name: '選択中に適用' }).first().click();
+    await page.keyboard.press('F2');
+    await page.keyboard.press('Control+A');
+    await page.keyboard.type('manual-new.txt');
+    await page.keyboard.press('Enter');
 
-    await expect(entryRow(page, 'duplicate.txt')).toHaveCount(2);
-    await expect(page.getByRole('button', { name: 'ファイルリネームを実行' })).toBeDisabled();
-    await expect(page.getByText('フォルダーリネームは後続対応です')).toBeVisible();
+    await expect(entryRow(page, 'manual-new.txt')).toBeVisible();
+    await expect(entryRow(page, 'old-file.txt')).toHaveCount(0);
+
+    await page.getByRole('button', { name: '戻す' }).first().click();
+    await page.getByRole('button', { name: /復元|戻す/ }).last().click();
+    await expect(entryRow(page, 'old-file.txt')).toBeVisible();
+    await expect(entryRow(page, 'manual-new.txt')).toHaveCount(0);
+  });
+
+  test('renames a folder from inline edit', async ({ page }) => {
+    await installRenameryFsMock(page);
+    await openApp(page);
+    await openMockDirectory(page);
+
+    await entryRow(page, 'sub-folder').getByRole('checkbox').click();
+    await page.keyboard.press('F2');
+    await page.keyboard.press('Control+A');
+    await page.keyboard.type('renamed-folder');
+    await page.keyboard.press('Enter');
+
+    await expect(entryRow(page, 'renamed-folder')).toBeVisible();
+    await expect(entryRow(page, 'sub-folder')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'renamed-folder フォルダ' }).click();
+    await expect(entryRow(page, 'child-old.txt')).toBeVisible();
+  });
+
+  test('keeps inline edit focused until submitted', async ({ page }) => {
+    await installRenameryFsMock(page);
+    await openApp(page);
+    await openMockDirectory(page);
+
+    await entryRow(page, 'old-file.txt').getByRole('checkbox').click();
+    await page.keyboard.press('F2');
+    await page.keyboard.press('Control+A');
+    await page.keyboard.type('manual-new.txt');
+    await expect(entryRow(page, 'manual-new.txt')).toHaveCount(0);
+    await page.keyboard.press('Enter');
+    await expect(entryRow(page, 'manual-new.txt')).toBeVisible();
   });
 });
