@@ -1976,8 +1976,19 @@ class DirectoryProvider extends ChangeNotifier {
     return renamed.length;
   }
 
+  void _restoreSelectionByPath(String path, bool selected) {
+    for (final file in _currentFiles) {
+      if (file.entity.path != path) continue;
+      file.setSelected(selected, notify: false);
+      file.notifyIfChanged();
+      notifyListeners();
+      return;
+    }
+  }
+
   Future<void> renameOneFile(FileModel file, String newName) async {
     if (file.originalName == newName || newName.isEmpty) return;
+    final wasSelected = file.isSelected;
     _isLoading = true;
     notifyListeners();
     try {
@@ -1986,7 +1997,10 @@ class DirectoryProvider extends ChangeNotifier {
       await file.entity.rename(newP);
       _undoManager
           .addTransaction([UndoAction(oldP, newP, type: UndoType.rename)]);
-      if (_currentDirectory != null) await setDirectory(_currentDirectory!);
+      if (_currentDirectory != null) {
+        await setDirectory(_currentDirectory!);
+        _restoreSelectionByPath(newP, wasSelected);
+      }
     } catch (_) {
       _isLoading = false;
       notifyListeners();

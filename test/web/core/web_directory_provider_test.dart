@@ -438,7 +438,7 @@ void main() {
       expect(provider.canUndo, true);
     });
 
-    test('renameOneFile calls renameFile immediately', () async {
+    test('renameOneFile preserves unselected state after rename', () async {
       final root = FakeHandle('root');
       final fs = FakeWebFileSystemClient()
         ..pickResult = savedDirectory('1', 'Root', root)
@@ -459,10 +459,29 @@ void main() {
         ),
       ]);
       expect(provider.currentFiles.map((entry) => entry.name), ['new.txt']);
+      expect(provider.currentFiles.single.isSelected, false);
       expect(provider.canUndo, true);
     });
 
-    test('renameOneFile calls renameFile immediately for a directory',
+    test('renameOneFile preserves selected state after rename', () async {
+      final root = FakeHandle('root');
+      final fs = FakeWebFileSystemClient()
+        ..pickResult = savedDirectory('1', 'Root', root)
+        ..entries[root] = [
+          fileEntry(name: 'old.txt', parent: root),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      await provider.pickLocalDirectory();
+      provider.toggleSelection(provider.currentFiles.single);
+      await provider.renameOneFile(provider.currentFiles.single, 'new.txt');
+
+      expect(provider.currentFiles.map((entry) => entry.name), ['new.txt']);
+      expect(provider.currentFiles.single.isSelected, true);
+    });
+
+    test('renameOneFile preserves selected state after directory rename',
         () async {
       final root = FakeHandle('root');
       final folder = FakeHandle('folder');
@@ -475,6 +494,7 @@ void main() {
       final provider = DirectoryProvider(fileSystem: fs);
 
       await provider.pickLocalDirectory();
+      provider.toggleSelection(provider.currentFiles.single);
       await provider.renameOneFile(provider.currentFiles.single, 'Renamed');
 
       expect(fs.renameCalls, [
@@ -485,6 +505,7 @@ void main() {
         ),
       ]);
       expect(provider.currentFiles.map((entry) => entry.name), ['Renamed']);
+      expect(provider.currentFiles.single.isSelected, true);
       expect(provider.canUndo, true);
     });
 

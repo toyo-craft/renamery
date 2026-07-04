@@ -92,7 +92,8 @@ void main() {
       expect(_selection(provider), [false, true, false, false]);
     });
 
-    testWidgets('clicking a file name toggles selection', (tester) async {
+    testWidgets('clicking a file name toggles selection in default ctrl mode',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(1600, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -115,9 +116,20 @@ void main() {
 
       expect(find.byType(TextField), findsNothing);
       expect(_selection(provider), [false, true, false, false]);
+
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 500)),
+      );
+      await tester.pump();
+      await tester.tap(find.text('02.txt'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsNothing);
+      expect(_selection(provider), [false, false, false, false]);
     });
 
-    testWidgets('double-clicking a file name starts inline rename',
+    testWidgets(
+        'double-clicking an unselected file name keeps toggled selection while editing',
         (tester) async {
       await tester.binding.setSurfaceSize(const Size(1600, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -142,6 +154,39 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(TextField), findsOneWidget);
+      expect(_selection(provider), [false, true, false, false]);
+    });
+
+    testWidgets(
+        'double-clicking a selected file name keeps toggled-off selection while editing',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1600, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: provider,
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SizedBox.expand(child: FileListPanel()),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      provider.toggleSelection(provider.currentFiles[1]);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('02.txt'));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.text('02.txt'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsOneWidget);
+      expect(_selection(provider), [false, false, false, false]);
     });
 
     testWidgets('double-clicking name column whitespace does not start rename',

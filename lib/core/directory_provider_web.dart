@@ -584,6 +584,15 @@ class DirectoryProvider extends ChangeNotifier {
     return entryParentPath;
   }
 
+  void _restoreSelectionByPath(String path, bool selected) {
+    for (final file in _currentFiles) {
+      if (file.path != path) continue;
+      file.setSelected(selected, notify: false);
+      file.notifyIfChanged();
+      return;
+    }
+  }
+
   Future<void> _guarded(Future<void> Function() action) async {
     _isLoading = true;
     _errorMessage = null;
@@ -1156,6 +1165,8 @@ class DirectoryProvider extends ChangeNotifier {
   Future<void> renameOneFile(FileModel file, String newName) async {
     final trimmed = newName.trim();
     if (file.originalName == trimmed || trimmed.isEmpty) return;
+    final wasSelected = file.isSelected;
+    final renamedPath = p.posix.join(file.parentPath, trimmed);
 
     setNewName(file, trimmed);
     if (file.validationErrorMessage != null) return;
@@ -1181,6 +1192,7 @@ class DirectoryProvider extends ChangeNotifier {
           parentHandle: parentHandle,
         ));
       await _listCurrentDirectory();
+      _restoreSelectionByPath(renamedPath, wasSelected);
     });
   }
 

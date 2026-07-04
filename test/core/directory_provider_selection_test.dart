@@ -58,6 +58,52 @@ void main() {
       expect(_selection(provider), [true, true, false, true]);
     });
   });
+
+  group('DirectoryProvider.renameOneFile', () {
+    late Directory tempDir;
+    late DirectoryProvider provider;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('renamery_rename_');
+      File('${tempDir.path}${Platform.pathSeparator}old.txt')
+          .writeAsStringSync('old');
+
+      provider = DirectoryProvider();
+      await provider.setDirectory(tempDir, addToHistory: false);
+      provider.sortFiles(0, true);
+
+      expect(provider.currentFiles.map((file) => file.originalName), [
+        'old.txt',
+      ]);
+    });
+
+    tearDown(() async {
+      await provider.cancelScan();
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    test('preserves unselected state after rename', () async {
+      await provider.renameOneFile(provider.currentFiles.single, 'new.txt');
+
+      expect(provider.currentFiles.map((file) => file.originalName), [
+        'new.txt',
+      ]);
+      expect(provider.currentFiles.single.isSelected, false);
+    });
+
+    test('preserves selected state after rename', () async {
+      provider.toggleSelection(provider.currentFiles.single);
+
+      await provider.renameOneFile(provider.currentFiles.single, 'new.txt');
+
+      expect(provider.currentFiles.map((file) => file.originalName), [
+        'new.txt',
+      ]);
+      expect(provider.currentFiles.single.isSelected, true);
+    });
+  });
 }
 
 List<bool> _selection(DirectoryProvider provider) =>
