@@ -104,6 +104,53 @@ void main() {
       expect(provider.currentFiles.single.isSelected, true);
     });
   });
+
+  group('DirectoryProvider.openDroppedDirectoryPath', () {
+    late Directory tempDir;
+    late Directory droppedDir;
+    late File droppedFile;
+    late DirectoryProvider provider;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('renamery_drop_');
+      droppedDir = Directory('${tempDir.path}${Platform.pathSeparator}folder')
+        ..createSync();
+      droppedFile = File('${tempDir.path}${Platform.pathSeparator}file.txt')
+        ..writeAsStringSync('file');
+      File('${droppedDir.path}${Platform.pathSeparator}inside.txt')
+          .writeAsStringSync('inside');
+
+      provider = DirectoryProvider();
+    });
+
+    tearDown(() async {
+      await provider.cancelScan();
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    test('opens a dropped directory path on desktop platforms', () async {
+      if (!provider.supportsExternalFolderDrop) return;
+
+      final message = await provider.openDroppedDirectoryPath(droppedDir.path);
+
+      expect(message, isNull);
+      expect(provider.currentDirectory?.path, droppedDir.path);
+      expect(provider.currentFiles.map((file) => file.originalName), [
+        'inside.txt',
+      ]);
+    });
+
+    test('rejects a dropped file path', () async {
+      if (!provider.supportsExternalFolderDrop) return;
+
+      final message = await provider.openDroppedDirectoryPath(droppedFile.path);
+
+      expect(message, contains('フォルダ'));
+      expect(provider.currentDirectory, isNull);
+    });
+  });
 }
 
 List<bool> _selection(DirectoryProvider provider) =>

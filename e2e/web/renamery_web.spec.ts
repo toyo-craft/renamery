@@ -177,8 +177,10 @@ async function openApp(page: Page, options: { acceptLicense?: boolean } = {}) {
   if (options.acceptLicense === false) return;
 
   const acceptLicense = page.getByRole('button', { name: '同意して利用を開始する' });
+  await acceptLicense.waitFor({ state: 'visible', timeout: 3000 }).catch(() => undefined);
   if (await acceptLicense.isVisible().catch(() => false)) {
     await acceptLicense.click();
+    await acceptLicense.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => undefined);
   }
 }
 

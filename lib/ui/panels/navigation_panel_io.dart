@@ -3,12 +3,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:multi_split_view/multi_split_view.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:path/path.dart' as p;
 import '../../core/directory_provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
-import '../widgets/preview_window.dart';
+import 'navigation_panel_shell.dart';
 
 class NavigationPanel extends StatefulWidget {
   const NavigationPanel({super.key});
@@ -22,19 +21,12 @@ class _NavigationPanelState extends State<NavigationPanel> {
   List<Directory> _quickAccess = [];
   bool _loading = true;
 
-  late final MultiSplitViewController _splitterController;
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _verticalScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _splitterController = MultiSplitViewController(
-      areas: [
-        Area(flex: 0.7, builder: (context, area) => _buildTreeSection()),
-        Area(flex: 0.3, builder: (context, area) => _buildPreviewSection()),
-      ],
-    );
     _loadData();
   }
 
@@ -86,168 +78,55 @@ class _NavigationPanelState extends State<NavigationPanel> {
   void dispose() {
     _horizontalController.dispose();
     _verticalScrollController.dispose();
-    _splitterController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    return MultiSplitViewTheme(
-      data: MultiSplitViewThemeData(
-        dividerThickness: 6,
-        dividerPainter: DividerPainters.grooved1(
-          color: Theme.of(context).dividerColor,
-          highlightedColor: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-      child: MultiSplitView(
-        axis: Axis.vertical,
-        controller: _splitterController,
-      ),
-    );
+    return NavigationPanelShell(treeBuilder: (_) => _buildTreeSection());
   }
 
   Widget _buildTreeSection() {
     final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<DirectoryProvider>();
-    return SafeArea(
-      top: true,
-      bottom: false,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_quickAccess.isNotEmpty)
-            _buildSectionHeader(
+    final quickAccessRoots = _quickAccess.map((d) => d.path).toList();
+
+    return NavigationTreeView(
+      horizontalController: _horizontalController,
+      verticalController: _verticalScrollController,
+      header: _quickAccess.isEmpty
+          ? null
+          : NavigationSectionHeader(
               l10n.labelNavQuickAccess,
               onAction: () => provider.resetNavTree(),
               actionIcon: Symbols.collapse_all,
+              actionTooltip: '全て折りたたむ',
             ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Scrollbar(
-                  controller: _verticalScrollController,
-                  thumbVisibility: true,
-                  child: Scrollbar(
-                    controller: _horizontalController,
-                    notificationPredicate: (n) => n.depth == 1,
-                    child: SingleChildScrollView(
-                      controller: _horizontalController,
-                      scrollDirection: Axis.horizontal,
-                      child: ConstrainedBox(
-                        constraints:
-                            BoxConstraints(minWidth: constraints.maxWidth),
-                        child: IntrinsicWidth(
-                          child: SingleChildScrollView(
-                            controller: _verticalScrollController,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (_quickAccess.isNotEmpty)
-                                  Column(
-                                    children: _quickAccess
-                                        .map((dir) => _DirectoryTile(
-                                              directory: dir,
-                                              customIcon:
-                                                  _getIconForPath(dir.path),
-                                              isRoot: true,
-                                              isQuickAccess: true,
-                                              contextRoot: dir.path,
-                                              depth: 1,
-                                              quickAccessRoots: _quickAccess
-                                                  .map((d) => d.path)
-                                                  .toList(),
-                                              scrollController:
-                                                  _verticalScrollController,
-                                            ))
-                                        .toList(),
-                                  ),
-                                _buildSectionHeader(l10n.labelNavPC),
-                                ..._drives.map((dir) => _DirectoryTile(
-                                      directory: dir,
-                                      customIcon: Icons.computer,
-                                      isRoot: true,
-                                      isQuickAccess: false,
-                                      contextRoot: dir.path,
-                                      depth: 1,
-                                      quickAccessRoots: _quickAccess
-                                          .map((d) => d.path)
-                                          .toList(),
-                                      scrollController:
-                                          _verticalScrollController,
-                                    )),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPreviewSection() {
-    final l10n = AppLocalizations.of(context)!;
-    final provider = context.watch<DirectoryProvider>();
-    return Container(
-      decoration: BoxDecoration(
-          border: Border(
-              top: BorderSide(
-                  color: Theme.of(context).dividerColor, width: 0.5))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-              child: Text(l10n.labelFilterPreview,
-                  style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.bold))),
-          Expanded(
-              child: PreviewWindow(
-                  file: provider.currentFiles
-                              .where((f) => f.isSelected)
-                              .length ==
-                          1
-                      ? provider.currentFiles.firstWhere((f) => f.isSelected)
-                      : null,
-                  selectedFiles: provider.currentFiles
-                      .where((f) => f.isSelected)
-                      .toList())),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title,
-      {VoidCallback? onAction, IconData? actionIcon}) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title,
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary)),
-          if (onAction != null && actionIcon != null)
-            IconButton(
-                icon: Icon(actionIcon, size: 16),
-                onPressed: onAction,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                visualDensity: VisualDensity.compact,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                tooltip: '全て折りたたむ'),
-        ],
-      ),
+      children: [
+        if (_quickAccess.isNotEmpty)
+          ..._quickAccess.map((dir) => _DirectoryTile(
+                directory: dir,
+                customIcon: _getIconForPath(dir.path),
+                isRoot: true,
+                isQuickAccess: true,
+                contextRoot: dir.path,
+                depth: 1,
+                quickAccessRoots: quickAccessRoots,
+                scrollController: _verticalScrollController,
+              )),
+        NavigationSectionHeader(l10n.labelNavPC),
+        ..._drives.map((dir) => _DirectoryTile(
+              directory: dir,
+              customIcon: Icons.computer,
+              isRoot: true,
+              isQuickAccess: false,
+              contextRoot: dir.path,
+              depth: 1,
+              quickAccessRoots: quickAccessRoots,
+              scrollController: _verticalScrollController,
+            )),
+      ],
     );
   }
 

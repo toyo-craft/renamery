@@ -8,6 +8,17 @@
 - When implementing the `ctrlMode` setting, verify the behavior in `FileListPanel`, `DirectoryProvider.renameOneFile`, `DirectoryProviderWeb.renameOneFile`, and settings persistence/defaults together.
 - After changing selection or `ctrlMode` behavior, run the gate tests listed in `docs/selection_ctrl_mode_contract.md`.
 
+## Cross Platform UI Parity
+
+- Treat `docs/platform_ui_parity.md` as the source of truth for shared Windows/Android/Web UI parity.
+- Windows/Android UI is the source of truth for shared application layout and interaction.
+- Web must use the same shared UI widgets whenever possible; browser-only constraints should be represented as disabled items, explanatory fallback text, or capability flags inside the shared UI.
+- Do not create or expand Web-only UI implementations unless a browser capability prevents using the shared widget.
+- Platform differences must be isolated in providers, services, file-system adapters, platform utilities, or capability flags.
+- The upper navigation area of the left panel is the only external folder drop target. The lower preview area must not open dropped folders.
+- External drops accept exactly one folder where supported. File drops, multiple drops, and mixed file/folder drops must be rejected with a clear explanation unless a future documented capability changes this contract.
+- When changing `NavigationPanel`, `FileListPanel`, `SettingsPanel`, or `PreviewWindow`, verify Windows/Android and Web behavior together.
+
 ## Release Trigger
 
 When the user says `リリースしてください` or otherwise explicitly requests a release, handle the release workflow. Do not create release commits, tags, or pushes without an explicit release request.

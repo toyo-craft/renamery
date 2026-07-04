@@ -94,6 +94,25 @@ void main() {
       expect(provider.currentFiles.map((entry) => entry.name), ['a.txt']);
     });
 
+    test('opening dropped directory uses the saved directory flow', () async {
+      final root = FakeHandle('root');
+      final fs = FakeWebFileSystemClient()
+        ..savedDirectories.add(savedDirectory('1', 'Root', root))
+        ..entries[root] = [
+          fileEntry(name: 'dropped.txt', parent: root),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      await provider.openDroppedDirectory(savedDirectory('1', 'Root', root));
+
+      expect(provider.currentDirectory?.name, 'Root');
+      expect(provider.currentFiles.map((entry) => entry.name), ['dropped.txt']);
+      expect(provider.savedDirectories.map((directory) => directory.name), [
+        'Root',
+      ]);
+    });
+
     test('opening saved directory stops when permission is denied', () async {
       final root = FakeHandle('root');
       final fs = FakeWebFileSystemClient()..permissionResults[root] = 'denied';

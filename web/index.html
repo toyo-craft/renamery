@@ -127,6 +127,82 @@
         return saveDirectoryHandle(handle);
       };
 
+      let externalDropBounds = null;
+      let externalDropCallback = null;
+
+      const emitExternalDrop = (result) => {
+        if (typeof externalDropCallback !== 'function') return;
+        try {
+          externalDropCallback(result);
+        } catch (_) {}
+      };
+
+      const isInsideExternalDropBounds = (event) => {
+        if (!externalDropBounds) return false;
+        return event.clientX >= externalDropBounds.left &&
+          event.clientX <= externalDropBounds.right &&
+          event.clientY >= externalDropBounds.top &&
+          event.clientY <= externalDropBounds.bottom;
+      };
+
+      const rejectExternalDrop = (message) => {
+        emitExternalDrop({ status: 'rejected', message });
+      };
+
+      const handleExternalDrop = async (event) => {
+        if (!isInsideExternalDropBounds(event)) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        const items = Array.from(event.dataTransfer?.items || [])
+          .filter((item) => item.kind === 'file');
+        if (items.length !== 1) {
+          rejectExternalDrop('フォルダを1つだけドロップしてください。');
+          return;
+        }
+
+        const item = items[0];
+        if (typeof item.getAsFileSystemHandle !== 'function') {
+          rejectExternalDrop('このブラウザではフォルダのドラッグ&ドロップに対応していません。');
+          return;
+        }
+
+        try {
+          const handle = await item.getAsFileSystemHandle();
+          if (!handle || handle.kind !== 'directory') {
+            rejectExternalDrop('ファイルではなくフォルダを1つだけドロップしてください。');
+            return;
+          }
+          const directory = await saveDirectoryHandle(handle);
+          emitExternalDrop({ status: 'accepted', directory });
+        } catch (error) {
+          rejectExternalDrop(error?.message || 'フォルダを開けませんでした。');
+        }
+      };
+
+      document.addEventListener('dragover', (event) => {
+        if (!isInsideExternalDropBounds(event)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+      });
+
+      document.addEventListener('drop', (event) => {
+        handleExternalDrop(event);
+      });
+
+      window.renameryExternalDrop = {
+        setBounds: (left, top, right, bottom) => {
+          externalDropBounds = { left, top, right, bottom };
+        },
+        setDropCallback: (callback) => {
+          externalDropCallback = callback;
+        },
+        clearDropCallback: (callback) => {
+          if (externalDropCallback === callback) externalDropCallback = null;
+        },
+      };
+
       const listSavedDirectories = async () => {
         const records = await getRecords();
         const result = [];

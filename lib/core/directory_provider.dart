@@ -1278,6 +1278,8 @@ class DirectoryProvider extends ChangeNotifier {
   int _selectionVersion = 0;
   int get selectionVersion => _selectionVersion;
   bool get supportsDirectPathInput => true;
+  bool get supportsExternalFolderDrop =>
+      Platform.isWindows || Platform.isLinux || Platform.isMacOS;
   bool get hasUsableDirectory => _currentDirectory != null;
 
   List<String> get breadcrumbLabels {
@@ -1296,6 +1298,18 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   Future<void> pickLocalDirectory() async {}
+
+  Future<String?> openDroppedDirectoryPath(String path) async {
+    if (!supportsExternalFolderDrop) {
+      return 'この環境ではフォルダのドラッグ&ドロップに対応していません。';
+    }
+    final directory = Directory(path);
+    if (!await directory.exists()) {
+      return 'ファイルではなくフォルダを1つだけドロップしてください。';
+    }
+    await setDirectory(directory);
+    return null;
+  }
 
   Future<void> openBreadcrumb(int index) async {
     final path = _currentDirectory?.path ?? '';

@@ -162,6 +162,7 @@ class DirectoryProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isWebFileSystemSupported => _fs.isSupported;
   bool get supportsDirectPathInput => false;
+  bool get supportsExternalFolderDrop => _fs.isSupported;
   bool get hasUsableDirectory => _currentDirectory?.handle != null;
   List<WebSavedDirectory> get savedDirectories => _savedDirectories;
   List<WebDirectory> get breadcrumbs => List.unmodifiable(_breadcrumbs);
@@ -429,6 +430,10 @@ class DirectoryProvider extends ChangeNotifier {
       await _openRoot(directory);
       _savedDirectories = await _fs.listSavedDirectories();
     });
+  }
+
+  Future<void> openDroppedDirectory(WebSavedDirectory directory) async {
+    await openSavedDirectory(directory);
   }
 
   Future<void> openDirectory(FileModel entry) async {
