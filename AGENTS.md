@@ -1,5 +1,13 @@
 # ReNamery Agent Rules
 
+## Selection / Ctrl Mode Contract
+
+- Treat `docs/selection_ctrl_mode_contract.md` as the source of truth for file selection, file-name click, double-click rename, and `ctrlMode` behavior.
+- When adding a `ctrlMode` setting, or changing settings that affect selection behavior, update `docs/selection_ctrl_mode_contract.md` before changing implementation.
+- Do not remove comments that reference `docs/selection_ctrl_mode_contract.md` as "unused" or "obvious" unless an equivalent guard remains in `AGENTS.md`, the contract document, and the relevant tests.
+- When implementing the `ctrlMode` setting, verify the behavior in `FileListPanel`, `DirectoryProvider.renameOneFile`, `DirectoryProviderWeb.renameOneFile`, and settings persistence/defaults together.
+- After changing selection or `ctrlMode` behavior, run the gate tests listed in `docs/selection_ctrl_mode_contract.md`.
+
 ## Release Trigger
 
 When the user says `リリースしてください` or otherwise explicitly requests a release, handle the release workflow. Do not create release commits, tags, or pushes without an explicit release request.

@@ -1977,6 +1977,7 @@ class DirectoryProvider extends ChangeNotifier {
   }
 
   void _restoreSelectionByPath(String path, bool selected) {
+    // Keep this in sync with docs/selection_ctrl_mode_contract.md.
     for (final file in _currentFiles) {
       if (file.entity.path != path) continue;
       file.setSelected(selected, notify: false);

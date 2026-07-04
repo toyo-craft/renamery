@@ -45,6 +45,8 @@ class _FileListPanelState extends State<FileListPanel> {
   static const double _widthCheckbox = 32.0;
   static const double _widthSeparator = 16.0;
   static const double _dragSelectStartThreshold = 24.0;
+  // Update docs/selection_ctrl_mode_contract.md and the selection tests before
+  // changing the file-name click or double-click selection contract.
   static const Duration _doubleClickInterval = Duration(milliseconds: 450);
 
   @override
