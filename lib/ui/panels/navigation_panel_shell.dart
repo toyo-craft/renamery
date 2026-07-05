@@ -101,6 +101,7 @@ class NavigationTreeView extends StatelessWidget {
     required this.verticalController,
     required List<NavigationSection> sections,
     this.header,
+    this.enableHorizontalScroll = true,
     List<Widget> trailingChildren = const [],
   }) : children = [
           for (final section in sections) ...section.widgets,
@@ -110,6 +111,7 @@ class NavigationTreeView extends StatelessWidget {
   final ScrollController horizontalController;
   final ScrollController verticalController;
   final Widget? header;
+  final bool enableHorizontalScroll;
   final List<Widget> children;
 
   @override
@@ -124,31 +126,38 @@ class NavigationTreeView extends StatelessWidget {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
+                final tree = SingleChildScrollView(
+                  controller: verticalController,
+                  child: _NavigationTreeViewport(
+                    width: constraints.maxWidth,
+                    horizontalController: horizontalController,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: children,
+                    ),
+                  ),
+                );
+
                 return Scrollbar(
                   controller: verticalController,
                   thumbVisibility: true,
-                  child: Scrollbar(
-                    controller: horizontalController,
-                    notificationPredicate: (notification) =>
-                        notification.depth == 1,
-                    child: SingleChildScrollView(
-                      controller: horizontalController,
-                      scrollDirection: Axis.horizontal,
-                      child: ConstrainedBox(
-                        constraints:
-                            BoxConstraints(minWidth: constraints.maxWidth),
-                        child: IntrinsicWidth(
+                  child: enableHorizontalScroll
+                      ? Scrollbar(
+                          controller: horizontalController,
+                          notificationPredicate: (notification) =>
+                              notification.depth == 1,
                           child: SingleChildScrollView(
-                            controller: verticalController,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: children,
+                            controller: horizontalController,
+                            scrollDirection: Axis.horizontal,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minWidth: constraints.maxWidth,
+                              ),
+                              child: IntrinsicWidth(child: tree),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
+                        )
+                      : tree,
                 );
               },
             ),
@@ -156,6 +165,28 @@ class NavigationTreeView extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _NavigationTreeViewport extends InheritedWidget {
+  const _NavigationTreeViewport({
+    required this.width,
+    required this.horizontalController,
+    required super.child,
+  });
+
+  final double width;
+  final ScrollController horizontalController;
+
+  static _NavigationTreeViewport? maybeOf(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_NavigationTreeViewport>();
+  }
+
+  @override
+  bool updateShouldNotify(_NavigationTreeViewport oldWidget) {
+    return width != oldWidget.width ||
+        horizontalController != oldWidget.horizontalController;
   }
 }
 
@@ -452,9 +483,12 @@ class NavigationExpandableItem extends StatelessWidget {
     this.iconColor,
     this.selectedColor,
     this.semanticLabel,
+    this.trailing,
     this.errorMessage,
     this.children = const [],
     this.onTap,
+    this.onSecondaryTap,
+    this.onLongPress,
   });
 
   final String title;
@@ -468,9 +502,12 @@ class NavigationExpandableItem extends StatelessWidget {
   final Color? iconColor;
   final Color? selectedColor;
   final String? semanticLabel;
+  final Widget? trailing;
   final String? errorMessage;
   final List<Widget> children;
   final VoidCallback? onTap;
+  final VoidCallback? onSecondaryTap;
+  final VoidCallback? onLongPress;
   final VoidCallback onToggle;
 
   @override
@@ -490,85 +527,118 @@ class NavigationExpandableItem extends StatelessWidget {
             button: onTap != null,
             enabled: enabled,
             label: semanticLabel ?? '$title フォルダ',
-            child: ExcludeSemantics(
-              child: Material(
-                color: selected
-                    ? selectedColor ?? colorScheme.secondaryContainer
-                    : Colors.transparent,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-                child: InkWell(
-                  onTap: enabled ? onTap : null,
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
-                  ),
-                  child: SizedBox(
-                    height: rowHeight,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: provider.touchMode ? 32 : 24,
-                          height: rowHeight,
-                          child: InkWell(
-                            onTap: enabled ? onToggle : null,
-                            child: Icon(
-                              isExpanded
-                                  ? Symbols.keyboard_arrow_down
-                                  : Symbols.keyboard_arrow_right,
-                              size: provider.touchMode ? 24 : 16,
-                              color: enabled
-                                  ? colorScheme.onSurfaceVariant
-                                  : colorScheme.outline,
+            child: Material(
+              color: selected
+                  ? selectedColor ?? colorScheme.secondaryContainer
+                  : Colors.transparent,
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final viewport = _NavigationTreeViewport.maybeOf(context);
+                  final fallbackWidth = viewport?.width;
+                  final width = constraints.hasBoundedWidth
+                      ? constraints.maxWidth
+                      : fallbackWidth;
+                  Widget? trailingAction = trailing;
+                  if (trailingAction != null && viewport != null) {
+                    trailingAction = AnimatedBuilder(
+                      animation: viewport.horizontalController,
+                      child: trailingAction,
+                      builder: (context, child) {
+                        final offset = viewport.horizontalController.hasClients
+                            ? viewport.horizontalController.offset
+                            : 0.0;
+                        return Transform.translate(
+                          offset: Offset(offset, 0),
+                          child: child,
+                        );
+                      },
+                    );
+                  }
+                  final row = InkWell(
+                    onTap: enabled ? onTap : null,
+                    onSecondaryTap: enabled ? onSecondaryTap : null,
+                    onLongPress: enabled ? onLongPress : null,
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
+                    child: SizedBox(
+                      width: width,
+                      height: rowHeight,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: provider.touchMode ? 32 : 24,
+                            height: rowHeight,
+                            child: InkWell(
+                              onTap: enabled ? onToggle : null,
+                              child: Icon(
+                                isExpanded
+                                    ? Symbols.keyboard_arrow_down
+                                    : Symbols.keyboard_arrow_right,
+                                size: provider.touchMode ? 24 : 16,
+                                color: enabled
+                                    ? colorScheme.onSurfaceVariant
+                                    : colorScheme.outline,
+                              ),
                             ),
                           ),
-                        ),
-                        Icon(
-                          isExpanded ? expandedIcon : icon,
-                          size: provider.touchMode ? 28 : 20,
-                          color: effectiveIconColor,
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.visible,
-                              style: TextStyle(
-                                fontSize: provider.touchMode ? 15 : 13,
-                                color: selected
-                                    ? colorScheme.onSecondaryContainer
-                                    : enabled
-                                        ? null
-                                        : colorScheme.onSurfaceVariant,
-                                fontWeight: selected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                            if (subtitle != null)
-                              Text(
-                                subtitle!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: colorScheme.onSurfaceVariant,
+                          Icon(
+                            isExpanded ? expandedIcon : icon,
+                            size: provider.touchMode ? 28 : 20,
+                            color: effectiveIconColor,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: provider.touchMode ? 15 : 13,
+                                    color: selected
+                                        ? colorScheme.onSecondaryContainer
+                                        : enabled
+                                            ? null
+                                            : colorScheme.onSurfaceVariant,
+                                    fontWeight: selected
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                  ),
                                 ),
-                              ),
+                                if (subtitle != null)
+                                  Text(
+                                    subtitle!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          if (trailingAction != null) ...[
+                            const SizedBox(width: 8),
+                            trailingAction,
                           ],
-                        ),
-                        const SizedBox(width: 8),
-                      ],
+                          const SizedBox(width: 8),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                  if (width == null) return IntrinsicWidth(child: row);
+                  return row;
+                },
               ),
             ),
           ),

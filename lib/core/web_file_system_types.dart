@@ -7,6 +7,7 @@ abstract class WebFileSystemClient {
 
   Future<WebSavedDirectory?> pickDirectory();
   Future<List<WebSavedDirectory>> listSavedDirectories();
+  Future<void> forgetSavedDirectory(String id);
   Future<String> requestPermission(Object handle);
   Future<List<WebFileEntry>> listDirectory(
     Object directoryHandle,

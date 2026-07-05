@@ -420,6 +420,26 @@ class DirectoryProvider extends ChangeNotifier {
     });
   }
 
+  Future<bool> forgetSavedDirectory(WebSavedDirectory directory) async {
+    var success = false;
+    await _guarded(() async {
+      await _fs.forgetSavedDirectory(directory.id);
+      _savedDirectories = await _fs.listSavedDirectories();
+      if (_navigationContextRoot == directory.id) {
+        _navigationSource = null;
+        _navigationContextRoot = null;
+        _breadcrumbs.clear();
+        _currentDirectory = null;
+        _allFiles = [];
+        _currentFiles = [];
+        _directoryEntries = [];
+      }
+      _navTreeResetTick++;
+      success = true;
+    });
+    return success && _errorMessage == null;
+  }
+
   Future<void> openSavedDirectory(WebSavedDirectory directory) async {
     await _guarded(() async {
       var permission = directory.permission;

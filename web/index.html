@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,7 +18,29 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="ReNamery Web - browser-based local folder rename support.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ReNameryは、ローカルフォルダ内のファイル名を安全にプレビューしながら一括変更できる東洋クラフト提供のリネーム支援アプリです。Windows、Android、Webで利用できます。">
+  <meta name="application-name" content="ReNamery">
+  <meta name="author" content="東洋クラフト">
+  <meta name="creator" content="東洋クラフト">
+  <meta name="publisher" content="東洋クラフト">
+  <meta name="keywords" content="ReNamery,リネーマリー,ファイル名変更,一括リネーム,リネームアプリ,東洋クラフト,Toyo Craft">
+  <meta name="theme-color" content="#2E7D32">
+  <meta name="color-scheme" content="light">
+  <link rel="canonical" href="https://toyo-craft.net/apps">
+
+  <meta property="og:site_name" content="東洋クラフト">
+  <meta property="og:title" content="ReNamery - ファイル名を安全に一括変更">
+  <meta property="og:description" content="ローカルフォルダ内のファイル名をプレビューしながら一括変更できる、東洋クラフト提供のリネーム支援アプリです。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://toyo-craft.net/apps">
+  <meta property="og:image" content="https://toyo-craft.net/apps/icons/Icon-512.png">
+  <meta property="og:locale" content="ja_JP">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="ReNamery - ファイル名を安全に一括変更">
+  <meta name="twitter:description" content="ローカルフォルダ内のファイル名をプレビューしながら一括変更できる、東洋クラフト提供のリネーム支援アプリです。">
+  <meta name="twitter:image" content="https://toyo-craft.net/apps/icons/Icon-512.png">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -29,8 +51,31 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>ReNamery</title>
+  <title>ReNamery - ファイル名を安全に一括変更 | 東洋クラフト</title>
   <link rel="manifest" href="manifest.json">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ReNamery",
+      "alternateName": "リネーマリー",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Windows, Android, Web",
+      "url": "https://toyo-craft.net/apps",
+      "description": "ReNameryは、ローカルフォルダ内のファイル名を安全にプレビューしながら一括変更できる東洋クラフト提供のリネーム支援アプリです。",
+      "image": "https://toyo-craft.net/apps/icons/Icon-512.png",
+      "author": {
+        "@type": "Organization",
+        "name": "東洋クラフト",
+        "url": "https://toyo-craft.net/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "東洋クラフト",
+        "url": "https://toyo-craft.net/"
+      }
+    }
+  </script>
 </head>
 <body>
   <script>
@@ -95,6 +140,13 @@
         const db = await openDb();
         const transaction = db.transaction(storeName, 'readwrite');
         await requestToPromise(transaction.objectStore(storeName).put(record));
+        db.close();
+      };
+
+      const deleteRecord = async (id) => {
+        const db = await openDb();
+        const transaction = db.transaction(storeName, 'readwrite');
+        await requestToPromise(transaction.objectStore(storeName).delete(id));
         db.close();
       };
 
@@ -217,6 +269,11 @@
         }
         result.sort((a, b) => (b.lastUsedAt || 0) - (a.lastUsedAt || 0));
         return result;
+      };
+
+      const forgetSavedDirectory = async (id) => {
+        if (!isSupported()) return;
+        await deleteRecord(id);
       };
 
       const requestDirectoryPermission = async (handle) => {
@@ -366,6 +423,7 @@
         isSupported,
         pickDirectory,
         listSavedDirectories,
+        forgetSavedDirectory,
         requestDirectoryPermission,
         listDirectory,
         renameFile,

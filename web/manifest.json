@@ -1,11 +1,14 @@
 {
     "name": "ReNamery",
     "short_name": "ReNamery",
+    "id": "https://toyo-craft.net/apps",
     "start_url": ".",
+    "scope": ".",
     "display": "standalone",
     "background_color": "#F7FBF4",
     "theme_color": "#2E7D32",
-    "description": "A browser-based local folder rename tool.",
+    "description": "ReNameryは、ローカルフォルダ内のファイル名を安全にプレビューしながら一括変更できる東洋クラフト提供のリネーム支援アプリです。",
+    "categories": ["productivity", "utilities"],
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [

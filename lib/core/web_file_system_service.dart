@@ -22,6 +22,10 @@ class WebFileSystemService implements WebFileSystemClient {
       _delegate.listSavedDirectories();
 
   @override
+  Future<void> forgetSavedDirectory(String id) =>
+      _delegate.forgetSavedDirectory(id);
+
+  @override
   Future<String> requestPermission(Object handle) =>
       _delegate.requestPermission(handle);
 

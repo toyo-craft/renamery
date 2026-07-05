@@ -29,6 +29,11 @@ class _JsWebFileSystemClient implements WebFileSystemClient {
   }
 
   @override
+  Future<void> forgetSavedDirectory(String id) async {
+    await _bridgeForgetSavedDirectory(id).toDart;
+  }
+
+  @override
   Future<String> requestPermission(Object handle) async {
     final result =
         await _bridgeRequestDirectoryPermission(handle as JSObject).toDart;
@@ -118,6 +123,9 @@ external JSPromise<_JsSavedDirectory?> _bridgePickDirectory();
 
 @JS('renameryFs.listSavedDirectories')
 external JSPromise<JSArray<_JsSavedDirectory>> _bridgeListSavedDirectories();
+
+@JS('renameryFs.forgetSavedDirectory')
+external JSPromise<JSAny?> _bridgeForgetSavedDirectory(String id);
 
 @JS('renameryFs.requestDirectoryPermission')
 external JSPromise<JSString> _bridgeRequestDirectoryPermission(JSObject handle);

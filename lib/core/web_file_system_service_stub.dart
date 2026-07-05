@@ -16,6 +16,9 @@ class _UnsupportedWebFileSystemClient implements WebFileSystemClient {
   Future<List<WebSavedDirectory>> listSavedDirectories() async => const [];
 
   @override
+  Future<void> forgetSavedDirectory(String id) async {}
+
+  @override
   Future<String> requestPermission(Object handle) async => 'denied';
 
   @override

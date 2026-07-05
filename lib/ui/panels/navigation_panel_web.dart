@@ -47,6 +47,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
     return NavigationTreeView.sections(
       horizontalController: _horizontalController,
       verticalController: _verticalScrollController,
+      enableHorizontalScroll: false,
       header: NavigationSectionHeader(l10n.labelNavQuickAccess),
       sections: [
         NavigationSection(
@@ -62,19 +63,15 @@ class _NavigationPanelState extends State<NavigationPanel> {
                 provider.errorMessage!,
                 error: true,
               ),
+            if (provider.savedDirectories.isEmpty)
+              const NavigationEmptyText('選択済みフォルダはまだありません。')
+            else
+              for (final directory in provider.savedDirectories)
+                _WebDirectoryTile(
+                  key: ValueKey('web-nav-root-${directory.id}'),
+                  root: directory,
+                ),
           ],
-        ),
-        NavigationSection.pc(
-          context,
-          children: provider.savedDirectories.isEmpty
-              ? const [NavigationEmptyText('選択済みフォルダはまだありません。')]
-              : [
-                  for (final directory in provider.savedDirectories)
-                    _WebDirectoryTile(
-                      key: ValueKey('web-nav-root-${directory.id}'),
-                      root: directory,
-                    ),
-                ],
         ),
       ],
       trailingChildren: const [SizedBox(height: 8)],
@@ -169,6 +166,72 @@ class _WebDirectoryTileState extends State<_WebDirectoryTile> {
     if (!_isExpanded) await _expand();
   }
 
+  Future<void> _forgetRoot() async {
+    if (!widget.isRoot) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('クイックアクセスから解除しますか？'),
+        content: Text(
+          '「${widget.root.name}」をReNameryのクイックアクセスから解除します。\n\n'
+          'フォルダやファイル自体は削除されません。\n'
+          '再度利用する場合は「ローカルフォルダを選択」から追加してください。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('解除'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final provider = context.read<DirectoryProvider>();
+    final success = await provider.forgetSavedDirectory(widget.root);
+    messenger?.showSnackBar(
+      SnackBar(
+        content: Text(success
+            ? 'クイックアクセスから解除しました。ファイルは削除されていません。'
+            : 'クイックアクセスから解除できませんでした。'),
+      ),
+    );
+  }
+
+  Future<void> _showRootMenu() async {
+    if (!widget.isRoot) return;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
+    final box = context.findRenderObject() as RenderBox?;
+    if (overlay == null || box == null) return;
+    final offset = box.localToGlobal(Offset.zero, ancestor: overlay);
+    final result = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        offset & box.size,
+        Offset.zero & overlay.size,
+      ),
+      items: const [
+        PopupMenuItem(
+          value: 'forget',
+          child: Row(
+            children: [
+              Icon(Icons.link_off, size: 18),
+              SizedBox(width: 8),
+              Text('解除'),
+            ],
+          ),
+        ),
+      ],
+    );
+    if (result == 'forget') await _forgetRoot();
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DirectoryProvider>();
@@ -209,8 +272,20 @@ class _WebDirectoryTileState extends State<_WebDirectoryTile> {
           ? Theme.of(context).colorScheme.error
           : Colors.amber,
       semanticLabel: '${widget.title} フォルダ',
+      trailing: widget.isRoot
+          ? IconButton(
+              icon: const Icon(Icons.link_off, size: 16),
+              tooltip: 'クイックアクセスから解除',
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              onPressed: provider.isLoading ? null : _forgetRoot,
+            )
+          : null,
       errorMessage: _errorMessage,
       onTap: _open,
+      onSecondaryTap: widget.isRoot ? _showRootMenu : null,
+      onLongPress: widget.isRoot ? _showRootMenu : null,
       onToggle: _toggleExpand,
       children: [
         for (final child in _children)

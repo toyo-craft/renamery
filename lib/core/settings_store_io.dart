@@ -1,21 +1,32 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+String? _memorySettingsJson;
+
 Future<String?> readSettingsJson() async {
-  final file = await _getSettingsFile();
-  if (!await file.exists()) return null;
-  final content = await file.readAsString();
-  if (kDebugMode) debugPrint('Settings loaded from: ${file.path}');
-  return content;
+  try {
+    final file = await _getSettingsFile();
+    if (!await file.exists()) return null;
+    final content = await file.readAsString();
+    if (kDebugMode) debugPrint('Settings loaded from: ${file.path}');
+    return content;
+  } on MissingPluginException {
+    return _memorySettingsJson;
+  }
 }
 
 Future<void> writeSettingsJson(String content) async {
-  final file = await _getSettingsFile();
-  await file.writeAsString(content);
-  if (kDebugMode) debugPrint('Settings saved to: ${file.path}');
+  try {
+    final file = await _getSettingsFile();
+    await file.writeAsString(content);
+    if (kDebugMode) debugPrint('Settings saved to: ${file.path}');
+  } on MissingPluginException {
+    _memorySettingsJson = content;
+  }
 }
 
 Future<File> _getSettingsFile() async {

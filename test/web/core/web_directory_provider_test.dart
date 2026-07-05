@@ -177,6 +177,53 @@ void main() {
       expect(provider.currentFiles.map((entry) => entry.name), ['inside.txt']);
     });
 
+    test('forgetting active saved directory clears current folder', () async {
+      final root = FakeHandle('root');
+      final fs = FakeWebFileSystemClient()
+        ..savedDirectories.add(savedDirectory('1', 'Root', root))
+        ..entries[root] = [
+          fileEntry(name: 'inside.txt', parent: root),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      await provider.openSavedDirectory(savedDirectory('1', 'Root', root));
+      final success = await provider.forgetSavedDirectory(
+        savedDirectory('1', 'Root', root),
+      );
+
+      expect(success, true);
+      expect(provider.savedDirectories, isEmpty);
+      expect(provider.currentDirectory, isNull);
+      expect(provider.currentFiles, isEmpty);
+      expect(provider.navigationContextRoot, isNull);
+    });
+
+    test('forgetting inactive saved directory keeps current folder', () async {
+      final root = FakeHandle('root');
+      final other = FakeHandle('other');
+      final fs = FakeWebFileSystemClient()
+        ..savedDirectories.add(savedDirectory('1', 'Root', root))
+        ..savedDirectories.add(savedDirectory('2', 'Other', other))
+        ..entries[root] = [
+          fileEntry(name: 'inside.txt', parent: root),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      await provider.openSavedDirectory(savedDirectory('1', 'Root', root));
+      final success = await provider.forgetSavedDirectory(
+        savedDirectory('2', 'Other', other),
+      );
+
+      expect(success, true);
+      expect(provider.savedDirectories.map((directory) => directory.name), [
+        'Root',
+      ]);
+      expect(provider.currentDirectory?.name, 'Root');
+      expect(provider.currentFiles.map((entry) => entry.name), ['inside.txt']);
+    });
+
     test('opening saved directory stops when permission is denied', () async {
       final root = FakeHandle('root');
       final fs = FakeWebFileSystemClient()..permissionResults[root] = 'denied';
@@ -746,6 +793,11 @@ class FakeWebFileSystemClient implements WebFileSystemClient {
   @override
   Future<List<WebSavedDirectory>> listSavedDirectories() async {
     return List<WebSavedDirectory>.from(savedDirectories);
+  }
+
+  @override
+  Future<void> forgetSavedDirectory(String id) async {
+    savedDirectories.removeWhere((directory) => directory.id == id);
   }
 
   @override

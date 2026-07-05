@@ -97,7 +97,7 @@ async function installRenameryFsMock(
       },
     ];
 
-    let hasSavedDirectory = false;
+    const savedDirectoryIds = new Set<string>();
 
     function directoryRecord(
       id = 'root',
@@ -136,12 +136,15 @@ async function installRenameryFsMock(
       isSupported: () => supported,
       pickDirectory: async () => {
         if (!supported) throw new Error('File System Access API is not supported.');
-        hasSavedDirectory = true;
+        for (const id of ['root', 'work', 'archive']) savedDirectoryIds.add(id);
         return directoryRecord();
       },
       listSavedDirectories: async () => {
-        if (!supported || !hasSavedDirectory) return [];
-        return directoryRecords();
+        if (!supported || savedDirectoryIds.size === 0) return [];
+        return directoryRecords().filter((record) => savedDirectoryIds.has(record.id));
+      },
+      forgetSavedDirectory: async (id: string) => {
+        savedDirectoryIds.delete(id);
       },
       requestDirectoryPermission: async () => permission,
       listDirectory: async (
@@ -262,7 +265,22 @@ test.describe('ReNamery Web MVP', () => {
     await installRenameryFsMock(page);
     await openApp(page);
 
+    await expect(page.getByRole('button', { name: 'ローカルフォルダを選択' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'フォルダを選択', exact: true })).toBeVisible();
+  });
+
+  test('exposes app and publisher metadata', async ({ page }) => {
+    await installRenameryFsMock(page);
+    await openApp(page);
+
+    await expect(page).toHaveTitle(/ReNamery/);
+    await expect(page).toHaveTitle(/東洋クラフト/);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
+    await expect(page.locator('meta[name="application-name"]')).toHaveAttribute('content', 'ReNamery');
+    await expect(page.locator('meta[name="author"]')).toHaveAttribute('content', '東洋クラフト');
+    await expect(page.locator('meta[name="publisher"]')).toHaveAttribute('content', '東洋クラフト');
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://toyo-craft.net/apps');
+    await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute('content', '東洋クラフト');
   });
 
   test('shows unsupported browser guidance', async ({ page }) => {
@@ -278,7 +296,7 @@ test.describe('ReNamery Web MVP', () => {
     await openApp(page);
 
     await openMockDirectory(page);
-    await expect(page.getByText('PC', { exact: true })).toBeVisible();
+    await expect(page.getByText('PC', { exact: true })).toHaveCount(0);
     await expect(page.getByText('フォルダ', { exact: true })).toHaveCount(0);
     await expect(page.getByText('OSドライブ一覧はブラウザ制約により利用できません')).toHaveCount(0);
     await expect(page.getByText('任意パス移動はWeb版では利用できません')).toHaveCount(0);
@@ -295,6 +313,29 @@ test.describe('ReNamery Web MVP', () => {
 
     await page.getByRole('button', { name: 'Root フォルダ' }).click();
     await expect(entryRow(page, 'old-file.txt')).toBeVisible();
+  });
+
+  test('forgets saved directories from quick access', async ({ page }) => {
+    await installRenameryFsMock(page);
+    await openApp(page);
+    await openMockDirectory(page);
+
+    await page.getByRole('button', { name: 'クイックアクセスから解除' }).first().click();
+    await expect(page.getByText('クイックアクセスから解除しますか？')).toBeVisible();
+    await expect(page.getByText('「Root」をReNameryのクイックアクセスから解除します。')).toBeVisible();
+    await page.getByRole('button', { name: 'キャンセル' }).click();
+    await expect(page.getByText('クイックアクセスから解除しますか？')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Root フォルダ' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'クイックアクセスから解除' }).first().click();
+    await page.getByRole('button', { name: /^解除$/ }).click();
+    await expect(page.getByText('クイックアクセスから解除しました').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Root フォルダ' })).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'クイックアクセスから解除' }).first().click();
+    await expect(page.getByText('「Work」をReNameryのクイックアクセスから解除します。')).toBeVisible();
+    await page.getByRole('button', { name: /^解除$/ }).click();
+    await expect(page.getByRole('button', { name: 'Work フォルダ' })).toHaveCount(0);
   });
 
   test('selects and clears all listed entries', async ({ page }) => {
