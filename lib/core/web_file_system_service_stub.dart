@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'web_file_system_types.dart';
 
 WebFileSystemClient createWebFileSystemClient() =>
@@ -28,6 +30,11 @@ class _UnsupportedWebFileSystemClient implements WebFileSystemClient {
     bool recursive,
   ) async =>
       const [];
+
+  @override
+  Future<Uint8List> readFileBytes(Object fileHandle, int limit) async {
+    throw UnsupportedError('File System Access API is unavailable.');
+  }
 
   @override
   Future<void> renameFile({

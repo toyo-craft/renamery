@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 enum WebEntryKind { file, directory }
 
 enum WebEntryStatus { original, pending, renamed, error }
@@ -14,6 +16,7 @@ abstract class WebFileSystemClient {
     String relativePath,
     bool recursive,
   );
+  Future<Uint8List> readFileBytes(Object fileHandle, int limit);
   Future<void> renameFile({
     required Object parentHandle,
     required String oldName,

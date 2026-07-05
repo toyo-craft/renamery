@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'web_file_system_service_stub.dart'
     if (dart.library.js_interop) 'web_file_system_service_js.dart'
     as implementation;
@@ -36,6 +38,10 @@ class WebFileSystemService implements WebFileSystemClient {
     bool recursive,
   ) =>
       _delegate.listDirectory(directoryHandle, relativePath, recursive);
+
+  @override
+  Future<Uint8List> readFileBytes(Object fileHandle, int limit) =>
+      _delegate.readFileBytes(fileHandle, limit);
 
   @override
   Future<void> renameFile({

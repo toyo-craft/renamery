@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
+import 'dart:typed_data';
 
 import 'web_file_system_types.dart';
 
@@ -52,6 +53,13 @@ class _JsWebFileSystemClient implements WebFileSystemClient {
       recursive,
     ).toDart;
     return result.toDart.map(_entryFromJs).toList();
+  }
+
+  @override
+  Future<Uint8List> readFileBytes(Object fileHandle, int limit) async {
+    final result =
+        await _bridgeReadFileBytes(fileHandle as JSObject, limit).toDart;
+    return result.toDart;
   }
 
   @override
@@ -135,6 +143,12 @@ external JSPromise<JSArray<_JsFileEntry>> _bridgeListDirectory(
   JSObject handle,
   String relativePath,
   bool recursive,
+);
+
+@JS('renameryFs.readFileBytes')
+external JSPromise<JSUint8Array> _bridgeReadFileBytes(
+  JSObject fileHandle,
+  int limit,
 );
 
 @JS('renameryFs.renameFile')

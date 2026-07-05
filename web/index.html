@@ -336,6 +336,13 @@
         return result;
       };
 
+      const readFileBytes = async (handle, limit = 0) => {
+        const file = await handle.getFile();
+        const source = limit > 0 ? file.slice(0, limit) : file;
+        const buffer = await source.arrayBuffer();
+        return new Uint8Array(buffer);
+      };
+
       const isNotFoundError = (error) => error && error.name === 'NotFoundError';
       const isTypeMismatchError = (error) => error && error.name === 'TypeMismatchError';
 
@@ -426,6 +433,7 @@
         forgetSavedDirectory,
         requestDirectoryPermission,
         listDirectory,
+        readFileBytes,
         renameFile,
       };
     })();

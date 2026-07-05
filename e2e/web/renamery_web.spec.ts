@@ -132,6 +132,19 @@ async function installRenameryFsMock(
       return rootEntries;
     }
 
+    function bytesForHandle(handle: { id: string }) {
+      const textById: Record<string, string> = {
+        'file:old-file.txt': 'old-file.txt preview text from the browser handle',
+        'file:another-old.txt': 'another-old.txt preview text from the browser handle',
+        'file:duplicate.txt': 'duplicate.txt preview text from the browser handle',
+        'file:child-old.txt': 'child-old.txt preview text from the browser handle',
+        'file:deep-old.txt': 'deep-old.txt preview text from the browser handle',
+        'file:manual-new.txt': 'manual-new.txt preview text from the browser handle',
+      };
+      const text = textById[handle.id] ?? `${handle.id} preview text from the browser handle`;
+      return new TextEncoder().encode(text);
+    }
+
     const api = {
       isSupported: () => supported,
       pickDirectory: async () => {
@@ -160,6 +173,10 @@ async function installRenameryFsMock(
           if (entry.kind !== 'directory') return [entry];
           return [entry, ...entriesFor(entry.handle).map(cloneEntry)];
         });
+      },
+      readFileBytes: async (handle: { id: string }, limit = 0) => {
+        const bytes = bytesForHandle(handle);
+        return limit > 0 ? bytes.slice(0, limit) : bytes;
       },
       renameFile: async (
         parentHandle: { id: string },
@@ -348,6 +365,21 @@ test.describe('ReNamery Web MVP', () => {
 
     await page.getByRole('button', { name: '選択解除' }).click();
     await expect(page.getByRole('button', { name: 'すべて選択' })).toBeVisible();
+  });
+
+  test('shows shared preview for web text file content', async ({ page }) => {
+    await installRenameryFsMock(page);
+    await openApp(page);
+    await openMockDirectory(page);
+
+    await entryRow(page, 'old-file.txt').click();
+
+    await expect(
+      page.locator('[aria-label*="old-file.txt preview text from the browser handle"]'),
+    ).toBeVisible();
+    await expect(
+      page.locator('[aria-label*="Web版ではTXTファイルの内容プレビューは未対応です。"]'),
+    ).toHaveCount(0);
   });
 
   test('shows child directory files when recursive search is enabled', async ({ page }) => {

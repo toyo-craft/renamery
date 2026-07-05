@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:renamery/core/directory_provider_web.dart';
 import 'package:renamery/core/web_file_system_service.dart';
@@ -830,6 +832,11 @@ class FakeWebFileSystemClient implements WebFileSystemClient {
       }
     }
     return result;
+  }
+
+  @override
+  Future<Uint8List> readFileBytes(Object fileHandle, int limit) async {
+    return Uint8List(0);
   }
 
   WebFileEntry _withRelativeBase(WebFileEntry entry, String base) {

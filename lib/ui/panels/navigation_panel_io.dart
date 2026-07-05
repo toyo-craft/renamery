@@ -47,7 +47,6 @@ class _NavigationPanelState extends State<NavigationPanel> {
     }).then((drives) {
       if (!mounted) return;
       setState(() => _drives = drives);
-      debugPrint('[NavPanel] Drives: ${drives.map((d) => d.path).toList()}');
       revealTree();
     });
 
@@ -346,11 +345,8 @@ class _DirectoryTileState extends State<_DirectoryTile> {
         (provider.selectionVersion != _lastHandledSelectionVersion ||
             widget.forceExpansion)) {
       bool shouldAutoExpand = isDescendant || isSelected;
-      debugPrint(
-          '[NavDebug] Tile: ${widget.directory.path} | isSelected: $isSelected | isDescendant: $isDescendant | shouldAutoExpand: $shouldAutoExpand');
 
       if (shouldAutoExpand && !_isExpanded && !widget.isSuppressingAutoExpand) {
-        debugPrint('[NavDebug] Auto-expanding: ${widget.directory.path}');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _toggleExpand();
         });
