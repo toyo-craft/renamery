@@ -43,10 +43,6 @@ class _NavigationPanelState extends State<NavigationPanel> {
   Widget _buildTreeSection() {
     final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<DirectoryProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
-    final folders = provider.directoryEntries
-        .where((file) => file.isDirectory)
-        .toList(growable: false);
 
     return NavigationTreeView.sections(
       horizontalController: _horizontalController,
@@ -66,41 +62,20 @@ class _NavigationPanelState extends State<NavigationPanel> {
                 provider.errorMessage!,
                 error: true,
               ),
-            if (provider.savedDirectories.isEmpty)
-              const NavigationEmptyText('選択済みフォルダはまだありません。')
-            else
-              ..._savedDirectoryTiles(provider, colorScheme),
           ],
         ),
-        NavigationSection(
-          title: l10n.labelNavPC,
-          items: const [
-            NavigationItem.disabled(
-              icon: Symbols.desktop_windows,
-              title: 'このPC',
-              subtitle: 'OSドライブ一覧はブラウザ制約により利用できません',
-            ),
-            NavigationItem.disabled(
-              icon: Symbols.input,
-              title: 'パスを入力',
-              subtitle: '任意パス移動はWeb版では利用できません',
-            ),
-          ],
+        NavigationSection.pc(
+          context,
+          children: provider.savedDirectories.isEmpty
+              ? const [NavigationEmptyText('選択済みフォルダはまだありません。')]
+              : [
+                  for (final directory in provider.savedDirectories)
+                    _WebDirectoryTile(
+                      key: ValueKey('web-nav-root-${directory.id}'),
+                      root: directory,
+                    ),
+                ],
         ),
-        if (provider.currentDirectory != null)
-          NavigationSection(
-            title: '現在のフォルダ',
-            children: [
-              NavigationBreadcrumbs(
-                emptyText: 'フォルダは選択されていません。',
-                items: _breadcrumbItems(provider),
-              ),
-              if (folders.isEmpty)
-                const NavigationEmptyText('子フォルダはありません。')
-              else
-                ..._directoryTiles(folders, colorScheme),
-            ],
-          ),
       ],
       trailingChildren: const [SizedBox(height: 8)],
     );
@@ -115,91 +90,144 @@ class _NavigationPanelState extends State<NavigationPanel> {
       onTap: provider.pickLocalDirectory,
     );
   }
+}
 
-  NavigationItem _savedDirectoryItem(
-    DirectoryProvider provider,
-    WebSavedDirectory directory, {
-    required ColorScheme colorScheme,
-    required int depth,
-  }) {
-    final current = provider.currentDirectory?.name == directory.name &&
-        provider.breadcrumbs.length == 1;
-    final subtitle = directory.isGranted ? 'アクセス許可済み' : 'クリックして許可';
+class _WebDirectoryTile extends StatefulWidget {
+  const _WebDirectoryTile({
+    super.key,
+    required this.root,
+    this.locations = const [],
+  });
 
-    return NavigationItem(
-      icon: directory.isGranted ? Symbols.folder : Symbols.lock,
-      title: directory.name,
-      subtitle: subtitle,
-      depth: depth,
+  final WebSavedDirectory root;
+  final List<WebDirectoryLocation> locations;
+
+  bool get isRoot => locations.isEmpty;
+  WebDirectoryLocation? get location => isRoot ? null : locations.last;
+  String get title => location?.name ?? root.name;
+  String get relativePath => location?.relativePath ?? '';
+  Object get handle => location?.handle ?? root.handle;
+
+  @override
+  State<_WebDirectoryTile> createState() => _WebDirectoryTileState();
+}
+
+class _WebDirectoryTileState extends State<_WebDirectoryTile> {
+  bool _isExpanded = false;
+  bool _isLoadingChildren = false;
+  bool _loaded = false;
+  String? _errorMessage;
+  List<FileModel> _children = [];
+  int _lastResetTick = -1;
+
+  Future<void> _toggleExpand() async {
+    if (_isExpanded) {
+      setState(() => _isExpanded = false);
+      return;
+    }
+    await _expand();
+  }
+
+  Future<void> _expand() async {
+    if (_isExpanded && (_loaded || _isLoadingChildren)) return;
+    if (mounted) {
+      setState(() {
+        _isExpanded = true;
+        _errorMessage = null;
+      });
+    }
+    if (_loaded || _isLoadingChildren) return;
+
+    final provider = context.read<DirectoryProvider>();
+    if (mounted) setState(() => _isLoadingChildren = true);
+    try {
+      final children = await provider.listNavigationDirectoryChildren(
+        handle: widget.handle,
+        rootPath: widget.root.name,
+        relativePath: widget.relativePath,
+      );
+      if (!mounted) return;
+      setState(() {
+        _children = children;
+        _loaded = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'フォルダを読み込めませんでした。';
+        _loaded = false;
+      });
+    } finally {
+      if (mounted) setState(() => _isLoadingChildren = false);
+    }
+  }
+
+  Future<void> _open() async {
+    final provider = context.read<DirectoryProvider>();
+    await provider.openNavigationDirectory(widget.root, widget.locations);
+    if (!mounted) return;
+    if (!_isExpanded) await _expand();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<DirectoryProvider>();
+    final rootIsActive = provider.navigationContextRoot == widget.root.id;
+    final currentRelativePath = provider.currentDirectory?.relativePath ?? '';
+    final relativePath = widget.relativePath;
+    final isSelected = rootIsActive && currentRelativePath == relativePath;
+    final isDescendant = rootIsActive &&
+        (relativePath.isEmpty
+            ? currentRelativePath.isNotEmpty
+            : currentRelativePath.startsWith('$relativePath/'));
+
+    if (_lastResetTick != -1 && provider.navTreeResetTick != _lastResetTick) {
+      _isExpanded = false;
+      _isLoadingChildren = false;
+      _loaded = false;
+      _children = [];
+      _errorMessage = null;
+    }
+    _lastResetTick = provider.navTreeResetTick;
+
+    if ((isSelected || isDescendant) && !_isExpanded && !_isLoadingChildren) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _expand();
+      });
+    }
+
+    final rootNeedsPermission = widget.isRoot && !widget.root.isGranted;
+    return NavigationExpandableItem(
+      title: widget.title,
+      icon: rootNeedsPermission ? Symbols.lock : Symbols.folder,
+      expandedIcon: Symbols.folder_open,
       enabled: !provider.isLoading,
-      selected: current,
-      iconColor: directory.isGranted ? Colors.amber : colorScheme.error,
-      semanticLabel: '${directory.name} $subtitle',
-      onTap: () => context.read<DirectoryProvider>().openSavedDirectory(
-            directory,
-          ),
+      selected: isSelected,
+      isExpanded: _isExpanded,
+      isLoading: _isLoadingChildren,
+      iconColor: rootNeedsPermission
+          ? Theme.of(context).colorScheme.error
+          : Colors.amber,
+      semanticLabel: '${widget.title} フォルダ',
+      errorMessage: _errorMessage,
+      onTap: _open,
+      onToggle: _toggleExpand,
+      children: [
+        for (final child in _children)
+          if (child.handle != null)
+            _WebDirectoryTile(
+              key: ValueKey('web-nav-${widget.root.id}-${child.relativePath}'),
+              root: widget.root,
+              locations: [
+                ...widget.locations,
+                WebDirectoryLocation(
+                  name: child.originalName,
+                  relativePath: child.relativePath,
+                  handle: child.handle!,
+                ),
+              ],
+            ),
+      ],
     );
-  }
-
-  List<Widget> _savedDirectoryTiles(
-    DirectoryProvider provider,
-    ColorScheme colorScheme,
-  ) {
-    return [
-      for (final directory in provider.savedDirectories)
-        NavigationInfoTile.item(
-          _savedDirectoryItem(
-            provider,
-            directory,
-            colorScheme: colorScheme,
-            depth: 1,
-          ),
-        ),
-    ];
-  }
-
-  List<NavigationBreadcrumbItem> _breadcrumbItems(DirectoryProvider provider) {
-    return [
-      for (var i = 0; i < provider.breadcrumbs.length; i++)
-        NavigationBreadcrumbItem(
-          label: provider.breadcrumbs[i].name,
-          onPressed: provider.isLoading
-              ? null
-              : () => context.read<DirectoryProvider>().openBreadcrumb(i),
-        ),
-    ];
-  }
-
-  NavigationItem _directoryItem(
-    FileModel folder, {
-    required ColorScheme colorScheme,
-    required int depth,
-  }) {
-    return NavigationItem.folder(
-      title: folder.originalName,
-      subtitle: folder.displayRelativePath.isEmpty
-          ? 'フォルダ'
-          : folder.displayRelativePath,
-      depth: depth,
-      enabled: folder.handle != null,
-      trailing: Icon(
-        Symbols.chevron_right,
-        size: 18,
-        color: colorScheme.onSurfaceVariant,
-      ),
-      onTap: () => context.read<DirectoryProvider>().openDirectory(folder),
-    );
-  }
-
-  List<Widget> _directoryTiles(
-    List<FileModel> folders,
-    ColorScheme colorScheme,
-  ) {
-    return [
-      for (final folder in folders)
-        NavigationInfoTile.item(
-          _directoryItem(folder, colorScheme: colorScheme, depth: 1),
-        ),
-    ];
   }
 }

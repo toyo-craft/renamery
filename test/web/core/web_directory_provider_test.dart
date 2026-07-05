@@ -124,6 +124,59 @@ void main() {
       ]);
     });
 
+    test('navigation children include folders only', () async {
+      final root = FakeHandle('root');
+      final folder = FakeHandle('folder');
+      final fs = FakeWebFileSystemClient()
+        ..entries[root] = [
+          directoryEntry(name: 'Images', handle: folder, parent: root),
+          fileEntry(name: 'old.txt', parent: root),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      final children = await provider.listNavigationDirectoryChildren(
+        handle: root,
+        rootPath: 'Root',
+        relativePath: '',
+      );
+
+      expect(children.map((entry) => entry.originalName), ['Images']);
+      expect(children.single.path, 'Root/Images');
+      expect(children.single.relativePath, 'Images');
+    });
+
+    test('opening navigation directory rebuilds breadcrumbs from saved root',
+        () async {
+      final root = FakeHandle('root');
+      final child = FakeHandle('child');
+      final fs = FakeWebFileSystemClient()
+        ..savedDirectories.add(savedDirectory('1', 'Root', root))
+        ..entries[child] = [
+          fileEntry(name: 'inside.txt', parent: child),
+        ];
+
+      final provider = DirectoryProvider(fileSystem: fs);
+
+      await provider.openNavigationDirectory(
+        savedDirectory('1', 'Root', root),
+        [
+          WebDirectoryLocation(
+            name: 'Child',
+            relativePath: 'Child',
+            handle: child,
+          ),
+        ],
+      );
+
+      expect(provider.navigationContextRoot, '1');
+      expect(provider.breadcrumbs.map((breadcrumb) => breadcrumb.name), [
+        'Root',
+        'Child',
+      ]);
+      expect(provider.currentFiles.map((entry) => entry.name), ['inside.txt']);
+    });
+
     test('opening saved directory stops when permission is denied', () async {
       final root = FakeHandle('root');
       final fs = FakeWebFileSystemClient()..permissionResults[root] = 'denied';

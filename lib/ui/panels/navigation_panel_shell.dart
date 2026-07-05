@@ -169,6 +169,24 @@ class NavigationSection {
     this.children = const [],
   });
 
+  factory NavigationSection.pc(
+    BuildContext context, {
+    VoidCallback? onAction,
+    IconData? actionIcon,
+    String? actionTooltip,
+    List<NavigationItem> items = const [],
+    List<Widget> children = const [],
+  }) {
+    return NavigationSection(
+      title: AppLocalizations.of(context)!.labelNavPC,
+      onAction: onAction,
+      actionIcon: actionIcon,
+      actionTooltip: actionTooltip,
+      items: items,
+      children: children,
+    );
+  }
+
   final String? title;
   final VoidCallback? onAction;
   final IconData? actionIcon;
@@ -415,6 +433,189 @@ class NavigationInfoTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class NavigationExpandableItem extends StatelessWidget {
+  const NavigationExpandableItem({
+    super.key,
+    required this.title,
+    required this.isExpanded,
+    required this.onToggle,
+    this.subtitle,
+    this.icon = Symbols.folder,
+    this.expandedIcon = Symbols.folder_open,
+    this.enabled = true,
+    this.selected = false,
+    this.isLoading = false,
+    this.iconColor,
+    this.selectedColor,
+    this.semanticLabel,
+    this.errorMessage,
+    this.children = const [],
+    this.onTap,
+  });
+
+  final String title;
+  final String? subtitle;
+  final IconData icon;
+  final IconData expandedIcon;
+  final bool enabled;
+  final bool selected;
+  final bool isExpanded;
+  final bool isLoading;
+  final Color? iconColor;
+  final Color? selectedColor;
+  final String? semanticLabel;
+  final String? errorMessage;
+  final List<Widget> children;
+  final VoidCallback? onTap;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<DirectoryProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final effectiveIconColor =
+        enabled ? (iconColor ?? Colors.amber) : colorScheme.onSurfaceVariant;
+    final rowHeight = provider.touchMode ? 44.0 : 32.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0, bottom: 2.0),
+          child: Semantics(
+            button: onTap != null,
+            enabled: enabled,
+            label: semanticLabel ?? '$title フォルダ',
+            child: ExcludeSemantics(
+              child: Material(
+                color: selected
+                    ? selectedColor ?? colorScheme.secondaryContainer
+                    : Colors.transparent,
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+                child: InkWell(
+                  onTap: enabled ? onTap : null,
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
+                  child: SizedBox(
+                    height: rowHeight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: provider.touchMode ? 32 : 24,
+                          height: rowHeight,
+                          child: InkWell(
+                            onTap: enabled ? onToggle : null,
+                            child: Icon(
+                              isExpanded
+                                  ? Symbols.keyboard_arrow_down
+                                  : Symbols.keyboard_arrow_right,
+                              size: provider.touchMode ? 24 : 16,
+                              color: enabled
+                                  ? colorScheme.onSurfaceVariant
+                                  : colorScheme.outline,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          isExpanded ? expandedIcon : icon,
+                          size: provider.touchMode ? 28 : 20,
+                          color: effectiveIconColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.visible,
+                              style: TextStyle(
+                                fontSize: provider.touchMode ? 15 : 13,
+                                color: selected
+                                    ? colorScheme.onSecondaryContainer
+                                    : enabled
+                                        ? null
+                                        : colorScheme.onSurfaceVariant,
+                                fontWeight: selected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            if (subtitle != null)
+                              Text(
+                                subtitle!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (isExpanded)
+          Container(
+            margin: EdgeInsets.only(left: provider.touchMode ? 15.0 : 11.0),
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+                  width: 1.0,
+                ),
+              ),
+            ),
+            padding: EdgeInsets.only(left: provider.touchMode ? 16.0 : 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isLoading)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6.0),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                if (errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6.0),
+                    child: Text(
+                      errorMessage!,
+                      style: TextStyle(
+                        color: colorScheme.error,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ...children,
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

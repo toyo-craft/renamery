@@ -21,6 +21,9 @@ async function installRenameryFsMock(
 
     const rootHandle = { id: 'root', kind: 'directory', name: 'Root' };
     const subHandle = { id: 'sub-folder', kind: 'directory', name: 'sub-folder' };
+    const childFolderHandle = { id: 'child-folder', kind: 'directory', name: 'child-folder' };
+    const workHandle = { id: 'work', kind: 'directory', name: 'Work' };
+    const archiveHandle = { id: 'archive', kind: 'directory', name: 'Archive' };
 
     const rootEntries = [
       {
@@ -63,6 +66,15 @@ async function installRenameryFsMock(
 
     const subEntries = [
       {
+        name: 'child-folder',
+        kind: 'directory',
+        handle: childFolderHandle,
+        parentHandle: subHandle,
+        relativePath: 'sub-folder/child-folder',
+        size: null,
+        lastModified: null,
+      },
+      {
         name: 'child-old.txt',
         kind: 'file',
         handle: { id: 'file:child-old.txt', kind: 'file', name: 'child-old.txt' },
@@ -73,16 +85,40 @@ async function installRenameryFsMock(
       },
     ];
 
+    const childFolderEntries = [
+      {
+        name: 'deep-old.txt',
+        kind: 'file',
+        handle: { id: 'file:deep-old.txt', kind: 'file', name: 'deep-old.txt' },
+        parentHandle: childFolderHandle,
+        relativePath: 'sub-folder/child-folder/deep-old.txt',
+        size: 60,
+        lastModified: now,
+      },
+    ];
+
     let hasSavedDirectory = false;
 
-    function directoryRecord() {
+    function directoryRecord(
+      id = 'root',
+      name = 'Root',
+      handle: { id: string; kind: string; name: string } = rootHandle,
+    ) {
       return {
-        id: 'root',
-        name: 'Root',
-        handle: rootHandle,
+        id,
+        name,
+        handle,
         permission,
         lastUsedAt: now,
       };
+    }
+
+    function directoryRecords() {
+      return [
+        directoryRecord('root', 'Root', rootHandle),
+        directoryRecord('work', 'Work', workHandle),
+        directoryRecord('archive', 'Archive', archiveHandle),
+      ];
     }
 
     function cloneEntry(entry: (typeof rootEntries)[number]) {
@@ -90,7 +126,10 @@ async function installRenameryFsMock(
     }
 
     function entriesFor(handle: { id: string }) {
-      return handle.id === 'sub-folder' ? subEntries : rootEntries;
+      if (handle.id === 'sub-folder') return subEntries;
+      if (handle.id === 'child-folder') return childFolderEntries;
+      if (handle.id === 'work' || handle.id === 'archive') return [];
+      return rootEntries;
     }
 
     const api = {
@@ -102,7 +141,7 @@ async function installRenameryFsMock(
       },
       listSavedDirectories: async () => {
         if (!supported || !hasSavedDirectory) return [];
-        return [directoryRecord()];
+        return directoryRecords();
       },
       requestDirectoryPermission: async () => permission,
       listDirectory: async (
@@ -239,14 +278,22 @@ test.describe('ReNamery Web MVP', () => {
     await openApp(page);
 
     await openMockDirectory(page);
-    await expect(page.getByRole('button', { name: 'Root', exact: true })).toBeVisible();
+    await expect(page.getByText('PC', { exact: true })).toBeVisible();
+    await expect(page.getByText('フォルダ', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('OSドライブ一覧はブラウザ制約により利用できません')).toHaveCount(0);
+    await expect(page.getByText('任意パス移動はWeb版では利用できません')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Root フォルダ' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Work フォルダ' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Archive フォルダ' })).toBeVisible();
     await expect(entryRow(page, 'sub-folder')).toBeVisible();
     await expect(entryRow(page, 'duplicate.txt')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'sub-folder フォルダ' })).toBeVisible();
 
     await page.getByRole('button', { name: 'sub-folder フォルダ' }).click();
     await expect(entryRow(page, 'child-old.txt')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'child-folder フォルダ' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Root', exact: true }).click();
+    await page.getByRole('button', { name: 'Root フォルダ' }).click();
     await expect(entryRow(page, 'old-file.txt')).toBeVisible();
   });
 

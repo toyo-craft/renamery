@@ -119,8 +119,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
                     ))
                 .toList(),
           ),
-        NavigationSection(
-          title: l10n.labelNavPC,
+        NavigationSection.pc(
+          context,
           children: _drives
               .map((dir) => _DirectoryTile(
                     directory: dir,

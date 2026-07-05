@@ -405,6 +405,9 @@ class DirectoryProvider extends ChangeNotifier {
     await _guarded(() async {
       final directory = await _fs.pickDirectory();
       if (directory == null) return;
+      _navigationSource = 'tree';
+      _navigationContextRoot = directory.id;
+      _selectionVersion++;
       await _openRoot(directory);
       _savedDirectories = await _fs.listSavedDirectories();
     });
@@ -427,6 +430,9 @@ class DirectoryProvider extends ChangeNotifier {
         _errorMessage = 'フォルダへのアクセスが許可されませんでした。';
         return;
       }
+      _navigationSource = 'tree';
+      _navigationContextRoot = directory.id;
+      _selectionVersion++;
       await _openRoot(directory);
       _savedDirectories = await _fs.listSavedDirectories();
     });
@@ -439,6 +445,8 @@ class DirectoryProvider extends ChangeNotifier {
   Future<void> openDirectory(FileModel entry) async {
     if (!entry.isDirectory || entry.handle == null) return;
     await _guarded(() async {
+      _navigationSource = 'tree';
+      _selectionVersion++;
       _breadcrumbs.add(WebDirectory(
         name: entry.originalName,
         path: entry.path,
@@ -448,6 +456,57 @@ class DirectoryProvider extends ChangeNotifier {
       _currentDirectory = _breadcrumbs.last;
       await _listCurrentDirectory();
     });
+  }
+
+  Future<void> openNavigationDirectory(
+    WebSavedDirectory root,
+    List<WebDirectoryLocation> locations,
+  ) async {
+    await _guarded(() async {
+      var permission = root.permission;
+      if (permission != 'granted') {
+        permission = await _fs.requestPermission(root.handle);
+      }
+      if (permission != 'granted') {
+        _errorMessage = 'フォルダへのアクセスが許可されませんでした。';
+        return;
+      }
+      _navigationSource = 'tree';
+      _navigationContextRoot = root.id;
+      _selectionVersion++;
+      _breadcrumbs
+        ..clear()
+        ..add(WebDirectory(
+          name: root.name,
+          path: root.name,
+          relativePath: '',
+          handle: root.handle,
+        ));
+      for (final location in locations) {
+        _breadcrumbs.add(WebDirectory(
+          name: location.name,
+          path: p.posix.join(root.name, location.relativePath),
+          relativePath: location.relativePath,
+          handle: location.handle,
+        ));
+      }
+      _currentDirectory = _breadcrumbs.last;
+      await _listCurrentDirectory();
+      _savedDirectories = await _fs.listSavedDirectories();
+    });
+  }
+
+  Future<List<FileModel>> listNavigationDirectoryChildren({
+    required Object handle,
+    required String rootPath,
+    required String relativePath,
+  }) async {
+    final entries = await _fs.listDirectory(handle, relativePath, false);
+    return entries
+        .where((entry) => entry.isDirectory)
+        .where((entry) => !_hideSystemFiles || !entry.name.startsWith('.'))
+        .map((entry) => _toNavigationFileModel(entry, rootPath))
+        .toList(growable: false);
   }
 
   Future<void> openBreadcrumb(int index) async {
@@ -573,6 +632,24 @@ class DirectoryProvider extends ChangeNotifier {
       parentHandle: entry.parentHandle,
     )..setRelativePath(entry.relativePath);
     file.setDisplayRelativePath(displayRelativeParent);
+    return file;
+  }
+
+  FileModel _toNavigationFileModel(WebFileEntry entry, String rootPath) {
+    final entryParentPath = p.posix.dirname(entry.relativePath);
+    final parent = entryParentPath == '.'
+        ? rootPath
+        : p.posix.join(rootPath, entryParentPath);
+    final file = FileModel(
+      originalName: entry.name,
+      parentPath: parent,
+      isDirectory: entry.isDirectory,
+      modified: entry.lastModified,
+      byteSize: entry.size,
+      handle: entry.handle,
+      parentHandle: entry.parentHandle,
+    )..setRelativePath(entry.relativePath);
+    file.setDisplayRelativePath(entryParentPath == '.' ? '' : entryParentPath);
     return file;
   }
 
@@ -1164,6 +1241,7 @@ class DirectoryProvider extends ChangeNotifier {
           ..addAll(undoActions);
       }
       await _listCurrentDirectory();
+      if (count > 0) _navTreeResetTick++;
     });
     return count;
   }
@@ -1198,6 +1276,7 @@ class DirectoryProvider extends ChangeNotifier {
           parentHandle: parentHandle,
         ));
       await _listCurrentDirectory();
+      _navTreeResetTick++;
       _restoreSelectionByPath(renamedPath, wasSelected);
     });
   }
@@ -1229,7 +1308,10 @@ class DirectoryProvider extends ChangeNotifier {
           errors.add('$newName: $e');
         }
       }
-      if (count > 0) _lastUndoTransaction.clear();
+      if (count > 0) {
+        _lastUndoTransaction.clear();
+        _navTreeResetTick++;
+      }
       await _listCurrentDirectory();
     });
 
