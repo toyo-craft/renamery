@@ -18,6 +18,7 @@ class _JsWebFileSystemClient implements WebFileSystemClient {
   @override
   Future<WebSavedDirectory?> pickDirectory() async {
     final result = await _bridgePickDirectory().toDart;
+    if (result == null) return null;
     return _savedDirectoryFromJs(result);
   }
 
@@ -113,7 +114,7 @@ extension type _JsFileEntry(JSObject _) implements JSObject {
 external bool _bridgeIsSupported();
 
 @JS('renameryFs.pickDirectory')
-external JSPromise<_JsSavedDirectory> _bridgePickDirectory();
+external JSPromise<_JsSavedDirectory?> _bridgePickDirectory();
 
 @JS('renameryFs.listSavedDirectories')
 external JSPromise<JSArray<_JsSavedDirectory>> _bridgeListSavedDirectories();

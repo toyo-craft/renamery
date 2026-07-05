@@ -29,6 +29,17 @@ void main() {
       expect(provider.isLoading, false);
     });
 
+    test('canceling local directory picker leaves state unchanged', () async {
+      final provider = DirectoryProvider(fileSystem: FakeWebFileSystemClient());
+
+      await provider.pickLocalDirectory();
+
+      expect(provider.errorMessage, isNull);
+      expect(provider.currentDirectory, isNull);
+      expect(provider.currentFiles, isEmpty);
+      expect(provider.isLoading, false);
+    });
+
     test('loads saved directories when File System Access API is supported',
         () async {
       final root = FakeHandle('root');

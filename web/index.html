@@ -123,7 +123,13 @@
         if (!isSupported()) {
           throw new Error('File System Access API is not supported.');
         }
-        const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        let handle = null;
+        try {
+          handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        } catch (error) {
+          if (error?.name === 'AbortError') return null;
+          throw error;
+        }
         return saveDirectoryHandle(handle);
       };
 

@@ -48,60 +48,61 @@ class _NavigationPanelState extends State<NavigationPanel> {
         .where((file) => file.isDirectory)
         .toList(growable: false);
 
-    return NavigationTreeView(
+    return NavigationTreeView.sections(
       horizontalController: _horizontalController,
       verticalController: _verticalScrollController,
       header: NavigationSectionHeader(l10n.labelNavQuickAccess),
-      children: [
-        NavigationInfoTile.item(_localDirectoryPickerItem(provider)),
-        if (!provider.isWebFileSystemSupported)
-          const NavigationMessageCard(
-            'このブラウザはフォルダ連携に対応していません。ChromeまたはEdgeのデスクトップ版をご利用ください。',
-            error: true,
-          ),
-        if (provider.errorMessage != null)
-          NavigationMessageCard(
-            provider.errorMessage!,
-            error: true,
-          ),
-        if (provider.savedDirectories.isEmpty)
-          const NavigationEmptyText('選択済みフォルダはまだありません。')
-        else
-          ...provider.savedDirectories.map(
-            (directory) => NavigationInfoTile.item(
-              _savedDirectoryItem(
-                provider,
-                directory,
-                colorScheme: colorScheme,
-                depth: 1,
+      sections: [
+        NavigationSection(
+          items: [_localDirectoryPickerItem(provider)],
+          children: [
+            if (!provider.isWebFileSystemSupported)
+              const NavigationMessageCard(
+                'このブラウザはフォルダ連携に対応していません。ChromeまたはEdgeのデスクトップ版をご利用ください。',
+                error: true,
               ),
-            ),
-          ),
-        NavigationSectionHeader(l10n.labelNavPC),
-        const NavigationDisabledTile(
-          icon: Symbols.desktop_windows,
-          title: 'このPC',
-          subtitle: 'OSドライブ一覧はブラウザ制約により利用できません',
-        ),
-        const NavigationDisabledTile(
-          icon: Symbols.input,
-          title: 'パスを入力',
-          subtitle: '任意パス移動はWeb版では利用できません',
-        ),
-        if (provider.currentDirectory != null) ...[
-          const NavigationSectionHeader('現在のフォルダ'),
-          _buildBreadcrumbs(provider),
-          if (folders.isEmpty)
-            const NavigationEmptyText('子フォルダはありません。')
-          else
-            ...folders.map(
-              (folder) => NavigationInfoTile.item(
-                _directoryItem(folder, colorScheme: colorScheme, depth: 1),
+            if (provider.errorMessage != null)
+              NavigationMessageCard(
+                provider.errorMessage!,
+                error: true,
               ),
+            if (provider.savedDirectories.isEmpty)
+              const NavigationEmptyText('選択済みフォルダはまだありません。')
+            else
+              ..._savedDirectoryTiles(provider, colorScheme),
+          ],
+        ),
+        NavigationSection(
+          title: l10n.labelNavPC,
+          items: const [
+            NavigationItem.disabled(
+              icon: Symbols.desktop_windows,
+              title: 'このPC',
+              subtitle: 'OSドライブ一覧はブラウザ制約により利用できません',
             ),
-        ],
-        const SizedBox(height: 8),
+            NavigationItem.disabled(
+              icon: Symbols.input,
+              title: 'パスを入力',
+              subtitle: '任意パス移動はWeb版では利用できません',
+            ),
+          ],
+        ),
+        if (provider.currentDirectory != null)
+          NavigationSection(
+            title: '現在のフォルダ',
+            children: [
+              NavigationBreadcrumbs(
+                emptyText: 'フォルダは選択されていません。',
+                items: _breadcrumbItems(provider),
+              ),
+              if (folders.isEmpty)
+                const NavigationEmptyText('子フォルダはありません。')
+              else
+                ..._directoryTiles(folders, colorScheme),
+            ],
+          ),
       ],
+      trailingChildren: const [SizedBox(height: 8)],
     );
   }
 
@@ -140,32 +141,33 @@ class _NavigationPanelState extends State<NavigationPanel> {
     );
   }
 
-  Widget _buildBreadcrumbs(DirectoryProvider provider) {
-    if (provider.breadcrumbs.isEmpty) {
-      return const NavigationEmptyText('フォルダは選択されていません。');
-    }
+  List<Widget> _savedDirectoryTiles(
+    DirectoryProvider provider,
+    ColorScheme colorScheme,
+  ) {
+    return [
+      for (final directory in provider.savedDirectories)
+        NavigationInfoTile.item(
+          _savedDirectoryItem(
+            provider,
+            directory,
+            colorScheme: colorScheme,
+            depth: 1,
+          ),
+        ),
+    ];
+  }
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 8, 6),
-      child: Wrap(
-        spacing: 4,
-        runSpacing: 4,
-        children: [
-          for (var i = 0; i < provider.breadcrumbs.length; i++)
-            ActionChip(
-              avatar: const Icon(Symbols.folder, size: 16),
-              label: Text(
-                provider.breadcrumbs[i].name,
-                overflow: TextOverflow.ellipsis,
-              ),
-              visualDensity: VisualDensity.compact,
-              onPressed: provider.isLoading
-                  ? null
-                  : () => context.read<DirectoryProvider>().openBreadcrumb(i),
-            ),
-        ],
-      ),
-    );
+  List<NavigationBreadcrumbItem> _breadcrumbItems(DirectoryProvider provider) {
+    return [
+      for (var i = 0; i < provider.breadcrumbs.length; i++)
+        NavigationBreadcrumbItem(
+          label: provider.breadcrumbs[i].name,
+          onPressed: provider.isLoading
+              ? null
+              : () => context.read<DirectoryProvider>().openBreadcrumb(i),
+        ),
+    ];
   }
 
   NavigationItem _directoryItem(
@@ -173,17 +175,13 @@ class _NavigationPanelState extends State<NavigationPanel> {
     required ColorScheme colorScheme,
     required int depth,
   }) {
-    return NavigationItem(
-      icon: Symbols.folder,
+    return NavigationItem.folder(
       title: folder.originalName,
       subtitle: folder.displayRelativePath.isEmpty
           ? 'フォルダ'
           : folder.displayRelativePath,
       depth: depth,
       enabled: folder.handle != null,
-      height: 40,
-      iconColor: Colors.amber,
-      semanticLabel: '${folder.originalName} フォルダ',
       trailing: Icon(
         Symbols.chevron_right,
         size: 18,
@@ -191,5 +189,17 @@ class _NavigationPanelState extends State<NavigationPanel> {
       ),
       onTap: () => context.read<DirectoryProvider>().openDirectory(folder),
     );
+  }
+
+  List<Widget> _directoryTiles(
+    List<FileModel> folders,
+    ColorScheme colorScheme,
+  ) {
+    return [
+      for (final folder in folders)
+        NavigationInfoTile.item(
+          _directoryItem(folder, colorScheme: colorScheme, depth: 1),
+        ),
+    ];
   }
 }

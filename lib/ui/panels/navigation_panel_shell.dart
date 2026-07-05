@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:provider/provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
@@ -94,13 +95,17 @@ class _NavigationPanelShellState extends State<NavigationPanelShell> {
 }
 
 class NavigationTreeView extends StatelessWidget {
-  const NavigationTreeView({
+  NavigationTreeView.sections({
     super.key,
     required this.horizontalController,
     required this.verticalController,
-    required this.children,
+    required List<NavigationSection> sections,
     this.header,
-  });
+    List<Widget> trailingChildren = const [],
+  }) : children = [
+          for (final section in sections) ...section.widgets,
+          ...trailingChildren,
+        ];
 
   final ScrollController horizontalController;
   final ScrollController verticalController;
@@ -151,6 +156,38 @@ class NavigationTreeView extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class NavigationSection {
+  const NavigationSection({
+    this.title,
+    this.onAction,
+    this.actionIcon,
+    this.actionTooltip,
+    this.items = const [],
+    this.children = const [],
+  });
+
+  final String? title;
+  final VoidCallback? onAction;
+  final IconData? actionIcon;
+  final String? actionTooltip;
+  final List<NavigationItem> items;
+  final List<Widget> children;
+
+  List<Widget> get widgets {
+    return [
+      if (title != null)
+        NavigationSectionHeader(
+          title!,
+          onAction: onAction,
+          actionIcon: actionIcon,
+          actionTooltip: actionTooltip,
+        ),
+      ...items.map(NavigationInfoTile.item),
+      ...children,
+    ];
   }
 }
 
@@ -215,6 +252,36 @@ class NavigationItem {
     this.onTap,
   });
 
+  const NavigationItem.disabled({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.depth = 1,
+    String? semanticLabel,
+  })  : enabled = false,
+        selected = false,
+        height = 44,
+        iconColor = null,
+        selectedColor = null,
+        semanticLabel = semanticLabel ?? '$title $subtitle',
+        trailing = null,
+        onTap = null;
+
+  const NavigationItem.folder({
+    required this.title,
+    this.subtitle,
+    this.depth = 1,
+    this.enabled = true,
+    this.selected = false,
+    this.height = 40,
+    this.iconColor = Colors.amber,
+    this.selectedColor,
+    String? semanticLabel,
+    this.trailing,
+    this.onTap,
+  })  : icon = Symbols.folder,
+        semanticLabel = semanticLabel ?? '$title フォルダ';
+
   final IconData icon;
   final String title;
   final String? subtitle;
@@ -227,6 +294,18 @@ class NavigationItem {
   final String? semanticLabel;
   final Widget? trailing;
   final VoidCallback? onTap;
+}
+
+class NavigationBreadcrumbItem {
+  const NavigationBreadcrumbItem({
+    required this.label,
+    this.onPressed,
+    this.icon = Symbols.folder,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData icon;
 }
 
 class NavigationInfoTile extends StatelessWidget {
@@ -340,29 +419,38 @@ class NavigationInfoTile extends StatelessWidget {
   }
 }
 
-class NavigationDisabledTile extends StatelessWidget {
-  const NavigationDisabledTile({
+class NavigationBreadcrumbs extends StatelessWidget {
+  const NavigationBreadcrumbs({
     super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.depth = 1,
+    required this.items,
+    required this.emptyText,
   });
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final int depth;
+  final List<NavigationBreadcrumbItem> items;
+  final String emptyText;
 
   @override
   Widget build(BuildContext context) {
-    return NavigationInfoTile(
-      icon: icon,
-      title: title,
-      subtitle: subtitle,
-      depth: depth,
-      enabled: false,
-      semanticLabel: '$title $subtitle',
+    if (items.isEmpty) return NavigationEmptyText(emptyText);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 8, 6),
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        children: [
+          for (final item in items)
+            ActionChip(
+              avatar: Icon(item.icon, size: 16),
+              label: Text(
+                item.label,
+                overflow: TextOverflow.ellipsis,
+              ),
+              visualDensity: VisualDensity.compact,
+              onPressed: item.onPressed,
+            ),
+        ],
+      ),
     );
   }
 }
