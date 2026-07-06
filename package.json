@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build:web": "flutter build web",
+    "build:web": "flutter build web && dart run scripts/generate_web_locale_pages.dart",
+    "serve:web": "http-server build/web -a 127.0.0.1 -p 4173 -c-1",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:full": "flutter build web && playwright test"
+    "test:e2e:full": "npm run build:web && playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

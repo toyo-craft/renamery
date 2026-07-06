@@ -40,6 +40,17 @@ class DirectoryProvider extends ChangeNotifier {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   GlobalKey<ScaffoldState> get scaffoldKey => _scaffoldKey;
 
+  AppLocalizations? get _l10n {
+    final context = _scaffoldKey.currentContext;
+    return context == null ? null : AppLocalizations.of(context);
+  }
+
+  String _localized(
+      String Function(AppLocalizations l10n) text, String fallback) {
+    final l10n = _l10n;
+    return l10n == null ? fallback : text(l10n);
+  }
+
   // アップデート情報
   bool _hasUpdate = false;
   String? _latestVersion;
@@ -1301,11 +1312,17 @@ class DirectoryProvider extends ChangeNotifier {
 
   Future<String?> openDroppedDirectoryPath(String path) async {
     if (!supportsExternalFolderDrop) {
-      return 'この環境ではフォルダのドラッグ&ドロップに対応していません。';
+      return _localized(
+        (l10n) => l10n.labelDropUnsupported,
+        'この環境ではフォルダのドラッグ&ドロップに対応していません。',
+      );
     }
     final directory = Directory(path);
     if (!await directory.exists()) {
-      return 'ファイルではなくフォルダを1つだけドロップしてください。';
+      return _localized(
+        (l10n) => l10n.labelDropFolderNotFile,
+        'ファイルではなくフォルダを1つだけドロップしてください。',
+      );
     }
     await setDirectory(directory);
     return null;
@@ -1894,27 +1911,28 @@ class DirectoryProvider extends ChangeNotifier {
         completer.complete('continue');
         return;
       }
-      String message = '$currentCount 件のファイルが見つかりました。\nスキャンを続行しますか？';
+      final l10n = AppLocalizations.of(context)!;
+      String message = l10n.labelScanConfirmCount(currentCount);
       if (reason == 'time') {
-        message = 'スキャン開始から5秒が経過しました（現在 $currentCount 件）。\nこのまま続行しますか？';
+        message = l10n.labelScanConfirmTime(currentCount);
       }
-      if (reason == 'stall') message = '応答が一時的に途絶えています。スキャンを続行しますか？';
+      if (reason == 'stall') message = l10n.labelScanConfirmStall;
       final result = await showDialog<String>(
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-                  title: const Text('スキャンの確認'),
+                  title: Text(l10n.labelScanConfirmTitle),
                   content: Text(message),
                   actions: [
                     TextButton(
                         onPressed: () => Navigator.pop(context, 'cancel'),
-                        child: const Text('中止 (クリア)')),
+                        child: Text(l10n.labelScanCancelClear)),
                     TextButton(
                         onPressed: () => Navigator.pop(context, 'stop'),
-                        child: const Text('ここで止めて表示')),
+                        child: Text(l10n.labelScanStopAndShow)),
                     FilledButton(
                         onPressed: () => Navigator.pop(context, 'continue'),
-                        child: const Text('続行する'))
+                        child: Text(l10n.labelScanContinue))
                   ]));
       completer.complete(result ?? 'continue');
     });

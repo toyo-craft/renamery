@@ -794,4 +794,225 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelLicenseAcceptStart => 'Agree and start using';
+
+  @override
+  String get labelAppTitle => 'ReNamery - Safe bulk file renaming | Toyo Craft';
+
+  @override
+  String labelUpdateAvailable(String version) {
+    return 'A new version (v$version) is available';
+  }
+
+  @override
+  String get labelViewSettings => 'View settings';
+
+  @override
+  String get labelAppExitTitle => 'Exit app';
+
+  @override
+  String get labelAppExitConfirm => 'Exit ReNamery?';
+
+  @override
+  String get labelExit => 'Exit';
+
+  @override
+  String get labelSkipInvalidTitle => 'Skip files with errors?';
+
+  @override
+  String labelSkipInvalidMessage(int invalidCount, int validCount) {
+    return '$invalidCount selected files have invalid names, such as forbidden characters or duplicates.\n\nExclude them and rename only the $validCount valid files?';
+  }
+
+  @override
+  String get labelSkipAndContinue => 'Skip and continue';
+
+  @override
+  String labelMsgExecutedWithSkipped(int executedCount, int invalidCount) {
+    return '$executedCount succeeded, $invalidCount skipped due to errors';
+  }
+
+  @override
+  String get labelMsgNoExecutableFiles =>
+      'There are no files that can be processed';
+
+  @override
+  String get labelWebSelectFolderPromptTitle =>
+      'Select a local folder first in the Web version.';
+
+  @override
+  String get labelWebSelectFolderPromptMessage =>
+      'The screen layout matches the Windows version, but browser restrictions limit access to the folder you explicitly select.';
+
+  @override
+  String get labelSelectFolder => 'Select folder';
+
+  @override
+  String get labelLicenseCannotExitTitle => 'Cannot exit the app';
+
+  @override
+  String get labelLicenseCannotExitMessage =>
+      'Browsers do not allow the app to close this tab. If you do not want to use the app, close this tab manually.';
+
+  @override
+  String get labelDropOneFolder => 'Drop exactly one folder.';
+
+  @override
+  String get labelDropFolderNotFile => 'Drop one folder, not a file.';
+
+  @override
+  String get labelDropUnsupported =>
+      'Folder drag and drop is not supported in this environment.';
+
+  @override
+  String get labelDropOpenFailed => 'Could not open the folder.';
+
+  @override
+  String get labelDropHereToOpen => 'Drop a folder here to open it';
+
+  @override
+  String get labelFileNotFound => 'The file does not exist';
+
+  @override
+  String get labelWindowsPropertiesFailed =>
+      'Could not open Windows Properties';
+
+  @override
+  String labelPropertiesTitle(String name) {
+    return 'Properties: $name';
+  }
+
+  @override
+  String get labelPropertyKind => 'Type';
+
+  @override
+  String get labelPropertyFileFolder => 'File folder';
+
+  @override
+  String get labelPropertyFile => 'File';
+
+  @override
+  String get labelPropertyLocation => 'Location';
+
+  @override
+  String get labelPropertySize => 'Size';
+
+  @override
+  String get labelPropertyModified => 'Date modified';
+
+  @override
+  String get labelPropertyAttributes => 'Attributes';
+
+  @override
+  String get labelWebUnsupportedBrowserMessage =>
+      'This browser does not support folder integration. Use the desktop version of Chrome or Edge.';
+
+  @override
+  String get labelWebLocalFolderPickerTitle => 'Select local folder';
+
+  @override
+  String get labelWebLocalFolderPickerSubtitle =>
+      'Open a folder in Chrome/Edge';
+
+  @override
+  String get labelWebNoSavedDirectories => 'No folders have been selected yet.';
+
+  @override
+  String get labelWebDirectoryPermissionDenied =>
+      'Folder access was not granted.';
+
+  @override
+  String get labelWebAccessUnavailable =>
+      'Could not read a folder or file. Some items may be unavailable because they were moved, deleted, or are syncing.';
+
+  @override
+  String get labelWebNameRequired => 'Enter a file name.';
+
+  @override
+  String get labelWebInvalidFileNameChars =>
+      'The file name contains forbidden characters: / \\ : * ? \" < > |';
+
+  @override
+  String get labelWebDuplicateItem =>
+      'An item with the same name already exists.';
+
+  @override
+  String get labelWebDuplicateFile =>
+      'A file with the same name already exists.';
+
+  @override
+  String get labelWebItemAccessLost =>
+      'Access information for this item was lost. Select the folder again.';
+
+  @override
+  String get labelWebFileAccessLost =>
+      'Access information for this file was lost. Select the folder again.';
+
+  @override
+  String get labelForgetQuickAccessTitle => 'Remove from Quick Access?';
+
+  @override
+  String labelForgetQuickAccessMessage(String name) {
+    return 'Remove \"$name\" from ReNamery Quick Access.\n\nThe folder and files themselves will not be deleted.\nTo use it again, add it from \"Select local folder\".';
+  }
+
+  @override
+  String get labelForget => 'Remove';
+
+  @override
+  String get labelForgetQuickAccessAction => 'Remove from Quick Access';
+
+  @override
+  String get labelForgetQuickAccessSuccess =>
+      'Removed from Quick Access. Files were not deleted.';
+
+  @override
+  String get labelForgetQuickAccessFailure =>
+      'Could not remove it from Quick Access.';
+
+  @override
+  String get labelArchiveContents => 'Archive contents:';
+
+  @override
+  String labelPreviewError(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String labelPreviewUnsupportedWeb(String target) {
+    return 'Content preview for $target is not supported in the Web version.\nYou can still check the file name, type, size, and other information in the list.';
+  }
+
+  @override
+  String get labelPreviewTargetThisFile => 'this file';
+
+  @override
+  String labelPreviewTargetExtensionFile(String extension) {
+    return '$extension file';
+  }
+
+  @override
+  String get labelScanConfirmTitle => 'Confirm scan';
+
+  @override
+  String labelScanConfirmCount(int count) {
+    return '$count files were found.\nContinue scanning?';
+  }
+
+  @override
+  String labelScanConfirmTime(int count) {
+    return '5 seconds have passed since scanning started ($count files so far).\nContinue?';
+  }
+
+  @override
+  String get labelScanConfirmStall =>
+      'The response has temporarily stopped. Continue scanning?';
+
+  @override
+  String get labelScanCancelClear => 'Cancel and clear';
+
+  @override
+  String get labelScanStopAndShow => 'Stop here and show';
+
+  @override
+  String get labelScanContinue => 'Continue';
 }

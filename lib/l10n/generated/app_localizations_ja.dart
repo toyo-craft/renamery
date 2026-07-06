@@ -787,6 +787,215 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get labelLicenseAcceptStart => '同意して利用を開始する';
+
+  @override
+  String get labelAppTitle => 'ReNamery - ファイル名を安全に一括変更 | 東洋クラフト';
+
+  @override
+  String labelUpdateAvailable(String version) {
+    return '新しいバージョン (v$version) が利用可能です';
+  }
+
+  @override
+  String get labelViewSettings => '設定を見る';
+
+  @override
+  String get labelAppExitTitle => 'アプリの終了';
+
+  @override
+  String get labelAppExitConfirm => 'ReNamery を終了しますか？';
+
+  @override
+  String get labelExit => '終了する';
+
+  @override
+  String get labelSkipInvalidTitle => 'エラーを含むファイルのスキップ確認';
+
+  @override
+  String labelSkipInvalidMessage(int invalidCount, int validCount) {
+    return '選択されたファイルの中に、ファイル名が不正（禁止文字・重複など）なものが $invalidCount 件あります。\n\nこれらを除外し、正常な $validCount 件のファイルのみリネームを実行しますか？';
+  }
+
+  @override
+  String get labelSkipAndContinue => 'スキップして続行';
+
+  @override
+  String labelMsgExecutedWithSkipped(int executedCount, int invalidCount) {
+    return '$executedCount 件成功、$invalidCount 件はエラーのためスキップされました';
+  }
+
+  @override
+  String get labelMsgNoExecutableFiles => '実行できるファイルがありませんでした';
+
+  @override
+  String get labelWebSelectFolderPromptTitle => 'Web版では、最初にローカルフォルダを選択してください。';
+
+  @override
+  String get labelWebSelectFolderPromptMessage =>
+      'Windows版と同じ画面構成で操作しますが、ブラウザ制約により明示選択したフォルダ配下だけを扱います。';
+
+  @override
+  String get labelSelectFolder => 'フォルダを選択';
+
+  @override
+  String get labelLicenseCannotExitTitle => 'アプリを終了できません';
+
+  @override
+  String get labelLicenseCannotExitMessage =>
+      'ブラウザではアプリ側からタブを閉じられません。利用しない場合は、このタブを閉じてください。';
+
+  @override
+  String get labelDropOneFolder => 'フォルダを1つだけドロップしてください。';
+
+  @override
+  String get labelDropFolderNotFile => 'ファイルではなくフォルダを1つだけドロップしてください。';
+
+  @override
+  String get labelDropUnsupported => 'この環境ではフォルダのドラッグ&ドロップに対応していません。';
+
+  @override
+  String get labelDropOpenFailed => 'フォルダを開けませんでした。';
+
+  @override
+  String get labelDropHereToOpen => 'ここにフォルダをドロップして開く';
+
+  @override
+  String get labelFileNotFound => 'ファイルが存在しません';
+
+  @override
+  String get labelWindowsPropertiesFailed => 'Windowsプロパティ画面を開けませんでした';
+
+  @override
+  String labelPropertiesTitle(String name) {
+    return 'プロパティ: $name';
+  }
+
+  @override
+  String get labelPropertyKind => '種類';
+
+  @override
+  String get labelPropertyFileFolder => 'ファイル フォルダ';
+
+  @override
+  String get labelPropertyFile => 'ファイル';
+
+  @override
+  String get labelPropertyLocation => '場所';
+
+  @override
+  String get labelPropertySize => 'サイズ';
+
+  @override
+  String get labelPropertyModified => '更新日時';
+
+  @override
+  String get labelPropertyAttributes => '属性';
+
+  @override
+  String get labelWebUnsupportedBrowserMessage =>
+      'このブラウザはフォルダ連携に対応していません。ChromeまたはEdgeのデスクトップ版をご利用ください。';
+
+  @override
+  String get labelWebLocalFolderPickerTitle => 'ローカルフォルダを選択';
+
+  @override
+  String get labelWebLocalFolderPickerSubtitle => 'Chrome/Edgeでフォルダを開く';
+
+  @override
+  String get labelWebNoSavedDirectories => '選択済みフォルダはまだありません。';
+
+  @override
+  String get labelWebDirectoryPermissionDenied => 'フォルダへのアクセスが許可されませんでした。';
+
+  @override
+  String get labelWebAccessUnavailable =>
+      'フォルダまたはファイルを読み込めませんでした。移動、削除、同期中などにより一部の項目へアクセスできない可能性があります。';
+
+  @override
+  String get labelWebNameRequired => 'ファイル名を入力してください。';
+
+  @override
+  String get labelWebInvalidFileNameChars =>
+      'ファイル名に使用できない文字が含まれています: / \\ : * ? \" < > |';
+
+  @override
+  String get labelWebDuplicateItem => '同じ名前の項目が既にあります。';
+
+  @override
+  String get labelWebDuplicateFile => '同じ名前のファイルが既にあります。';
+
+  @override
+  String get labelWebItemAccessLost => '項目へのアクセス情報が失われています。フォルダを選択し直してください。';
+
+  @override
+  String get labelWebFileAccessLost => 'ファイルへのアクセス情報が失われています。フォルダを選択し直してください。';
+
+  @override
+  String get labelForgetQuickAccessTitle => 'クイックアクセスから解除しますか？';
+
+  @override
+  String labelForgetQuickAccessMessage(String name) {
+    return '「$name」をReNameryのクイックアクセスから解除します。\n\nフォルダやファイル自体は削除されません。\n再度利用する場合は「ローカルフォルダを選択」から追加してください。';
+  }
+
+  @override
+  String get labelForget => '解除';
+
+  @override
+  String get labelForgetQuickAccessAction => 'クイックアクセスから解除';
+
+  @override
+  String get labelForgetQuickAccessSuccess =>
+      'クイックアクセスから解除しました。ファイルは削除されていません。';
+
+  @override
+  String get labelForgetQuickAccessFailure => 'クイックアクセスから解除できませんでした。';
+
+  @override
+  String get labelArchiveContents => 'アーカイブ内容:';
+
+  @override
+  String labelPreviewError(String message) {
+    return 'エラー: $message';
+  }
+
+  @override
+  String labelPreviewUnsupportedWeb(String target) {
+    return 'Web版では$targetの内容プレビューは未対応です。\nファイル名、種類、サイズなどの情報は一覧で確認できます。';
+  }
+
+  @override
+  String get labelPreviewTargetThisFile => 'このファイル';
+
+  @override
+  String labelPreviewTargetExtensionFile(String extension) {
+    return '$extensionファイル';
+  }
+
+  @override
+  String get labelScanConfirmTitle => 'スキャンの確認';
+
+  @override
+  String labelScanConfirmCount(int count) {
+    return '$count 件のファイルが見つかりました。\nスキャンを続行しますか？';
+  }
+
+  @override
+  String labelScanConfirmTime(int count) {
+    return 'スキャン開始から5秒が経過しました（現在 $count 件）。\nこのまま続行しますか？';
+  }
+
+  @override
+  String get labelScanConfirmStall => '応答が一時的に途絶えています。スキャンを続行しますか？';
+
+  @override
+  String get labelScanCancelClear => '中止 (クリア)';
+
+  @override
+  String get labelScanStopAndShow => 'ここで止めて表示';
+
+  @override
+  String get labelScanContinue => '続行する';
 }
 
 /// The translations for Japanese (`ja_NM`).
@@ -1568,4 +1777,213 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
 
   @override
   String get labelLicenseAcceptStart => '同意して開始';
+
+  @override
+  String get labelAppTitle => 'ReNamery - ファイル名を安全に一括変更 | 東洋クラフト';
+
+  @override
+  String labelUpdateAvailable(String version) {
+    return '新しいVer (v$version) があります';
+  }
+
+  @override
+  String get labelViewSettings => '設定を見る';
+
+  @override
+  String get labelAppExitTitle => '終了';
+
+  @override
+  String get labelAppExitConfirm => 'ReNamery を終了しますか？';
+
+  @override
+  String get labelExit => '終了';
+
+  @override
+  String get labelSkipInvalidTitle => 'エラーをスキップ';
+
+  @override
+  String labelSkipInvalidMessage(int invalidCount, int validCount) {
+    return '不正な名前のファイルが $invalidCount 件あります。\n\n正常な $validCount 件だけリネームしますか？';
+  }
+
+  @override
+  String get labelSkipAndContinue => 'スキップして続行';
+
+  @override
+  String labelMsgExecutedWithSkipped(int executedCount, int invalidCount) {
+    return '$executedCount 件成功、$invalidCount 件スキップ';
+  }
+
+  @override
+  String get labelMsgNoExecutableFiles => '実行できるファイルがありません';
+
+  @override
+  String get labelWebSelectFolderPromptTitle => 'Web版では先にローカルフォルダを選択してください。';
+
+  @override
+  String get labelWebSelectFolderPromptMessage =>
+      'ブラウザ制約により、選択したフォルダ配下だけを扱います。';
+
+  @override
+  String get labelSelectFolder => 'フォルダを選択';
+
+  @override
+  String get labelLicenseCannotExitTitle => '終了できません';
+
+  @override
+  String get labelLicenseCannotExitMessage =>
+      'ブラウザではアプリ側からタブを閉じられません。使わない場合はタブを閉じてください。';
+
+  @override
+  String get labelDropOneFolder => 'フォルダを1つだけドロップしてください。';
+
+  @override
+  String get labelDropFolderNotFile => 'ファイルではなくフォルダを1つだけドロップしてください。';
+
+  @override
+  String get labelDropUnsupported => 'この環境ではフォルダD&Dに対応していません。';
+
+  @override
+  String get labelDropOpenFailed => 'フォルダを開けませんでした。';
+
+  @override
+  String get labelDropHereToOpen => 'ここにフォルダをドロップ';
+
+  @override
+  String get labelFileNotFound => 'ファイルがありません';
+
+  @override
+  String get labelWindowsPropertiesFailed => 'プロパティを開けませんでした';
+
+  @override
+  String labelPropertiesTitle(String name) {
+    return 'プロパティ: $name';
+  }
+
+  @override
+  String get labelPropertyKind => '種類';
+
+  @override
+  String get labelPropertyFileFolder => 'フォルダ';
+
+  @override
+  String get labelPropertyFile => 'ファイル';
+
+  @override
+  String get labelPropertyLocation => '場所';
+
+  @override
+  String get labelPropertySize => 'サイズ';
+
+  @override
+  String get labelPropertyModified => '更新日時';
+
+  @override
+  String get labelPropertyAttributes => '属性';
+
+  @override
+  String get labelWebUnsupportedBrowserMessage =>
+      'このブラウザはフォルダ連携に対応していません。Chrome/Edgeのデスクトップ版をご利用ください。';
+
+  @override
+  String get labelWebLocalFolderPickerTitle => 'ローカルフォルダを選択';
+
+  @override
+  String get labelWebLocalFolderPickerSubtitle => 'Chrome/Edgeで開く';
+
+  @override
+  String get labelWebNoSavedDirectories => '選択済みフォルダはありません。';
+
+  @override
+  String get labelWebDirectoryPermissionDenied => 'フォルダへのアクセスが許可されませんでした。';
+
+  @override
+  String get labelWebAccessUnavailable =>
+      'フォルダまたはファイルを読み込めませんでした。移動、削除、同期中などの可能性があります。';
+
+  @override
+  String get labelWebNameRequired => 'ファイル名を入力してください。';
+
+  @override
+  String get labelWebInvalidFileNameChars =>
+      'ファイル名に使えない文字があります: / \\ : * ? \" < > |';
+
+  @override
+  String get labelWebDuplicateItem => '同じ名前の項目があります。';
+
+  @override
+  String get labelWebDuplicateFile => '同じ名前のファイルがあります。';
+
+  @override
+  String get labelWebItemAccessLost => '項目へのアクセス情報が失われました。フォルダを選択し直してください。';
+
+  @override
+  String get labelWebFileAccessLost => 'ファイルへのアクセス情報が失われました。フォルダを選択し直してください。';
+
+  @override
+  String get labelForgetQuickAccessTitle => 'クイックアクセスから解除しますか？';
+
+  @override
+  String labelForgetQuickAccessMessage(String name) {
+    return '「$name」をReNameryのクイックアクセスから解除します。\n\nフォルダやファイル自体は削除されません。\n再度使う場合は「ローカルフォルダを選択」から追加してください。';
+  }
+
+  @override
+  String get labelForget => '解除';
+
+  @override
+  String get labelForgetQuickAccessAction => 'クイックアクセスから解除';
+
+  @override
+  String get labelForgetQuickAccessSuccess =>
+      'クイックアクセスから解除しました。ファイルは削除されていません。';
+
+  @override
+  String get labelForgetQuickAccessFailure => 'クイックアクセスから解除できませんでした。';
+
+  @override
+  String get labelArchiveContents => 'アーカイブ内容:';
+
+  @override
+  String labelPreviewError(String message) {
+    return 'エラー: $message';
+  }
+
+  @override
+  String labelPreviewUnsupportedWeb(String target) {
+    return 'Web版では$targetの内容プレビューは未対応です。\n名前、種類、サイズなどは一覧で確認できます。';
+  }
+
+  @override
+  String get labelPreviewTargetThisFile => 'このファイル';
+
+  @override
+  String labelPreviewTargetExtensionFile(String extension) {
+    return '$extensionファイル';
+  }
+
+  @override
+  String get labelScanConfirmTitle => 'スキャン確認';
+
+  @override
+  String labelScanConfirmCount(int count) {
+    return '$count 件見つかりました。\n続行しますか？';
+  }
+
+  @override
+  String labelScanConfirmTime(int count) {
+    return 'スキャン開始から5秒経過しました（現在 $count 件）。\n続行しますか？';
+  }
+
+  @override
+  String get labelScanConfirmStall => '応答が一時停止しています。続行しますか？';
+
+  @override
+  String get labelScanCancelClear => '中止 (クリア)';
+
+  @override
+  String get labelScanStopAndShow => 'ここで表示';
+
+  @override
+  String get labelScanContinue => '続行';
 }

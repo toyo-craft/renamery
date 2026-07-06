@@ -783,4 +783,211 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get labelLicenseAcceptStart => '同意并开始使用';
+
+  @override
+  String get labelAppTitle => 'ReNamery - 安全批量重命名文件 | Toyo Craft';
+
+  @override
+  String labelUpdateAvailable(String version) {
+    return '有新版本 (v$version) 可用';
+  }
+
+  @override
+  String get labelViewSettings => '查看设置';
+
+  @override
+  String get labelAppExitTitle => '退出应用';
+
+  @override
+  String get labelAppExitConfirm => '要退出 ReNamery 吗？';
+
+  @override
+  String get labelExit => '退出';
+
+  @override
+  String get labelSkipInvalidTitle => '是否跳过有错误的文件？';
+
+  @override
+  String labelSkipInvalidMessage(int invalidCount, int validCount) {
+    return '选中的文件中有 $invalidCount 个文件名无效（包含禁用字符或重复等）。\n\n是否排除这些文件，只重命名 $validCount 个正常文件？';
+  }
+
+  @override
+  String get labelSkipAndContinue => '跳过并继续';
+
+  @override
+  String labelMsgExecutedWithSkipped(int executedCount, int invalidCount) {
+    return '$executedCount 个成功，$invalidCount 个因错误已跳过';
+  }
+
+  @override
+  String get labelMsgNoExecutableFiles => '没有可执行的文件';
+
+  @override
+  String get labelWebSelectFolderPromptTitle => 'Web 版请先选择本地文件夹。';
+
+  @override
+  String get labelWebSelectFolderPromptMessage =>
+      '操作界面与 Windows 版相同，但由于浏览器限制，只能处理您明确选择的文件夹下的项目。';
+
+  @override
+  String get labelSelectFolder => '选择文件夹';
+
+  @override
+  String get labelLicenseCannotExitTitle => '无法退出应用';
+
+  @override
+  String get labelLicenseCannotExitMessage =>
+      '浏览器不允许应用关闭此标签页。如果不使用应用，请手动关闭此标签页。';
+
+  @override
+  String get labelDropOneFolder => '请只拖放一个文件夹。';
+
+  @override
+  String get labelDropFolderNotFile => '请拖放一个文件夹，而不是文件。';
+
+  @override
+  String get labelDropUnsupported => '此环境不支持文件夹拖放。';
+
+  @override
+  String get labelDropOpenFailed => '无法打开文件夹。';
+
+  @override
+  String get labelDropHereToOpen => '将文件夹拖放到此处以打开';
+
+  @override
+  String get labelFileNotFound => '文件不存在';
+
+  @override
+  String get labelWindowsPropertiesFailed => '无法打开 Windows 属性窗口';
+
+  @override
+  String labelPropertiesTitle(String name) {
+    return '属性: $name';
+  }
+
+  @override
+  String get labelPropertyKind => '类型';
+
+  @override
+  String get labelPropertyFileFolder => '文件夹';
+
+  @override
+  String get labelPropertyFile => '文件';
+
+  @override
+  String get labelPropertyLocation => '位置';
+
+  @override
+  String get labelPropertySize => '大小';
+
+  @override
+  String get labelPropertyModified => '修改日期';
+
+  @override
+  String get labelPropertyAttributes => '属性';
+
+  @override
+  String get labelWebUnsupportedBrowserMessage =>
+      '此浏览器不支持文件夹集成。请使用桌面版 Chrome 或 Edge。';
+
+  @override
+  String get labelWebLocalFolderPickerTitle => '选择本地文件夹';
+
+  @override
+  String get labelWebLocalFolderPickerSubtitle => '在 Chrome/Edge 中打开文件夹';
+
+  @override
+  String get labelWebNoSavedDirectories => '尚未选择任何文件夹。';
+
+  @override
+  String get labelWebDirectoryPermissionDenied => '未授予文件夹访问权限。';
+
+  @override
+  String get labelWebAccessUnavailable =>
+      '无法读取文件夹或文件。部分项目可能已移动、删除或正在同步，因此暂时无法访问。';
+
+  @override
+  String get labelWebNameRequired => '请输入文件名。';
+
+  @override
+  String get labelWebInvalidFileNameChars => '文件名包含禁用字符: / \\ : * ? \" < > |';
+
+  @override
+  String get labelWebDuplicateItem => '已存在同名项目。';
+
+  @override
+  String get labelWebDuplicateFile => '已存在同名文件。';
+
+  @override
+  String get labelWebItemAccessLost => '此项目的访问信息已丢失。请重新选择文件夹。';
+
+  @override
+  String get labelWebFileAccessLost => '此文件的访问信息已丢失。请重新选择文件夹。';
+
+  @override
+  String get labelForgetQuickAccessTitle => '要从快速访问中移除吗？';
+
+  @override
+  String labelForgetQuickAccessMessage(String name) {
+    return '将“$name”从 ReNamery 的快速访问中移除。\n\n文件夹和文件本身不会被删除。\n如需再次使用，请从“选择本地文件夹”重新添加。';
+  }
+
+  @override
+  String get labelForget => '移除';
+
+  @override
+  String get labelForgetQuickAccessAction => '从快速访问中移除';
+
+  @override
+  String get labelForgetQuickAccessSuccess => '已从快速访问中移除。文件未被删除。';
+
+  @override
+  String get labelForgetQuickAccessFailure => '无法从快速访问中移除。';
+
+  @override
+  String get labelArchiveContents => '压缩包内容:';
+
+  @override
+  String labelPreviewError(String message) {
+    return '错误: $message';
+  }
+
+  @override
+  String labelPreviewUnsupportedWeb(String target) {
+    return 'Web 版不支持预览 $target 的内容。\n您仍可在列表中查看文件名、类型、大小等信息。';
+  }
+
+  @override
+  String get labelPreviewTargetThisFile => '此文件';
+
+  @override
+  String labelPreviewTargetExtensionFile(String extension) {
+    return '$extension 文件';
+  }
+
+  @override
+  String get labelScanConfirmTitle => '确认扫描';
+
+  @override
+  String labelScanConfirmCount(int count) {
+    return '已找到 $count 个文件。\n是否继续扫描？';
+  }
+
+  @override
+  String labelScanConfirmTime(int count) {
+    return '扫描开始已超过 5 秒（当前 $count 个）。\n是否继续？';
+  }
+
+  @override
+  String get labelScanConfirmStall => '响应暂时中断。是否继续扫描？';
+
+  @override
+  String get labelScanCancelClear => '中止并清除';
+
+  @override
+  String get labelScanStopAndShow => '在此停止并显示';
+
+  @override
+  String get labelScanContinue => '继续';
 }

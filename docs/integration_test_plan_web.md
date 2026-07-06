@@ -42,7 +42,8 @@ WEB版で追加したローカルフォルダ連携が、UI、状態管理、ブ
 | コマンド | 用途 |
 |---|---|
 | `flutter run -d chrome`（ChromeでWEB版を起動） | 手動結合テスト |
-| `flutter build web`（WEBビルド） | ビルド成果物確認 |
+| `npm run build:web`（WEBビルドと言語別HTML生成） | ビルド成果物確認 |
+| `npm run serve:web`（生成済みWEB成果物のローカル配信） | 言語別HTML/メタ情報の手動確認 |
 | `flutter test`（全テスト実行） | 既存回帰確認 |
 | `flutter test test/web/core/web_directory_provider_test.dart`（WEB Provider単体テスト） | WEB状態管理の回帰確認 |
 
@@ -255,7 +256,7 @@ Playwright構成:
 
 ```text
 flutter test
-flutter build web
+npm run build:web
 npx playwright test
 ```
 
@@ -275,7 +276,7 @@ P0の完了条件:
 - フォルダーリネームが実行されないことを確認する。
 - 不正名、重複名、未選択、変更なしで実行不可になる。
 - `flutter test`（全テスト実行）が成功する。
-- `flutter build web`（WEBビルド）が成功する。
+- `npm run build:web`（WEBビルドと言語別HTML生成）が成功する。
 - Windows版の既存ファイルリネームが壊れていない。
 
 P1の完了条件:

@@ -116,7 +116,7 @@ Widget buildPlatformImagePreview(
       }
       if (snapshot.hasError || !snapshot.hasData) {
         return PreviewDocumentMessage(
-          message: unsupportedPreviewMessage(file, extension),
+          message: unsupportedPreviewMessage(file, extension, l10n),
         );
       }
       return Padding(
@@ -145,7 +145,7 @@ Widget buildPlatformSvgPreview(
       }
       if (snapshot.hasError || !snapshot.hasData) {
         return PreviewDocumentMessage(
-          message: unsupportedPreviewMessage(file, 'svg'),
+          message: unsupportedPreviewMessage(file, 'svg', l10n),
         );
       }
       return Padding(
@@ -195,7 +195,7 @@ Future<String> readPlatformTextPreview(
     final totalSize = file.byteSize;
     if (totalSize != null && totalSize > limit) {
       final sizeStr = (totalSize / 1024).toStringAsFixed(1);
-      return '$content\n\n... (Omitted, Total: $sizeStr KB)';
+      return '$content\n\n${l10n.labelPreviewOmitted(sizeStr)}';
     }
     return content;
   } catch (_) {
@@ -217,11 +217,15 @@ Future<List<String>> listPlatformArchiveFiles(FileModel file) async {
   }
 }
 
-String unsupportedPreviewMessage(FileModel file, String extension) {
-  final target =
-      extension.isEmpty ? 'このファイル' : '${extension.toUpperCase()}ファイル';
-  return 'Web版では$targetの内容プレビューは未対応です。\n'
-      'ファイル名、種類、サイズなどの情報は一覧で確認できます。';
+String unsupportedPreviewMessage(
+  FileModel file,
+  String extension,
+  AppLocalizations l10n,
+) {
+  final target = extension.isEmpty
+      ? l10n.labelPreviewTargetThisFile
+      : l10n.labelPreviewTargetExtensionFile(extension.toUpperCase());
+  return l10n.labelPreviewUnsupportedWeb(target);
 }
 
 Future<Uint8List> _readFileBytes(FileModel file, int limit) async {
@@ -301,7 +305,7 @@ class _WebPdfPreviewState extends State<_WebPdfPreview> {
     }
     if (_cachedImageData == null) {
       return PreviewDocumentMessage(
-        message: unsupportedPreviewMessage(widget.file, 'pdf'),
+        message: unsupportedPreviewMessage(widget.file, 'pdf', widget.l10n),
       );
     }
     return Container(

@@ -1596,6 +1596,372 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'同意して利用を開始する'**
   String get labelLicenseAcceptStart;
+
+  /// No description provided for @labelAppTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'ReNamery - ファイル名を安全に一括変更 | 東洋クラフト'**
+  String get labelAppTitle;
+
+  /// No description provided for @labelUpdateAvailable.
+  ///
+  /// In ja, this message translates to:
+  /// **'新しいバージョン (v{version}) が利用可能です'**
+  String labelUpdateAvailable(String version);
+
+  /// No description provided for @labelViewSettings.
+  ///
+  /// In ja, this message translates to:
+  /// **'設定を見る'**
+  String get labelViewSettings;
+
+  /// No description provided for @labelAppExitTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'アプリの終了'**
+  String get labelAppExitTitle;
+
+  /// No description provided for @labelAppExitConfirm.
+  ///
+  /// In ja, this message translates to:
+  /// **'ReNamery を終了しますか？'**
+  String get labelAppExitConfirm;
+
+  /// No description provided for @labelExit.
+  ///
+  /// In ja, this message translates to:
+  /// **'終了する'**
+  String get labelExit;
+
+  /// No description provided for @labelSkipInvalidTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'エラーを含むファイルのスキップ確認'**
+  String get labelSkipInvalidTitle;
+
+  /// No description provided for @labelSkipInvalidMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'選択されたファイルの中に、ファイル名が不正（禁止文字・重複など）なものが {invalidCount} 件あります。\n\nこれらを除外し、正常な {validCount} 件のファイルのみリネームを実行しますか？'**
+  String labelSkipInvalidMessage(int invalidCount, int validCount);
+
+  /// No description provided for @labelSkipAndContinue.
+  ///
+  /// In ja, this message translates to:
+  /// **'スキップして続行'**
+  String get labelSkipAndContinue;
+
+  /// No description provided for @labelMsgExecutedWithSkipped.
+  ///
+  /// In ja, this message translates to:
+  /// **'{executedCount} 件成功、{invalidCount} 件はエラーのためスキップされました'**
+  String labelMsgExecutedWithSkipped(int executedCount, int invalidCount);
+
+  /// No description provided for @labelMsgNoExecutableFiles.
+  ///
+  /// In ja, this message translates to:
+  /// **'実行できるファイルがありませんでした'**
+  String get labelMsgNoExecutableFiles;
+
+  /// No description provided for @labelWebSelectFolderPromptTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'Web版では、最初にローカルフォルダを選択してください。'**
+  String get labelWebSelectFolderPromptTitle;
+
+  /// No description provided for @labelWebSelectFolderPromptMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'Windows版と同じ画面構成で操作しますが、ブラウザ制約により明示選択したフォルダ配下だけを扱います。'**
+  String get labelWebSelectFolderPromptMessage;
+
+  /// No description provided for @labelSelectFolder.
+  ///
+  /// In ja, this message translates to:
+  /// **'フォルダを選択'**
+  String get labelSelectFolder;
+
+  /// No description provided for @labelLicenseCannotExitTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'アプリを終了できません'**
+  String get labelLicenseCannotExitTitle;
+
+  /// No description provided for @labelLicenseCannotExitMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'ブラウザではアプリ側からタブを閉じられません。利用しない場合は、このタブを閉じてください。'**
+  String get labelLicenseCannotExitMessage;
+
+  /// No description provided for @labelDropOneFolder.
+  ///
+  /// In ja, this message translates to:
+  /// **'フォルダを1つだけドロップしてください。'**
+  String get labelDropOneFolder;
+
+  /// No description provided for @labelDropFolderNotFile.
+  ///
+  /// In ja, this message translates to:
+  /// **'ファイルではなくフォルダを1つだけドロップしてください。'**
+  String get labelDropFolderNotFile;
+
+  /// No description provided for @labelDropUnsupported.
+  ///
+  /// In ja, this message translates to:
+  /// **'この環境ではフォルダのドラッグ&ドロップに対応していません。'**
+  String get labelDropUnsupported;
+
+  /// No description provided for @labelDropOpenFailed.
+  ///
+  /// In ja, this message translates to:
+  /// **'フォルダを開けませんでした。'**
+  String get labelDropOpenFailed;
+
+  /// No description provided for @labelDropHereToOpen.
+  ///
+  /// In ja, this message translates to:
+  /// **'ここにフォルダをドロップして開く'**
+  String get labelDropHereToOpen;
+
+  /// No description provided for @labelFileNotFound.
+  ///
+  /// In ja, this message translates to:
+  /// **'ファイルが存在しません'**
+  String get labelFileNotFound;
+
+  /// No description provided for @labelWindowsPropertiesFailed.
+  ///
+  /// In ja, this message translates to:
+  /// **'Windowsプロパティ画面を開けませんでした'**
+  String get labelWindowsPropertiesFailed;
+
+  /// No description provided for @labelPropertiesTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'プロパティ: {name}'**
+  String labelPropertiesTitle(String name);
+
+  /// No description provided for @labelPropertyKind.
+  ///
+  /// In ja, this message translates to:
+  /// **'種類'**
+  String get labelPropertyKind;
+
+  /// No description provided for @labelPropertyFileFolder.
+  ///
+  /// In ja, this message translates to:
+  /// **'ファイル フォルダ'**
+  String get labelPropertyFileFolder;
+
+  /// No description provided for @labelPropertyFile.
+  ///
+  /// In ja, this message translates to:
+  /// **'ファイル'**
+  String get labelPropertyFile;
+
+  /// No description provided for @labelPropertyLocation.
+  ///
+  /// In ja, this message translates to:
+  /// **'場所'**
+  String get labelPropertyLocation;
+
+  /// No description provided for @labelPropertySize.
+  ///
+  /// In ja, this message translates to:
+  /// **'サイズ'**
+  String get labelPropertySize;
+
+  /// No description provided for @labelPropertyModified.
+  ///
+  /// In ja, this message translates to:
+  /// **'更新日時'**
+  String get labelPropertyModified;
+
+  /// No description provided for @labelPropertyAttributes.
+  ///
+  /// In ja, this message translates to:
+  /// **'属性'**
+  String get labelPropertyAttributes;
+
+  /// No description provided for @labelWebUnsupportedBrowserMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'このブラウザはフォルダ連携に対応していません。ChromeまたはEdgeのデスクトップ版をご利用ください。'**
+  String get labelWebUnsupportedBrowserMessage;
+
+  /// No description provided for @labelWebLocalFolderPickerTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'ローカルフォルダを選択'**
+  String get labelWebLocalFolderPickerTitle;
+
+  /// No description provided for @labelWebLocalFolderPickerSubtitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'Chrome/Edgeでフォルダを開く'**
+  String get labelWebLocalFolderPickerSubtitle;
+
+  /// No description provided for @labelWebNoSavedDirectories.
+  ///
+  /// In ja, this message translates to:
+  /// **'選択済みフォルダはまだありません。'**
+  String get labelWebNoSavedDirectories;
+
+  /// No description provided for @labelWebDirectoryPermissionDenied.
+  ///
+  /// In ja, this message translates to:
+  /// **'フォルダへのアクセスが許可されませんでした。'**
+  String get labelWebDirectoryPermissionDenied;
+
+  /// No description provided for @labelWebAccessUnavailable.
+  ///
+  /// In ja, this message translates to:
+  /// **'フォルダまたはファイルを読み込めませんでした。移動、削除、同期中などにより一部の項目へアクセスできない可能性があります。'**
+  String get labelWebAccessUnavailable;
+
+  /// No description provided for @labelWebNameRequired.
+  ///
+  /// In ja, this message translates to:
+  /// **'ファイル名を入力してください。'**
+  String get labelWebNameRequired;
+
+  /// No description provided for @labelWebInvalidFileNameChars.
+  ///
+  /// In ja, this message translates to:
+  /// **'ファイル名に使用できない文字が含まれています: / \\ : * ? \" < > |'**
+  String get labelWebInvalidFileNameChars;
+
+  /// No description provided for @labelWebDuplicateItem.
+  ///
+  /// In ja, this message translates to:
+  /// **'同じ名前の項目が既にあります。'**
+  String get labelWebDuplicateItem;
+
+  /// No description provided for @labelWebDuplicateFile.
+  ///
+  /// In ja, this message translates to:
+  /// **'同じ名前のファイルが既にあります。'**
+  String get labelWebDuplicateFile;
+
+  /// No description provided for @labelWebItemAccessLost.
+  ///
+  /// In ja, this message translates to:
+  /// **'項目へのアクセス情報が失われています。フォルダを選択し直してください。'**
+  String get labelWebItemAccessLost;
+
+  /// No description provided for @labelWebFileAccessLost.
+  ///
+  /// In ja, this message translates to:
+  /// **'ファイルへのアクセス情報が失われています。フォルダを選択し直してください。'**
+  String get labelWebFileAccessLost;
+
+  /// No description provided for @labelForgetQuickAccessTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'クイックアクセスから解除しますか？'**
+  String get labelForgetQuickAccessTitle;
+
+  /// No description provided for @labelForgetQuickAccessMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'「{name}」をReNameryのクイックアクセスから解除します。\n\nフォルダやファイル自体は削除されません。\n再度利用する場合は「ローカルフォルダを選択」から追加してください。'**
+  String labelForgetQuickAccessMessage(String name);
+
+  /// No description provided for @labelForget.
+  ///
+  /// In ja, this message translates to:
+  /// **'解除'**
+  String get labelForget;
+
+  /// No description provided for @labelForgetQuickAccessAction.
+  ///
+  /// In ja, this message translates to:
+  /// **'クイックアクセスから解除'**
+  String get labelForgetQuickAccessAction;
+
+  /// No description provided for @labelForgetQuickAccessSuccess.
+  ///
+  /// In ja, this message translates to:
+  /// **'クイックアクセスから解除しました。ファイルは削除されていません。'**
+  String get labelForgetQuickAccessSuccess;
+
+  /// No description provided for @labelForgetQuickAccessFailure.
+  ///
+  /// In ja, this message translates to:
+  /// **'クイックアクセスから解除できませんでした。'**
+  String get labelForgetQuickAccessFailure;
+
+  /// No description provided for @labelArchiveContents.
+  ///
+  /// In ja, this message translates to:
+  /// **'アーカイブ内容:'**
+  String get labelArchiveContents;
+
+  /// No description provided for @labelPreviewError.
+  ///
+  /// In ja, this message translates to:
+  /// **'エラー: {message}'**
+  String labelPreviewError(String message);
+
+  /// No description provided for @labelPreviewUnsupportedWeb.
+  ///
+  /// In ja, this message translates to:
+  /// **'Web版では{target}の内容プレビューは未対応です。\nファイル名、種類、サイズなどの情報は一覧で確認できます。'**
+  String labelPreviewUnsupportedWeb(String target);
+
+  /// No description provided for @labelPreviewTargetThisFile.
+  ///
+  /// In ja, this message translates to:
+  /// **'このファイル'**
+  String get labelPreviewTargetThisFile;
+
+  /// No description provided for @labelPreviewTargetExtensionFile.
+  ///
+  /// In ja, this message translates to:
+  /// **'{extension}ファイル'**
+  String labelPreviewTargetExtensionFile(String extension);
+
+  /// No description provided for @labelScanConfirmTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'スキャンの確認'**
+  String get labelScanConfirmTitle;
+
+  /// No description provided for @labelScanConfirmCount.
+  ///
+  /// In ja, this message translates to:
+  /// **'{count} 件のファイルが見つかりました。\nスキャンを続行しますか？'**
+  String labelScanConfirmCount(int count);
+
+  /// No description provided for @labelScanConfirmTime.
+  ///
+  /// In ja, this message translates to:
+  /// **'スキャン開始から5秒が経過しました（現在 {count} 件）。\nこのまま続行しますか？'**
+  String labelScanConfirmTime(int count);
+
+  /// No description provided for @labelScanConfirmStall.
+  ///
+  /// In ja, this message translates to:
+  /// **'応答が一時的に途絶えています。スキャンを続行しますか？'**
+  String get labelScanConfirmStall;
+
+  /// No description provided for @labelScanCancelClear.
+  ///
+  /// In ja, this message translates to:
+  /// **'中止 (クリア)'**
+  String get labelScanCancelClear;
+
+  /// No description provided for @labelScanStopAndShow.
+  ///
+  /// In ja, this message translates to:
+  /// **'ここで止めて表示'**
+  String get labelScanStopAndShow;
+
+  /// No description provided for @labelScanContinue.
+  ///
+  /// In ja, this message translates to:
+  /// **'続行する'**
+  String get labelScanContinue;
 }
 
 class _AppLocalizationsDelegate

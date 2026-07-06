@@ -72,8 +72,9 @@ class ReNameryApp extends StatelessWidget {
         );
 
         return MaterialApp(
-          title: 'ReNamery - ファイル名を安全に一括変更 | 東洋クラフト',
-          onGenerateTitle: (_) => 'ReNamery - ファイル名を安全に一括変更 | 東洋クラフト',
+          title: 'ReNamery',
+          onGenerateTitle: (context) =>
+              AppLocalizations.of(context)!.labelAppTitle,
           themeMode: provider.themeMode,
           locale: provider.currentLocale,
           theme: ThemeData(

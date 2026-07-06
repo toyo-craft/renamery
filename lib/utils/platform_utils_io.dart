@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:ffi' as ffi;
 import 'package:ffi/ffi.dart' as pkg_ffi;
+import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:win32/win32.dart';
 import '../core/file_model.dart';
 
 const int SEE_MASK_INVOKEIDLIST = 0x0000000C;
 
 void showPropertiesDialogImpl(BuildContext context, FileModel fileModel) {
+  final l10n = AppLocalizations.of(context)!;
   final path = fileModel.entity.path;
 
   if (Platform.isWindows) {
     if (!File(path).existsSync() && !Directory(path).existsSync()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ファイルが存在しません')),
+        SnackBar(content: Text(l10n.labelFileNotFound)),
       );
       return;
     }
@@ -40,7 +42,7 @@ void showPropertiesDialogImpl(BuildContext context, FileModel fileModel) {
     if (result == FALSE) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Windowsプロパティ画面を開けませんでした')),
+          SnackBar(content: Text(l10n.labelWindowsPropertiesFailed)),
         );
       }
     }
@@ -54,18 +56,19 @@ void openFileImpl(String path) {
     // Windows ではバックスラッシュを使用する方が確実
     final normalizedPath = path.replaceAll('/', '\\');
     final pPath = normalizedPath.toNativeUtf16();
-    
+
     // lpOperation に nullptr を渡すと、デフォルトの動作（通常は 'open'）が実行される
     // これにより、関連付けられたアプリがより確実に起動する
-    final result = ShellExecute(0, ffi.nullptr, pPath, ffi.nullptr, ffi.nullptr, SW_SHOWNORMAL);
-    
+    final result = ShellExecute(
+        0, ffi.nullptr, pPath, ffi.nullptr, ffi.nullptr, SW_SHOWNORMAL);
+
     if (result <= 32) {
       // 失敗した場合は念のため 'open' を明示して再試行
       final pVerb = 'open'.toNativeUtf16();
       ShellExecute(0, pVerb, pPath, ffi.nullptr, ffi.nullptr, SW_SHOWNORMAL);
       pkg_ffi.calloc.free(pVerb);
     }
-    
+
     pkg_ffi.calloc.free(pPath);
   } else if (Platform.isMacOS) {
     Process.run('open', [path]);

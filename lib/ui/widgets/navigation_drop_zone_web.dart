@@ -2,6 +2,7 @@ import 'dart:js_interop';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:renamery/l10n/generated/app_localizations.dart';
 
 import '../../core/directory_provider_platform.dart';
 import '../../core/web_file_system_types.dart';
@@ -87,7 +88,7 @@ class _NavigationDropZoneState extends State<NavigationDropZone> {
             );
         return;
       }
-      final message = result.message ?? 'フォルダを1つだけドロップしてください。';
+      final message = _dropMessage(context, result.reason, result.message);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
@@ -107,10 +108,31 @@ class _NavigationDropZoneState extends State<NavigationDropZone> {
           : DateTime.fromMillisecondsSinceEpoch(lastUsedRaw.toInt()),
     );
   }
+
+  String _dropMessage(BuildContext context, String? reason, String? fallback) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (reason) {
+      case 'oneFolder':
+        return l10n.labelDropOneFolder;
+      case 'unsupported':
+        return l10n.labelDropUnsupported;
+      case 'folderNotFile':
+        return l10n.labelDropFolderNotFile;
+      case 'openFailed':
+        return fallback?.isNotEmpty == true
+            ? fallback!
+            : l10n.labelDropOpenFailed;
+      default:
+        return fallback?.isNotEmpty == true
+            ? fallback!
+            : l10n.labelDropOneFolder;
+    }
+  }
 }
 
 extension type _JsExternalDropResult(JSObject _) implements JSObject {
   external String get status;
+  external String? get reason;
   external String? get message;
   external _JsDroppedDirectory? get directory;
 }

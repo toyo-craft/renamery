@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
+import 'package:renamery/l10n/generated/app_localizations.dart';
 
 import 'file_model_web.dart';
 import 'rename_options.dart';
 import 'settings_service.dart';
 import 'web_file_system_service.dart';
+import 'web_locale_service.dart';
 
 enum HistoryType { find, replace, add, extension, remove, deleteTo }
 
@@ -13,6 +15,70 @@ enum AppThemeType { system, light, dark, darkGray }
 enum MenuLabelType { standard, namery, english, chinese, spanish }
 
 enum InitialDirectoryMode { lastUsed, fixed }
+
+MenuLabelType? _menuLabelTypeForLocale(Locale? locale) {
+  switch (locale?.languageCode.toLowerCase()) {
+    case 'ja':
+      return MenuLabelType.standard;
+    case 'en':
+      return MenuLabelType.english;
+    case 'zh':
+      return MenuLabelType.chinese;
+    case 'es':
+      return MenuLabelType.spanish;
+    default:
+      return null;
+  }
+}
+
+MenuLabelType _defaultMenuLabelTypeForLocales(List<Locale> locales) {
+  for (final locale in locales) {
+    final type = _menuLabelTypeForLocale(locale);
+    if (type != null) return type;
+  }
+  return MenuLabelType.english;
+}
+
+MenuLabelType? _pageMenuLabelType() {
+  final tag = _readPageInitialLocale();
+  if (tag == null || tag.isEmpty || tag.toLowerCase() == 'auto') return null;
+  return _menuLabelTypeForLocale(_localeFromTag(tag));
+}
+
+String? _readPageInitialLocale() {
+  return readPageInitialLocale();
+}
+
+List<Locale> _readPreferredLocales() {
+  final locales = readPreferredLocaleTags()
+      .map(_localeFromTag)
+      .whereType<Locale>()
+      .toList(growable: false);
+  if (locales.isNotEmpty) return locales;
+  final platformLocales = WidgetsBinding.instance.platformDispatcher.locales;
+  if (platformLocales.isNotEmpty) return platformLocales;
+  return [WidgetsBinding.instance.platformDispatcher.locale];
+}
+
+Locale? _localeFromTag(String tag) {
+  final parts = tag.trim().replaceAll('_', '-').split('-');
+  if (parts.isEmpty || parts.first.isEmpty) return null;
+  final languageCode = parts.first.toLowerCase();
+  String? scriptCode;
+  String? countryCode;
+  for (final part in parts.skip(1)) {
+    if (part.length == 4 && scriptCode == null) {
+      scriptCode = part[0].toUpperCase() + part.substring(1).toLowerCase();
+    } else if ((part.length == 2 || part.length == 3) && countryCode == null) {
+      countryCode = part.toUpperCase();
+    }
+  }
+  return Locale.fromSubtags(
+    languageCode: languageCode,
+    scriptCode: scriptCode,
+    countryCode: countryCode,
+  );
+}
 
 class WebDirectory {
   WebDirectory({
@@ -62,6 +128,17 @@ class DirectoryProvider extends ChangeNotifier {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   GlobalKey<ScaffoldState> get scaffoldKey => _scaffoldKey;
+
+  AppLocalizations? get _l10n {
+    final context = _scaffoldKey.currentContext;
+    return context == null ? null : AppLocalizations.of(context);
+  }
+
+  String _localized(
+      String Function(AppLocalizations l10n) text, String fallback) {
+    final l10n = _l10n;
+    return l10n == null ? fallback : text(l10n);
+  }
 
   WebDirectory? _currentDirectory;
   List<FileModel> _currentFiles = [];
@@ -347,11 +424,16 @@ class DirectoryProvider extends ChangeNotifier {
       orElse: () => AppThemeType.light,
     );
     final menuLabelStr = _settings.getString('menuLabelType');
-    if (menuLabelStr != null) {
+    final pageMenuLabelType = _pageMenuLabelType();
+    if (pageMenuLabelType != null) {
+      _menuLabelType = pageMenuLabelType;
+    } else if (menuLabelStr != null) {
       _menuLabelType = MenuLabelType.values.firstWhere(
         (e) => e.name == menuLabelStr,
         orElse: () => MenuLabelType.standard,
       );
+    } else {
+      _menuLabelType = _defaultMenuLabelTypeForLocales(_readPreferredLocales());
     }
     final validationIndex = _settings.getInt('validationType');
     if (validationIndex != null &&
@@ -398,7 +480,10 @@ class DirectoryProvider extends ChangeNotifier {
 
   Future<void> pickLocalDirectory() async {
     if (!_fs.isSupported) {
-      _errorMessage = 'このブラウザはローカルフォルダ連携に対応していません。';
+      _errorMessage = _localized(
+        (l10n) => l10n.labelWebUnsupportedBrowserMessage,
+        'このブラウザはローカルフォルダ連携に対応していません。',
+      );
       notifyListeners();
       return;
     }
@@ -447,7 +532,10 @@ class DirectoryProvider extends ChangeNotifier {
         permission = await _fs.requestPermission(directory.handle);
       }
       if (permission != 'granted') {
-        _errorMessage = 'フォルダへのアクセスが許可されませんでした。';
+        _errorMessage = _localized(
+          (l10n) => l10n.labelWebDirectoryPermissionDenied,
+          'フォルダへのアクセスが許可されませんでした。',
+        );
         return;
       }
       _navigationSource = 'tree';
@@ -488,7 +576,10 @@ class DirectoryProvider extends ChangeNotifier {
         permission = await _fs.requestPermission(root.handle);
       }
       if (permission != 'granted') {
-        _errorMessage = 'フォルダへのアクセスが許可されませんでした。';
+        _errorMessage = _localized(
+          (l10n) => l10n.labelWebDirectoryPermissionDenied,
+          'フォルダへのアクセスが許可されませんでした。',
+        );
         return;
       }
       _navigationSource = 'tree';
@@ -703,11 +794,22 @@ class DirectoryProvider extends ChangeNotifier {
     try {
       await action();
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = _friendlyErrorMessage(e);
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  String _friendlyErrorMessage(Object error) {
+    final message = error.toString();
+    if (message.contains('NotFoundError')) {
+      return _localized(
+        (l10n) => l10n.labelWebAccessUnavailable,
+        'フォルダまたはファイルを読み込めませんでした。移動、削除、同期中などにより一部の項目へアクセスできない可能性があります。',
+      );
+    }
+    return message;
   }
 
   Future<void> refresh() async {
@@ -1051,9 +1153,17 @@ class DirectoryProvider extends ChangeNotifier {
 
   String? _validateNewName(FileModel entry, String newName) {
     final trimmed = newName.trim();
-    if (trimmed.isEmpty) return 'ファイル名を入力してください。';
+    if (trimmed.isEmpty) {
+      return _localized(
+        (l10n) => l10n.labelWebNameRequired,
+        'ファイル名を入力してください。',
+      );
+    }
     if (RegExp(r'[\\/:*?"<>|]').hasMatch(trimmed)) {
-      return 'ファイル名に使用できない文字が含まれています: / \\ : * ? " < > |';
+      return _localized(
+        (l10n) => l10n.labelWebInvalidFileNameChars,
+        'ファイル名に使用できない文字が含まれています: / \\ : * ? " < > |',
+      );
     }
     if (entry.originalName != trimmed &&
         _currentFiles.any(
@@ -1062,7 +1172,10 @@ class DirectoryProvider extends ChangeNotifier {
               other.parentPath == entry.parentPath &&
               other.originalName.toLowerCase() == trimmed.toLowerCase(),
         )) {
-      return '同じ名前の項目が既にあります。';
+      return _localized(
+        (l10n) => l10n.labelWebDuplicateItem,
+        '同じ名前の項目が既にあります。',
+      );
     }
     return null;
   }
@@ -1081,7 +1194,12 @@ class DirectoryProvider extends ChangeNotifier {
       }
       final key = '${entry.parentPath}/${entry.newName}'.toLowerCase();
       entry.setValidationError(
-        (counts[key] ?? 0) > 1 ? '同じ名前のファイルが既にあります。' : null,
+        (counts[key] ?? 0) > 1
+            ? _localized(
+                (l10n) => l10n.labelWebDuplicateFile,
+                '同じ名前のファイルが既にあります。',
+              )
+            : null,
         notify: false,
       );
     }
@@ -1236,7 +1354,10 @@ class DirectoryProvider extends ChangeNotifier {
         try {
           final parentHandle = entry.parentHandle;
           if (parentHandle == null) {
-            entry.markError('項目へのアクセス情報が失われています。フォルダを選択し直してください。');
+            entry.markError(_localized(
+              (l10n) => l10n.labelWebItemAccessLost,
+              '項目へのアクセス情報が失われています。フォルダを選択し直してください。',
+            ));
             continue;
           }
           await _fs.renameFile(
@@ -1277,7 +1398,10 @@ class DirectoryProvider extends ChangeNotifier {
 
     final parentHandle = file.parentHandle;
     if (parentHandle == null) {
-      file.markError('ファイルへのアクセス情報が失われています。フォルダを選択し直してください。');
+      file.markError(_localized(
+        (l10n) => l10n.labelWebFileAccessLost,
+        'ファイルへのアクセス情報が失われています。フォルダを選択し直してください。',
+      ));
       notifyListeners();
       return;
     }

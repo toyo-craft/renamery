@@ -112,12 +112,14 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         await provider.checkForUpdates();
         if (provider.hasUpdate && mounted) {
+          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('新しいバージョン (v${provider.latestVersion}) が利用可能です'),
+              content:
+                  Text(l10n.labelUpdateAvailable(provider.latestVersion ?? '')),
               behavior: SnackBarBehavior.floating,
               action: SnackBarAction(
-                label: '設定を見る',
+                label: l10n.labelViewSettings,
                 onPressed: () {
                   // 設定ドロワーを開く
                   provider.scaffoldKey.currentState?.openEndDrawer();
@@ -346,8 +348,8 @@ class _HomeScreenState extends State<HomeScreen> {
           final bool? shouldExit = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('アプリの終了'),
-              content: const Text('ReNamery を終了しますか？'),
+              title: Text(l10n.labelAppExitTitle),
+              content: Text(l10n.labelAppExitConfirm),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -355,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 FilledButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('終了する'),
+                  child: Text(l10n.labelExit),
                 ),
               ],
             ),
@@ -712,7 +714,7 @@ class _HomeScreenState extends State<HomeScreen> {
       DirectoryProvider provider, AppLocalizations l10n) async {
     if (!provider.currentFiles.any((f) => f.isSelected)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No files selected')),
+        SnackBar(content: Text(l10n.labelMsgNoSelection)),
       );
       return;
     }
@@ -724,19 +726,16 @@ class _HomeScreenState extends State<HomeScreen> {
       final shouldProceed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('エラーを含むファイルのスキップ確認'),
-          content: Text(
-            '選択されたファイルの中に、ファイル名が不正（禁止文字・重複など）なものが $invalidCount 件あります。\n\n'
-            'これらを除外し、正常な $validCount 件のファイルのみリネームを実行しますか？',
-          ),
+          title: Text(l10n.labelSkipInvalidTitle),
+          content: Text(l10n.labelSkipInvalidMessage(invalidCount, validCount)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('キャンセル'),
+              child: Text(l10n.labelDialogCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('スキップして続行'),
+              child: Text(l10n.labelSkipAndContinue),
             ),
           ],
         ),
@@ -752,14 +751,14 @@ class _HomeScreenState extends State<HomeScreen> {
     if (context.mounted) {
       if (executedCount > 0) {
         final msg = invalidCount > 0
-            ? '$executedCount 件成功、$invalidCount 件はエラーのためスキップされました'
+            ? l10n.labelMsgExecutedWithSkipped(executedCount, invalidCount)
             : l10n.labelMsgExecutedCount(executedCount);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('実行できるファイルがありませんでした')),
+          SnackBar(content: Text(l10n.labelMsgNoExecutableFiles)),
         );
       }
     }

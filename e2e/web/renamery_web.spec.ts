@@ -222,7 +222,7 @@ async function installRenameryFsMock(
 }
 
 async function openApp(page: Page, options: { acceptLicense?: boolean } = {}) {
-  await page.goto('/');
+  await page.goto('/ja/');
   await page.locator('flt-glass-pane').waitFor({ state: 'attached' });
 
   const semanticsPlaceholder = page.locator('flt-semantics-placeholder');
@@ -291,13 +291,23 @@ test.describe('ReNamery Web MVP', () => {
     await openApp(page);
 
     await expect(page).toHaveTitle(/ReNamery/);
-    await expect(page).toHaveTitle(/東洋クラフト/);
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      'content',
+      /Nameryの直感的な操作感/,
+    );
     await expect(page.locator('meta[name="application-name"]')).toHaveAttribute('content', 'ReNamery');
-    await expect(page.locator('meta[name="author"]')).toHaveAttribute('content', '東洋クラフト');
-    await expect(page.locator('meta[name="publisher"]')).toHaveAttribute('content', '東洋クラフト');
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://toyo-craft.net/apps');
-    await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute('content', '東洋クラフト');
+    await expect(page.locator('meta[name="author"]')).toHaveAttribute('content', 'TOYO CRAFT Laboratory&Co.');
+    await expect(page.locator('meta[name="publisher"]')).toHaveAttribute('content', 'TOYO CRAFT Laboratory&Co.');
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://renamery.toyo-craft.net/ja/');
+    await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', 'https://renamery.toyo-craft.net/en/');
+    await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute('href', 'https://renamery.toyo-craft.net/');
+    await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href', 'manifest-ja.json');
+    await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute('content', 'ReNamery');
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /一括ファイル名変更ツール/);
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', 'https://renamery.toyo-craft.net/ja/');
+    await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute('content', 'ja_JP');
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary');
   });
 
   test('shows unsupported browser guidance', async ({ page }) => {

@@ -82,10 +82,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
               await showDialog<void>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('アプリを終了できません'),
-                  content: const Text(
-                    'ブラウザではアプリ側からタブを閉じられません。利用しない場合は、このタブを閉じてください。',
-                  ),
+                  title: Text(l10n.labelLicenseCannotExitTitle),
+                  content: Text(l10n.labelLicenseCannotExitMessage),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),

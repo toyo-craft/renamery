@@ -45,7 +45,7 @@ class PreviewWindow extends StatelessWidget {
       return _ArchivePreview(file: file!, l10n: l10n, extension: extension);
     }
     if (file!.isDirectory) {
-      return const PreviewDocumentMessage(message: 'Folder');
+      return PreviewDocumentMessage(message: l10n.labelTermFolder);
     }
     return _TextPreview(file: file!, l10n: l10n, extension: extension);
   }
@@ -222,7 +222,7 @@ class _ArchivePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!canListArchivePreview(file, extension)) {
       return PreviewDocumentMessage(
-        message: unsupportedPreviewMessage(file, extension),
+        message: unsupportedPreviewMessage(file, extension, l10n),
       );
     }
     final provider = context.watch<DirectoryProvider>();
@@ -272,7 +272,7 @@ class _ArchivePreview extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Archive Contents:',
+                        l10n.labelArchiveContents,
                         style: TextStyle(
                           fontSize: provider.textPreviewFontSize,
                           fontWeight: FontWeight.bold,
@@ -322,7 +322,7 @@ class _TextPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!canReadTextPreview(file, extension)) {
       return PreviewDocumentMessage(
-        message: unsupportedPreviewMessage(file, extension),
+        message: unsupportedPreviewMessage(file, extension, l10n),
       );
     }
     final provider = context.watch<DirectoryProvider>();
@@ -354,7 +354,8 @@ class _TextPreview extends StatelessWidget {
             }
             if (snapshot.hasError) {
               return PreviewDocumentMessage(
-                  message: 'Error: ${snapshot.error}');
+                message: l10n.labelPreviewError(snapshot.error.toString()),
+              );
             }
             final text = snapshot.data ?? l10n.labelPreviewUnavailable;
             if (text == l10n.labelPreviewBinaryError) {

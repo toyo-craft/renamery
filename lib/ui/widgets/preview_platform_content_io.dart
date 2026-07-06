@@ -174,7 +174,7 @@ Future<String> readPlatformTextPreview(
     final content = utf8.decode(bytes, allowMalformed: true);
     if (len > limit) {
       final sizeStr = (len / 1024).toStringAsFixed(1);
-      return '$content\n\n... (Omitted, Total: $sizeStr KB)';
+      return '$content\n\n${l10n.labelPreviewOmitted(sizeStr)}';
     }
     return content;
   } catch (_) {
@@ -196,8 +196,12 @@ Future<List<String>> listPlatformArchiveFiles(FileModel file) async {
   }
 }
 
-String unsupportedPreviewMessage(FileModel file, String extension) {
-  return 'Preview unavailable';
+String unsupportedPreviewMessage(
+  FileModel file,
+  String extension,
+  AppLocalizations l10n,
+) {
+  return l10n.labelPreviewUnavailable;
 }
 
 class _PdfPreview extends StatefulWidget {

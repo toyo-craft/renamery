@@ -87,7 +87,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 const SizedBox(width: 2),
                 _buildCompactIconButton(
                   context,
-                  icon: Symbols.arrow_back,
+                  icon: Icons.arrow_back,
                   tooltip: l10n.labelNavBack,
                   onPressed:
                       provider.canGoBack ? () => provider.goBack() : null,
@@ -98,7 +98,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 ),
                 _buildCompactIconButton(
                   context,
-                  icon: Symbols.arrow_forward,
+                  icon: Icons.arrow_forward,
                   tooltip: l10n.labelNavForward,
                   onPressed:
                       provider.canGoForward ? () => provider.goForward() : null,
@@ -109,7 +109,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 ),
                 _buildCompactIconButton(
                   context,
-                  icon: Symbols.arrow_upward,
+                  icon: Icons.arrow_upward,
                   tooltip: l10n.labelNavUp,
                   onPressed: provider.currentDirectory?.parent != null
                       ? () => provider.goUp()
@@ -117,7 +117,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 ),
                 _buildCompactIconButton(
                   context,
-                  icon: Symbols.undo,
+                  icon: Icons.undo,
                   tooltip: l10n.labelUndo,
                   onPressed: provider.canUndo
                       ? () => UndoHelper.handleUndo(context, provider)
@@ -125,14 +125,14 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 ),
                 _buildCompactIconButton(
                   context,
-                  icon: Symbols.content_copy,
+                  icon: Icons.content_copy,
                   tooltip: l10n.labelCopyOptions,
                   onPressed: () =>
                       CopyHelper.showCopyOptionsBottomSheet(context, provider),
                 ),
                 _buildCompactIconButton(
                   context,
-                  icon: Symbols.expand_less,
+                  icon: Icons.expand_less,
                   tooltip: l10n.labelMoveUp,
                   onPressed: provider.canMoveUp
                       ? () => provider.moveSelection(true)
@@ -140,7 +140,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 ),
                 _buildCompactIconButton(
                   context,
-                  icon: Symbols.expand_more,
+                  icon: Icons.expand_more,
                   tooltip: l10n.labelMoveDown,
                   onPressed: provider.canMoveDown
                       ? () => provider.moveSelection(false)
@@ -148,7 +148,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 ),
                 _buildCompactIconButton(
                   context,
-                  icon: Symbols.refresh,
+                  icon: Icons.refresh,
                   tooltip: l10n.labelRefresh,
                   onPressed: () => provider.refresh(),
                 ),
@@ -161,7 +161,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
             children: [
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Symbols.arrow_back),
+                icon: const Icon(Icons.arrow_back),
                 iconSize: iconSize,
                 tooltip: l10n.labelNavBack,
                 onPressed: provider.canGoBack ? () => provider.goBack() : null,
@@ -169,7 +169,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 constraints: const BoxConstraints(),
               ),
               PopupMenuButton<int>(
-                icon: const Icon(Symbols.arrow_drop_down),
+                icon: const Icon(Icons.arrow_drop_down),
                 enabled: provider.backHistory.isNotEmpty,
                 onSelected: (steps) => provider.jumpBack(steps),
                 itemBuilder: (context) {
@@ -185,7 +185,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 tooltip: l10n.labelHistoryBack,
               ),
               IconButton(
-                icon: const Icon(Symbols.arrow_forward),
+                icon: const Icon(Icons.arrow_forward),
                 iconSize: iconSize,
                 tooltip: l10n.labelNavForward,
                 onPressed:
@@ -194,7 +194,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 constraints: const BoxConstraints(),
               ),
               PopupMenuButton<int>(
-                icon: const Icon(Symbols.arrow_drop_down),
+                icon: const Icon(Icons.arrow_drop_down),
                 enabled: provider.forwardHistory.isNotEmpty,
                 onSelected: (steps) => provider.jumpForward(steps),
                 itemBuilder: (context) {
@@ -210,7 +210,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 tooltip: l10n.labelHistoryForward,
               ),
               IconButton(
-                icon: const Icon(Symbols.arrow_upward),
+                icon: const Icon(Icons.arrow_upward),
                 iconSize: iconSize,
                 tooltip: l10n.labelNavUp,
                 onPressed: provider.currentDirectory?.parent != null
@@ -223,7 +223,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   height: 24,
                   child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
               IconButton(
-                icon: const Icon(Symbols.play_arrow),
+                icon: const Icon(Icons.play_arrow),
                 iconSize: iconSize,
                 tooltip: provider.hasInvalidFilenamesSelected
                     ? '一部のファイルにエラーがあります (クリックで詳細)'
@@ -234,7 +234,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
               ),
               if (!isNarrow)
                 TextButton.icon(
-                  icon: const Icon(Symbols.undo),
+                  icon: const Icon(Icons.undo),
                   label: Text(provider.canUndo
                       ? '${l10n.labelUndo} (${provider.undoCount})'
                       : l10n.labelUndo),
@@ -247,7 +247,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 )
               else
                 IconButton(
-                  icon: const Icon(Symbols.undo),
+                  icon: const Icon(Icons.undo),
                   iconSize: iconSize,
                   tooltip: provider.canUndo
                       ? '${l10n.labelUndo} (${provider.undoCount})'
@@ -260,7 +260,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   height: 24,
                   child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
               IconButton(
-                icon: const Icon(Symbols.content_copy),
+                icon: const Icon(Icons.content_copy),
                 iconSize: iconSize,
                 tooltip: l10n.labelCopyName,
                 onPressed: provider.currentFiles.any((f) => f.isSelected)
@@ -270,7 +270,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 constraints: const BoxConstraints(),
               ),
               PopupMenuButton<int>(
-                icon: const Icon(Symbols.arrow_drop_down),
+                icon: const Icon(Icons.arrow_drop_down),
                 enabled: provider.currentFiles.any((f) => f.isSelected) ||
                     provider.getLastUndoTransaction().isNotEmpty,
                 onSelected: (value) async {
@@ -283,7 +283,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   height: 24,
                   child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
               IconButton(
-                icon: const Icon(Symbols.expand_less),
+                icon: const Icon(Icons.expand_less),
                 iconSize: iconSize,
                 tooltip: l10n.labelMoveUp,
                 onPressed: provider.canMoveUp
@@ -291,7 +291,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                     : null,
               ),
               IconButton(
-                icon: const Icon(Symbols.expand_more),
+                icon: const Icon(Icons.expand_more),
                 iconSize: iconSize,
                 tooltip: l10n.labelMoveDown,
                 onPressed: provider.canMoveDown
@@ -302,7 +302,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
                   height: 24,
                   child: VerticalDivider(width: 20, indent: 4, endIndent: 4)),
               IconButton(
-                icon: const Icon(Symbols.refresh),
+                icon: const Icon(Icons.refresh),
                 iconSize: iconSize,
                 tooltip: l10n.labelRefresh,
                 onPressed: () => provider.refresh(),

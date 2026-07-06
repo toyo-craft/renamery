@@ -550,6 +550,7 @@ class _FileListPanelState extends State<FileListPanel> {
 
   Widget _buildWebEmptyPrompt(
       BuildContext context, DirectoryProvider provider) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: ConstrainedBox(
@@ -568,14 +569,17 @@ class _FileListPanelState extends State<FileListPanel> {
                   color: colorScheme.primary,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Web版では、最初にローカルフォルダを選択してください。',
+                Text(
+                  l10n.labelWebSelectFolderPromptTitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Windows版と同じ画面構成で操作しますが、ブラウザ制約により明示選択したフォルダ配下だけを扱います。',
+                  l10n.labelWebSelectFolderPromptMessage,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: colorScheme.onSurfaceVariant),
                 ),
@@ -584,7 +588,7 @@ class _FileListPanelState extends State<FileListPanel> {
                   onPressed:
                       provider.isLoading ? null : provider.pickLocalDirectory,
                   icon: const Icon(Icons.add),
-                  label: const Text('フォルダを選択'),
+                  label: Text(l10n.labelSelectFolder),
                 ),
               ],
             ),

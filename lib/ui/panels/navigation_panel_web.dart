@@ -51,11 +51,11 @@ class _NavigationPanelState extends State<NavigationPanel> {
       header: NavigationSectionHeader(l10n.labelNavQuickAccess),
       sections: [
         NavigationSection(
-          items: [_localDirectoryPickerItem(provider)],
+          items: [_localDirectoryPickerItem(provider, l10n)],
           children: [
             if (!provider.isWebFileSystemSupported)
-              const NavigationMessageCard(
-                'このブラウザはフォルダ連携に対応していません。ChromeまたはEdgeのデスクトップ版をご利用ください。',
+              NavigationMessageCard(
+                l10n.labelWebUnsupportedBrowserMessage,
                 error: true,
               ),
             if (provider.errorMessage != null)
@@ -64,7 +64,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                 error: true,
               ),
             if (provider.savedDirectories.isEmpty)
-              const NavigationEmptyText('選択済みフォルダはまだありません。')
+              NavigationEmptyText(l10n.labelWebNoSavedDirectories)
             else
               for (final directory in provider.savedDirectories)
                 _WebDirectoryTile(
@@ -78,11 +78,12 @@ class _NavigationPanelState extends State<NavigationPanel> {
     );
   }
 
-  NavigationItem _localDirectoryPickerItem(DirectoryProvider provider) {
+  NavigationItem _localDirectoryPickerItem(
+      DirectoryProvider provider, AppLocalizations l10n) {
     return NavigationItem(
       icon: Symbols.folder_open,
-      title: 'ローカルフォルダを選択',
-      subtitle: 'Chrome/Edgeでフォルダを開く',
+      title: l10n.labelWebLocalFolderPickerTitle,
+      subtitle: l10n.labelWebLocalFolderPickerSubtitle,
       enabled: !provider.isLoading && provider.isWebFileSystemSupported,
       onTap: provider.pickLocalDirectory,
     );
@@ -126,6 +127,7 @@ class _WebDirectoryTileState extends State<_WebDirectoryTile> {
   }
 
   Future<void> _expand() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_isExpanded && (_loaded || _isLoadingChildren)) return;
     if (mounted) {
       setState(() {
@@ -151,7 +153,7 @@ class _WebDirectoryTileState extends State<_WebDirectoryTile> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'フォルダを読み込めませんでした。';
+        _errorMessage = l10n.labelDropOpenFailed;
         _loaded = false;
       });
     } finally {
@@ -168,23 +170,20 @@ class _WebDirectoryTileState extends State<_WebDirectoryTile> {
 
   Future<void> _forgetRoot() async {
     if (!widget.isRoot) return;
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('クイックアクセスから解除しますか？'),
-        content: Text(
-          '「${widget.root.name}」をReNameryのクイックアクセスから解除します。\n\n'
-          'フォルダやファイル自体は削除されません。\n'
-          '再度利用する場合は「ローカルフォルダを選択」から追加してください。',
-        ),
+        title: Text(l10n.labelForgetQuickAccessTitle),
+        content: Text(l10n.labelForgetQuickAccessMessage(widget.root.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('キャンセル'),
+            child: Text(l10n.labelDialogCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('解除'),
+            child: Text(l10n.labelForget),
           ),
         ],
       ),
@@ -197,14 +196,15 @@ class _WebDirectoryTileState extends State<_WebDirectoryTile> {
     messenger?.showSnackBar(
       SnackBar(
         content: Text(success
-            ? 'クイックアクセスから解除しました。ファイルは削除されていません。'
-            : 'クイックアクセスから解除できませんでした。'),
+            ? l10n.labelForgetQuickAccessSuccess
+            : l10n.labelForgetQuickAccessFailure),
       ),
     );
   }
 
   Future<void> _showRootMenu() async {
     if (!widget.isRoot) return;
+    final l10n = AppLocalizations.of(context)!;
     final overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox?;
     final box = context.findRenderObject() as RenderBox?;
@@ -216,14 +216,14 @@ class _WebDirectoryTileState extends State<_WebDirectoryTile> {
         offset & box.size,
         Offset.zero & overlay.size,
       ),
-      items: const [
+      items: [
         PopupMenuItem(
           value: 'forget',
           child: Row(
             children: [
-              Icon(Icons.link_off, size: 18),
-              SizedBox(width: 8),
-              Text('解除'),
+              const Icon(Icons.link_off, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.labelForget),
             ],
           ),
         ),
@@ -235,6 +235,7 @@ class _WebDirectoryTileState extends State<_WebDirectoryTile> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DirectoryProvider>();
+    final l10n = AppLocalizations.of(context)!;
     final rootIsActive = provider.navigationContextRoot == widget.root.id;
     final currentRelativePath = provider.currentDirectory?.relativePath ?? '';
     final relativePath = widget.relativePath;
@@ -271,11 +272,11 @@ class _WebDirectoryTileState extends State<_WebDirectoryTile> {
       iconColor: rootNeedsPermission
           ? Theme.of(context).colorScheme.error
           : Colors.amber,
-      semanticLabel: '${widget.title} フォルダ',
+      semanticLabel: '${widget.title} ${l10n.labelTermFolder}',
       trailing: widget.isRoot
           ? IconButton(
-              icon: const Icon(Icons.link_off, size: 16),
-              tooltip: 'クイックアクセスから解除',
+               icon: const Icon(Icons.link_off, size: 16),
+              tooltip: l10n.labelForgetQuickAccessAction,
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints.tightFor(width: 32, height: 32),

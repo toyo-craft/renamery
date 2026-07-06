@@ -1,6 +1,7 @@
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:renamery/l10n/generated/app_localizations.dart';
 
 import '../../core/directory_provider.dart';
 
@@ -43,12 +44,13 @@ class _NavigationDropZoneState extends State<NavigationDropZone> {
   }
 
   Future<String?> _handleDrop(BuildContext context, List<dynamic> files) async {
+    final l10n = AppLocalizations.of(context)!;
     if (files.length != 1) {
-      return 'フォルダを1つだけドロップしてください。';
+      return l10n.labelDropOneFolder;
     }
     final path = files.single.path as String?;
     if (path == null || path.isEmpty) {
-      return 'ファイルではなくフォルダを1つだけドロップしてください。';
+      return l10n.labelDropFolderNotFile;
     }
     return context.read<DirectoryProvider>().openDroppedDirectoryPath(path);
   }
@@ -59,6 +61,7 @@ class _DropOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     return IgnorePointer(
       child: DecoratedBox(
@@ -69,9 +72,9 @@ class _DropOverlay extends StatelessWidget {
         child: Center(
           child: Card(
             color: colorScheme.surface,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Text('ここにフォルダをドロップして開く'),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Text(l10n.labelDropHereToOpen),
             ),
           ),
         ),

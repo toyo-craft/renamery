@@ -1,33 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:renamery/l10n/generated/app_localizations.dart';
+
 import '../core/file_model.dart';
 
 // Custom Dialog for Web/Linux/Android fallback
 void showCustomPropertiesDialog(BuildContext context, FileModel fileModel) {
+  final l10n = AppLocalizations.of(context)!;
   showDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text('プロパティ: ${fileModel.originalName}'),
+        title: Text(l10n.labelPropertiesTitle(fileModel.originalName)),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildPropertyRow(
-                  '種類', fileModel.isDirectory ? 'ファイル フォルダ' : 'ファイル'),
-              _buildPropertyRow('場所', fileModel.parentPath),
-              _buildPropertyRow('サイズ', fileModel.size),
+                l10n.labelPropertyKind,
+                fileModel.isDirectory
+                    ? l10n.labelPropertyFileFolder
+                    : l10n.labelPropertyFile,
+              ),
+              _buildPropertyRow(
+                  l10n.labelPropertyLocation, fileModel.parentPath),
+              _buildPropertyRow(l10n.labelPropertySize, fileModel.size),
               const Divider(),
-              _buildPropertyRow('更新日時', fileModel.dateModified),
+              _buildPropertyRow(
+                  l10n.labelPropertyModified, fileModel.dateModified),
               const Divider(),
-              _buildPropertyRow('属性', fileModel.attributes),
+              _buildPropertyRow(
+                  l10n.labelPropertyAttributes, fileModel.attributes),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(MaterialLocalizations.of(context).okButtonLabel),
           ),
         ],
       );

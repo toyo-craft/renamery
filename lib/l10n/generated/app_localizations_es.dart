@@ -798,4 +798,227 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get labelLicenseAcceptStart => 'Aceptar y empezar a usar';
+
+  @override
+  String get labelAppTitle =>
+      'ReNamery - Cambio seguro de nombres por lotes | Toyo Craft';
+
+  @override
+  String labelUpdateAvailable(String version) {
+    return 'Hay una nueva versión (v$version) disponible';
+  }
+
+  @override
+  String get labelViewSettings => 'Ver ajustes';
+
+  @override
+  String get labelAppExitTitle => 'Salir de la app';
+
+  @override
+  String get labelAppExitConfirm => '¿Salir de ReNamery?';
+
+  @override
+  String get labelExit => 'Salir';
+
+  @override
+  String get labelSkipInvalidTitle => '¿Omitir archivos con errores?';
+
+  @override
+  String labelSkipInvalidMessage(int invalidCount, int validCount) {
+    return '$invalidCount archivos seleccionados tienen nombres no válidos, como caracteres prohibidos o duplicados.\n\n¿Excluirlos y renombrar solo los $validCount archivos válidos?';
+  }
+
+  @override
+  String get labelSkipAndContinue => 'Omitir y continuar';
+
+  @override
+  String labelMsgExecutedWithSkipped(int executedCount, int invalidCount) {
+    return '$executedCount correctos, $invalidCount omitidos por errores';
+  }
+
+  @override
+  String get labelMsgNoExecutableFiles =>
+      'No hay archivos que se puedan procesar';
+
+  @override
+  String get labelWebSelectFolderPromptTitle =>
+      'Seleccione primero una carpeta local en la versión web.';
+
+  @override
+  String get labelWebSelectFolderPromptMessage =>
+      'La pantalla es igual que en Windows, pero las restricciones del navegador limitan el acceso a la carpeta seleccionada explícitamente.';
+
+  @override
+  String get labelSelectFolder => 'Seleccionar carpeta';
+
+  @override
+  String get labelLicenseCannotExitTitle => 'No se puede salir de la app';
+
+  @override
+  String get labelLicenseCannotExitMessage =>
+      'El navegador no permite que la app cierre esta pestaña. Si no desea usar la app, cierre esta pestaña manualmente.';
+
+  @override
+  String get labelDropOneFolder => 'Suelte exactamente una carpeta.';
+
+  @override
+  String get labelDropFolderNotFile => 'Suelte una carpeta, no un archivo.';
+
+  @override
+  String get labelDropUnsupported =>
+      'Arrastrar y soltar carpetas no es compatible en este entorno.';
+
+  @override
+  String get labelDropOpenFailed => 'No se pudo abrir la carpeta.';
+
+  @override
+  String get labelDropHereToOpen => 'Suelte una carpeta aquí para abrirla';
+
+  @override
+  String get labelFileNotFound => 'El archivo no existe';
+
+  @override
+  String get labelWindowsPropertiesFailed =>
+      'No se pudo abrir Propiedades de Windows';
+
+  @override
+  String labelPropertiesTitle(String name) {
+    return 'Propiedades: $name';
+  }
+
+  @override
+  String get labelPropertyKind => 'Tipo';
+
+  @override
+  String get labelPropertyFileFolder => 'Carpeta de archivos';
+
+  @override
+  String get labelPropertyFile => 'Archivo';
+
+  @override
+  String get labelPropertyLocation => 'Ubicación';
+
+  @override
+  String get labelPropertySize => 'Tamaño';
+
+  @override
+  String get labelPropertyModified => 'Fecha de modificación';
+
+  @override
+  String get labelPropertyAttributes => 'Atributos';
+
+  @override
+  String get labelWebUnsupportedBrowserMessage =>
+      'Este navegador no admite la integración de carpetas. Use la versión de escritorio de Chrome o Edge.';
+
+  @override
+  String get labelWebLocalFolderPickerTitle => 'Seleccionar carpeta local';
+
+  @override
+  String get labelWebLocalFolderPickerSubtitle =>
+      'Abrir una carpeta en Chrome/Edge';
+
+  @override
+  String get labelWebNoSavedDirectories =>
+      'Aún no se han seleccionado carpetas.';
+
+  @override
+  String get labelWebDirectoryPermissionDenied =>
+      'No se concedió acceso a la carpeta.';
+
+  @override
+  String get labelWebAccessUnavailable =>
+      'No se pudo leer una carpeta o archivo. Algunos elementos pueden no estar disponibles porque se movieron, eliminaron o se están sincronizando.';
+
+  @override
+  String get labelWebNameRequired => 'Introduzca un nombre de archivo.';
+
+  @override
+  String get labelWebInvalidFileNameChars =>
+      'El nombre de archivo contiene caracteres prohibidos: / \\ : * ? \" < > |';
+
+  @override
+  String get labelWebDuplicateItem =>
+      'Ya existe un elemento con el mismo nombre.';
+
+  @override
+  String get labelWebDuplicateFile =>
+      'Ya existe un archivo con el mismo nombre.';
+
+  @override
+  String get labelWebItemAccessLost =>
+      'Se perdió la información de acceso de este elemento. Seleccione la carpeta de nuevo.';
+
+  @override
+  String get labelWebFileAccessLost =>
+      'Se perdió la información de acceso de este archivo. Seleccione la carpeta de nuevo.';
+
+  @override
+  String get labelForgetQuickAccessTitle => '¿Quitar de Acceso rápido?';
+
+  @override
+  String labelForgetQuickAccessMessage(String name) {
+    return 'Quitar \"$name\" del Acceso rápido de ReNamery.\n\nLa carpeta y los archivos no se eliminarán.\nPara usarla de nuevo, agréguela desde \"Seleccionar carpeta local\".';
+  }
+
+  @override
+  String get labelForget => 'Quitar';
+
+  @override
+  String get labelForgetQuickAccessAction => 'Quitar de Acceso rápido';
+
+  @override
+  String get labelForgetQuickAccessSuccess =>
+      'Quitado de Acceso rápido. Los archivos no se eliminaron.';
+
+  @override
+  String get labelForgetQuickAccessFailure =>
+      'No se pudo quitar de Acceso rápido.';
+
+  @override
+  String get labelArchiveContents => 'Contenido del archivo:';
+
+  @override
+  String labelPreviewError(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String labelPreviewUnsupportedWeb(String target) {
+    return 'La vista previa de contenido de $target no es compatible en la versión web.\nPuede consultar el nombre, tipo, tamaño y otra información en la lista.';
+  }
+
+  @override
+  String get labelPreviewTargetThisFile => 'este archivo';
+
+  @override
+  String labelPreviewTargetExtensionFile(String extension) {
+    return 'archivo $extension';
+  }
+
+  @override
+  String get labelScanConfirmTitle => 'Confirmar escaneo';
+
+  @override
+  String labelScanConfirmCount(int count) {
+    return 'Se encontraron $count archivos.\n¿Continuar escaneando?';
+  }
+
+  @override
+  String labelScanConfirmTime(int count) {
+    return 'Han pasado 5 segundos desde que comenzó el escaneo ($count archivos hasta ahora).\n¿Continuar?';
+  }
+
+  @override
+  String get labelScanConfirmStall =>
+      'La respuesta se ha detenido temporalmente. ¿Continuar escaneando?';
+
+  @override
+  String get labelScanCancelClear => 'Cancelar y borrar';
+
+  @override
+  String get labelScanStopAndShow => 'Detener aquí y mostrar';
+
+  @override
+  String get labelScanContinue => 'Continuar';
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -19,28 +19,148 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ReNameryは、ローカルフォルダ内のファイル名を安全にプレビューしながら一括変更できる東洋クラフト提供のリネーム支援アプリです。Windows、Android、Webで利用できます。">
+  <!-- RENAMERY_META_START -->
+  <meta name="description" content="ReNamery is a modern batch file renamer inspired by Namery. Preview changes in a 3-pane UI and use numbering, regex replacement, extension changes, undo, and image/PDF/SVG/ZIP previews on Windows, Android, Linux, and Web.">
   <meta name="application-name" content="ReNamery">
-  <meta name="author" content="東洋クラフト">
-  <meta name="creator" content="東洋クラフト">
-  <meta name="publisher" content="東洋クラフト">
-  <meta name="keywords" content="ReNamery,リネーマリー,ファイル名変更,一括リネーム,リネームアプリ,東洋クラフト,Toyo Craft">
+  <meta name="author" content="TOYO CRAFT Laboratory&Co.">
+  <meta name="creator" content="TOYO CRAFT Laboratory&Co.">
+  <meta name="publisher" content="TOYO CRAFT Laboratory&Co.">
+  <meta name="keywords" content="ReNamery, batch file renamer, rename files, bulk rename, Namery, regex rename, file utility, Toyo Craft">
   <meta name="theme-color" content="#2E7D32">
   <meta name="color-scheme" content="light">
-  <link rel="canonical" href="https://toyo-craft.net/apps">
+  <link rel="canonical" href="https://renamery.toyo-craft.net/">
+  <link rel="alternate" hreflang="ja" href="https://renamery.toyo-craft.net/ja/">
+  <link rel="alternate" hreflang="en" href="https://renamery.toyo-craft.net/en/">
+  <link rel="alternate" hreflang="es" href="https://renamery.toyo-craft.net/es/">
+  <link rel="alternate" hreflang="zh-Hans" href="https://renamery.toyo-craft.net/zh/">
+  <link rel="alternate" hreflang="x-default" href="https://renamery.toyo-craft.net/">
 
-  <meta property="og:site_name" content="東洋クラフト">
-  <meta property="og:title" content="ReNamery - ファイル名を安全に一括変更">
-  <meta property="og:description" content="ローカルフォルダ内のファイル名をプレビューしながら一括変更できる、東洋クラフト提供のリネーム支援アプリです。">
+  <meta property="og:site_name" content="ReNamery">
+  <meta property="og:title" content="ReNamery | Safe Batch File Renamer with Live Preview">
+  <meta property="og:description" content="A modern batch file renamer inspired by Namery, with live previews, numbering, regex replacement, extension changes, undo, and file content previews.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://toyo-craft.net/apps">
-  <meta property="og:image" content="https://toyo-craft.net/apps/icons/Icon-512.png">
-  <meta property="og:locale" content="ja_JP">
+  <meta property="og:url" content="https://renamery.toyo-craft.net/">
+  <meta property="og:image" content="https://renamery.toyo-craft.net/icons/Icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="ja_JP">
+  <meta property="og:locale:alternate" content="es_ES">
+  <meta property="og:locale:alternate" content="zh_CN">
 
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="ReNamery - ファイル名を安全に一括変更">
-  <meta name="twitter:description" content="ローカルフォルダ内のファイル名をプレビューしながら一括変更できる、東洋クラフト提供のリネーム支援アプリです。">
-  <meta name="twitter:image" content="https://toyo-craft.net/apps/icons/Icon-512.png">
+  <meta name="twitter:title" content="ReNamery | Safe Batch File Renamer with Live Preview">
+  <meta name="twitter:description" content="Preview and safely batch rename files with numbering, regex replacement, extension changes, undo, and image/PDF/SVG/ZIP previews.">
+  <meta name="twitter:image" content="https://renamery.toyo-craft.net/icons/Icon-512.png">
+  <title>ReNamery | Safe Batch File Renamer with Live Preview</title>
+  <link rel="manifest" href="manifest.json">
+  <script id="renamery-locale-bootstrap">
+    window.renameryInitialLocale = 'auto';
+    window.renameryPageLocale = 'x-default';
+    window.renameryLocale = {
+      initialLocale: window.renameryInitialLocale,
+      pageLocale: window.renameryPageLocale,
+      getInitialLocale: () => window.renameryInitialLocale,
+      preferredLocales: () => Array.from(
+        navigator.languages && navigator.languages.length
+          ? navigator.languages
+          : [navigator.language]
+      ).filter(Boolean),
+      getPreferredLocales: () => Array.from(
+        navigator.languages && navigator.languages.length
+          ? navigator.languages
+          : [navigator.language]
+      ).filter(Boolean),
+    };
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": ["WebApplication", "SoftwareApplication"],
+      "name": "ReNamery",
+      "alternateName": ["Namery-inspired batch renamer", "リネームリー"],
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Windows, Android, Linux, Web",
+      "url": "https://renamery.toyo-craft.net/",
+      "description": "ReNamery is a modern batch file renamer inspired by Namery. It provides a 3-pane interface, live rename preview, numbering, regex replacement, extension changes, undo, and previews for images, PDFs, SVGs, and ZIP files.",
+      "image": "https://renamery.toyo-craft.net/icons/Icon-512.png",
+      "screenshot": [
+        "https://toyo-craft.net/images/cap_renamery01.png",
+        "https://toyo-craft.net/images/cap_renamery02.png",
+        "https://toyo-craft.net/images/cap_renamery03.png",
+        "https://toyo-craft.net/images/cap_renamery04.png"
+      ],
+      "softwareVersion": "0.13.2",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "3-pane file renaming interface",
+        "Live rename preview",
+        "Advanced numbering",
+        "Regex replacement",
+        "Bulk extension changes",
+        "Undo after renaming",
+        "Image, PDF, SVG, and ZIP preview"
+      ],
+      "license": "https://github.com/toyo-craft/renamery/blob/main/LICENSE",
+      "codeRepository": "https://github.com/toyo-craft/renamery",
+      "downloadUrl": "https://github.com/toyo-craft/renamery/releases",
+      "author": {
+        "@type": "Organization",
+        "name": "TOYO CRAFT Laboratory&Co.",
+        "url": "https://toyo-craft.net/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "TOYO CRAFT Laboratory&Co.",
+        "url": "https://toyo-craft.net/"
+      },
+      "sameAs": [
+        "https://toyo-craft.net/apps",
+        "https://github.com/toyo-craft/renamery"
+      ],
+      "subjectOf": [
+        {
+          "@type": "WebPage",
+          "name": "ReNamery on Vector",
+          "url": "https://www.vector.co.jp/soft/winnt/util/se528679.html"
+        },
+        {
+          "@type": "NewsArticle",
+          "name": "ReNamery in Mado no Mori Digest News",
+          "url": "https://forest.watch.impress.co.jp/docs/digest/2099794.html"
+        }
+      ]
+    }
+  </script>
+  <!-- RENAMERY_META_END -->
+  <style>
+    .renamery-seo-content {
+      box-sizing: border-box;
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 24px;
+      color: #1f2933;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    .renamery-seo-content h1 {
+      margin: 0 0 12px;
+      color: #1b5e20;
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      line-height: 1.15;
+    }
+
+    .renamery-seo-content a {
+      color: #1b5e20;
+      font-weight: 700;
+    }
+  </style>
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -51,33 +171,21 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>ReNamery - ファイル名を安全に一括変更 | 東洋クラフト</title>
-  <link rel="manifest" href="manifest.json">
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "ReNamery",
-      "alternateName": "リネーマリー",
-      "applicationCategory": "UtilitiesApplication",
-      "operatingSystem": "Windows, Android, Web",
-      "url": "https://toyo-craft.net/apps",
-      "description": "ReNameryは、ローカルフォルダ内のファイル名を安全にプレビューしながら一括変更できる東洋クラフト提供のリネーム支援アプリです。",
-      "image": "https://toyo-craft.net/apps/icons/Icon-512.png",
-      "author": {
-        "@type": "Organization",
-        "name": "東洋クラフト",
-        "url": "https://toyo-craft.net/"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "東洋クラフト",
-        "url": "https://toyo-craft.net/"
-      }
-    }
-  </script>
 </head>
 <body>
+  <!-- RENAMERY_SEO_CONTENT_START -->
+  <main id="renamery-seo-content" class="renamery-seo-content">
+    <h1>ReNamery</h1>
+    <p>ReNamery is a modern batch file renamer inspired by Namery, the classic Windows renaming utility. It helps you preview file name changes before execution and supports numbering, regex replacement, extension changes, undo, and previews for images, PDFs, SVGs, and ZIP archives.</p>
+    <p>Use the Web version as a quick trial, or download the Windows, Android, and Linux releases from GitHub. The project is developed by TOYO CRAFT Laboratory&Co. as an evolving prototype for practical file-management workflows.</p>
+    <p><a href="https://github.com/toyo-craft/renamery/releases">Download ReNamery</a> / <a href="https://github.com/toyo-craft/renamery">View source code</a></p>
+  </main>
+  <script>
+    window.addEventListener('flutter-first-frame', () => {
+      document.getElementById('renamery-seo-content')?.remove();
+    });
+  </script>
+  <!-- RENAMERY_SEO_CONTENT_END -->
   <script>
     (() => {
       const dbName = 'renamery-web-fs';
@@ -203,8 +311,8 @@
           event.clientY <= externalDropBounds.bottom;
       };
 
-      const rejectExternalDrop = (message) => {
-        emitExternalDrop({ status: 'rejected', message });
+      const rejectExternalDrop = (reason, message = null) => {
+        emitExternalDrop({ status: 'rejected', reason, message });
       };
 
       const handleExternalDrop = async (event) => {
@@ -215,26 +323,26 @@
         const items = Array.from(event.dataTransfer?.items || [])
           .filter((item) => item.kind === 'file');
         if (items.length !== 1) {
-          rejectExternalDrop('フォルダを1つだけドロップしてください。');
+          rejectExternalDrop('oneFolder');
           return;
         }
 
         const item = items[0];
         if (typeof item.getAsFileSystemHandle !== 'function') {
-          rejectExternalDrop('このブラウザではフォルダのドラッグ&ドロップに対応していません。');
+          rejectExternalDrop('unsupported');
           return;
         }
 
         try {
           const handle = await item.getAsFileSystemHandle();
           if (!handle || handle.kind !== 'directory') {
-            rejectExternalDrop('ファイルではなくフォルダを1つだけドロップしてください。');
+            rejectExternalDrop('folderNotFile');
             return;
           }
           const directory = await saveDirectoryHandle(handle);
           emitExternalDrop({ status: 'accepted', directory });
         } catch (error) {
-          rejectExternalDrop(error?.message || 'フォルダを開けませんでした。');
+          rejectExternalDrop('openFailed');
         }
       };
 
@@ -327,7 +435,12 @@
               lastModified,
             });
             if (recursive && child.kind === 'directory') {
-              await appendEntries(child, childRelativePath);
+              try {
+                await appendEntries(child, childRelativePath);
+              } catch (error) {
+                // A child folder can disappear or become unavailable while the browser enumerates it.
+                if (!isNotFoundError(error)) throw error;
+              }
             }
           }
         };
@@ -343,7 +456,12 @@
         return new Uint8Array(buffer);
       };
 
-      const isNotFoundError = (error) => error && error.name === 'NotFoundError';
+      const isNotFoundError = (error) => {
+        if (!error) return false;
+        if (error.name === 'NotFoundError') return true;
+        if (typeof error.message === 'string' && error.message.includes('NotFoundError')) return true;
+        return String(error).includes('NotFoundError');
+      };
       const isTypeMismatchError = (error) => error && error.name === 'TypeMismatchError';
 
       const assertNewNameAvailable = async (parentHandle, newName) => {
