@@ -294,7 +294,7 @@ test.describe('ReNamery Web MVP', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'ja');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
-      /Nameryの直感的な操作感/,
+      /先行する優れたリネームツールの開拓者たちが築いた思想/,
     );
     await expect(page.locator('meta[name="application-name"]')).toHaveAttribute('content', 'ReNamery');
     await expect(page.locator('meta[name="author"]')).toHaveAttribute('content', 'TOYO CRAFT Laboratory&Co.');
