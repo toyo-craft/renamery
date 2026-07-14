@@ -193,35 +193,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  deploy-web:
-    name: Build and Deploy Web
-    runs-on: ubuntu-22.04
-    needs: build-and-release
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          flutter-version: 'any'
-
-      - name: Validate Version
-        run: dart scripts/release_validator.dart --validate-version
-
-      - name: Install npm dependencies
-        run: npm ci
-
-      - name: Build Web
-        run: npm run build:web
-
-      - name: Deploy Web to mixhost
-        uses: easingthemes/ssh-deploy@main
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          SOURCE: "build/web/"
-          TARGET: "/home/${{ secrets.REMOTE_USER }}/public_html/renamery.toyo-craft.net/"
-          # Keep the ReNamery subdomain document root exactly in sync with build/web.
-          ARGS: "-rlgoDzvc -i --delete"
