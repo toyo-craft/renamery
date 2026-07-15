@@ -53,11 +53,6 @@ class _NavigationPanelState extends State<NavigationPanel> {
         NavigationSection(
           items: [_localDirectoryPickerItem(provider, l10n)],
           children: [
-            if (!provider.isWebFileSystemSupported)
-              NavigationMessageCard(
-                l10n.labelWebUnsupportedBrowserMessage,
-                error: true,
-              ),
             if (provider.errorMessage != null)
               NavigationMessageCard(
                 provider.errorMessage!,
@@ -81,7 +76,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
   NavigationItem _localDirectoryPickerItem(
       DirectoryProvider provider, AppLocalizations l10n) {
     return NavigationItem(
-      icon: Symbols.folder_open,
+      icon: Symbols.create_new_folder,
+      iconFill: 1,
       title: l10n.labelWebLocalFolderPickerTitle,
       subtitle: l10n.labelWebLocalFolderPickerSubtitle,
       enabled: !provider.isLoading && provider.isWebFileSystemSupported,
@@ -275,7 +271,7 @@ class _WebDirectoryTileState extends State<_WebDirectoryTile> {
       semanticLabel: '${widget.title} ${l10n.labelTermFolder}',
       trailing: widget.isRoot
           ? IconButton(
-               icon: const Icon(Icons.link_off, size: 16),
+              icon: const Icon(Icons.link_off, size: 16),
               tooltip: l10n.labelForgetQuickAccessAction,
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,

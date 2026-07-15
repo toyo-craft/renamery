@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/directory_provider_platform.dart';
 import '../../core/file_model.dart';
@@ -18,6 +19,9 @@ class FileListPanel extends StatefulWidget {
 }
 
 class _FileListPanelState extends State<FileListPanel> {
+  static final Uri _desktopAppUri =
+      Uri.parse('https://toyo-craft.net/apps#renamery');
+
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _verticalController = ScrollController();
   Key _reorderableListKey = UniqueKey();
@@ -25,6 +29,8 @@ class _FileListPanelState extends State<FileListPanel> {
   final FocusNode _renameFocusNode = FocusNode();
   final TextEditingController _renameController = TextEditingController();
   final TextEditingController _pathController = TextEditingController();
+  late final TapGestureRecognizer _desktopAppLinkRecognizer =
+      TapGestureRecognizer()..onTap = _openDesktopAppLink;
 
   String? _editingFilePath;
   int? _lastSelectedIndex; // 範囲選択の起点（アンカー）
@@ -185,7 +191,12 @@ class _FileListPanelState extends State<FileListPanel> {
     _renameFocusNode.dispose();
     _renameController.dispose();
     _pathController.dispose();
+    _desktopAppLinkRecognizer.dispose();
     super.dispose();
+  }
+
+  Future<void> _openDesktopAppLink() async {
+    await launchUrl(_desktopAppUri, mode: LaunchMode.externalApplication);
   }
 
   void _startAutoScroll(
@@ -552,6 +563,7 @@ class _FileListPanelState extends State<FileListPanel> {
       BuildContext context, DirectoryProvider provider) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final isSupported = provider.isWebFileSystemSupported;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
@@ -564,36 +576,102 @@ class _FileListPanelState extends State<FileListPanel> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.folder_open,
+                  isSupported ? Icons.folder_open : Icons.folder_off,
                   size: 64,
                   color: colorScheme.primary,
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  l10n.labelWebSelectFolderPromptTitle,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                Semantics(
+                  container: true,
+                  label: isSupported
+                      ? l10n.labelWebSelectFolderPromptTitle
+                      : l10n.labelWebUnsupportedPromptTitle,
+                  child: Text(
+                    isSupported
+                        ? l10n.labelWebSelectFolderPromptTitle
+                        : l10n.labelWebUnsupportedPromptTitle,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  l10n.labelWebSelectFolderPromptMessage,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                Semantics(
+                  container: true,
+                  label: isSupported
+                      ? l10n.labelWebSelectFolderPromptMessage
+                      : l10n.labelWebUnsupportedPromptMessage,
+                  child: Text(
+                    isSupported
+                        ? l10n.labelWebSelectFolderPromptMessage
+                        : l10n.labelWebUnsupportedPromptMessage,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  ),
                 ),
-                const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed:
-                      provider.isLoading ? null : provider.pickLocalDirectory,
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.labelSelectFolder),
-                ),
+                if (isSupported) ...[
+                  const SizedBox(height: 8),
+                  Semantics(
+                    container: true,
+                    label: l10n.labelWebSelectFolderPromptPrivacy,
+                    child: Text(
+                      l10n.labelWebSelectFolderPromptPrivacy,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+                if (isSupported) ...[
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed:
+                        provider.isLoading ? null : provider.pickLocalDirectory,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.labelSelectFolder),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                _buildDesktopAppPromptLink(context, l10n, colorScheme),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopAppPromptLink(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
+    final baseStyle = TextStyle(
+      color: colorScheme.onSurfaceVariant,
+      fontSize: 12,
+    );
+    final linkStyle = baseStyle.copyWith(
+      color: colorScheme.primary,
+      decoration: TextDecoration.underline,
+      decorationColor: colorScheme.primary,
+    );
+    return Semantics(
+      link: true,
+      child: Text.rich(
+        TextSpan(
+          style: baseStyle,
+          children: [
+            TextSpan(text: l10n.labelWebSelectFolderPromptDesktopBeforeLink),
+            TextSpan(
+              text: l10n.labelDesktopAppVersionLink,
+              style: linkStyle,
+              recognizer: _desktopAppLinkRecognizer,
+            ),
+            TextSpan(text: l10n.labelWebSelectFolderPromptDesktopAfterLink),
+          ],
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }

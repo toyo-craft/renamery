@@ -824,11 +824,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelMsgNoExecutableFiles => '没有可执行的文件';
 
   @override
-  String get labelWebSelectFolderPromptTitle => 'Web 版请先选择本地文件夹。';
+  String get labelWebSelectFolderPromptTitle => '选择本地文件夹即可开始';
 
   @override
   String get labelWebSelectFolderPromptMessage =>
-      '操作界面与 Windows 版相同，但由于浏览器限制，只能处理您明确选择的文件夹下的项目。';
+      '在基于 Chromium 的浏览器中，可批量重命名所选文件夹内的文件。';
+
+  @override
+  String get labelWebSelectFolderPromptPrivacy => '所选数据不会从浏览器上传到外部。';
+
+  @override
+  String get labelWebSelectFolderPromptDesktopBeforeLink => '如需更顺畅的体验，建议使用';
+
+  @override
+  String get labelDesktopAppVersionLink => '桌面应用版';
+
+  @override
+  String get labelWebSelectFolderPromptDesktopAfterLink => '。';
+
+  @override
+  String get labelWebUnsupportedPromptTitle => '此浏览器不受支持';
+
+  @override
+  String get labelWebUnsupportedPromptMessage => '请尝试 Chrome 或 Edge 等受支持的浏览器。';
 
   @override
   String get labelSelectFolder => '选择文件夹';
@@ -889,13 +907,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get labelWebUnsupportedBrowserMessage =>
-      '此浏览器不支持文件夹集成。请使用桌面版 Chrome 或 Edge。';
+      '此浏览器无法使用本地文件夹集成所需的功能。请尝试使用 Chrome 或 Edge 等受支持的 PC 浏览器。';
 
   @override
   String get labelWebLocalFolderPickerTitle => '选择本地文件夹';
 
   @override
-  String get labelWebLocalFolderPickerSubtitle => '在 Chrome/Edge 中打开文件夹';
+  String get labelWebLocalFolderPickerSubtitle =>
+      '可在 Chrome / Edge 等受支持的浏览器中使用';
 
   @override
   String get labelWebNoSavedDirectories => '尚未选择任何文件夹。';

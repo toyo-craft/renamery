@@ -18,14 +18,14 @@ void main() {
       expect(provider.isLicenseAccepted, false);
     });
 
-    test('unsupported browser reports an error without changing directory',
+    test('unsupported browser leaves state unchanged without duplicating errors',
         () async {
       final fs = FakeWebFileSystemClient(isSupported: false);
       final provider = DirectoryProvider(fileSystem: fs);
 
       await provider.pickLocalDirectory();
 
-      expect(provider.errorMessage, contains('対応していません'));
+      expect(provider.errorMessage, isNull);
       expect(provider.currentDirectory, isNull);
       expect(provider.currentFiles, isEmpty);
       expect(provider.isLoading, false);

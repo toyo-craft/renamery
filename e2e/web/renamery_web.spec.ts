@@ -315,7 +315,10 @@ test.describe('ReNamery Web MVP', () => {
     await openApp(page);
 
     await expect(page).toHaveTitle(/ReNamery/);
-    await expect(page.getByText('このブラウザはフォルダ連携に対応していません')).toBeVisible();
+    await expect(page.getByText('このブラウザではローカルフォルダ連携を利用できません。')).toBeVisible();
+    await expect(page.getByText('ローカルフォルダを選択して一括リネームするには、ChromeまたはEdgeなどの対応ブラウザをご利用ください。')).toBeVisible();
+    await expect(page.getByText('デスクトップ・アプリ版')).toBeVisible();
+    await expect(page.getByText('このブラウザでは、ローカルフォルダ連携に必要な機能が利用できません')).toHaveCount(0);
   });
 
   test('opens a mocked local directory and navigates entries', async ({ page }) => {

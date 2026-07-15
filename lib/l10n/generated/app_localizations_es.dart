@@ -842,11 +842,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get labelWebSelectFolderPromptTitle =>
-      'Seleccione primero una carpeta local en la versión web.';
+      'Seleccione una carpeta local para empezar';
 
   @override
   String get labelWebSelectFolderPromptMessage =>
-      'La pantalla es igual que en Windows, pero las restricciones del navegador limitan el acceso a la carpeta seleccionada explícitamente.';
+      'En navegadores basados en Chromium puede renombrar por lotes los archivos de la carpeta seleccionada.';
+
+  @override
+  String get labelWebSelectFolderPromptPrivacy =>
+      'Los datos seleccionados no se suben fuera del navegador.';
+
+  @override
+  String get labelWebSelectFolderPromptDesktopBeforeLink =>
+      'Para una experiencia más fluida, recomendamos la ';
+
+  @override
+  String get labelDesktopAppVersionLink => 'versión de escritorio';
+
+  @override
+  String get labelWebSelectFolderPromptDesktopAfterLink => '.';
+
+  @override
+  String get labelWebUnsupportedPromptTitle =>
+      'Este navegador no es compatible';
+
+  @override
+  String get labelWebUnsupportedPromptMessage =>
+      'Pruebe un navegador compatible como Chrome o Edge.';
 
   @override
   String get labelSelectFolder => 'Seleccionar carpeta';
@@ -909,14 +931,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get labelWebUnsupportedBrowserMessage =>
-      'Este navegador no admite la integración de carpetas. Use la versión de escritorio de Chrome o Edge.';
+      'Este navegador no puede usar las funciones necesarias para integrar carpetas locales. Pruebe con un navegador de PC compatible, como Chrome o Edge.';
 
   @override
   String get labelWebLocalFolderPickerTitle => 'Seleccionar carpeta local';
 
   @override
   String get labelWebLocalFolderPickerSubtitle =>
-      'Abrir una carpeta en Chrome/Edge';
+      'Disponible en navegadores compatibles como Chrome / Edge';
 
   @override
   String get labelWebNoSavedDirectories =>

@@ -480,10 +480,6 @@ class DirectoryProvider extends ChangeNotifier {
 
   Future<void> pickLocalDirectory() async {
     if (!_fs.isSupported) {
-      _errorMessage = _localized(
-        (l10n) => l10n.labelWebUnsupportedBrowserMessage,
-        'このブラウザはローカルフォルダ連携に対応していません。',
-      );
       notifyListeners();
       return;
     }

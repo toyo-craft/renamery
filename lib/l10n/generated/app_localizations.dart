@@ -1666,14 +1666,50 @@ abstract class AppLocalizations {
   /// No description provided for @labelWebSelectFolderPromptTitle.
   ///
   /// In ja, this message translates to:
-  /// **'Web版では、最初にローカルフォルダを選択してください。'**
+  /// **'ローカルフォルダを選択して開始'**
   String get labelWebSelectFolderPromptTitle;
 
   /// No description provided for @labelWebSelectFolderPromptMessage.
   ///
   /// In ja, this message translates to:
-  /// **'Windows版と同じ画面構成で操作しますが、ブラウザ制約により明示選択したフォルダ配下だけを扱います。'**
+  /// **'Chrome系ブラウザで、選択したフォルダ内のファイル名をまとめて変更できます。'**
   String get labelWebSelectFolderPromptMessage;
+
+  /// No description provided for @labelWebSelectFolderPromptPrivacy.
+  ///
+  /// In ja, this message translates to:
+  /// **'データはデバイス以外に持ち出されることはありません。'**
+  String get labelWebSelectFolderPromptPrivacy;
+
+  /// No description provided for @labelWebSelectFolderPromptDesktopBeforeLink.
+  ///
+  /// In ja, this message translates to:
+  /// **'シームレスな操作には、'**
+  String get labelWebSelectFolderPromptDesktopBeforeLink;
+
+  /// No description provided for @labelDesktopAppVersionLink.
+  ///
+  /// In ja, this message translates to:
+  /// **'デスクトップ・アプリ版'**
+  String get labelDesktopAppVersionLink;
+
+  /// No description provided for @labelWebSelectFolderPromptDesktopAfterLink.
+  ///
+  /// In ja, this message translates to:
+  /// **'をお勧めします。'**
+  String get labelWebSelectFolderPromptDesktopAfterLink;
+
+  /// No description provided for @labelWebUnsupportedPromptTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'このブラウザでは利用できません'**
+  String get labelWebUnsupportedPromptTitle;
+
+  /// No description provided for @labelWebUnsupportedPromptMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'ChromeまたはEdgeなどの対応ブラウザでお試しください。'**
+  String get labelWebUnsupportedPromptMessage;
 
   /// No description provided for @labelSelectFolder.
   ///
@@ -1786,7 +1822,7 @@ abstract class AppLocalizations {
   /// No description provided for @labelWebUnsupportedBrowserMessage.
   ///
   /// In ja, this message translates to:
-  /// **'このブラウザはフォルダ連携に対応していません。ChromeまたはEdgeのデスクトップ版をご利用ください。'**
+  /// **'このブラウザでは、ローカルフォルダ連携に必要な機能が利用できません。ChromeまたはEdgeなど、対応しているPC向けブラウザでお試しください。'**
   String get labelWebUnsupportedBrowserMessage;
 
   /// No description provided for @labelWebLocalFolderPickerTitle.
@@ -1798,7 +1834,7 @@ abstract class AppLocalizations {
   /// No description provided for @labelWebLocalFolderPickerSubtitle.
   ///
   /// In ja, this message translates to:
-  /// **'Chrome/Edgeでフォルダを開く'**
+  /// **'Chrome / Edge などの対応ブラウザで利用できます'**
   String get labelWebLocalFolderPickerSubtitle;
 
   /// No description provided for @labelWebNoSavedDirectories.

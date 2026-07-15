@@ -294,6 +294,7 @@ class NavigationItem {
     this.enabled = true,
     this.selected = false,
     this.height = 44,
+    this.iconFill = 0,
     this.iconColor,
     this.selectedColor,
     this.semanticLabel,
@@ -310,6 +311,7 @@ class NavigationItem {
   })  : enabled = false,
         selected = false,
         height = 44,
+        iconFill = 0,
         iconColor = null,
         selectedColor = null,
         semanticLabel = semanticLabel ?? '$title $subtitle',
@@ -323,6 +325,7 @@ class NavigationItem {
     this.enabled = true,
     this.selected = false,
     this.height = 40,
+    this.iconFill = 0,
     this.iconColor = Colors.amber,
     this.selectedColor,
     String? semanticLabel,
@@ -338,6 +341,7 @@ class NavigationItem {
   final bool enabled;
   final bool selected;
   final double height;
+  final double iconFill;
   final Color? iconColor;
   final Color? selectedColor;
   final String? semanticLabel;
@@ -367,6 +371,7 @@ class NavigationInfoTile extends StatelessWidget {
     this.enabled = true,
     this.selected = false,
     this.height = 44,
+    this.iconFill = 0,
     this.iconColor,
     this.selectedColor,
     this.semanticLabel,
@@ -382,6 +387,7 @@ class NavigationInfoTile extends StatelessWidget {
         enabled = item.enabled,
         selected = item.selected,
         height = item.height,
+        iconFill = item.iconFill,
         iconColor = item.iconColor,
         selectedColor = item.selectedColor,
         semanticLabel = item.semanticLabel,
@@ -395,6 +401,7 @@ class NavigationInfoTile extends StatelessWidget {
   final bool enabled;
   final bool selected;
   final double height;
+  final double iconFill;
   final Color? iconColor;
   final Color? selectedColor;
   final String? semanticLabel;
@@ -427,7 +434,12 @@ class NavigationInfoTile extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, size: 20, color: effectiveIconColor),
+                    Icon(
+                      icon,
+                      size: 20,
+                      color: effectiveIconColor,
+                      fill: iconFill,
+                    ),
                     const SizedBox(width: 8),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,

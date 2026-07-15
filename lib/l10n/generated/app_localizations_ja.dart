@@ -828,11 +828,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelMsgNoExecutableFiles => '実行できるファイルがありませんでした';
 
   @override
-  String get labelWebSelectFolderPromptTitle => 'Web版では、最初にローカルフォルダを選択してください。';
+  String get labelWebSelectFolderPromptTitle => 'ローカルフォルダを選択して開始';
 
   @override
   String get labelWebSelectFolderPromptMessage =>
-      'Windows版と同じ画面構成で操作しますが、ブラウザ制約により明示選択したフォルダ配下だけを扱います。';
+      'Chrome系ブラウザで、選択したフォルダ内のファイル名をまとめて変更できます。';
+
+  @override
+  String get labelWebSelectFolderPromptPrivacy => 'データはデバイス以外に持ち出されることはありません。';
+
+  @override
+  String get labelWebSelectFolderPromptDesktopBeforeLink => 'シームレスな操作には、';
+
+  @override
+  String get labelDesktopAppVersionLink => 'デスクトップ・アプリ版';
+
+  @override
+  String get labelWebSelectFolderPromptDesktopAfterLink => 'をお勧めします。';
+
+  @override
+  String get labelWebUnsupportedPromptTitle => 'このブラウザでは利用できません';
+
+  @override
+  String get labelWebUnsupportedPromptMessage =>
+      'ChromeまたはEdgeなどの対応ブラウザでお試しください。';
 
   @override
   String get labelSelectFolder => 'フォルダを選択';
@@ -893,13 +912,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get labelWebUnsupportedBrowserMessage =>
-      'このブラウザはフォルダ連携に対応していません。ChromeまたはEdgeのデスクトップ版をご利用ください。';
+      'このブラウザでは、ローカルフォルダ連携に必要な機能が利用できません。ChromeまたはEdgeなど、対応しているPC向けブラウザでお試しください。';
 
   @override
   String get labelWebLocalFolderPickerTitle => 'ローカルフォルダを選択';
 
   @override
-  String get labelWebLocalFolderPickerSubtitle => 'Chrome/Edgeでフォルダを開く';
+  String get labelWebLocalFolderPickerSubtitle =>
+      'Chrome / Edge などの対応ブラウザで利用できます';
 
   @override
   String get labelWebNoSavedDirectories => '選択済みフォルダはまだありません。';
@@ -1818,11 +1838,30 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
   String get labelMsgNoExecutableFiles => '実行できるファイルがありません';
 
   @override
-  String get labelWebSelectFolderPromptTitle => 'Web版では先にローカルフォルダを選択してください。';
+  String get labelWebSelectFolderPromptTitle => 'ローカルフォルダを選択して開始';
 
   @override
   String get labelWebSelectFolderPromptMessage =>
-      'ブラウザ制約により、選択したフォルダ配下だけを扱います。';
+      'Chrome系ブラウザで、選択したフォルダ内のファイル名をまとめて変更できます。';
+
+  @override
+  String get labelWebSelectFolderPromptPrivacy => 'データはデバイス以外に持ち出されることはありません。';
+
+  @override
+  String get labelWebSelectFolderPromptDesktopBeforeLink => 'シームレスな操作には、';
+
+  @override
+  String get labelDesktopAppVersionLink => 'デスクトップ・アプリ版';
+
+  @override
+  String get labelWebSelectFolderPromptDesktopAfterLink => 'をお勧めします。';
+
+  @override
+  String get labelWebUnsupportedPromptTitle => 'このブラウザでは利用できません';
+
+  @override
+  String get labelWebUnsupportedPromptMessage =>
+      'ChromeまたはEdgeなどの対応ブラウザでお試しください。';
 
   @override
   String get labelSelectFolder => 'フォルダを選択';
@@ -1883,13 +1922,14 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
 
   @override
   String get labelWebUnsupportedBrowserMessage =>
-      'このブラウザはフォルダ連携に対応していません。Chrome/Edgeのデスクトップ版をご利用ください。';
+      'このブラウザでは、ローカルフォルダ連携に必要な機能が利用できません。ChromeまたはEdgeなど、対応しているPC向けブラウザでお試しください。';
 
   @override
   String get labelWebLocalFolderPickerTitle => 'ローカルフォルダを選択';
 
   @override
-  String get labelWebLocalFolderPickerSubtitle => 'Chrome/Edgeで開く';
+  String get labelWebLocalFolderPickerSubtitle =>
+      'Chrome / Edge などの対応ブラウザで利用できます';
 
   @override
   String get labelWebNoSavedDirectories => '選択済みフォルダはありません。';

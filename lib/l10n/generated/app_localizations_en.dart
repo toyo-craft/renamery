@@ -837,11 +837,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelWebSelectFolderPromptTitle =>
-      'Select a local folder first in the Web version.';
+      'Select a local folder to start';
 
   @override
   String get labelWebSelectFolderPromptMessage =>
-      'The screen layout matches the Windows version, but browser restrictions limit access to the folder you explicitly select.';
+      'In Chromium-based browsers, you can batch rename files in the selected folder.';
+
+  @override
+  String get labelWebSelectFolderPromptPrivacy =>
+      'Selected data is not uploaded outside your browser.';
+
+  @override
+  String get labelWebSelectFolderPromptDesktopBeforeLink =>
+      'For a smoother experience, we recommend the ';
+
+  @override
+  String get labelDesktopAppVersionLink => 'desktop app version';
+
+  @override
+  String get labelWebSelectFolderPromptDesktopAfterLink => '.';
+
+  @override
+  String get labelWebUnsupportedPromptTitle => 'This browser is not supported';
+
+  @override
+  String get labelWebUnsupportedPromptMessage =>
+      'Try a supported browser such as Chrome or Edge.';
 
   @override
   String get labelSelectFolder => 'Select folder';
@@ -904,14 +925,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelWebUnsupportedBrowserMessage =>
-      'This browser does not support folder integration. Use the desktop version of Chrome or Edge.';
+      'This browser cannot use the features required for local folder integration. Try a supported PC browser such as Chrome or Edge.';
 
   @override
   String get labelWebLocalFolderPickerTitle => 'Select local folder';
 
   @override
   String get labelWebLocalFolderPickerSubtitle =>
-      'Open a folder in Chrome/Edge';
+      'Available in supported browsers such as Chrome / Edge';
 
   @override
   String get labelWebNoSavedDirectories => 'No folders have been selected yet.';
