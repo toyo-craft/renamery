@@ -326,6 +326,20 @@
   "labelAppTitle": "ReNamery - 安全批量重命名文件 | Toyo Craft",
   "labelUpdateAvailable": "有新版本 (v{version}) 可用",
   "labelViewSettings": "查看设置",
+  "labelLanguagePromptMessage": "可以在应用设置中更改显示语言。",
+  "labelLanguagePromptAction": "语言设置",
+  "labelRecommendedLanguagePageMessage": "有与浏览器语言匹配的{language}页面：{url}",
+  "@labelRecommendedLanguagePageMessage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "labelRecommendedLanguagePageAction": "打开",
   "labelAppExitTitle": "退出应用",
   "labelAppExitConfirm": "要退出 ReNamery 吗？",
   "labelExit": "退出",

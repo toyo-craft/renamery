@@ -796,6 +796,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labelViewSettings => '查看设置';
 
   @override
+  String get labelLanguagePromptMessage => '可以在应用设置中更改显示语言。';
+
+  @override
+  String get labelLanguagePromptAction => '语言设置';
+
+  @override
+  String labelRecommendedLanguagePageMessage(String language, String url) {
+    return '有与浏览器语言匹配的$language页面：$url';
+  }
+
+  @override
+  String get labelRecommendedLanguagePageAction => '打开';
+
+  @override
   String get labelAppExitTitle => '退出应用';
 
   @override

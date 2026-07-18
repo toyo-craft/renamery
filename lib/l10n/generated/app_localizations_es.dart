@@ -812,6 +812,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get labelViewSettings => 'Ver ajustes';
 
   @override
+  String get labelLanguagePromptMessage =>
+      'Puede cambiar el idioma de la interfaz en los ajustes de la app.';
+
+  @override
+  String get labelLanguagePromptAction => 'Idioma';
+
+  @override
+  String labelRecommendedLanguagePageMessage(String language, String url) {
+    return 'Hay una página en $language que coincide con el idioma del navegador: $url';
+  }
+
+  @override
+  String get labelRecommendedLanguagePageAction => 'Abrir';
+
+  @override
   String get labelAppExitTitle => 'Salir de la app';
 
   @override

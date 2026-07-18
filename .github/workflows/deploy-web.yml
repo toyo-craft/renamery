@@ -1,0 +1,42 @@
+name: ReNamery Web Deploy
+
+on:
+  push:
+    branches:
+      - web-only-deploy-20260715-175624
+
+jobs:
+  deploy-web:
+    name: Build and Deploy Web
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: any
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build Web
+        run: npm run build:web
+
+      - name: Deploy Web to mixhost
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          SOURCE: "build/web/"
+          TARGET: "/home/${{ secrets.REMOTE_USER }}/public_html/renamery.toyo-craft.net/"
+          ARGS: "-rlgoDzvc -i --delete"

@@ -1615,6 +1615,30 @@ abstract class AppLocalizations {
   /// **'設定を見る'**
   String get labelViewSettings;
 
+  /// No description provided for @labelLanguagePromptMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'表示言語はアプリ設定で変更できます。'**
+  String get labelLanguagePromptMessage;
+
+  /// No description provided for @labelLanguagePromptAction.
+  ///
+  /// In ja, this message translates to:
+  /// **'言語設定'**
+  String get labelLanguagePromptAction;
+
+  /// No description provided for @labelRecommendedLanguagePageMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'ブラウザーの言語に合う{language}ページがあります: {url}'**
+  String labelRecommendedLanguagePageMessage(String language, String url);
+
+  /// No description provided for @labelRecommendedLanguagePageAction.
+  ///
+  /// In ja, this message translates to:
+  /// **'開く'**
+  String get labelRecommendedLanguagePageAction;
+
   /// No description provided for @labelAppExitTitle.
   ///
   /// In ja, this message translates to:

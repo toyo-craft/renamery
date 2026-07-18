@@ -800,6 +800,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get labelViewSettings => '設定を見る';
 
   @override
+  String get labelLanguagePromptMessage => '表示言語はアプリ設定で変更できます。';
+
+  @override
+  String get labelLanguagePromptAction => '言語設定';
+
+  @override
+  String labelRecommendedLanguagePageMessage(String language, String url) {
+    return 'ブラウザーの言語に合う$languageページがあります: $url';
+  }
+
+  @override
+  String get labelRecommendedLanguagePageAction => '開く';
+
+  @override
   String get labelAppExitTitle => 'アプリの終了';
 
   @override
@@ -1808,6 +1822,20 @@ class AppLocalizationsJaNm extends AppLocalizationsJa {
 
   @override
   String get labelViewSettings => '設定を見る';
+
+  @override
+  String get labelLanguagePromptMessage => '表示言語はアプリ設定で変更できます。';
+
+  @override
+  String get labelLanguagePromptAction => '言語設定';
+
+  @override
+  String labelRecommendedLanguagePageMessage(String language, String url) {
+    return 'ブラウザーの言語に合う$languageページがあります: $url';
+  }
+
+  @override
+  String get labelRecommendedLanguagePageAction => '開く';
 
   @override
   String get labelAppExitTitle => '終了';

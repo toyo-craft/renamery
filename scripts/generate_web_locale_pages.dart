@@ -162,11 +162,13 @@ String _seoContent(WebLocalePage page) {
   final faqItems =
       page.faq.map((item) => '''      <dt>${_html(item.question)}</dt>
       <dd>${_html(item.answer)}</dd>''').join('\n');
+  final languageChooser = _languageChooser(page);
 
   return '''  <main id="renamery-seo-content" class="renamery-seo-content">
     <h1>${_html(page.heading)}</h1>
     <p>${_html(page.summary)}</p>
     <p>${_html(page.context)}</p>
+$languageChooser
     <h2>${_html(page.featuresHeading)}</h2>
     <ul>
 $featureItems
@@ -182,6 +184,20 @@ $faqItems
       document.getElementById('renamery-seo-content')?.remove();
     });
   </script>''';
+}
+
+String _languageChooser(WebLocalePage page) {
+  if (page.languageLinks.isEmpty) return '';
+  final links = page.languageLinks.entries
+      .map((entry) =>
+          '      <li><a href="${_attr(entry.value)}">${_html(entry.key)}</a></li>')
+      .join('\n');
+  return '''    <nav class="renamery-language-nav" aria-label="Language selection">
+      <h2>${_html(page.languageLinksHeading)}</h2>
+      <ul class="renamery-language-list">
+$links
+      </ul>
+    </nav>''';
 }
 
 Map<String, Object?> _jsonLdFor(WebLocalePage page) => {
@@ -310,11 +326,7 @@ String _xml(String value) =>
     const HtmlEscape(HtmlEscapeMode.element).convert(value);
 
 List<WebLocalePage> _pages(String version) => [
-      _englishPage(version,
-          code: 'x-default',
-          path: '',
-          initialLocale: 'auto',
-          url: '$_siteOrigin/'),
+      _rootPage(version),
       _englishPage(version,
           code: 'en', path: 'en', initialLocale: 'en', url: '$_siteOrigin/en/'),
       WebLocalePage(
@@ -333,8 +345,7 @@ List<WebLocalePage> _pages(String version) => [
             '先行するリネームツールの開拓者たちが築いた思想と操作感への敬意を受け継ぎ、現代の環境に合わせて再編成した一括ファイル名変更ツールです。',
         twitterDescription:
             '変更後の名前を確認しながら、連番、正規表現置換、拡張子変更、Undo、画像/PDF/SVG/ZIPプレビューを使える一括リネームツールです。',
-        keywords:
-            'ReNamery,リネームリー,ファイル名変更,一括リネーム,リネームソフト,連番,正規表現,拡張子変更,東洋クラフト',
+        keywords: 'ReNamery,リネームリー,ファイル名変更,一括リネーム,リネームソフト,連番,正規表現,拡張子変更,東洋クラフト',
         alternateNames: const ['リネームリー', 'リネーム思想継承ツール'],
         heading: 'ReNamery - 安全にプレビューできる一括ファイル名変更ツール',
         summary:
@@ -448,6 +459,62 @@ List<WebLocalePage> _pages(String version) => [
       ),
     ];
 
+WebLocalePage _rootPage(String version) => WebLocalePage(
+      version: version,
+      code: 'x-default',
+      path: '',
+      initialLocale: 'auto',
+      htmlLang: 'en',
+      ogLocale: 'en_US',
+      url: '$_siteOrigin/',
+      manifestName: 'manifest.json',
+      title: 'ReNamery | Multilingual Safe Batch File Renamer',
+      description:
+          'ReNamery is a multilingual batch file renamer for Windows, Android, Linux, and Web. Choose Japanese, English, Spanish, or Chinese, preview changes safely, and rename files without uploading them.',
+      ogDescription:
+          'The official multilingual entry page for ReNamery, a safe batch file renamer with live preview for Japanese, English, Spanish, and Chinese users.',
+      twitterDescription:
+          'Choose Japanese, English, Spanish, or Chinese and try ReNamery, a safe batch file renamer with live preview.',
+      keywords:
+          'ReNamery, multilingual batch file renamer, rename files, bulk rename, リネーム, renombrar archivos, 批量重命名, Toyo Craft',
+      alternateNames: const [
+        'リネームリー',
+        'Renombrador ReNamery',
+        'ReNamery 批量重命名'
+      ],
+      heading: 'ReNamery - Multilingual safe batch file renamer',
+      summary:
+          'ReNamery is the official multilingual entry point for a safe batch file renamer with live preview. The app supports Japanese, English, Spanish, and Chinese pages so you can open the language that fits you best.',
+      context:
+          'Use the Web version as a quick browser trial, or download the Windows, Android, and Linux releases from GitHub. Local files are handled on your device and are not designed to be uploaded to a server.',
+      languageLinksHeading: 'Choose your language',
+      languageLinks: const {
+        '日本語': '$_siteOrigin/ja/',
+        'English': '$_siteOrigin/en/',
+        'Español': '$_siteOrigin/es/',
+        '中文': '$_siteOrigin/zh/',
+      },
+      featuresHeading: 'What you can do',
+      faqHeading: 'Frequently asked questions',
+      downloadLabel: 'Download the latest release',
+      sourceLabel: 'View source code',
+      features: const [
+        'Open a language-specific page for Japanese, English, Spanish, or Chinese',
+        'Preview new file names before applying changes',
+        'Use numbering, add/remove text, regex replacement, and extension changes',
+        'Undo after renaming',
+        'Preview images, PDFs, SVGs, and ZIP contents',
+      ],
+      faq: const [
+        FaqItem('What is this top page for?',
+            'It is the official entry page for ReNamery and points visitors and search engines to the available language-specific pages.'),
+        FaqItem('Does ReNamery choose a language automatically?',
+            'The app can use your browser language, but this page keeps the official top page visible and gives you clear language links.'),
+        FaqItem('Does the Web version upload local files?',
+            'No. It uses the browser File System Access API to work with the selected folder on your device and is not designed to upload files to a server.'),
+      ],
+    );
+
 WebLocalePage _englishPage(
   String version, {
   required String code,
@@ -521,6 +588,8 @@ class WebLocalePage {
     required this.context,
     required this.featuresHeading,
     required this.faqHeading,
+    this.languageLinksHeading = '',
+    this.languageLinks = const {},
     required this.downloadLabel,
     required this.sourceLabel,
     required this.features,
@@ -546,6 +615,8 @@ class WebLocalePage {
   final String context;
   final String featuresHeading;
   final String faqHeading;
+  final String languageLinksHeading;
+  final Map<String, String> languageLinks;
   final String downloadLabel;
   final String sourceLabel;
   final List<String> features;

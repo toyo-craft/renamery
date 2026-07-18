@@ -253,6 +253,20 @@
   "labelAppTitle": "ReNamery - Cambio seguro de nombres por lotes | Toyo Craft",
   "labelUpdateAvailable": "Hay una nueva versión (v{version}) disponible",
   "labelViewSettings": "Ver ajustes",
+  "labelLanguagePromptMessage": "Puede cambiar el idioma de la interfaz en los ajustes de la app.",
+  "labelLanguagePromptAction": "Idioma",
+  "labelRecommendedLanguagePageMessage": "Hay una página en {language} que coincide con el idioma del navegador: {url}",
+  "@labelRecommendedLanguagePageMessage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "labelRecommendedLanguagePageAction": "Abrir",
   "labelAppExitTitle": "Salir de la app",
   "labelAppExitConfirm": "¿Salir de ReNamery?",
   "labelExit": "Salir",

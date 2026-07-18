@@ -326,6 +326,20 @@
   "labelAppTitle": "ReNamery - Safe bulk file renaming | Toyo Craft",
   "labelUpdateAvailable": "A new version (v{version}) is available",
   "labelViewSettings": "View settings",
+  "labelLanguagePromptMessage": "You can change the display language in app settings.",
+  "labelLanguagePromptAction": "Language settings",
+  "labelRecommendedLanguagePageMessage": "A {language} page matches your browser language: {url}",
+  "@labelRecommendedLanguagePageMessage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "labelRecommendedLanguagePageAction": "Open",
   "labelAppExitTitle": "Exit app",
   "labelAppExitConfirm": "Exit ReNamery?",
   "labelExit": "Exit",

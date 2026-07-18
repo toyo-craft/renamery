@@ -45,6 +45,65 @@ MenuLabelType? _pageMenuLabelType() {
   return _menuLabelTypeForLocale(_localeFromTag(tag));
 }
 
+String? _languageCodeForMenuLabelType(MenuLabelType type) {
+  switch (type) {
+    case MenuLabelType.standard:
+    case MenuLabelType.namery:
+      return 'ja';
+    case MenuLabelType.english:
+      return 'en';
+    case MenuLabelType.chinese:
+      return 'zh';
+    case MenuLabelType.spanish:
+      return 'es';
+  }
+}
+
+String _languageNameForCode(String code) {
+  switch (code) {
+    case 'ja':
+      return '日本語';
+    case 'en':
+      return 'English';
+    case 'es':
+      return 'Español';
+    case 'zh':
+      return '中文';
+    default:
+      return code;
+  }
+}
+
+String _languagePageMessageForCode(String code, String url) {
+  switch (code) {
+    case 'ja':
+      return '日本語ページがあります: $url';
+    case 'en':
+      return 'English page available: $url';
+    case 'es':
+      return 'Página en español disponible: $url';
+    case 'zh':
+      return '可以查看中文页面: $url';
+    default:
+      return 'Language page available: $url';
+  }
+}
+
+String _languagePageActionForCode(String code) {
+  switch (code) {
+    case 'ja':
+      return '日本語で見る';
+    case 'en':
+      return 'Open';
+    case 'es':
+      return 'Abrir';
+    case 'zh':
+      return '打开';
+    default:
+      return 'Open';
+  }
+}
+
 String? _readPageInitialLocale() {
   return readPageInitialLocale();
 }
@@ -200,6 +259,12 @@ class DirectoryProvider extends ChangeNotifier {
   bool _touchMode = false;
   AppThemeType _appTheme = AppThemeType.light;
   MenuLabelType _menuLabelType = MenuLabelType.standard;
+  bool _hasExplicitMenuLabelSetting = false;
+  bool _isRootLocaleEntryPage = false;
+  String? _recommendedLanguagePageUrl;
+  String? _recommendedLanguagePageName;
+  String? _recommendedLanguagePageMessage;
+  String? _recommendedLanguagePageAction;
   Color _seedColor = Colors.green;
 
   int _resetCount = 0;
@@ -306,6 +371,17 @@ class DirectoryProvider extends ChangeNotifier {
   bool get isFilterRegex => _isFilterRegex;
   AppThemeType get appTheme => _appTheme;
   MenuLabelType get menuLabelType => _menuLabelType;
+  bool get hasExplicitMenuLabelSetting => _hasExplicitMenuLabelSetting;
+  bool get shouldShowLanguageSettingsPrompt =>
+      _isRootLocaleEntryPage &&
+      !_hasExplicitMenuLabelSetting &&
+      _recommendedLanguagePageUrl == null;
+  bool get shouldShowRecommendedLanguagePagePrompt =>
+      _recommendedLanguagePageUrl != null;
+  String? get recommendedLanguagePageUrl => _recommendedLanguagePageUrl;
+  String? get recommendedLanguagePageName => _recommendedLanguagePageName;
+  String? get recommendedLanguagePageMessage => _recommendedLanguagePageMessage;
+  String? get recommendedLanguagePageAction => _recommendedLanguagePageAction;
   Color get seedColor => _seedColor;
   int get sortColumnIndex => _sortColumnIndex;
   bool get sortAscending => _sortAscending;
@@ -424,17 +500,26 @@ class DirectoryProvider extends ChangeNotifier {
       orElse: () => AppThemeType.light,
     );
     final menuLabelStr = _settings.getString('menuLabelType');
-    final pageMenuLabelType = _pageMenuLabelType();
-    if (pageMenuLabelType != null) {
-      _menuLabelType = pageMenuLabelType;
-    } else if (menuLabelStr != null) {
+    _hasExplicitMenuLabelSetting =
+        _settings.getBool('menuLabelTypeExplicit') ?? menuLabelStr != null;
+    _isRootLocaleEntryPage =
+        (_readPageInitialLocale() ?? '').toLowerCase() == 'auto';
+    if (menuLabelStr != null) {
       _menuLabelType = MenuLabelType.values.firstWhere(
         (e) => e.name == menuLabelStr,
         orElse: () => MenuLabelType.standard,
       );
     } else {
-      _menuLabelType = _defaultMenuLabelTypeForLocales(_readPreferredLocales());
+      final pageMenuLabelType = _pageMenuLabelType();
+      if (pageMenuLabelType != null) {
+        _menuLabelType = pageMenuLabelType;
+      } else {
+        _menuLabelType =
+            _defaultMenuLabelTypeForLocales(_readPreferredLocales());
+      }
     }
+    _updateRecommendedLanguagePage();
+
     final validationIndex = _settings.getInt('validationType');
     if (validationIndex != null &&
         validationIndex < ValidationType.values.length) {
@@ -447,6 +532,31 @@ class DirectoryProvider extends ChangeNotifier {
     }
   }
 
+  void _updateRecommendedLanguagePage() {
+    _recommendedLanguagePageUrl = null;
+    _recommendedLanguagePageName = null;
+    _recommendedLanguagePageMessage = null;
+    _recommendedLanguagePageAction = null;
+    if (_hasExplicitMenuLabelSetting) return;
+
+    final preferredType =
+        _defaultMenuLabelTypeForLocales(_readPreferredLocales());
+    final preferredCode = _languageCodeForMenuLabelType(preferredType);
+    if (preferredCode == null) return;
+
+    final pageTag = (_readPageInitialLocale() ?? '').toLowerCase();
+    if (pageTag == preferredCode) return;
+
+    final targetUri = Uri.parse(Uri.base.origin).replace(
+      path: '/$preferredCode/',
+    );
+    _recommendedLanguagePageUrl = targetUri.toString();
+    _recommendedLanguagePageName = _languageNameForCode(preferredCode);
+    _recommendedLanguagePageMessage = _languagePageMessageForCode(
+        preferredCode, _recommendedLanguagePageUrl!);
+    _recommendedLanguagePageAction = _languagePageActionForCode(preferredCode);
+  }
+
   void _saveState() {
     _settings.set('isCompactMode', _isCompactMode, saveImmediate: false);
     _settings.set('touchMode', _touchMode, saveImmediate: false);
@@ -456,6 +566,8 @@ class DirectoryProvider extends ChangeNotifier {
         saveImmediate: false);
     _settings.set('appTheme', _appTheme.name, saveImmediate: false);
     _settings.set('menuLabelType', _menuLabelType.name, saveImmediate: false);
+    _settings.set('menuLabelTypeExplicit', _hasExplicitMenuLabelSetting,
+        saveImmediate: false);
     _settings.set('seedColor', _seedColor.toARGB32(), saveImmediate: false);
     _settings.set('filterText', _filterText, saveImmediate: false);
     _settings.set('hideSystemFiles', _hideSystemFiles, saveImmediate: false);
@@ -865,6 +977,7 @@ class DirectoryProvider extends ChangeNotifier {
 
   void setMenuLabelType(MenuLabelType type) {
     _menuLabelType = type;
+    _hasExplicitMenuLabelSetting = true;
     _saveState();
     notifyListeners();
   }

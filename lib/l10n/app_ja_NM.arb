@@ -252,6 +252,20 @@
   "labelAppTitle": "ReNamery - ファイル名を安全に一括変更 | 東洋クラフト",
   "labelUpdateAvailable": "新しいVer (v{version}) があります",
   "labelViewSettings": "設定を見る",
+  "labelLanguagePromptMessage": "表示言語はアプリ設定で変更できます。",
+  "labelLanguagePromptAction": "言語設定",
+  "labelRecommendedLanguagePageMessage": "ブラウザーの言語に合う{language}ページがあります: {url}",
+  "@labelRecommendedLanguagePageMessage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "labelRecommendedLanguagePageAction": "開く",
   "labelAppExitTitle": "終了",
   "labelAppExitConfirm": "ReNamery を終了しますか？",
   "labelExit": "終了",

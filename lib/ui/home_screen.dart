@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:renamery/l10n/generated/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:path/path.dart' as p;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/directory_provider_platform.dart';
 import '../../core/file_model.dart';
@@ -14,6 +15,7 @@ import 'panels/navigation_panel.dart';
 import 'panels/file_list_panel.dart';
 import 'panels/settings_panel.dart';
 import 'panels/home_app_bar.dart';
+import 'settings_screen.dart';
 import 'widgets/preview_window.dart';
 import 'widgets/enlarged_preview_overlay.dart';
 
@@ -108,7 +110,49 @@ class _HomeScreenState extends State<HomeScreen> {
         await provider.requestAndroidPermissions(context);
       }
 
-      // 3. アップデートチェック (静かに実行)
+      // 3. ブラウザー言語と現在URLが合わない場合は、対応する言語ページへ案内する。
+      // アプリ内の表示言語変更は設定画面に集約し、URL導線とは役割を分ける。
+      if (mounted && provider.shouldShowRecommendedLanguagePagePrompt) {
+        final url = provider.recommendedLanguagePageUrl;
+        final message = provider.recommendedLanguagePageMessage;
+        final actionLabel = provider.recommendedLanguagePageAction;
+        if (url != null && message != null && actionLabel != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: actionLabel,
+                onPressed: () {
+                  launchUrl(Uri.parse(url), webOnlyWindowName: '_self');
+                },
+              ),
+              duration: const Duration(seconds: 10),
+            ),
+          );
+        }
+      } else if (mounted && provider.shouldShowLanguageSettingsPrompt) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.labelLanguagePromptMessage),
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: l10n.labelLanguagePromptAction,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+            duration: const Duration(seconds: 8),
+          ),
+        );
+      }
+
+      // 4. アップデートチェック (静かに実行)
       if (mounted) {
         await provider.checkForUpdates();
         if (provider.hasUpdate && mounted) {

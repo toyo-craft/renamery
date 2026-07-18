@@ -28,6 +28,7 @@ class DirectoryProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isInlineRenaming = false;
   bool _enableBetaFeatures = false;
+  bool _hasExplicitMenuLabelSetting = false;
   final int _treeVersion = 0;
   final UndoManager _undoManager = UndoManager();
   final SettingsService _settings = SettingsService();
@@ -117,6 +118,13 @@ class DirectoryProvider extends ChangeNotifier {
   bool get isCutMode => _isCutMode;
   bool get isInlineRenaming => _isInlineRenaming;
   bool get enableBetaFeatures => _enableBetaFeatures;
+  bool get hasExplicitMenuLabelSetting => _hasExplicitMenuLabelSetting;
+  bool get shouldShowLanguageSettingsPrompt => false;
+  bool get shouldShowRecommendedLanguagePagePrompt => false;
+  String? get recommendedLanguagePageUrl => null;
+  String? get recommendedLanguagePageName => null;
+  String? get recommendedLanguagePageMessage => null;
+  String? get recommendedLanguagePageAction => null;
   int get treeVersion => _treeVersion;
 
   void setInlineRenaming(bool isRenaming) {
@@ -161,6 +169,8 @@ class DirectoryProvider extends ChangeNotifier {
     }
 
     final menuLabelStr = s.getString('menuLabelType');
+    _hasExplicitMenuLabelSetting =
+        s.getBool('menuLabelTypeExplicit') ?? menuLabelStr != null;
     if (menuLabelStr == null) {
       _menuLabelType = defaultMenuLabelTypeForLocale(
         WidgetsBinding.instance.platformDispatcher.locale,
@@ -274,6 +284,8 @@ class DirectoryProvider extends ChangeNotifier {
     s.set('enableBetaFeatures', _enableBetaFeatures, saveImmediate: false);
     s.set('appTheme', _appTheme.name, saveImmediate: false);
     s.set('menuLabelType', _menuLabelType.name, saveImmediate: false);
+    s.set('menuLabelTypeExplicit', _hasExplicitMenuLabelSetting,
+        saveImmediate: false);
     s.set('seedColor', _seedColor.toARGB32(), saveImmediate: false);
     s.set('navHistory', _navHistory, saveImmediate: false);
     s.set('navIndex', _navIndex, saveImmediate: false);
@@ -732,6 +744,7 @@ class DirectoryProvider extends ChangeNotifier {
 
   void setMenuLabelType(MenuLabelType type) {
     _menuLabelType = type;
+    _hasExplicitMenuLabelSetting = true;
     _saveState();
     notifyListeners();
   }

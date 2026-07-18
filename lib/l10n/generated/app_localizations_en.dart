@@ -807,6 +807,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelViewSettings => 'View settings';
 
   @override
+  String get labelLanguagePromptMessage =>
+      'You can change the display language in app settings.';
+
+  @override
+  String get labelLanguagePromptAction => 'Language settings';
+
+  @override
+  String labelRecommendedLanguagePageMessage(String language, String url) {
+    return 'A $language page matches your browser language: $url';
+  }
+
+  @override
+  String get labelRecommendedLanguagePageAction => 'Open';
+
+  @override
   String get labelAppExitTitle => 'Exit app';
 
   @override

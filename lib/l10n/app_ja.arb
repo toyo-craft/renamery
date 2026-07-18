@@ -333,6 +333,20 @@
   "labelUpdateAvailable": "新しいバージョン (v{version}) が利用可能です",
   "@labelUpdateAvailable": { "placeholders": { "version": { "type": "String" } } },
   "labelViewSettings": "設定を見る",
+  "labelLanguagePromptMessage": "表示言語はアプリ設定で変更できます。",
+  "labelLanguagePromptAction": "言語設定",
+  "labelRecommendedLanguagePageMessage": "ブラウザーの言語に合う{language}ページがあります: {url}",
+  "@labelRecommendedLanguagePageMessage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "labelRecommendedLanguagePageAction": "開く",
   "labelAppExitTitle": "アプリの終了",
   "labelAppExitConfirm": "ReNamery を終了しますか？",
   "labelExit": "終了する",
