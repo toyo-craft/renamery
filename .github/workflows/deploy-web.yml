@@ -32,11 +32,14 @@ jobs:
         run: npm run build:web
 
       - name: Deploy Web to mixhost
-        uses: easingthemes/ssh-deploy@main
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          SOURCE: "build/web/"
-          TARGET: "/home/${{ secrets.REMOTE_USER }}/public_html/renamery.toyo-craft.net/"
-          ARGS: "-rlgoDzvc -i --delete"
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_TARGET_DIR }}
+          local-dir: ./build/web/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
